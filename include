@@ -1,0 +1,203 @@
+
+/////////////////////////////////HeadFile/////////////////////////////////////////
+#include<stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
+#define MAXLINE 100                                 //¶¨ÒåÒ»ÐÐËùÄÜ¶ÁÈ¡µÄ×î¶à×Ö·ûµÄ¸öÊý
+#define MAXLENGTH_NAME 100                          //¶¨Òå×î³¤µÄ¿ÉÒÔ½ÓÊÜµÄÃû×Ö³¤¶È
+#define RESERVENUM 22                               //¶¨Òå±£Áô×ÖµÄ¸öÊý
+static char line[MAXLINE];                          //¶¨ÒåÃ¿´Î¶ÁÎÄ¼þ£¬¶ÁÒ»ÐÐµÄ»º³åÇø
+static int errNum=0;                                //¶¨ÒåERRORµÄ¸öÊý
+int ll=0;                                           //¶¨ÒåÃ¿´Î¶Áµ½Ò»ÐÐµÄ³¤¶È
+int cc=0;                                           //¶¨ÒågetcÊ±¶ÁÈëµÄ×Ö·ûÊý
+int lx=0;                                           //¶¨Òåµ±Ç°¶Áµ½ÁËµÚ¼¸ÐÐ
+int tableindex=0;                                   //¶¨Òå·ûºÅ±íµÄË÷Òý£¬ÎÒÃÇ°ÑÆðÊ¼ÖµÖÃÎª1£¬table[0]²»ÓÃ
+int arrayindex=0;				    //¶¨ÒåÊý×é¼ÇÂ¼±íµÄË÷Òý
+int constindex=0;				    //¶¨Òå³£Á¿¼ÇÂ¼±íµÄË÷Òý
+int funcindex=0;				    //¶¨Òåº¯Êý¼ÇÂ¼±íµÄË÷Òý
+int proindex=0;					    //¶¨Òå¹ý³Ì¼ÇÂ¼±íµÄË÷Òý
+int codeindex=0;				    //¶¨ÒåÖ¸Áî±íµÄË÷Òý
+char currentIdent[MAXLENGTH_NAME];		    //¶¨Òåµ±ÆÚ±êÊ¶·ûµÄÃû×Ö
+FILE *fileIn,*tableOut,*PcodeOut;		    //¶¨ÒåÎÄ¼þµÄÖ¸Õë
+char ch=' ';					    //¶ÁÈ¡ÎÄ¼þµ±Ç°Î»ÖÃµÄ×Ö·û£¬³õÊ¼ÖµÉèÖÃÎª¿Õ¸ñ
+char buf[MAXLENGTH_NAME];			    //¶¨Òå¶ÁÈë×Ö·ûµÄ»º³åÇø£¬Ö±µ½ÊÇÊ¶±ðµÄ·ûºÅ
+char id[MAXLENGTH_NAME];			    //¶¨Òå¶ÁÈëµÄµ±Ç°±êÊ¶·û
+int INumber;					    //¶¨Òåµ±Ç°¶ÁÈëµÄÕûÊý
+double FNumber;					    //¶¨Òåµ±Ç°¶ÁÈëµÄ¸¡µãÊý
+int step;
+/*¶¨ÒåËùÓÐ·ûºÅµÄÒâÒå*/
+typedef enum
+{
+	identsym,							//±êÊ¶·û
+	varsym,constsym,funcsym,prosym,arraysym,ifsym,elsesym,thensym,stringsym,ofsym,
+	intsym,charsym,realsym,	repeatsym,untilsym,dosym,forsym,tosym,downtosym,
+	beginsym,endsym,writesym,readsym,				//¶¨ÒåËùÓÐ±£Áô×Ö
+	addsym,subsym,mulsym,divsym,  					//¼Ó¼õ³Ë³ý
+	eql,neq,lss,leq,						//µÈÓÚ£¬²»µÈÓÚ£¬Ð¡ÓÚ£¬Ð¡ÓÚµÈÓÚ
+	gtr,geq,becomes,						//´óÓÚ£¬´óÓÚµÈÓÚ£¬¸³Öµ
+	lparen,rparen,comma,semicolon,period,colonsym,			//×óÐ¡À¨ºÅ£¬ÓÒÐ¡À¨ºÅ£¬¶ººÅ£¬·ÖºÅ£¬¾äºÅ£¬Ã°ºÅ
+	lbracket,rbracket,						//×óÖÐÀ¨ºÅ£¬ÓÒÖÐÀ¨ºÅ
+	squote,dquote,							//µ¥ÒýºÅ£¬Ë«ÒýºÅ
+	intNumber,floatNumber,						//ÕûÊý£¬ÊµÊý£¨²»Í¬ÓÚintsymºÍrealsym£©
+	character							//×Ö·û£¨²»Í¬ÓÚcharsym£©
+}symbol;
+symbol sym;	//µ±Ç°¶Áµ½µÄ±êÊ¶·û
+
+/*¶¨Òå±£Áô×Ö±í£¬ÓÃÓÚÔÚ´Ê·¨·ÖÎöµÄÊ±ºò¼ì²é*/
+static char reservedWord [RESERVENUM][15]={
+	"var","const","integer","char","real","procedure","of",
+	"if","then","else","repeat","until","do","begin","end","array",
+	"to","downto","read","write","for","function"
+};
+
+/*ºÍÉÏÃæ¶ÔÓ¦µÄ±£Áô×Ö±í£¬·½±ãºóÃæµÄ²é±í¸³Öµ*/
+static symbol reservedSym [RESERVENUM]={
+	varsym,constsym,intsym,charsym,realsym,prosym,ofsym,
+	ifsym,thensym,elsesym,repeatsym,untilsym,dosym,beginsym,endsym,arraysym,
+	tosym,downtosym,readsym,writesym,forsym,funcsym
+};
+
+/*¶¨Òå»ù±¾±äÁ¿µÄÀàÐÍ*/
+typedef enum
+{
+	charkind,intkind,realkind
+}varKind;
+
+
+/*¶¨ÒåÃ¶¾ÙÀàÐÍÀ´ÃèÊöP-codeÖ¸ÁîµÄÖÖÀà*/
+typedef enum
+{
+	Lit,Opr,Lod,Sto,Cal,Int,Jmp,Jpc,WrtI,LodArray,StoArray,RedI,RedR,RedC,StoPara,AssignPara,
+	WrtR,WrtC,LodRet,StoRet,LodAdd,LDA,StoA,Template
+}fct;
+
+/*¶¨Òåstruct½á¹¹À´ÃèÊöÒ»¸öp-codeÖ¸ÁîµÄ½á¹¹*/
+typedef struct
+{
+	fct f;						//P-codeÖ¸ÁîÃû
+	int l;						//²ã´Î
+	double a;					//Æ«ÒÆ
+}instruction;
+static instruction codeTable[1000];			//¶¨ÒåÖ¸Áî±í
+
+
+/*¶¨Òå±êÊ¾·ûµÄÖÖÀà*/
+typedef enum
+{
+	varkind,constkind,prokind,funckind,parakind	//·Ö±ð¶ÔÓ¦ÁË±äÁ¿£¬³£Á¿£¬¹ý³Ì£¬º¯Êý£¬º¯Êý»ò¹ý³ÌµÄ²ÎÊý
+}identKind;
+
+
+
+
+double s[10000];				//ÔËÐÐÕ»
+double paraStack[20];				//±£´æÊµ²ÎµÄÕ»
+int paraT=0;					//¿ØÖÆÊµ²ÎÕ»µÄÕ»¶¥Ö¸Õë
+
+int j;						//ÖÐ¼ä±äÁ¿
+int t;						//Õ»¶¥Ö¸Õë
+int p;						//±£´æÏÂÒ»ÌõÖ¸ÁîµÄµØÖ·
+int b=0;					//µ±Ç°ÔËÐÐµÄ·Ö³ÌÐòµÄÊý¾ÝÇøµÄ»ùµØÖ·
+instruction i;					//µ±Ç°ÒªÖ´ÐÐµÄÖ¸ÁîÃû³Æ
+/*¶¨Òå×î»ù±¾µÄ·ûºÅ±íµÄÀàÐÍ*/
+typedef struct
+{
+	char name[MAXLENGTH_NAME];		//±êÊ¶·ûµÄÃû×Ö
+	varKind type;				//±êÊ¶·ûµÄ»ù±¾ÀàÐÍ:integer,char,real
+	identKind kind;				//±êÊ¶·ûµÄÖÖÀà£º±äÁ¿£¬³£Á¿£¬º¯Êý£¬¹ý³Ì£¬º¯ÊýºÍ¹ý³ÌµÄ²ÎÊý
+	int arrayFlag;				//Èç¹ûÊÇ1Ôò±íÊ¾ÊÇÊý×é
+	int AddUse;				//ÒýÓÃµ÷ÓÃµÄ±ê¼Ç£¬0±íÊ¾´«Öµµ÷ÓÃ£¬1±íÊ¾´«µØÖ·
+	int index; 				/* Èç¹ûÊÇº¯Êý£¬ÔòindexÓÃÀ´¼ìË÷Õâ¸öº¯ÊýÔÚº¯Êý¼ÇÂ¼±íÖÐµÄÎ»ÖÃ
+			   			 * Èç¹ûÊÇÊý×é£¬ÔòindexÓÃÀ´¼ìË÷Õâ¸öÊý×éÔÚÊý×é¼ÇÂ¼±íÖÐµÄÎ»ÖÃ
+						 * Èç¹ûÊÇ³£Á¿£¬ÔòindexÓÃÀ´¼ìË÷Õâ¸ö³£Á¿ÔÚ³£Á¿¼ÇÂ¼±íÖÐµÄÎ»ÖÃ
+						 * Èç¹ûÊÇ¹ý³Ì£¬ÔòindexÓÃÀ´¼ìË÷Õâ¸ö¹ý³ÌÔÚ¹ý³Ì¼ÇÂ¼±íÖÐµÄÎ»ÖÃ
+						 */
+	int level;				//²ã´Î
+	int address;				//Æ«ÒÆ
+
+}tabStruct;
+static tabStruct Table [200];			//·ûºÅ±í
+
+/*Êý×é¶ÔÓ¦µÄ¼ÇÂ¼±íÀàÐÍ*/
+typedef struct
+{
+	varKind type;				//Êý×éµÄ»ù±¾ÀàÐÍ
+	int len;				//Êý×éµÄ³¤¶È
+}arrStruct;
+static arrStruct arrayTable[100];		//¶¨ÒåÊý×éµÄ¼ÇÂ¼±í
+
+/*¶¨Òå³£Á¿¼ÇÂ¼±íÀàÐÍ*/
+typedef struct
+{
+	varKind type;				//¶¨Òå³£Á¿µÄÀàÐÍ:integer,char,real
+	/*·Ö±ð¶¨Òå¼¸ÖÖÀàÐÍ³£Á¿µÄÖµ*/
+	int valueI;
+	char valueC;
+	double valueF;
+}constStruct;
+constStruct constTable[100];			//¶¨Òå³£Á¿µÄ¼ÇÂ¼±í
+
+
+/*¶¨Òåº¯ÊýÀàÐÍ½á¹¹*/
+typedef struct
+{
+	int paraNum;				//¶¨Òåº¯ÊýµÄ²ÎÊý¸öÊý
+	varKind ReturnVal;			//¶¨Òåº¯ÊýµÄ·µ»ØÖµÀàÐÍ
+}funcStruct;
+funcStruct funcTable[50];			//¶¨Òåº¯ÊýµÄ¼ÇÂ¼±í
+
+/*¶¨Òå¹ý³ÌµÄÀàÐÍ½á¹¹*/
+typedef struct
+{
+	int paraNum;				//¶¨Òå¹ý³ÌµÄ²ÎÊý¸öÊý
+}proStruct;
+proStruct proTable[50];				//¶¨Òå¹ý³ÌµÄ¼ÇÂ¼±í
+
+char ERROR_MESSAGE[50][100]={
+	"ERROR0£º×Ö·ûÖÐ´æÔÚ²»ºÏ·¨×Ö·û£¡",
+	"ERROR1£º×Ö·ûÃ»ÓÐÒÔµ¥ÒýºÅ½áÎ²»òÕß×Ö·û³¤¶È³¬¹ý1£¡",
+	"ERROR2£º×Ö·û´®ÖÐ´æÔÚ²»ºÏ·¨×Ö·û£¡",
+	"ERROR3£º·Ç·¨µÄ×Ö·û£¡",
+	"ERROR4£ºÃ»ÓÐÒÔ·ÖºÅ½áÎ²£¡",
+	"ERROR5£º±êÊ¶·ûÖØ¸´¶¨Òå£¡",
+	"ERROR6£º³£Á¿¶¨ÒåÖÐ³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR7£ºÈ±ÉÙµÈºÅ£¡",
+	"ERROR8£º²»ÊÇ±êÊ¶·û»òÕß±êÊ¶·ûÖÐ´æÔÚ²»ºÏ·¨·ûºÅ£¡",
+	"ERROR9£º±äÁ¿¶¨ÒåÖÐ¶ººÅºóÃæÓ¦¸Ã¸úÒ»¸ö±êÊ¶·û£¡",
+	"ERROR10£ºÊý×éµÄ³¤¶ÈÓ¦¸ÃÊÇÎÞ·ûºÅÕûÊý£¡",
+	"ERROR11£ºÈ±ÉÙÖÐÀ¨ºÅ£¡",
+	"ERROR12£º²»´æÔÚµÄÀàÐÍ£¡",
+	"ERROR13£ºº¯Êý»ò¹ý³ÌÉùÃ÷ÖÐ³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR14£º±êÊ¶·ûÎ´¶¨Òå£¡",
+	"ERROR15£ºÈ±ÉÙÐ¡À¨ºÅ£¡",
+	"ERROR16£ºÒò×ÓÖÐ³öÏÖ²»ºÏ·¨µÄ³É·Ö£¡",
+	"ERROR17£ºÊý×éË÷Òý±ØÐëÊÇÕûÐÍ£¡",
+	"ERROR18£ºÌõ¼þÓï¾äÖÐÈ±ÉÙthen!",
+	"ERROR19£ºÀàÐÍ²»Æ¥Åä£¡",
+	"ERROR20£º¶ÁÓï¾äÖÐ³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR21£º²»ÊÇÊý×é£¡",
+	"ERROR22£ºÈ±ÉÙend£¡",
+	"ERROR23£ºÈ±ÉÙdo!",
+	"ERROR24£º²»ÊÇ±äÁ¿£¡",
+	"ERROR25£ºÐ´Óï¾äÖÐ³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR26£ºº¯Êý·µ»ØÖµ²»Æ¥Åä£¡",
+	"ERROR27£º²»ÊÇº¯Êý»ò¹ý³Ì£¡",
+	"ERROR28£ºº¯Êý»ò¹ý³ÌµÄ²ÎÊý¸öÊý²»Æ¥Åä£¡",
+	"ERROR29£ºÊµ²ÎÖÐ³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR30£ºÐÎ²ÎºÍÊµ²ÎµÄÀàÐÍ²»Æ¥Åä£¡",
+	"ERROR31£º¶Á²Ù×÷Ö»ÄÜ¶Ô±äÁ¿½øÐÐ£¡",
+	"ERROR32£ºÈ±ÉÙ¾äºÅ£¡",
+	"ERROR33£º¸³ÖµÓï¾ä³öÏÖ²»ºÏ·¨³É·Ö£¡",
+	"ERROR34£ºÈ±ÉÙ¸³Öµ·ûºÅ:=£¡",
+	"ERROR35£ºcharÇ°Ãæ²»ÄÜ¼Ó¼õºÅ!",
+	"ERROR36£ºÈ±ÉÙbegin£¡",
+	"ERROR37£º´«µØÖ·µ÷ÓÃµÄÊµ²ÎÖ»ÄÜÊÇ±êÊ¶·û»òÊý×éÔªËØ£¡",
+	"ERROR38£ºÃ»ÓÐÐÎ²ÎµÄº¯Êý»ò¹ý³Ì²»ÄÜÓÐÐ¡À¨ºÅ£¡",
+	"ERROR39£º³£Á¿ÉùÃ÷±ØÐëÔÚ±äÁ¿ÉùÃ÷Ö®Ç°£¡",
+	"ERROR40£ºERRORµÄÊý¾ÝÀàÐÍ£¡",
+    "ERROR41£ºÈ±ÉÙby£¡",
+	"ERROR42£ºÈ±ÉÙto!"
+	"ERROR43£ºÈ±ÉÙuntil£¡"
+
+};
