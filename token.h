@@ -14,6 +14,7 @@ extern const char *token_tab[];
 typedef enum token_type 
 {
   /* keywords must come first */
+   /* KEYWORDS */
   TKT_KW_FOR=0,
   TKT_KW_WHILE,
   TKT_KW_CASE,
@@ -23,7 +24,35 @@ typedef enum token_type
   TKT_KW_ELSE,
   TKT_KW_GOTO,
 
+  /* PUNCTUATIONS */
+  TKT_LEFT_PARENTHESIS,
+  TKT_RIGHT_PARENTHESIS,
+  TKT_LEFT_BRACKET,
+  TKT_RIGHT_BRACKET,
+  TKT_LEFT_BRACE,
+  TKT_RIGHT_BRACE,
+  TKT_COLON,
+  TKT_SEMICOLON,
+  TKT_COMMA,
+  TKT_PERIOD,
+  TKT_QUESTION,
 
+  /* OPERATORS */
+  TKT_TILDE,
+  TKT_EXCLAIM,
+  TKT_PERCENT,
+  TKT_CARET,
+  TKT_AMPERSAND,
+  TKT_STAR,
+  TKT_POSITIVE,
+  TKT_NEGATIVE,
+  TKT_LESS,
+  TKT_GREATER,
+  TKT_EQUAL,
+  TKT_SLASH,
+  TKT_VERTICAL_BAR,
+
+  /* IDENTIFIERS */
   TKT_IDENTIFIER,
   TKT_UNKNOWN
 
@@ -38,6 +67,7 @@ typedef struct token
     int integer;
     double dreal;
     float freal;
+    char character;
   } value ;
   int len;
   position begin;

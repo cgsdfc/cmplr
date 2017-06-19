@@ -19,6 +19,8 @@
 #define CHAR_CLASS_SEPARATOR \
   CHAR_CLASS_SPACES CHAR_CLASS_PUNCTUATION CHAR_CLASS_OPERATOR
 
+#define CHAR_CLASS_ONE_CHAR \
+  CHAR_CLASS_PUNCTUATION CHAR_CLASS_OPERATOR
 
 typedef void (* tkz_action) (struct token *, int, char_buffer *);
 

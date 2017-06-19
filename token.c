@@ -29,15 +29,76 @@ const char *token_tab [] =
   [TKT_KW_RETURN]="TKT_KW_RETURN",
   [TKT_IDENTIFIER]="TKT_IDENTIFIER",
   [TKT_KW_WHILE]="TKT_KW_WHILE",
+
+  [TKT_LEFT_PARENTHESIS]="TKT_LEFT_PARENTHESIS",
+  [TKT_RIGHT_PARENTHESIS]="TKT_RIGHT_PARENTHESIS",
+  [TKT_LEFT_BRACKET]="TKT_LEFT_BRACKET",
+  [TKT_RIGHT_BRACKET]="TKT_RIGHT_BRACKET",
+  [TKT_LEFT_BRACE]="TKT_LEFT_BRACE",
+  [TKT_RIGHT_BRACE]="TKT_RIGHT_BRACE",
+  [TKT_COLON]="TKT_COLON",
+  [TKT_SEMICOLON]="TKT_SEMICOLON",
+  [TKT_COMMA]="TKT_COMMA",
+  [TKT_PERIOD]="TKT_PERIOD",
+  [TKT_QUESTION]="TKT_QUESTION",
+
+  /* OPERATORS */
+  [TKT_TILDE]="TKT_TILDE",
+  [TKT_EXCLAIM]="TKT_EXCLAIM",
+  [TKT_PERCENT]="TKT_PERCENT",
+  [TKT_CARET]="TKT_CARET",
+  [TKT_AMPERSAND]="TKT_AMPERSAND",
+  [TKT_STAR]="TKT_STAR",
+  [TKT_POSITIVE]="TKT_POSITIVE",
+  [TKT_NEGATIVE]="TKT_NEGATIVE",
+  [TKT_LESS]="TKT_LESS",
+  [TKT_GREATER]="TKT_GREATER",
+  [TKT_EQUAL]="TKT_EQUAL",
+  [TKT_SLASH]="TKT_SLASH",
+  [TKT_VERTICAL_BAR]="TKT_VERTICAL_BAR",
   [TKT_UNKNOWN]="TKT_UNKNOWN"
 
 };
+
+const static token_type char2type [] =
+{
+  
+  /* PUNCTUATIONS */
+  ['(']=TKT_LEFT_PARENTHESIS,
+  [')']=TKT_RIGHT_PARENTHESIS,
+  ['[']=TKT_LEFT_BRACKET,
+  [']']=TKT_RIGHT_BRACKET,
+  ['{']=TKT_LEFT_BRACE,
+  ['}']=TKT_RIGHT_BRACE,
+  [':']=TKT_COLON,
+  [';']=TKT_SEMICOLON,
+  [',']=TKT_COMMA,
+  ['.']=TKT_PERIOD,
+  ['?']=TKT_QUESTION,
+
+  /* OPERATORS */
+  ['~']=TKT_TILDE,
+  ['!']=TKT_EXCLAIM,
+  ['%']=TKT_PERCENT,
+  ['^']=TKT_CARET,
+  ['&']=TKT_AMPERSAND,
+  ['*']=TKT_STAR,
+  ['+']=TKT_POSITIVE,
+  ['-']=TKT_NEGATIVE,
+  ['<']=TKT_LESS,
+  ['>']=TKT_GREATER,
+  ['=']=TKT_EQUAL,
+  ['/']=TKT_SLASH,
+  ['|']=TKT_VERTICAL_BAR
+
+
+};
+
 
 void init_token(token *tk, int state, char_buffer *buffer)
 {
   tk->len=0;
   memcpy (&tk->begin, &buffer->pos, sizeof (position));
-  memset (&tk->end, 0, sizeof (position));
   append_token(tk,state,buffer);
 
 }
@@ -55,25 +116,51 @@ void skip_token(token *tk, int state, char_buffer *buffer)
   /* do nothing */
 }
 
-void accept_token(token *tk, int state, char_buffer *buffer)
+void acc_identifier(token *tk)
 {
   char *string=tk->value.string;
-  string [tk->len]=0;
-  put_char (buffer);
-  memcpy (&tk->end, &buffer->pos, sizeof (position));
+  tk->value.string [tk->len]=0;
 
-  if (state == TK_IDENTIFIER_END)
+  for (int i=0;i<N_KEYWORDS;++i)
   {
-    for (int i=0;i<N_KEYWORDS;++i)
+    if (keywords_tab[i] && 0==(strcmp(keywords_tab [i], string)))
     {
-      if (keywords_tab[i] && 0==(strcmp(keywords_tab [i], string)))
-      {
-        tk->type = i;
-        return;
-      }
+      tk->type = i;
+      return;
     }
-    tk->type = TKT_IDENTIFIER;
-    return;
+  }
+  tk->type = TKT_IDENTIFIER;
+
+}
+
+void acc_one_char (token *tk, char character)
+{
+  tk->type=char2type[character];
+  tk->value.string [tk->len]=0;
+}
+
+/** note: peek_char(buffer) will be one char pass the 
+ * char that caused the *ACCEPT*
+ * so use prev_char (buffer) to get the char
+ */
+void accept_token(token *tk, int state, char_buffer *buffer)
+{
+  memcpy (&tk->end, &buffer->pos, sizeof (position));
+  char _char =peek_char (buffer);
+
+  switch (state) {
+    case TK_IDENTIFIER_END:
+      acc_identifier(tk);
+      put_char(buffer);
+      return;
+
+    case TK_ONE_CHAR_END:
+      init_token (tk, TK_ONE_CHAR_END, buffer);
+      acc_one_char (tk, prev_char (buffer));
+      return ;
+
+    default:
+      break;
   }
 
 }

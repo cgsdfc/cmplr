@@ -218,6 +218,8 @@ char *peek_line (char_buffer *buffer, int lineno)
   int limit;
   int offset;
   int i;
+  int get_lineno(char_buffer*);
+  int get_line_limit(char_buffer*,int);
 
   limit=get_line_limit(buffer,lineno);
   offset = get_line_offset (buffer, lineno);
@@ -244,7 +246,7 @@ int get_line_limit (char_buffer *buffer, int lineno)
 void check_peek_line (char_buffer *buffer)
 {
   int offset;
-
+#if 0
   offset = get_line_offset(buffer, 1);
   assert (offset == 0);
   printf(peek_line(buffer, 1));
@@ -256,7 +258,7 @@ void check_peek_line (char_buffer *buffer)
   offset = get_line_offset (buffer, 3);
   assert (offset == get_line_limit(buffer,2) + get_line_limit(buffer, 1));
   printf(peek_line(buffer, 3));
-
+#endif
 
   printf ("check_peek_line passed\n");
 }

@@ -53,7 +53,8 @@ bool can_transfer(transfer_entry *entry, int character)
     return false;
   }
   bool is_in_class = strchr (entry->char_class, character);
-  return (is_in_class || entry->is_reversed);
+  return (is_in_class && !entry->is_reversed) ||
+    (!is_in_class && entry->is_reversed);
 
 }
 
@@ -93,8 +94,9 @@ void init_table (void)
 
   add_transfer(TK_INIT, TK_IDENTIFIER_BEGIN, false, false, CHAR_CLASS_IDENTIFIER_BEGIN, init_token);
   add_transfer(TK_INIT, TK_INIT, false, false, CHAR_CLASS_SPACES, skip_token);
-  add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, true, false, CHAR_CLASS_SPACES, accept_token);
+  add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, true, true, CHAR_CLASS_IDENTIFIER_PART, accept_token);
   add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_BEGIN, false, false, CHAR_CLASS_IDENTIFIER_PART, append_token);
+  add_transfer(TK_INIT, TK_ONE_CHAR_END, true, false, CHAR_CLASS_ONE_CHAR, accept_token);
 
 }
 
@@ -120,9 +122,9 @@ void check_init_table (void)
   }
 
   /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_END */
-  for (int i=0;i<strlen (CHAR_CLASS_SPACES); ++i)
+  for (int i=0;i<strlen (CHAR_CLASS_SEPARATOR); ++i)
   {
-    int letter = CHAR_CLASS_SPACES[i]; 
+    int letter = CHAR_CLASS_SEPARATOR[i];
     assert (can_transfer (seek_entry(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END), letter));
   }
 
@@ -133,10 +135,27 @@ void check_init_table (void)
     assert (can_transfer (seek_entry(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_BEGIN), letter));
   }
 
+  /* check TK_INIT -> TK_ONE_CHAR_END */
+  for (int i=0;i<strlen (CHAR_CLASS_ONE_CHAR); ++i)
+  {
+    int one_char = CHAR_CLASS_ONE_CHAR[i];
+    assert (can_transfer (seek_entry(TK_INIT, TK_ONE_CHAR_END), one_char));
+  }
   printf ("check_init_table passed\n");
 
 }
 
+const char *token_state_tab[]=
+{
+  
+  [TK_INIT]="TK_INIT",
+  [TK_IDENTIFIER_BEGIN]="TK_IDENTIFIER_BEGIN",
+  [TK_IDENTIFIER_END]="TK_IDENTIFIER_END",
+  [TK_ONE_CHAR_BEGIN]="TK_ONE_CHAR_BEGIN",
+  [TK_ONE_CHAR_END]="TK_ONE_CHAR_END",
+  
+  [TK_NULL]="TK_NULL"
+};
 
 int get_next_token(token *tk, char_buffer *buffer)
 {
@@ -146,11 +165,12 @@ int get_next_token(token *tk, char_buffer *buffer)
 
   transfer_entry *entry;
   bool accepted=false;
-  int state = TK_INIT;
+  tokenizer_state state = TK_INIT;
   static bool last_accepted;
 
   while (!accepted) {
     int _char = get_char (buffer);
+    printf("state = %s char = %c\n", token_state_tab[state], _char);
     if (_char == EOF) {
       if (state == TK_INIT) 
         return EOF;
@@ -158,6 +178,7 @@ int get_next_token(token *tk, char_buffer *buffer)
         return E_PREMATURE_END;
     }
     state = do_transfer (state ,_char,&entry);
+    printf("state' = %s\n", token_state_tab[state]);
     if (state == TK_NULL) {
       put_char(buffer);
       return E_UNEXPECTED_CHAR;
