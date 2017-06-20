@@ -132,8 +132,12 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
   void acc_integer(token *tk);
   if (is_tokenizable_operator (state))
   {
+     /* never put bach char here, no needed */
+    _clear_token(tk);
     _set_token_type (tk, state2operator[state]);
     _terminate_token(tk);
+    _set_token_pos(tk,buffer,POS_BEGIN);
+    _set_token_pos(tk,buffer,POS_END);
     return;
   }
   switch (state) {

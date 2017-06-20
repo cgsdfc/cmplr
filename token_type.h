@@ -109,6 +109,10 @@ typedef enum token_type
 
   /* ITERALS */
   TKT_INTEGER_ITERAL,
+  TKT_AMPERSAND,
+  TKT_STAR,
+  TKT_PLUS,
+  TKT_MINUS,
   TKT_UNKNOWN
 
 

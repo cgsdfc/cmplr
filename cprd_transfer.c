@@ -98,7 +98,7 @@ void add_transfer(tokenizer_state from,
 
 }
 
-static void add_initial(char *char_class,node to)
+static void add_initial(node to, char *char_class)
 {
   add_transfer (TK_INIT, to, 0,TFE_ACT_INIT,char_class);
 }
@@ -200,15 +200,14 @@ void init_identifier(void)
 void init_dec_integer(void)
 {
   add_initial(TK_INT_DEC_BEGIN, CHAR_CLASS_DEC_BEGIN);
-  // TODO: change it to CHAR_CLASS_DEC_PART
-  add_selfloop(TK_INT_DEC_BEGIN, CHAR_CLASS_TEN_DIGITS);
+  add_selfloop(TK_INT_DEC_BEGIN, CHAR_CLASS_DEC_PART);
   add_intermedia(TK_INT_DEC_BEGIN,TK_INT_LONG,"lL");
   add_intermedia(TK_INT_DEC_BEGIN,TK_INT_UNSIGNED,"uU");
   add_intermedia(TK_INT_UNSIGNED,TK_INT_LONG,"lL");
   add_intermedia(TK_INT_LONG,TK_INT_UNSIGNED,"uU");
-  add_intermedia(TK_INT_LONG,TK_INT_END,CHAR_CLASS_SEPARATOR);
-  add_intermedia(TK_INT_UNSIGNED,TK_INT_END,CHAR_CLASS_SEPARATOR);
-  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_END,CHAR_CLASS_SEPARATOR);
+  add_accepted(TK_INT_LONG,TK_INT_END,CHAR_CLASS_SEPARATOR);
+  add_accepted(TK_INT_UNSIGNED,TK_INT_END,CHAR_CLASS_SEPARATOR);
+  add_accepted(TK_INT_DEC_BEGIN,TK_INT_END,CHAR_CLASS_SEPARATOR);
 
 }
 
@@ -251,6 +250,12 @@ void init_multi_line_coment(void)
 
 }
 
+void init_operator_div(void)
+{
+  add_initial(TK_SLASH,"/");
+  add_accepted_rev(TK_SLASH, TK_SLASH_END, "/*=");
+  add_accepted(TK_SLASH, TK_SLASH_EQUAL,"=");
+}
 
 void init_table (void)
 {
@@ -259,52 +264,27 @@ void init_table (void)
   add_transfer(TK_INIT, TK_INIT, 0, TFE_ACT_SKIP, CHAR_CLASS_SPACES);
 
   /* identifier */
-  add_transfer(TK_INIT, TK_IDENTIFIER_BEGIN,0,TFE_ACT_INIT, CHAR_CLASS_IDENTIFIER_BEGIN);
-  add_transfer(TK_IDENTIFIER_BEGIN,TK_IDENTIFIER_BEGIN,0,TFE_ACT_APPEND,CHAR_CLASS_IDENTIFIER_PART);
-  add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END,TFE_FLAG_ACCEPTED | TFE_FLAG_REVERSED,
-      TFE_ACT_ACCEPT, CHAR_CLASS_IDENTIFIER_PART);
+  init_identifier();
 
-  /* one_char -- punctuation or operator */
-  /* TODO: some operator need two chars, remove them from here */
-  add_transfer(TK_INIT, TK_PUNCTUATION_END, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, CHAR_CLASS_PUNCTUATION);
+  /* punctuation */
+  init_punctuation();
 
   /* integer -- dec, oct, hex, long or not , unsigned or not */
-  add_transfer(TK_INIT, TK_INT_DEC_BEGIN, 0, TFE_ACT_INIT,"123456789");
-  add_transfer(TK_INT_DEC_BEGIN, TK_INT_DEC_BEGIN, 0,TFE_ACT_APPEND,  CHAR_CLASS_TEN_DIGITS);
-  add_transfer(TK_INT_DEC_BEGIN, TK_INT_END, 0, TFE_ACT_ACCEPT, CHAR_CLASS_SEPARATOR);
-  add_transfer(TK_INT_DEC_BEGIN, TK_INT_LONG, 0, TFE_ACT_APPEND , "lL");
-  add_transfer(TK_INT_LONG, TK_INT_END, 0,  TFE_ACT_ACCEPT, CHAR_CLASS_SEPARATOR);
-  add_transfer(TK_INT_LONG, TK_INT_UNSIGNED, 0, TFE_ACT_APPEND, "uU");
-  add_transfer(TK_INT_UNSIGNED, TK_INT_END, 0, TFE_FLAG_ACCEPTED, CHAR_CLASS_SEPARATOR);
+  init_integer_literal();
 
   /* slash begin token -- single line coment, multi_line coment, operator div and  operator div_assign */
 
   /* div and div_assign */
-  add_transfer(TK_INIT,TK_SLASH,0,TFE_ACT_INIT,"/");
-  add_transfer(TK_SLASH, TK_SLASH_END, TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT, "*=/");
-  add_transfer(TK_SLASH,TK_SLASH_EQUAL, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT,"=");
+  init_operator_div();
 
   /* single line coment */
-  add_transfer(TK_SLASH,TK_SINGLE_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"/");
-  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN,TK_SINGLE_LINE_COMENT_BEGIN, 
-      TFE_FLAG_REVERSED,TFE_ACT_SKIP, "\n\r");
-  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN, TK_INIT,0,TFE_ACT_SKIP,"\n\r");
+  init_single_line_coment();
 
   /* multi_line coment */
-  add_transfer(TK_SLASH,TK_MULTI_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"*");
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,
-      TFE_ACT_SKIP, "/*");
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_END, 0, TFE_ACT_SKIP,
-      "*");
-  add_transfer(TK_MULTI_LINE_COMENT_END,TK_MULTI_LINE_COMENT_BEGIN,TFE_FLAG_REVERSED, TFE_ACT_SKIP,"/");
-  add_transfer(TK_MULTI_LINE_COMENT_END, TK_INIT,0,TFE_ACT_SKIP,"/");
-
-  /* bad multi_line comment */
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_BAD_MULTI_LINE_COMENT, 0, TFE_ACT_SKIP,"/");
-  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_NULL, 0,TFE_ACT_SKIP,"*");
-  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,TFE_ACT_SKIP,"*");
+  init_multi_line_coment();
 
   /* operators */
+  init_exclaim_like_operator();
   
 
 }
@@ -316,15 +296,28 @@ void add_tilde_like_operator (tokenizer_state state, char *char_class)
 }
 
 /** accepted only needs 3 states */
-void add_exclaim_like_operator (tokenizer_state state[3], char *char_class[2])
+void add_3states_2chars(tokenizer_state state[3], char *char_class[2])
 {
-
   // ! -> !=
-  add_transfer(TK_INIT,state[0] ,0,TFE_ACT_APPEND, char_class[0]);
-  add_transfer(state[0],state[1],TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,char_class[1]);
-  add_transfer(state[0],state[2],TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT,char_class[1]);
+  add_initial(state[0],char_class[0]);
+  add_accepted_rev(state[0],state[1],char_class[1]);
+  add_accepted(state[0], state[2],char_class[1]);
 
 }
+
+void init_exclaim_like_operator() {
+  char *chars[][2]={
+    { "!", "=" }, { "=", "=" } 
+  };
+  node nodes[2][3]={
+    { TK_EXCLAIM, TK_EXCLAIM_END, TK_EXCLAIM_EQUAL },
+    { TK_EQUAL, TK_EQUAL_END, TK_EQUAL_EQUAL }
+  };
+  for (int i=0;i<2;++i) {
+    add_3states_2chars (nodes[i], chars[i]);
+  }
+}
+
 
 void add_greater_like_operator (tokenizer_state state [5], char *char_class[2])
 {
