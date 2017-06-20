@@ -270,7 +270,7 @@ void check_char_buffer (void)
   FILE *input;
   int r;
   int ch;
-  char *file="./test/init.c";
+  char *file="../test/init.c";
 
   r=init_char_buffer (&buffer, file);
   assert (r==0);

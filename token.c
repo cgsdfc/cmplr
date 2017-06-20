@@ -56,6 +56,9 @@ const char *token_tab [] =
   [TKT_EQUAL]="TKT_EQUAL",
   [TKT_SLASH]="TKT_SLASH",
   [TKT_VERTICAL_BAR]="TKT_VERTICAL_BAR",
+
+  /* ITERALS */
+  [TKT_INTEGER_ITERAL]="TKT_INTEGER_ITERAL",
   [TKT_UNKNOWN]="TKT_UNKNOWN"
 
 };
@@ -94,20 +97,73 @@ const static token_type char2type [] =
 
 };
 
+typedef enum pos_enum
+{
+  POS_BEGIN, POS_END
+} pos_enum;
+
+void _set_token_pos (token *tk, char_buffer *buffer, pos_enum begin)
+{
+  switch (begin) {
+    case POS_BEGIN:
+      memcpy (&tk->begin, &buffer->pos, sizeof (position));
+      return;
+    case POS_END:
+      memcpy (&tk->end, &buffer->pos, sizeof (position));
+      return;
+    default:
+      return;
+  }
+      
+}
+
+void _terminate_token (token *tk)
+{
+  tk->value.string [tk->len]=0;
+}
+
+void _catchar_token (token *tk, char ch)
+{
+  int len = tk->len;
+  tk->value.string [len] = ch;
+  tk->len=len+1;
+
+}
+
+void _clear_token (token *tk)
+{
+  memset (tk, 0, sizeof *tk);
+
+}
 
 void init_token(token *tk, int state, char_buffer *buffer)
 {
-  tk->len=0;
-  memcpy (&tk->begin, &buffer->pos, sizeof (position));
-  append_token(tk,state,buffer);
+  _clear_token(tk);
+  _set_token_pos(tk, buffer, POS_BEGIN);
+  _catchar_token(tk, prev_char(buffer));
+
+  switch (state) {
+    case TK_INT_DEC_BEGIN:
+      break;
+    case TK_IDENTIFIER_BEGIN:
+      break;
+    default:
+      break;
+  }
 
 }
 
 void append_token(token *tk, int state, char_buffer *buffer)
 {
-  int len = tk->len;
-  tk->value.string [len] = prev_char (buffer);
-  tk->len=len+1;
+  _catchar_token(tk,prev_char (buffer));
+  switch (state) {
+    case TK_INT_DEC_BEGIN:
+      break;
+    case TK_IDENTIFIER_BEGIN:
+      break;
+    default:
+      break;
+  }
 
 }
 
@@ -118,12 +174,10 @@ void skip_token(token *tk, int state, char_buffer *buffer)
 
 void acc_identifier(token *tk)
 {
-  char *string=tk->value.string;
-  tk->value.string [tk->len]=0;
 
   for (int i=0;i<N_KEYWORDS;++i)
   {
-    if (keywords_tab[i] && 0==(strcmp(keywords_tab [i], string)))
+    if (keywords_tab[i] && 0==(strcmp(keywords_tab [i], tk->value.string)))
     {
       tk->type = i;
       return;
@@ -132,38 +186,68 @@ void acc_identifier(token *tk)
   tk->type = TKT_IDENTIFIER;
 
 }
-
-void acc_one_char (token *tk, char character)
-{
-  tk->type=char2type[character];
-  tk->value.string [tk->len]=0;
-}
-
+  
 /** note: peek_char(buffer) will be one char pass the 
  * char that caused the *ACCEPT*
  * so use prev_char (buffer) to get the char
  */
 void accept_token(token *tk, int state, char_buffer *buffer)
 {
-  memcpy (&tk->end, &buffer->pos, sizeof (position));
-  char _char =peek_char (buffer);
 
+  void acc_integer(token *tk);
+  void acc_one_char(token *tk, char);
   switch (state) {
     case TK_IDENTIFIER_END:
+      _terminate_token(tk);
       acc_identifier(tk);
       put_char(buffer);
+      _set_token_pos(tk,buffer,POS_END);
       return;
 
     case TK_ONE_CHAR_END:
-      init_token (tk, TK_ONE_CHAR_END, buffer);
+      _set_token_pos(tk,buffer,POS_BEGIN);
+      _set_token_pos(tk,buffer,POS_END);
       acc_one_char (tk, prev_char (buffer));
       return ;
+
+    case TK_INT_END:
+      _terminate_token(tk);
+      acc_integer(tk);
+      put_char(buffer);
+      return;
 
     default:
       break;
   }
 
 }
+
+
+void acc_one_char (token *tk, char character)
+{
+  _catchar_token(tk,character);
+  _terminate_token(tk);
+  tk->type=char2type[character];
+}
+
+void acc_integer (token *tk)
+{
+  char *value = tk->value.string;
+  tk->type = TKT_INTEGER_ITERAL;
+  switch (tk->value.property.int_flag) {
+    case INT_FLAG_UNSIGNED:
+      tk->value.number.uint= (unsigned int) atoi (value);
+      return;
+    case INT_FLAG_LONG:
+      tk->value.number.long_int=atol(value);
+      return;
+    case ( INT_FLAG_LONG | INT_FLAG_UNSIGNED ):
+      tk->value.number.ulong=(unsigned long) atol(value);
+      return;
+  }
+
+}
+
 
 char *format_token (token *tk) 
 {

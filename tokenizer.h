@@ -1,10 +1,19 @@
 /* tokenizer.h */
 #ifndef TOKENIZER_H
 #define TOKENIZER_H 1
+#include <sys/types.h>
+#include <stdbool.h>
+#include<stdlib.h>
+#include <assert.h>
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
+#include "tokenizer.h"
+
 #include "char_buffer.h"
 #include "token.h"
 
-#define MAX_TRANSFER_ENTRIES 10
+#define MAX_TRANSFER_ENTRIES 50
 
 #define CHAR_CLASS_LOWER_CASE "abcdefghijklmnopqrstuvwxyz"
 #define CHAR_CLASS_UPPER_CASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -22,18 +31,7 @@
 #define CHAR_CLASS_ONE_CHAR \
   CHAR_CLASS_PUNCTUATION CHAR_CLASS_OPERATOR
 
-typedef void (* tkz_action) (struct token *, int, char_buffer *);
 
-
-typedef struct transfer_entry 
-{
-  enum tokenizer_state state;
-  bool is_accepted;
-  bool is_reversed;
-  char *char_class;
-  tkz_action tkz_act;
-
-} transfer_entry;
 
 typedef enum tkz_error
 {
@@ -43,12 +41,10 @@ typedef enum tkz_error
 
 } tkz_error ;
 
-typedef struct tk_status
-{
-  bool is_eof_hit;
-  bool is_last_accepted;
-
-} tk_status;
+void init_table (void);
+void check_table (void);
+void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
+int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate);
 
 #endif
 

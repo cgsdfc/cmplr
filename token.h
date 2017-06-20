@@ -54,9 +54,19 @@ typedef enum token_type
 
   /* IDENTIFIERS */
   TKT_IDENTIFIER,
+
+  /* ITERALS */
+  TKT_INTEGER_ITERAL,
   TKT_UNKNOWN
 
+
 } token_type;
+
+typedef enum integer_flag
+{
+  INT_FLAG_UNSIGNED=1,
+  INT_FLAG_LONG=2
+} integer_flag ;
 
 typedef struct token 
 {
@@ -64,11 +74,24 @@ typedef struct token
   union 
   {
     char string[MAX_TOKEN_LEN];
-    int integer;
-    double dreal;
-    float freal;
+    union
+    {
+      int integer;
+      unsigned int uint;
+      long long_int;
+      unsigned long ulong;
+      double dreal;
+      float freal;
+    } number;
+
+    union 
+    {
+      integer_flag int_flag;
+    } property;
+
     char character;
   } value ;
+
   int len;
   position begin;
   position end;

@@ -1,0 +1,15 @@
+project (cmplr)
+cmake_minimum_required(VERSION 3.5)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
+set(tokenizer_src token.c state.c char_buffer.c)
+set(use_compressed TRUE)
+if(use_compressed)
+  list(APPEND tokenizer_src cprd_transfer.c)
+else()
+  list(APPEND tokenizer_src transfer.c)
+endif()
+
+add_library(tokenizer_lib ${tokenizer_src})
+add_executable(tokenizer tokenizer.c)
+target_link_libraries(tokenizer tokenizer_lib)
+
