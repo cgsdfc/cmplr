@@ -15,21 +15,76 @@ const char *keywords_tab [] =
   [TKT_KW_CASE]="case",
   [TKT_KW_GOTO]="goto",
   [TKT_KW_RETURN]="return",
-  [TKT_UNKNOWN]="unknown"
+
+
+  [TKT_KW_AUTO]="auto",
+  [TKT_KW_DOUBLE]="double",
+  [TKT_KW_STRUCT]="struct",
+  [TKT_KW_BREAK]="break",
+  [TKT_KW_LONG]="long",
+  [TKT_KW_ENUM]="enum",
+  [TKT_KW_REGISTER]="register",
+  [TKT_KW_TYPEDEF]="typedef",
+  [TKT_KW_CHAR]="char",
+  [TKT_KW_EXTERN]="extern",
+  [TKT_KW_UNION ]="union",
+  [TKT_KW_CONST ]="const",
+  [TKT_KW_FLOAT ]="float",
+  [TKT_KW_SHORT ]="short",
+  [TKT_KW_UNSIGNED ]="unsigned",
+  [TKT_KW_CONTINUE ]="continue",
+  [TKT_KW_SIGNED ]="signed",
+  [TKT_KW_VOID ]="void",
+  [TKT_KW_DEFAULT ]="default",
+  [TKT_KW_SIZEOF ]="sizeof",
+  [TKT_KW_VOLATILE ]="volatile",
+  [TKT_KW_DO ]="do",
+  [TKT_KW_STATIC ]="static",
+  [TKT_KW_INT]="int",
+
+
+  [TKT_UNKNOWN]="TKT_UNKNOWN"
 
 };
 
 const char *token_tab [] = 
 {
+  /* KEYWORDS */
   [TKT_KW_IF]="TKT_KW_IF",
   [TKT_KW_FOR]="TKT_KW_FOR",
   [TKT_KW_ELSE]="TKT_KW_ELSE",
   [TKT_KW_GOTO]="TKT_KW_GOTO",
+  [TKT_KW_CASE]="TKT_KW_CASE",
   [TKT_KW_SWITCH]="TKT_KW_SWITCH",
   [TKT_KW_RETURN]="TKT_KW_RETURN",
   [TKT_IDENTIFIER]="TKT_IDENTIFIER",
   [TKT_KW_WHILE]="TKT_KW_WHILE",
+  [TKT_KW_AUTO]="TKT_KW_AUTO",
+  [TKT_KW_DOUBLE]="TKT_KW_DOUBLE",
+  [TKT_KW_STRUCT]="TKT_KW_STRUCT",
+  [TKT_KW_BREAK]="TKT_KW_BREAK",
+  [TKT_KW_LONG]="TKT_KW_LONG",
+  [TKT_KW_ENUM]="TKT_KW_ENUM",
+  [TKT_KW_REGISTER]="TKT_KW_REGISTER",
+  [TKT_KW_TYPEDEF]="TKT_KW_TYPEDEF",
+  [TKT_KW_CHAR]="TKT_KW_CHAR",
+  [TKT_KW_EXTERN]="TKT_KW_EXTERN",
+  [TKT_KW_UNION]="TKT_KW_UNION",
+  [TKT_KW_CONST]="TKT_KW_CONST",
+  [TKT_KW_FLOAT]="TKT_KW_FLOAT",
+  [TKT_KW_SHORT]="TKT_KW_SHORT",
+  [TKT_KW_UNSIGNED]="TKT_KW_UNSIGNED",
+  [TKT_KW_CONTINUE]="TKT_KW_CONTINUE",
+  [TKT_KW_SIGNED]="TKT_KW_SIGNED",
+  [TKT_KW_VOID]="TKT_KW_VOID",
+  [TKT_KW_DEFAULT]="TKT_KW_DEFAULT",
+  [TKT_KW_SIZEOF]="TKT_KW_SIZEOF",
+  [TKT_KW_VOLATILE]="TKT_KW_VOLATILE",
+  [TKT_KW_DO]="TKT_KW_DO",
+  [TKT_KW_STATIC]="TKT_KW_STATIC",
+  [TKT_KW_INT]="TKT_KW_INT",
 
+  /* PUNCTUATION */
   [TKT_LEFT_PARENTHESIS]="TKT_LEFT_PARENTHESIS",
   [TKT_RIGHT_PARENTHESIS]="TKT_RIGHT_PARENTHESIS",
   [TKT_LEFT_BRACKET]="TKT_LEFT_BRACKET",
