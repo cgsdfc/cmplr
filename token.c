@@ -130,7 +130,6 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
 
   char _char;
   void acc_integer(token *tk);
-  void acc_one_char(token *tk, char);
   if (is_tokenizable_operator (state))
   {
     _set_token_type (tk, state2operator[state]);
@@ -145,7 +144,7 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
       _set_token_pos(tk,buffer,POS_END);
       return;
 
-    case TK_ONE_CHAR_END:
+    case TK_PUNCTUATION_END:
       _char=prev_char(buffer);
       _clear_token(tk);
       _catchar_token(tk,_char);

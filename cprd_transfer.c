@@ -1,4 +1,5 @@
 #include "cprd_transfer.h"
+typedef tokenizer_state node;
 
 static transfer_table_t table;
 static int entry_counters[MAX_TRANSFER_ENTRIES];
@@ -97,6 +98,41 @@ void add_transfer(tokenizer_state from,
 
 }
 
+static void add_initial(char *char_class,node to)
+{
+  add_transfer (TK_INIT, to, 0,TFE_ACT_INIT,char_class);
+}
+
+
+static void add_intermedia_rev (node from, node to, char *char_class ) 
+{
+  add_transfer(from, to, TFE_FLAG_REVERSED, TFE_ACT_APPEND, char_class);
+}
+
+static void add_intermedia (node from, node to, char* char_class) 
+{
+  add_transfer(from, to, 0, TFE_ACT_APPEND, char_class);
+}
+
+static void add_selfloop (node from, char *char_class)
+{
+  add_intermedia(from,from,char_class);
+}
+
+static void add_selfloop_rev (node from, char *char_class)
+{
+  add_intermedia_rev(from,from,char_class);
+}
+
+static void add_accepted_rev(node from,  node to, char * char_class) 
+{
+  add_transfer(from, to, TFE_FLAG_REVERSED|TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
+}
+static void add_accepted(node from, node to , char *char_class) 
+{
+  add_transfer(from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
+}
+
 tokenizer_state do_transfer(tokenizer_state state,
     int ch, transfer_entry **entry)
 {
@@ -147,12 +183,75 @@ void check_init_table (void)
   /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_BEGIN */
   check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
 
-    /* check TK_INIT -> TK_ONE_CHAR_END */
-  check_can_transfer(TK_INIT,TK_ONE_CHAR_END,CHAR_CLASS_ONE_CHAR);
+    /* check TK_INIT -> TK_PUNCTUATION_END */
+  check_can_transfer(TK_INIT,TK_PUNCTUATION_END,CHAR_CLASS_PUNCTUATION);
   
   printf ("check_init_table passed\n");
 
 }
+
+void init_identifier(void)
+{
+  add_initial(TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
+  add_selfloop (TK_IDENTIFIER_BEGIN, CHAR_CLASS_IDENTIFIER_PART);
+  add_accepted_rev(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, CHAR_CLASS_IDENTIFIER_PART);
+}
+
+void init_dec_integer(void)
+{
+  add_initial(TK_INT_DEC_BEGIN, CHAR_CLASS_DEC_BEGIN);
+  // TODO: change it to CHAR_CLASS_DEC_PART
+  add_selfloop(TK_INT_DEC_BEGIN, CHAR_CLASS_TEN_DIGITS);
+  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_LONG,"lL");
+  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_UNSIGNED,"uU");
+  add_intermedia(TK_INT_UNSIGNED,TK_INT_LONG,"lL");
+  add_intermedia(TK_INT_LONG,TK_INT_UNSIGNED,"uU");
+  add_intermedia(TK_INT_LONG,TK_INT_END,CHAR_CLASS_SEPARATOR);
+  add_intermedia(TK_INT_UNSIGNED,TK_INT_END,CHAR_CLASS_SEPARATOR);
+  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_END,CHAR_CLASS_SEPARATOR);
+
+}
+
+void init_integer_literal(void)
+{
+  init_dec_integer();
+}
+
+void init_punctuation(void)
+{
+  add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION);
+}
+
+void init_single_line_coment(void)
+{
+ /* single line coment */
+  add_transfer(TK_SLASH,TK_SINGLE_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"/");
+  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN,TK_SINGLE_LINE_COMENT_BEGIN, 
+      TFE_FLAG_REVERSED,TFE_ACT_SKIP, "\n\r");
+  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN, TK_INIT,0,TFE_ACT_SKIP,"\n\r");
+
+
+}
+
+void init_multi_line_coment(void)
+{
+  /* multi_line coment */
+  add_transfer(TK_SLASH,TK_MULTI_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"*");
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,
+      TFE_ACT_SKIP, "/*");
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_END, 0, TFE_ACT_SKIP,
+      "*");
+  add_transfer(TK_MULTI_LINE_COMENT_END,TK_MULTI_LINE_COMENT_BEGIN,TFE_FLAG_REVERSED, TFE_ACT_SKIP,"/");
+  add_transfer(TK_MULTI_LINE_COMENT_END, TK_INIT,0,TFE_ACT_SKIP,"/");
+
+  /* bad multi_line comment */
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_BAD_MULTI_LINE_COMENT, 0, TFE_ACT_SKIP,"/");
+  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_NULL, 0,TFE_ACT_SKIP,"*");
+  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,TFE_ACT_SKIP,"*");
+
+}
+
+
 void init_table (void)
 {
   void add_transfer (tokenizer_state , tokenizer_state , entry_flag, entry_action, char*);
@@ -167,7 +266,7 @@ void init_table (void)
 
   /* one_char -- punctuation or operator */
   /* TODO: some operator need two chars, remove them from here */
-  add_transfer(TK_INIT, TK_ONE_CHAR_END, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, CHAR_CLASS_ONE_CHAR);
+  add_transfer(TK_INIT, TK_PUNCTUATION_END, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, CHAR_CLASS_PUNCTUATION);
 
   /* integer -- dec, oct, hex, long or not , unsigned or not */
   add_transfer(TK_INIT, TK_INT_DEC_BEGIN, 0, TFE_ACT_INIT,"123456789");
@@ -205,8 +304,38 @@ void init_table (void)
   add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_NULL, 0,TFE_ACT_SKIP,"*");
   add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,TFE_ACT_SKIP,"*");
 
+  /* operators */
+  
 
 }
+
+/* accepted only needs one state */
+void add_tilde_like_operator (tokenizer_state state, char *char_class)
+{
+  add_accepted(TK_INIT,state,char_class);
+}
+
+/** accepted only needs 3 states */
+void add_exclaim_like_operator (tokenizer_state state[3], char *char_class[2])
+{
+
+  // ! -> !=
+  add_transfer(TK_INIT,state[0] ,0,TFE_ACT_APPEND, char_class[0]);
+  add_transfer(state[0],state[1],TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,char_class[1]);
+  add_transfer(state[0],state[2],TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT,char_class[1]);
+
+}
+
+void add_greater_like_operator (tokenizer_state state [5], char *char_class[2])
+{
+  // < -> << -> <= -> <<= 
+  add_transfer(TK_INIT,state[0],0,TFE_ACT_APPEND,char_class[0]);
+  add_transfer(state[0],state[1],TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT,char_class[0]);
+  add_transfer(state[0],state [2], 0, TFE_ACT_APPEND,char_class[0]);
+  add_transfer(state [2], state [3], TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_APPEND,char_class[1]);
+  add_transfer(state [2], state [4], TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT,char_class[1]);
+}
+
 
 int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate)
 {
