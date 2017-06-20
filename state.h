@@ -64,8 +64,10 @@ typedef enum tokenizer_state
 
   TK_AMPERSAND_AMPERSAND,
   TK_LESS_LESS,
+  TK_LESS_LESS_END,
   TK_LESS_LESS_EQUAL,
   TK_GREATER_GREATER,
+  TK_GREATER_GREATER_END,
   TK_GREATER_GREATER_EQUAL,
   TK_VERTICAL_BAR_END,
   TK_VERTICAL_BAR_BAR,
@@ -92,6 +94,7 @@ typedef enum tokenizer_state
 } tokenizer_state;
 
 enum token_type;
+typedef tokenizer_state node;
 
 
 #endif

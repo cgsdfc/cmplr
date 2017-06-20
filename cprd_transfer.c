@@ -1,4 +1,6 @@
 #include "cprd_transfer.h"
+#include "operator.h"
+
 typedef tokenizer_state node;
 
 static transfer_table_t table;
@@ -98,37 +100,37 @@ void add_transfer(tokenizer_state from,
 
 }
 
-static void add_initial(node to, char *char_class)
+void add_initial(node to, char *char_class)
 {
   add_transfer (TK_INIT, to, 0,TFE_ACT_INIT,char_class);
 }
 
 
-static void add_intermedia_rev (node from, node to, char *char_class ) 
+void add_intermedia_rev (node from, node to, char *char_class ) 
 {
   add_transfer(from, to, TFE_FLAG_REVERSED, TFE_ACT_APPEND, char_class);
 }
 
-static void add_intermedia (node from, node to, char* char_class) 
+void add_intermedia (node from, node to, char* char_class) 
 {
   add_transfer(from, to, 0, TFE_ACT_APPEND, char_class);
 }
 
-static void add_selfloop (node from, char *char_class)
+void add_selfloop (node from, char *char_class)
 {
   add_intermedia(from,from,char_class);
 }
 
-static void add_selfloop_rev (node from, char *char_class)
+void add_selfloop_rev (node from, char *char_class)
 {
   add_intermedia_rev(from,from,char_class);
 }
 
-static void add_accepted_rev(node from,  node to, char * char_class) 
+void add_accepted_rev(node from,  node to, char * char_class) 
 {
   add_transfer(from, to, TFE_FLAG_REVERSED|TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
 }
-static void add_accepted(node from, node to , char *char_class) 
+void add_accepted(node from, node to , char *char_class) 
 {
   add_transfer(from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
 }
@@ -179,13 +181,13 @@ void check_init_table (void)
 
   /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_END */
   check_can_transfer(TK_IDENTIFIER_BEGIN,TK_IDENTIFIER_END,CHAR_CLASS_SEPARATOR);
-  
+
   /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_BEGIN */
   check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
 
-    /* check TK_INIT -> TK_PUNCTUATION_END */
+  /* check TK_INIT -> TK_PUNCTUATION_END */
   check_can_transfer(TK_INIT,TK_PUNCTUATION_END,CHAR_CLASS_PUNCTUATION);
-  
+
   printf ("check_init_table passed\n");
 
 }
@@ -223,7 +225,7 @@ void init_punctuation(void)
 
 void init_single_line_coment(void)
 {
- /* single line coment */
+  /* single line coment */
   add_transfer(TK_SLASH,TK_SINGLE_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"/");
   add_transfer(TK_SINGLE_LINE_COMENT_BEGIN,TK_SINGLE_LINE_COMENT_BEGIN, 
       TFE_FLAG_REVERSED,TFE_ACT_SKIP, "\n\r");
@@ -284,49 +286,9 @@ void init_table (void)
   init_multi_line_coment();
 
   /* operators */
-  init_exclaim_like_operator();
-  
-
-}
-
-/* accepted only needs one state */
-void add_tilde_like_operator (tokenizer_state state, char *char_class)
-{
-  add_accepted(TK_INIT,state,char_class);
-}
-
-/** accepted only needs 3 states */
-void add_3states_2chars(tokenizer_state state[3], char *char_class[2])
-{
-  // ! -> !=
-  add_initial(state[0],char_class[0]);
-  add_accepted_rev(state[0],state[1],char_class[1]);
-  add_accepted(state[0], state[2],char_class[1]);
-
-}
-
-void init_exclaim_like_operator() {
-  char *chars[][2]={
-    { "!", "=" }, { "=", "=" } 
-  };
-  node nodes[2][3]={
-    { TK_EXCLAIM, TK_EXCLAIM_END, TK_EXCLAIM_EQUAL },
-    { TK_EQUAL, TK_EQUAL_END, TK_EQUAL_EQUAL }
-  };
-  for (int i=0;i<2;++i) {
-    add_3states_2chars (nodes[i], chars[i]);
-  }
-}
+  init_operator();
 
 
-void add_greater_like_operator (tokenizer_state state [5], char *char_class[2])
-{
-  // < -> << -> <= -> <<= 
-  add_transfer(TK_INIT,state[0],0,TFE_ACT_APPEND,char_class[0]);
-  add_transfer(state[0],state[1],TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT,char_class[0]);
-  add_transfer(state[0],state [2], 0, TFE_ACT_APPEND,char_class[0]);
-  add_transfer(state [2], state [3], TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_APPEND,char_class[1]);
-  add_transfer(state [2], state [4], TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT,char_class[1]);
 }
 
 

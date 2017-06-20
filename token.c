@@ -121,6 +121,11 @@ bool is_tokenizable_operator(tokenizer_state state)
   return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
 }
 
+bool is_one_char_operator (tokenizer_state state)
+{
+  return _TK_OPERATOR_ONE_CHAR_BEGIN < state && state < _TK_OPERATOR_ONE_CHAR_END;
+}
+
 /** note: peek_char(buffer) will be one char pass the 
  * char that caused the *ACCEPT*
  * so use prev_char (buffer) to get the char
@@ -138,6 +143,10 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
     _terminate_token(tk);
     _set_token_pos(tk,buffer,POS_BEGIN);
     _set_token_pos(tk,buffer,POS_END);
+    if (is_one_char_operator (state)) 
+    {
+      put_char(buffer);
+    }
     return;
   }
   switch (state) {
