@@ -62,22 +62,53 @@ typedef enum token_type
   TKT_PERIOD,
   TKT_QUESTION,
 
-  /* OPERATORS */
-  TKT_TILDE,
-  TKT_EXCLAIM,
-  TKT_PERCENT,
-  TKT_CARET,
-  TKT_AMPERSAND,
-  TKT_STAR,
-  TKT_POSITIVE,
-  TKT_NEGATIVE,
-  TKT_LESS,
-  TKT_GREATER,
-  TKT_EQUAL,
-  TKT_SLASH,
-  TKT_VERTICAL_BAR,
+  TKT_BINARY_OP_ADD,
+  TKT_BINARY_OP_SUB,
+  TKT_BINARY_OP_DIV,
+  TKT_BINARY_OP_MUL,
+  TKT_BINARY_OP_MOD  ,
+  TKT_BINARY_OP_MOD_ASSIGN  ,
+  TKT_BINARY_OP_ADD_ASSIGN,
+  TKT_BINARY_OP_SUB_ASSIGN,
+  TKT_BINARY_OP_DIV_ASSIGN,
+  TKT_BINARY_OP_MUL_ASSIGN,
 
-  /* IDENTIFIERS */
+
+  TKT_BINARY_OP_ASSIGN,
+
+  TKT_BINARY_OP_BIT_AND_ASSIGN,
+  TKT_BINARY_OP_BIT_OR_ASSIGN,
+  TKT_BINARY_OP_BIT_XOR_ASSIGN,
+  TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN,
+  TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN,
+
+
+  TKT_BINARY_OP_BIT_AND,
+  TKT_BINARY_OP_BIT_OR,
+  TKT_BINARY_OP_BIT_XOR,
+  TKT_BINARY_OP_BIT_LEFT_SHIFT,
+  TKT_BINARY_OP_BIT_RIGHT_SHIFT,
+
+  TKT_BINARY_OP_LOGICAL_AND,
+  TKT_BINARY_OP_LOGICAL_OR ,
+  TKT_BINARY_OP_CMP_LESS  ,
+  TKT_BINARY_OP_CMP_LESS_EQUAL  ,
+  TKT_BINARY_OP_CMP_GREATER  ,
+  TKT_BINARY_OP_CMP_GREATER_EQUAL ,
+  TKT_BINARY_OP_CMP_EQUAL ,
+  TKT_BINARY_OP_CMP_NOT_EQUAL  ,
+  TKT_BINARY_OP_MEMBER_DOT  ,
+  TKT_BINARY_OP_MEMBER_ARROW,
+
+  /* UNARY OPERATORS */
+  TKT_UNARY_OP_LOGICAL_NOT  ,
+  TKT_UNARY_OP_BIT_NOT  ,
+  TKT_UNARY_OP_PLUS_PLUS  ,
+  TKT_UNARY_OP_MINUS_MINUS  ,
+  TKT_UNARY_OP_NEGATIVE  ,
+  TKT_UNARY_OP_ADDRESS  ,
+  TKT_UNARY_OP_DEREFERENCE  ,
+    /* IDENTIFIERS */
   TKT_IDENTIFIER,
 
   /* ITERALS */
@@ -124,10 +155,10 @@ typedef struct token
 } token;
 
 
-void init_token(struct token*,int,char_buffer*);
-void append_token(struct token*,int,char_buffer*);
-void skip_token(struct token*,int,char_buffer*);
-void accept_token(struct token*,int,char_buffer*);
+void init_token(struct token*,tokenizer_state,char_buffer*);
+void append_token(struct token*,tokenizer_state,char_buffer*);
+void skip_token(struct token*,tokenizer_state,char_buffer*);
+void accept_token(struct token*,tokenizer_state,char_buffer*);
 char *format_token(struct token*);
 
 #endif

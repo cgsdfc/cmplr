@@ -1,10 +1,16 @@
 #include <stdio.h>
+#include <stdbool.h>
+#include <assert.h>
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include "token.h"
 #include "state.h"
 #include "char_buffer.h"
 
+/** NOTICE: do not change this */
 const char *keywords_tab [] = 
 {
   [TKT_KW_FOR]="for",
@@ -98,19 +104,54 @@ const char *token_tab [] =
   [TKT_QUESTION]="TKT_QUESTION",
 
   /* OPERATORS */
-  [TKT_TILDE]="TKT_TILDE",
-  [TKT_EXCLAIM]="TKT_EXCLAIM",
-  [TKT_PERCENT]="TKT_PERCENT",
-  [TKT_CARET]="TKT_CARET",
-  [TKT_AMPERSAND]="TKT_AMPERSAND",
-  [TKT_STAR]="TKT_STAR",
-  [TKT_POSITIVE]="TKT_POSITIVE",
-  [TKT_NEGATIVE]="TKT_NEGATIVE",
-  [TKT_LESS]="TKT_LESS",
-  [TKT_GREATER]="TKT_GREATER",
-  [TKT_EQUAL]="TKT_EQUAL",
-  [TKT_SLASH]="TKT_SLASH",
-  [TKT_VERTICAL_BAR]="TKT_VERTICAL_BAR",
+
+  /* BINARY OPERATORS */
+  [TKT_BINARY_OP_ADD]="TKT_BINARY_OP_ADD", // +
+  [TKT_BINARY_OP_SUB]="TKT_BINARY_OP_SUB", // -
+  [TKT_BINARY_OP_DIV]="TKT_BINARY_OP_DIV", // /
+  [TKT_BINARY_OP_MUL]="TKT_BINARY_OP_MUL", // *
+  [TKT_BINARY_OP_MOD  ]="TKT_BINARY_OP_MOD  ", // %
+  [TKT_BINARY_OP_MOD_ASSIGN  ]="TKT_BINARY_OP_MOD_ASSIGN  ", // %=
+  [TKT_BINARY_OP_ADD_ASSIGN]="TKT_BINARY_OP_ADD_ASSIGN", // +=
+  [TKT_BINARY_OP_SUB_ASSIGN]="TKT_BINARY_OP_SUB_ASSIGN", // -=
+  [TKT_BINARY_OP_DIV_ASSIGN]="TKT_BINARY_OP_DIV_ASSIGN", // /=
+  [TKT_BINARY_OP_MUL_ASSIGN]="TKT_BINARY_OP_MUL_ASSIGN", // *=
+
+
+  [TKT_BINARY_OP_ASSIGN]="TKT_BINARY_OP_ASSIGN", // =
+
+  [TKT_BINARY_OP_BIT_AND_ASSIGN]="TKT_BINARY_OP_BIT_AND_ASSIGN", // &=
+  [TKT_BINARY_OP_BIT_OR_ASSIGN]="TKT_BINARY_OP_BIT_OR_ASSIGN", // |=
+  [TKT_BINARY_OP_BIT_XOR_ASSIGN]="TKT_BINARY_OP_BIT_XOR_ASSIGN", // ^=
+  [TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN]="TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN", // <<=
+  [TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN]="TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN", // >>=
+
+
+  [TKT_BINARY_OP_BIT_AND]="TKT_BINARY_OP_BIT_AND", // &
+  [TKT_BINARY_OP_BIT_OR]="TKT_BINARY_OP_BIT_OR", // |
+  [TKT_BINARY_OP_BIT_XOR]="TKT_BINARY_OP_BIT_XOR", // ^
+  [TKT_BINARY_OP_BIT_LEFT_SHIFT]="TKT_BINARY_OP_BIT_LEFT_SHIFT",// >>
+  [TKT_BINARY_OP_BIT_RIGHT_SHIFT]="TKT_BINARY_OP_BIT_RIGHT_SHIFT", // <<
+
+  [TKT_BINARY_OP_LOGICAL_AND]="TKT_BINARY_OP_LOGICAL_AND", // && 
+  [TKT_BINARY_OP_LOGICAL_OR ]="TKT_BINARY_OP_LOGICAL_OR ", // ||
+  [TKT_BINARY_OP_CMP_LESS  ]="TKT_BINARY_OP_CMP_LESS  ", // <
+  [TKT_BINARY_OP_CMP_LESS_EQUAL  ]="TKT_BINARY_OP_CMP_LESS_EQUAL  ", // <=
+  [TKT_BINARY_OP_CMP_GREATER  ]="TKT_BINARY_OP_CMP_GREATER  ", // >
+  [TKT_BINARY_OP_CMP_GREATER_EQUAL ]="TKT_BINARY_OP_CMP_GREATER_EQUAL ", // >=
+  [TKT_BINARY_OP_CMP_EQUAL ]="TKT_BINARY_OP_CMP_EQUAL ", // == 
+  [TKT_BINARY_OP_CMP_NOT_EQUAL  ]="TKT_BINARY_OP_CMP_NOT_EQUAL  ", // !=
+  [TKT_BINARY_OP_MEMBER_DOT  ]="TKT_BINARY_OP_MEMBER_DOT  ",// a.c
+  [TKT_BINARY_OP_MEMBER_ARROW]="TKT_BINARY_OP_MEMBER_ARROW", // a->c
+
+  /* UNARY OPERATORS */
+  [TKT_UNARY_OP_LOGICAL_NOT  ]="TKT_UNARY_OP_LOGICAL_NOT  ", // !
+  [TKT_UNARY_OP_BIT_NOT  ]="TKT_UNARY_OP_BIT_NOT  ",//~a
+  [TKT_UNARY_OP_PLUS_PLUS  ]="TKT_UNARY_OP_PLUS_PLUS  ",//++a
+  [TKT_UNARY_OP_MINUS_MINUS  ]="TKT_UNARY_OP_MINUS_MINUS  ",//--a
+  [TKT_UNARY_OP_NEGATIVE  ]="TKT_UNARY_OP_NEGATIVE  ",//-a
+  [TKT_UNARY_OP_ADDRESS  ]="TKT_UNARY_OP_ADDRESS  ",// &a
+  [TKT_UNARY_OP_DEREFERENCE  ]="TKT_UNARY_OP_DEREFERENCE  ", // *p
 
   /* ITERALS */
   [TKT_INTEGER_ITERAL]="TKT_INTEGER_ITERAL",
@@ -134,21 +175,13 @@ const static token_type char2type [] =
   ['.']=TKT_PERIOD,
   ['?']=TKT_QUESTION,
 
-  /* OPERATORS */
-  ['~']=TKT_TILDE,
-  ['!']=TKT_EXCLAIM,
-  ['%']=TKT_PERCENT,
-  ['^']=TKT_CARET,
-  ['&']=TKT_AMPERSAND,
-  ['*']=TKT_STAR,
-  ['+']=TKT_POSITIVE,
-  ['-']=TKT_NEGATIVE,
-  ['<']=TKT_LESS,
-  ['>']=TKT_GREATER,
-  ['=']=TKT_EQUAL,
-  ['/']=TKT_SLASH,
-  ['|']=TKT_VERTICAL_BAR
+};
 
+// TODO: map accepted operator state to operator type's
+const static token_type state2operator []=
+{
+  [TK_SLASH_END]=TKT_BINARY_OP_DIV,
+  [TK_SLASH_EQUAL]=TKT_BINARY_OP_DIV_ASSIGN,
 
 };
 
@@ -156,6 +189,7 @@ typedef enum pos_enum
 {
   POS_BEGIN, POS_END
 } pos_enum;
+
 
 void _set_token_pos (token *tk, char_buffer *buffer, pos_enum begin)
 {
@@ -191,7 +225,12 @@ void _clear_token (token *tk)
 
 }
 
-void init_token(token *tk, int state, char_buffer *buffer)
+void _set_token_type(token *tk, token_type type)
+{
+  tk->type=type;
+}
+
+void init_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
   _clear_token(tk);
   _set_token_pos(tk, buffer, POS_BEGIN);
@@ -208,7 +247,7 @@ void init_token(token *tk, int state, char_buffer *buffer)
 
 }
 
-void append_token(token *tk, int state, char_buffer *buffer)
+void append_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
   _catchar_token(tk,prev_char (buffer));
   switch (state) {
@@ -222,9 +261,18 @@ void append_token(token *tk, int state, char_buffer *buffer)
 
 }
 
-void skip_token(token *tk, int state, char_buffer *buffer)
+void skip_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
   /* do nothing */
+#ifndef NDEBUG // when debug, print out the comment we collect so far
+  switch (state) {
+    case TK_MULTI_LINE_COMENT_BEGIN:
+    case TK_SINGLE_LINE_COMENT_BEGIN:
+    case TK_MULTI_LINE_COMENT_END:
+      printf ("%c", prev_char (buffer));
+      return;
+  }
+#endif
 }
 
 void acc_identifier(token *tk)
@@ -242,15 +290,27 @@ void acc_identifier(token *tk)
 
 }
   
+bool is_tokenizable_operator(tokenizer_state state)
+{
+  return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
+}
+
 /** note: peek_char(buffer) will be one char pass the 
  * char that caused the *ACCEPT*
  * so use prev_char (buffer) to get the char
  */
-void accept_token(token *tk, int state, char_buffer *buffer)
+void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
 
+  char _char;
   void acc_integer(token *tk);
   void acc_one_char(token *tk, char);
+  if (is_tokenizable_operator (state))
+  {
+    _set_token_type (tk, state2operator[state]);
+    _terminate_token(tk);
+    return;
+  }
   switch (state) {
     case TK_IDENTIFIER_END:
       _terminate_token(tk);
@@ -260,9 +320,13 @@ void accept_token(token *tk, int state, char_buffer *buffer)
       return;
 
     case TK_ONE_CHAR_END:
+      _char=prev_char(buffer);
+      _clear_token(tk);
+      _catchar_token(tk,_char);
+      _terminate_token(tk);
       _set_token_pos(tk,buffer,POS_BEGIN);
       _set_token_pos(tk,buffer,POS_END);
-      acc_one_char (tk, prev_char (buffer));
+      _set_token_type(tk, char2type[_char]);
       return ;
 
     case TK_INT_END:
@@ -277,13 +341,6 @@ void accept_token(token *tk, int state, char_buffer *buffer)
 
 }
 
-
-void acc_one_char (token *tk, char character)
-{
-  _catchar_token(tk,character);
-  _terminate_token(tk);
-  tk->type=char2type[character];
-}
 
 void acc_integer (token *tk)
 {

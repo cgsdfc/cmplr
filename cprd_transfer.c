@@ -178,6 +178,32 @@ void init_table (void)
   add_transfer(TK_INT_LONG, TK_INT_UNSIGNED, 0, TFE_ACT_APPEND, "uU");
   add_transfer(TK_INT_UNSIGNED, TK_INT_END, 0, TFE_FLAG_ACCEPTED, CHAR_CLASS_SEPARATOR);
 
+  /* slash begin token -- single line coment, multi_line coment, operator div and  operator div_assign */
+
+  /* div and div_assign */
+  add_transfer(TK_INIT,TK_SLASH,0,TFE_ACT_INIT,"/");
+  add_transfer(TK_SLASH, TK_SLASH_END, TFE_FLAG_ACCEPTED|TFE_FLAG_REVERSED,TFE_ACT_ACCEPT, "*=/");
+  add_transfer(TK_SLASH,TK_SLASH_EQUAL, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT,"=");
+
+  /* single line coment */
+  add_transfer(TK_SLASH,TK_SINGLE_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"/");
+  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN,TK_SINGLE_LINE_COMENT_BEGIN, 
+      TFE_FLAG_REVERSED,TFE_ACT_SKIP, "\n\r");
+  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN, TK_INIT,0,TFE_ACT_SKIP,"\n\r");
+
+  /* multi_line coment */
+  add_transfer(TK_SLASH,TK_MULTI_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"*");
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,
+      TFE_ACT_SKIP, "/*");
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_END, 0, TFE_ACT_SKIP,
+      "*");
+  add_transfer(TK_MULTI_LINE_COMENT_END,TK_MULTI_LINE_COMENT_BEGIN,TFE_FLAG_REVERSED, TFE_ACT_SKIP,"/");
+  add_transfer(TK_MULTI_LINE_COMENT_END, TK_INIT,0,TFE_ACT_SKIP,"/");
+
+  /* bad multi_line comment */
+  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_BAD_MULTI_LINE_COMENT, 0, TFE_ACT_SKIP,"/");
+  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_NULL, 0,TFE_ACT_SKIP,"*");
+  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,TFE_ACT_SKIP,"*");
 
 
 }
@@ -226,6 +252,9 @@ int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate)
 
       case TFE_ACT_INIT:
         init_token(tk,nstate,buffer);
+        break;
+      case TFE_ACT_SKIP:
+        skip_token(tk,nstate,buffer);
         break;
     }
   } 
