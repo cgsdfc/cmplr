@@ -9,21 +9,68 @@
 
 
 
-
-void check_all(void)
-{
-  void check_char_buffer(void);
-  check_char_buffer();
-  
-  check_table();
-}
-
 const char *tokenizer_err_tab [] =
 {
   [E_PREMATURE_END]="premature end of input",
   [E_UNEXPECTED_CHAR]="unexpected character"
 
 };
+
+
+int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate)
+{
+  if (peek_char(buffer) == EOF) {
+    return EOF;
+  }
+
+  transfer_entry entry;
+  bool accepted=false;
+  tokenizer_state state=TK_INIT;
+  tokenizer_state nstate = TK_NULL;
+  int _char;
+
+  while (!accepted) 
+  {
+    *errstate=state;
+    _char = get_char (buffer);
+    if(_char == EOF) {
+      if (state == TK_INIT)
+        return EOF;
+      else
+        return E_PREMATURE_END;
+    }
+
+    nstate = do_transfer(state, _char, &entry);
+    if (nstate == TK_NULL)
+    {
+      put_char(buffer);
+      return E_UNEXPECTED_CHAR;
+    }
+
+    accepted = TFE_IS_ACCEPTED(entry);
+    state = nstate;
+    switch (TFE_ACTION(entry))
+    {
+      case TFE_ACT_ACCEPT:
+        accept_token(tk,nstate,buffer);
+        break;
+
+      case TFE_ACT_APPEND:
+        append_token(tk,nstate,buffer);
+        break;
+
+      case TFE_ACT_INIT:
+        init_token(tk,nstate,buffer);
+        break;
+      case TFE_ACT_SKIP:
+        skip_token(tk,nstate,buffer);
+        break;
+    }
+  } 
+
+  return 0;
+}
+
 
 void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state)
 {
@@ -49,7 +96,6 @@ void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state
 
 
 int main(int ac,char**av){ 
-  check_all();
 
   if (ac != 2)
   {

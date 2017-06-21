@@ -8,29 +8,8 @@
 #include<stdio.h>
 #include<string.h>
 #include<ctype.h>
-#include "tokenizer.h"
-
-#include "char_buffer.h"
+#include "transfer.h"
 #include "token.h"
-
-
-#define CHAR_CLASS_LOWER_CASE "abcdefghijklmnopqrstuvwxyz"
-#define CHAR_CLASS_UPPER_CASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-#define CHAR_CLASS_DEC_BEGIN "123456789" 
-#define CHAR_CLASS_DEC_PART "0123456789" 
-#define CHAR_CLASS_IDENTIFIER_BEGIN "_" CHAR_CLASS_LOWER_CASE CHAR_CLASS_UPPER_CASE
-#define CHAR_CLASS_IDENTIFIER_PART CHAR_CLASS_IDENTIFIER_BEGIN CHAR_CLASS_DEC_PART
-#define CHAR_CLASS_SPACES " \t\n\r\f\v"
-#define CHAR_CLASS_NEWLINE "\n\r"
-#define CHAR_CLASS_PUNCTUATION "(){}[]:;,.?"
-#define CHAR_CLASS_OPERATOR "~!%^&*-+<>=/|"
-#define CHAR_CLASS_BACKSLASH "\\"
-
-#define CHAR_CLASS_SEPARATOR \
-  CHAR_CLASS_SPACES CHAR_CLASS_PUNCTUATION CHAR_CLASS_OPERATOR
-
-
-
 
 typedef enum tkz_error
 {
@@ -40,8 +19,6 @@ typedef enum tkz_error
 
 } tkz_error ;
 
-void init_table (void);
-void check_table (void);
 void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
 int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate);
 

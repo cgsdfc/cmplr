@@ -23,7 +23,7 @@ void init_escape_hex_literal(void)
 
   /* => '\x */
   add_intermedia(TK_CHAR_LITERAL_ESCAPED,TK_CHAR_LITERAL_HEX_BEGIN,
-      "x");
+     CHAR_CLASS_X);
 
   /* => '\xf */
   add_intermedia(TK_CHAR_LITERAL_HEX_BEGIN,TK_CHAR_LITERAL_HEX_END,
@@ -75,7 +75,7 @@ void init_escape_single(void)
       CHAR_CLASS_SINGLE_ESCAPE_NON_ZERO);
 
   /* => '\0 */
-  add_intermedia(TK_CHAR_LITERAL_ESCAPED, TK_CHAR_LITERAL_ZERO,"0");
+  add_intermedia(TK_CHAR_LITERAL_ESCAPED, TK_CHAR_LITERAL_ZERO,CHAR_CLASS_ZERO);
 
   /* => '\0' */
   add_accepted(TK_CHAR_LITERAL_ZERO,TK_CHAR_LITERAL_END,CHAR_CLASS_SINGLE_QUOTE);

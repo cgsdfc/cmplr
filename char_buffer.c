@@ -89,7 +89,7 @@ int init_char_buffer_from_file (char_buffer *buffer, char *file)
 
     return init_char_buffer (buffer, f, chars, lines);
   } while (0);
-  perror ("init_char_buffer_from_file");
+  perror (file);
   return -1;
 
 }
