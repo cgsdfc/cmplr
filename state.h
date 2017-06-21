@@ -3,6 +3,13 @@
 
 extern const char *token_state_tab[];
 
+// TODO: make the table smaller
+// by dynamically alloc rows of len(all states)
+// but only non-accepted states have a column
+// namely: accepted state has no column
+// when accepted is much more than non-accepted
+// which is always the case, 
+// use second scheme to save space 
 typedef enum tokenizer_state
 {
   TK_INIT=0,
@@ -99,6 +106,16 @@ typedef enum tokenizer_state
   /*!ACCEPTED OPERATOR STATES */
   /*!OPERATOR STATES */
 
+  TK_CHAR_LITERAL_BEGIN,
+  TK_CHAR_LITERAL_PART,
+  TK_CHAR_LITERAL_END,
+  TK_BAD_CHAR_LITERAL,
+  TK_CHAR_LITERAL_ESCAPED,
+  TK_CHAR_LITERAL_OCT_BEGIN,
+  TK_CHAR_LITERAL_OCT_END,
+  TK_CHAR_LITERAL_HEX_BEGIN,
+  TK_CHAR_LITERAL_HEX_END,
+  TK_CHAR_LITERAL_ZERO,
 
   TK_NULL
 } tokenizer_state;

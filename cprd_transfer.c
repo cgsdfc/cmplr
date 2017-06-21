@@ -1,5 +1,6 @@
 #include "cprd_transfer.h"
 #include "operator.h"
+#include "char_literal.h"
 
 typedef tokenizer_state node;
 
@@ -287,6 +288,8 @@ void init_table (void)
 
   /* operators */
   init_operator();
+
+  init_char_literal();
 
 
 }

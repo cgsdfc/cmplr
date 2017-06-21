@@ -54,7 +54,7 @@ int main(int ac,char**av){
   if (ac != 2)
   {
     printf("Usage: %s input \n", av[0]);
-    goto error;
+    exit(0);
   }
 
 
@@ -65,7 +65,7 @@ int main(int ac,char**av){
   char_buffer buffer;
   tokenizer_state errstate;
 
-  if (init_char_buffer (&buffer, av[1])<0)
+  if (init_char_buffer_from_file (&buffer, av[1])<0)
   {
     perror (av[0]);
     exit(1);

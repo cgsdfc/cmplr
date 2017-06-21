@@ -25,7 +25,8 @@ typedef struct char_buffer
 
 } char_buffer;
 
-int init_char_buffer (char_buffer *buffer, char *);
+int init_char_buffer_from_string (char_buffer *buffer, char *);
+int init_char_buffer_from_file (char_buffer *buffer, char *);
 int peek_char (char_buffer *);
 int put_char (char_buffer *);
 int get_char (char_buffer *);

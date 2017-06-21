@@ -190,6 +190,14 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
       put_char(buffer);
       return;
 
+    case TK_CHAR_LITERAL_END:
+      _char=prev_char(buffer);
+      _catchar_token(tk,_char);
+      _terminate_token(tk);
+      _set_token_type(tk,TKT_CHARACTER_LITERAL);
+      _set_token_pos(tk,buffer,POS_END);
+      return;
+
     default:
       break;
   }
@@ -200,7 +208,7 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
 void acc_integer (token *tk)
 {
   char *value = tk->value.string;
-  tk->type = TKT_INTEGER_ITERAL;
+  tk->type = TKT_INTEGER_LITERAL;
   switch (tk->value.property.int_flag) {
     case INT_FLAG_UNSIGNED:
       tk->value.number.uint= (unsigned int) atoi (value);
