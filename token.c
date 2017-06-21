@@ -10,6 +10,7 @@
 #include "state.h"
 #include "char_buffer.h"
 
+// TODO: refactor this file
 typedef enum oper_enum 
 {
   IS_OPER, IS_OPER_PUT_BACK
@@ -196,6 +197,14 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
       _catchar_token(tk,_char);
       _terminate_token(tk);
       _set_token_type(tk,TKT_CHARACTER_LITERAL);
+      _set_token_pos(tk,buffer,POS_END);
+      return;
+
+    case TK_STRING_LITERAL_END:
+      _char=prev_char(buffer);
+      _catchar_token(tk,_char);
+      _terminate_token(tk);
+      _set_token_type(tk,TKT_STRING_LITERAL);
       _set_token_pos(tk,buffer,POS_END);
       return;
 

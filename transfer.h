@@ -2,24 +2,48 @@
 #define TRANSFER_H 1
 #include "tokenizer.h"
 
-#define TFE_STATE(e) ((e)->state)
-#define TFE_IS_ACCEPTED(e) ((e)->is_accepted)
-#define TFE_IS_REVERSED(e) ((e)->is_reversed)
+typedef unsigned int entry_t;
+/* transfer_entry flags */
+typedef enum entry_flag 
+{
+  TFE_FLAG_ACCEPTED=0x1,
+  TFE_FLAG_REVERSED=0X2
+
+} entry_flag;
+
+/* transfer actions */
+typedef enum entry_action
+{
+  TFE_ACT_INIT = 1,
+  TFE_ACT_APPEND = 2,
+  TFE_ACT_ACCEPT = 3,
+  TFE_ACT_SKIP=4
+
+} entry_action;
+
+/* bit shift of fields */
+#define TFE_STATE_SHIFT ( 2 )
+#define TFE_ACTION_SHIFT ( 20 + TFE_STATE_SHIFT )
+#define TFE_ACTION_MASK (~(0xF << TFE_ACTION_SHIFT))
 
 
-typedef void (* tkz_action) (struct token *, int, char_buffer *);
+/* fields accessor */
+#define TFE_IS_ACCEPTED(e) ((e) & TFE_FLAG_ACCEPTED) 
+#define TFE_IS_REVERSED(e) ((e) & TFE_FLAG_REVERSED) 
+#define TFE_ACTION(e) ((e) >> TFE_ACTION_SHIFT)
+#define TFE_STATE(e) (((e)& TFE_ACTION_MASK )>> TFE_STATE_SHIFT)
+#define TFE_MAKE_ENTRY(a,s,f)\
+  ( (entry_t) ((a)<<TFE_ACTION_SHIFT | (s) << TFE_STATE_SHIFT | (f)) )
+
 
 typedef struct transfer_entry 
 {
-  enum tokenizer_state state;
-  bool is_accepted;
-  bool is_reversed;
+  entry_t entry;
   char *char_class;
-  tkz_action tkz_act;
 
 } transfer_entry;
-void add_transfer(int this_state, int state, bool is_accepted, bool is_reversed, char *char_class, tkz_action act);
 
-
+typedef transfer_entry transfer_table_t [MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
+void add_transfer (tokenizer_state , tokenizer_state , entry_flag, entry_action, char*);
 #endif
 
