@@ -224,8 +224,6 @@ char *peek_line (char_buffer *buffer, int lineno)
   limit=get_line_limit(buffer,lineno);
   offset = get_line_offset (buffer, lineno);
 
-  printf("limit = %d, offset = %d\n",
-      limit, offset);
 
   for (i=0;i<limit;++i)
   {

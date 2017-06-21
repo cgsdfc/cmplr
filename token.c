@@ -10,6 +10,10 @@
 #include "state.h"
 #include "char_buffer.h"
 
+typedef enum oper_enum 
+{
+  IS_OPER, IS_OPER_PUT_BACK
+} oper_enum;
 
 typedef enum pos_enum
 {
@@ -116,15 +120,28 @@ void acc_identifier(token *tk)
 
 }
   
+bool is_oper_type (node state, oper_enum op)
+{
+  switch (op) {
+    case IS_OPER:
+      return _TK_OPERATOR_ACCEPT_BEGIN < state &&
+        state < _TK_OPERATOR_ACCEPT_END;
+
+    case IS_OPER_PUT_BACK:
+      return _TK_OPERATOR_ACCEPT_BEGIN < state &&
+        state < _TK_OPERATOR_PUT_BACK;
+
+    default:
+      return false;
+  }
+
+}
+
 bool is_tokenizable_operator(tokenizer_state state)
 {
   return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
 }
 
-bool is_one_char_operator (tokenizer_state state)
-{
-  return _TK_OPERATOR_ONE_CHAR_BEGIN < state && state < _TK_OPERATOR_ONE_CHAR_END;
-}
 
 /** note: peek_char(buffer) will be one char pass the 
  * char that caused the *ACCEPT*
@@ -135,7 +152,7 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
 
   char _char;
   void acc_integer(token *tk);
-  if (is_tokenizable_operator (state))
+  if (is_oper_type (state, IS_OPER))
   {
      /* never put bach char here, no needed */
     _clear_token(tk);
@@ -143,7 +160,7 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
     _terminate_token(tk);
     _set_token_pos(tk,buffer,POS_BEGIN);
     _set_token_pos(tk,buffer,POS_END);
-    if (is_one_char_operator (state)) 
+    if (is_oper_type (state, IS_OPER_PUT_BACK))
     {
       put_char(buffer);
     }

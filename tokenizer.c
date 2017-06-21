@@ -68,7 +68,7 @@ int main(int ac,char**av){
   if (init_char_buffer (&buffer, av[1])<0)
   {
     perror (av[0]);
-    goto error;
+    exit(1);
   }
 
   init_table();

@@ -277,7 +277,7 @@ void init_table (void)
   /* slash begin token -- single line coment, multi_line coment, operator div and  operator div_assign */
 
   /* div and div_assign */
-  init_operator_div();
+  /* init_operator_div(); */
 
   /* single line coment */
   init_single_line_coment();

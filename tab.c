@@ -22,6 +22,9 @@ const token_type char2type [] =
 // TODO: map accepted operator state to operator type's
 const token_type state2operator []=
 {
+  /* tilde_like_operator */
+  [TK_TILDE]=TKT_UNARY_OP_BIT_NOT,
+
   /* slash_like_operator */ 
   /* slash */
   [TK_SLASH_END]=TKT_BINARY_OP_DIV,
