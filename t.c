@@ -21,7 +21,5 @@ int main(int ac,char**av){
   char *bbb="\'";
   assert (strcmp (bb, bbb)==0);
 
-  char _='
-    a';
 
 }

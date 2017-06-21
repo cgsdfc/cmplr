@@ -1,7 +1,7 @@
 project (cmplr)
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
-set(tokenizer_src char_literal.c keyword.c token_type.c tab.c token.c state.c char_buffer.c operator.c)
+set(tokenizer_src string_literal.c char_literal.c keyword.c token_type.c tab.c token.c state.c char_buffer.c operator.c)
 set(use_compressed TRUE)
 if(use_compressed)
   list(APPEND tokenizer_src cprd_transfer.c)

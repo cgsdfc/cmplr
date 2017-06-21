@@ -10,13 +10,14 @@
 #define OP_MAX_STATE 7
 #define N_OPERATOR_KINDS 4
 #define OP_MAX_PER_KIND 7
-
+// TODO: arrow operator -> do it
 typedef void (*op_init)(node *,  char *, char *);
 
 void add_1state(node *state, char *op, char *rej);
 void add_3states(node *state, char *op, char *rej);
 void add_4states(node *state, char *op, char *rej);
 void add_6states(node *state, char *op, char *rej);
+void add_arrow_operator(void);
 
 /** the `reject` field is quite tricky:
  * for every kind of operators, 
@@ -118,7 +119,7 @@ static op_struct operators[]=
       "&","|","+","-"
     },
     .reject={
-      "&=","|=","+=","-="
+      "&=","|=","+=","-=>"
     },
     .init=add_4states
 
@@ -198,6 +199,7 @@ void check_operators(void)
 void init_operator(void) 
 {
   check_operators();
+  add_arrow_operator();
   for (int i=0;i<N_OPERATOR_KINDS;++i)
   {
     op_struct *ops=&operators[i];
@@ -213,6 +215,11 @@ void init_operator(void)
     }
   }
 
+}
+
+void add_arrow_operator(void)
+{
+  add_accepted(TK_NEGATIVE, TK_NEGATIVE_GREATER, ">");
 }
 
 /* accepted only needs one state */

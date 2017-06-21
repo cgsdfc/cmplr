@@ -1,7 +1,7 @@
 #include "token_type.h"
 
 
-
+/** this tab is for debug purpose */
 const char *token_tab [] = 
 {
   /* KEYWORDS */
@@ -108,7 +108,7 @@ const char *token_tab [] =
 
   /* ITERALS */
   [TKT_INTEGER_LITERAL]="TKT_INTEGER_LITERAL",
-  [TKT_CHARACTER_LITERAL]="CHAR_CLASS_CHAR_LITERAL",
+  [TKT_CHARACTER_LITERAL]="TKT_CHARACTER_LITERAL",
   [TKT_UNKNOWN]="TKT_UNKNOWN"
 
 };

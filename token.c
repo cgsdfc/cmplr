@@ -185,9 +185,10 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
       return ;
 
     case TK_INT_END:
+      put_char(buffer);
+      _set_token_pos(tk,buffer,POS_END);
       _terminate_token(tk);
       acc_integer(tk);
-      put_char(buffer);
       return;
 
     case TK_CHAR_LITERAL_END:

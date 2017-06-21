@@ -1,6 +1,7 @@
 #include "cprd_transfer.h"
 #include "operator.h"
 #include "char_literal.h"
+#include "string_literal.h"
 
 typedef tokenizer_state node;
 
@@ -21,7 +22,6 @@ void check_table (void)
 
 transfer_entry *seek_entry (int state_from, int state_to)
 {
-  assert (state_to >=0 && state_to < MAX_TRANSFER_ENTRIES);
   assert (state_from >=0 && state_from < MAX_TRANSFER_ENTRIES);
 
   transfer_entry *entry;
@@ -146,7 +146,6 @@ tokenizer_state do_transfer(tokenizer_state state,
   {
     *entry = &table[state][i];
     nstate = TFE_STATE(table[state][i].entry);
-    assert (nstate >=0 && nstate < MAX_TRANSFER_ENTRIES);
     if (can_transfer (&table[state][i], ch) ) 
     {
       return nstate;
@@ -167,6 +166,13 @@ void check_can_transfer (tokenizer_state from, tokenizer_state to, char *char_cl
   }
 
 }
+
+void clear_table(void)
+{
+  memset(table, 0, sizeof table);
+  memset(entry_counters, 0, sizeof entry_counters);
+}
+
 
 void check_init_table (void)
 {
@@ -190,6 +196,7 @@ void check_init_table (void)
   check_can_transfer(TK_INIT,TK_PUNCTUATION_END,CHAR_CLASS_PUNCTUATION);
 
   printf ("check_init_table passed\n");
+  clear_table();
 
 }
 
@@ -235,30 +242,21 @@ void init_single_line_coment(void)
 
 }
 
+// TODO: change it , donot detect bad multi_line 
+// just let the parser get fucked
 void init_multi_line_coment(void)
 {
   /* multi_line coment */
   add_transfer(TK_SLASH,TK_MULTI_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,"*");
   add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,
-      TFE_ACT_SKIP, "/*");
+      TFE_ACT_SKIP, "*");
   add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_END, 0, TFE_ACT_SKIP,
       "*");
   add_transfer(TK_MULTI_LINE_COMENT_END,TK_MULTI_LINE_COMENT_BEGIN,TFE_FLAG_REVERSED, TFE_ACT_SKIP,"/");
   add_transfer(TK_MULTI_LINE_COMENT_END, TK_INIT,0,TFE_ACT_SKIP,"/");
 
-  /* bad multi_line comment */
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_BAD_MULTI_LINE_COMENT, 0, TFE_ACT_SKIP,"/");
-  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_NULL, 0,TFE_ACT_SKIP,"*");
-  add_transfer(TK_BAD_MULTI_LINE_COMENT, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED,TFE_ACT_SKIP,"*");
-
 }
 
-void init_operator_div(void)
-{
-  add_initial(TK_SLASH,"/");
-  add_accepted_rev(TK_SLASH, TK_SLASH_END, "/*=");
-  add_accepted(TK_SLASH, TK_SLASH_EQUAL,"=");
-}
 
 void init_table (void)
 {
@@ -289,8 +287,11 @@ void init_table (void)
   /* operators */
   init_operator();
 
+  /* character */ 
   init_char_literal();
 
+  /* string */
+  init_string_literal();
 
 }
 

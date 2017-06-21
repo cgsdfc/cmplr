@@ -13,7 +13,6 @@
 #include "char_buffer.h"
 #include "token.h"
 
-#define MAX_TRANSFER_ENTRIES 100
 
 #define CHAR_CLASS_LOWER_CASE "abcdefghijklmnopqrstuvwxyz"
 #define CHAR_CLASS_UPPER_CASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
