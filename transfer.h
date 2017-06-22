@@ -61,7 +61,6 @@ typedef enum entry_action
   ( (entry_t) ((a)<<TFE_ACTION_SHIFT | (c) << TFE_CHAR_CLASS_SHIFT |  (s) << TFE_STATE_SHIFT | (f)) )
 
 
-typedef transfer_entry transfer_table_t [MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
 
 /* needed by operator.c string_literal.c char_literal.c */
 void add_initial(node , char_class_enum );
@@ -72,16 +71,15 @@ void add_selfloop_rev (node , char_class_enum );;
 void add_accepted_rev(node ,  node , char_class_enum  ); 
 void add_accepted(node , node  , char_class_enum ); 
 
-void init_operator(void);
-void init_char_literal(void);
-void init_string_literal(void);
 
-void clear_table(void);
-void init_table (void);
-void check_table (void);
-tokenizer_state do_transfer(tokenizer_state state,
-    int ch, transfer_entry *entry);
-void check_can_transfer(node from,node to, char_class_enum char_class);
+tokenizer_state do_transfer (tokenizer_state state, int ch, transfer_entry *entry);
+
+void add_transfer(tokenizer_state from,
+    tokenizer_state state, 
+    entry_flag flags, entry_action act,
+    char_class_enum cclass);
+bool can_transfer(entry_t entry,  int character) ;
+entry_t seek_entry(tokenizer_state , tokenizer_state);
 
 #endif
 

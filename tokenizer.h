@@ -9,7 +9,18 @@
 #include<string.h>
 #include<ctype.h>
 #include "transfer.h"
+#include "tknz_table.h"
 #include "token.h"
+
+typedef struct tokenizer
+{
+  char_buffer buffer;
+  entry_t *table;
+  int *counter;
+  int len;
+
+} tokenizer ;
+
 
 typedef enum tkz_error
 {

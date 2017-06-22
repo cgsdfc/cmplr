@@ -102,7 +102,7 @@ int print_token_stream (char_buffer *buffer)
   char *token_string;
   tokenizer_state errstate;
 
-  init_table();
+  init_tknzr_table ();
   while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
   {
     switch (r)
@@ -116,11 +116,11 @@ int print_token_stream (char_buffer *buffer)
         goto error;
     }
   }
-  clear_table();
+  clear_tknzr_table();
   return 0;
 
 error:
-  clear_table();
+  clear_tknzr_table();
   tokenizer_error(r,buffer, &tk, errstate);
   return 1;
 
@@ -162,7 +162,7 @@ int main(int ac,char**av){
     exit(1);
   }
 
-  init_table();
+  init_tknzr_table();
   while ((r = get_next_token(&tk, &buffer, &errstate)) != EOF)
   {
     switch (r)
