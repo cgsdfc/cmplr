@@ -1,4 +1,10 @@
 #include "char_class.h"
+#include <stdbool.h>
+#include<stdlib.h>
+#include <assert.h>
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
 
 #define CC_CHAR_LITERAL " `\"#@$" CC_IDENTIFIER_PART\
   CC_OPERATOR CC_PUNCTUATION
@@ -83,7 +89,16 @@ char *char_class2string[]=
   [CHAR_CLASS_X]="x",
   [CHAR_CLASS_ZERO]="0",
   [CHAR_CLASS_EQUAL]="=",
+  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE_BACKSLASH]="\\\n\r\""
 
 };
 
+void check_char_class(void)
+{
+  for (int i=CHAR_CLASS_EMPTY;i<_CHAR_CLASS_NULL;++i)
+  {
+    assert (char_class2string[i]);
+  }
+  puts("check_char_class passed");
+}
 

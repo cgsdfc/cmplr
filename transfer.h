@@ -80,6 +80,7 @@ void init_table (void);
 void check_table (void);
 tokenizer_state do_transfer(tokenizer_state state,
     int ch, transfer_entry *entry);
+void check_can_transfer(node from,node to, char_class_enum char_class);
 
 #endif
 

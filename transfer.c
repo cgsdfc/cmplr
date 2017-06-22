@@ -209,6 +209,7 @@ void check_table (void)
 {
   // TODO: check more throughly
 #ifndef NDEBUG
+  check_char_class();
   void init_table(void);
   init_table ();
 
@@ -226,6 +227,9 @@ void check_table (void)
 
   /* check TK_INIT -> TK_PUNCTUATION_END */
   check_can_transfer(TK_INIT,TK_PUNCTUATION_END,CHAR_CLASS_PUNCTUATION);
+
+  check_can_transfer(TK_STRING_LITERAL_BEGIN,TK_STRING_LITERAL_ESCAPED,
+      CHAR_CLASS_BACKSLASH);
 
   printf ("check_init_table passed\n");
   clear_table();

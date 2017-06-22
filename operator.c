@@ -114,6 +114,7 @@ static op_struct operators[]=
 
 void check_operators(void)
 {
+#ifndef NDEBUG
   int op_count=0;
   int rej_count=0;
   op_struct *ops=NULL;
@@ -155,6 +156,7 @@ void check_operators(void)
 
   assert (ops-operators == N_OPERATOR_KINDS);
   printf("check_operators passed\n");
+#endif
 }
 
 void init_operator(void) 
@@ -165,7 +167,6 @@ void init_operator(void)
   {
     op_struct *ops=&operators[i];
     int op_count=ops->op_count;
-    puts(ops->kind);
 
     for (int j=0;j<op_count;++j)
     {

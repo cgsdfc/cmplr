@@ -297,6 +297,7 @@ void check_peek_line (char_buffer *buffer)
 
 void check_char_buffer (void)
 {
+#ifndef NDEBUG
   void show_buffer (char_buffer*);
   char_buffer buffer;
   FILE *input;
@@ -313,8 +314,9 @@ void check_char_buffer (void)
   /*   putchar(ch); */
   /* } */
 
-
   printf("check_init_char_buffer passed\n");
+#endif
+
 }
 
 void show_buffer (char_buffer *buffer)

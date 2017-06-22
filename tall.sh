@@ -1,15 +1,25 @@
 #!/bin/sh
 
-testfile="char_literal comment id keywords number operators "
+TESTFILE="char_literal comment id keywords number operators "
 
 testdir="test"
 testbin="./bin/tokenizer"
 nerr=0
 
-for x in $testfile;do
+echo build the tokenizer 
+cd bin;cmake .. -Ddebug=0 && make
+if [ $? -ne 0 ];then
+  echo make failed!
+  exit 1
+fi
+cd ..
+
+
+for x in $TESTFILE;do
+  echo testing $x
   $testbin $testdir/$x.txt > $testdir/$x\$
   if [ $? -ne 0 ];then
-    echo "run wrong!"
+    echo "$x run wrong!"
     nerr=$((nerr+1))
     continue
   fi
@@ -26,7 +36,7 @@ if [ $nerr -ne 0 ];then
   echo "errors $nerr"
 else
   echo "pass all!"
-  rm $testdir/*.\$
+  rm $testdir/*\$
 fi
 
 

@@ -58,11 +58,14 @@ typedef enum char_class_enum
   CHAR_CLASS_X,
   CHAR_CLASS_ZERO,
   CHAR_CLASS_EQUAL, 
+  CHAR_CLASS_DOUBLE_QUOTE_NEWLINE_BACKSLASH,
 
   _CHAR_CLASS_NULL
 
 } char_class_enum ;
 
 extern char *char_class2string[];
+void check_char_class(void);
+
 #endif
 

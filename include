@@ -1,12 +1,5 @@
 
 /////////////////////////////////HeadFile/////////////////////////////////////////
-#include<stdlib.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
-#define MAXLINE 100                                 //¶¨ÒåÒ»ÐÐËùÄÜ¶ÁÈ¡µÄ×î¶à×Ö·ûµÄ¸öÊý
-#define MAXLENGTH_NAME 100                          //¶¨Òå×î³¤µÄ¿ÉÒÔ½ÓÊÜµÄÃû×Ö³¤¶È
-#define RESERVENUM 22                               //¶¨Òå±£Áô×ÖµÄ¸öÊý
 static char line[MAXLINE];                          //¶¨ÒåÃ¿´Î¶ÁÎÄ¼þ£¬¶ÁÒ»ÐÐµÄ»º³åÇø
 static int errNum=0;                                //¶¨ÒåERRORµÄ¸öÊý
 int ll=0;                                           //¶¨ÒåÃ¿´Î¶Áµ½Ò»ÐÐµÄ³¤¶È

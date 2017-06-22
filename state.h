@@ -19,19 +19,39 @@ typedef enum tokenizer_state
   TK_INT_LONG,
   TK_INT_UNSIGNED,
 
+  /* coments */
   TK_SINGLE_LINE_COMENT_BEGIN,
   TK_MULTI_LINE_COMENT_BEGIN,
+
+  /* since when a coment ends, we need to jump back */
+  /*   to TK_INIT, so the following is **not** accepted */
+  TK_SINGLE_LINE_COMENT_END,
+  TK_MULTI_LINE_COMENT_END,
+
+  /* char_literals */
   TK_CHAR_LITERAL_BEGIN,
   TK_CHAR_LITERAL_HEX_BEGIN,
   TK_CHAR_LITERAL_OCT_BEGIN,
-  TK_STRING_LITERAL_BEGIN,
   TK_CHAR_LITERAL_ZERO,
   TK_CHAR_LITERAL_ESCAPED,
   TK_CHAR_LITERAL_PART,
+
+  /* since when oct or hex ends, we still need to jump */ 
+  /*   back to TK_**_END, so the following is jump */
+  /*   part of the path to the accepted states */
+  /*   and it is **not** accepted */
   TK_CHAR_LITERAL_OCT_END,
   TK_CHAR_LITERAL_HEX_END,
-  TK_SINGLE_LINE_COMENT_END,
-  TK_MULTI_LINE_COMENT_END,
+
+  /* string_literal */
+  TK_STRING_LITERAL_BEGIN,
+  TK_STRING_LITERAL_HEX_BEGIN,
+  TK_STRING_LITERAL_OCT_BEGIN,
+  TK_STRING_LITERAL_ZERO,
+  TK_STRING_LITERAL_ESCAPED,
+  TK_STRING_LITERAL_PART,
+  TK_STRING_LITERAL_OCT_END,
+  TK_STRING_LITERAL_HEX_END,
   
   /* NON ACCEPTED OPERATOR STATES */ 
   TK_EXCLAIM,
