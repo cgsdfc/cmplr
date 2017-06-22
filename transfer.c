@@ -1,13 +1,8 @@
 /* transfer.c */
 #include "transfer.h"
 
-extern entry_t tknzr_table[MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
-extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES]
-;
-void add_transfer(tokenizer_state from,
-    tokenizer_state state, 
-    entry_flag flags, entry_action act,
-    char_class_enum cclass);
+extern transfer_table_t tknzr_table;
+extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES] ;
 
 
 void add_initial(node to, char_class_enum char_class)
@@ -48,7 +43,7 @@ void add_accepted(node from, node to , char_class_enum char_class)
 /* find the entry that defines a transfer going from */
 /* `state_from` to `state_to` */
 static
-transfer_entry seek_entry_r (entry_t **table, int *entry_counters ,int state_from, int state_to)
+transfer_entry seek_entry_r (transfer_table_t table, int *entry_counters ,int state_from, int state_to)
 {
 
   transfer_entry entry;
@@ -65,7 +60,7 @@ entry_t seek_entry(tokenizer_state from,
     tokenizer_state to)
 {
   assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
-  return seek_entry_r ((entry_t**) tknzr_table, tknzr_entry_counters,from,to);
+  return seek_entry_r (tknzr_table, tknzr_entry_counters,from,to);
 
 }
 
@@ -89,7 +84,7 @@ bool can_transfer(entry_t entry,  int character)
 }
 
   static
-void add_transfer_r(entry_t **table, int *entry_counters,
+void add_transfer_r(transfer_table_t table, int *entry_counters,
     int from,
     int state, 
     entry_flag flags,
@@ -107,8 +102,8 @@ void add_transfer_r(entry_t **table, int *entry_counters,
 }
 
   static
-int do_transfer_r (entry_t **table, int *entry_counters,
-    int state,
+int do_transfer_r (transfer_table_t table, int *entry_counters,
+    int state, /* state must be a non-accepted and not null */
     int ch, transfer_entry *entry, int state_not_found)
 {
   assert (entry);
@@ -139,23 +134,25 @@ tokenizer_state do_transfer (tokenizer_state state,
   assert (state >=0 && state < MAX_TRANSFER_ENTRIES);
   return
     (tokenizer_state) do_transfer_r(
-        (entry_t **) tknzr_table, tknzr_entry_counters,
+         tknzr_table, tknzr_entry_counters,
         state, ch, entry, TK_NULL);
 
 }
 
+/** add a transfer from `from` to `to`
+ * the `from` must be a non-accepted
+ */
 void add_transfer(tokenizer_state from,
     tokenizer_state state, 
     entry_flag flags, entry_action act,
     char_class_enum cclass)
 {
-  assert (state >=0 && state < MAX_TRANSFER_ENTRIES);
-  add_transfer_r((entry_t **) tknzr_table, tknzr_entry_counters, from,state,flags,act,cclass);
+  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
+  add_transfer_r( tknzr_table, tknzr_entry_counters, from,state,flags,act,cclass);
 
 }
 
-void clear_table_r (entry_t **table, int *entry_counters)
+void clear_table_r (transfer_table_t table, int *entry_counters)
 {
-  memset(table, 0, sizeof table);
   memset(entry_counters, 0, sizeof entry_counters);
 }

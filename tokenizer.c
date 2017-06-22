@@ -126,7 +126,7 @@ error:
 
 }
 
-int print_token_stream_from_string(char *string)
+int pss (char *string)
 {
   assert (string);
   char_buffer cb;

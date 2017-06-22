@@ -67,29 +67,11 @@ void init_token(token *tk, tokenizer_state state, char_buffer *buffer)
   _clear_token(tk);
   _set_token_pos(tk, buffer, POS_BEGIN);
   _catchar_token(tk, prev_char(buffer));
-
-  switch (state) {
-    case TK_INT_DEC_BEGIN:
-      break;
-    case TK_IDENTIFIER_BEGIN:
-      break;
-    default:
-      break;
-  }
-
 }
 
 void append_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
   _catchar_token(tk,prev_char (buffer));
-  switch (state) {
-    case TK_INT_DEC_BEGIN:
-      break;
-    case TK_IDENTIFIER_BEGIN:
-      break;
-    default:
-      break;
-  }
 
 }
 
@@ -222,17 +204,6 @@ void acc_integer (token *tk)
 {
   char *value = tk->value.string;
   tk->type = TKT_INTEGER_LITERAL;
-  switch (tk->value.property.int_flag) {
-    case INT_FLAG_UNSIGNED:
-      tk->value.number.uint= (unsigned int) atoi (value);
-      return;
-    case INT_FLAG_LONG:
-      tk->value.number.long_int=atol(value);
-      return;
-    case ( INT_FLAG_LONG | INT_FLAG_UNSIGNED ):
-      tk->value.number.ulong=(unsigned long) atol(value);
-      return;
-  }
 
 }
 

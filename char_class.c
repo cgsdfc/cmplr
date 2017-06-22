@@ -26,13 +26,19 @@
 #define CC_IDENTIFIER_PART CC_IDENTIFIER_BEGIN CC_DEC_PART
 #define CC_SPACES " \t\n\r\f\v"
 #define CC_NEWLINE "\n\r"
-#define CC_PUNCTUATION "(){}[]:;,.?"
+#define CC_PUNCTUATION "(){}[]:;,?"
 #define CC_OPERATOR "~!%^&*-+<>=/|"
 #define CC_BACKSLASH "\\"
+#define CC_L "lL"
+#define CC_U "uU"
+#define CC_E "eE"
+#define CC_X "x"
+#define CC_ZERO "0"
+#define CC_PERIOD "."
+#define CC_SIGN "-+"
 
 #define CC_SEPARATOR \
   CC_SPACES CC_PUNCTUATION CC_OPERATOR
-
 
 char *char_class2string[]=
 {
@@ -60,8 +66,8 @@ char *char_class2string[]=
   [CHAR_CLASS_OCT_BEGIN ]=CC_OCT_BEGIN ,
   [CHAR_CLASS_SINGLE_QUOTE]=CC_SINGLE_QUOTE ,
   [CHAR_CLASS_DOUBLE_QUOTE]=CC_DOUBLE_QUOTE ,
-  [CHAR_CLASS_LONG_SUFIX]="lL",
-  [CHAR_CLASS_UNSIGNED_SUFIX]="uU",
+  [CHAR_CLASS_L]=CC_L,
+  [CHAR_CLASS_U]=CC_U,
   [CAHR_CLASS_SLASH]="/",
   [CHAR_CLASS_STAR]="*",
 
@@ -94,6 +100,17 @@ char *char_class2string[]=
 
   [ CHAR_CLASS_SINGLE_QUOTE_BACKSLASH_NEWLINE ]="\'\\\n\r",
   [ CHAR_CLASS_SINGLE_QUOTE_NEWLINE ]="\'\n\r",
+
+  [CHAR_CLASS_OCT_BEGIN_X_U_L]=CC_OCT_BEGIN CC_L CC_X CC_U,
+  [CHAR_CLASS_HEX_BEGIN_U_L]=CC_HEX_BEGIN CC_U CC_L,
+  [CHAR_CLASS_OCT_BEGIN_U_L]=CC_OCT_BEGIN CC_U CC_L,
+  [CHAR_CLASS_PERIOD]=CC_PERIOD,
+  [ CHAR_CLASS_OCT_BEGIN_X_U_L_PERIOD ]=CC_OCT_BEGIN
+    CC_L CC_X CC_U CC_PERIOD,
+
+  [ CHAR_CLASS_DEC_PART_PERIOD ]=CC_DEC_PART CC_PERIOD,
+  [ CHAR_CLASS_E ]= CC_E,
+[ CHAR_CLASS_SIGN ]=CC_SIGN,
 };
 
 void check_char_class(void)

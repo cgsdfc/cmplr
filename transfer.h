@@ -18,6 +18,7 @@
  */ 
 typedef unsigned int transfer_entry;
 typedef transfer_entry entry_t;
+typedef entry_t transfer_table_t[MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
 
 
 /* transfer_entry flags */
@@ -81,5 +82,6 @@ void add_transfer(tokenizer_state from,
 bool can_transfer(entry_t entry,  int character) ;
 entry_t seek_entry(tokenizer_state , tokenizer_state);
 
+void clear_table_r(transfer_table_t , int*);
 #endif
 

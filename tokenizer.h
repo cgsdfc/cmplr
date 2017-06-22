@@ -12,6 +12,10 @@
 #include "tknz_table.h"
 #include "token.h"
 
+// TODO: clear TODOs, 
+// impl token_buffer that can look
+// ahead token, consum and discard
+// tokens
 typedef struct tokenizer
 {
   char_buffer buffer;

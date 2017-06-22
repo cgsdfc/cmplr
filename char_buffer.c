@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include "char_buffer.h"
 
-extern char *inline_file;
 typedef char_buffer *cb;
 static int init_char_buffer(cb, FILE*,int,int);
 
@@ -100,6 +99,18 @@ int init_char_buffer_from_file (char_buffer *buffer, char *file)
 
 }
 
+void check_last_line(char *line)
+{
+  int len=strlen(line);
+  if (line[len-1]!='\n')
+  {
+    fputs("warning: no newline at the end of input", stderr);
+    line[len]='\n';
+    line[len+1]=0;
+  }
+}
+
+
 
 /** read all the char from file 
  * put the chars into `buf`
@@ -136,6 +147,17 @@ int init_char_buffer (char_buffer *buffer, FILE *f, int chars, int lines)
     {
       buffer->limits[++i]=strlen (line);
       strncat (buffer->buf, line, BUFSIZ);
+    }
+
+    assert (strlen(buffer->buf) == chars);
+    /* check the last line, whether it has a newline as terminator */
+    /* if not, add a newline to it, for tokenize purposes */
+    if (buffer->buf[chars-1] != '\n')
+    {
+      fputs("warning: no newline at the end of input", stderr);
+      buffer->buf[chars]='\n';
+      buffer->buf[chars+1]=0;
+      chars++;
     }
 
     buffer->end=chars;
@@ -283,45 +305,10 @@ int get_line_limit (char_buffer *buffer, int lineno)
 
 void check_peek_line (char_buffer *buffer)
 {
-  int offset;
-#if 0
-  offset = get_line_offset(buffer, 1);
-  assert (offset == 0);
-  printf(peek_line(buffer, 1));
-
-  offset = get_line_offset (buffer, 2);
-  assert (offset == get_line_limit(buffer,1));
-  printf(peek_line(buffer, 2));
-
-  offset = get_line_offset (buffer, 3);
-  assert (offset == get_line_limit(buffer,2) + get_line_limit(buffer, 1));
-  printf(peek_line(buffer, 3));
-#endif
-
-  printf ("check_peek_line passed\n");
 }
 
 void check_char_buffer (void)
 {
-#ifndef NDEBUG
-  void show_buffer (char_buffer*);
-  char_buffer buffer;
-  FILE *input;
-  int r;
-  int ch;
-  char *file=inline_file;
-
-  r=init_char_buffer_from_string (&buffer, file);
-  assert (r==0);
-
-  check_peek_line(&buffer);
-  /* while ((ch=get_char (&buffer))!=EOF) */
-  /* { */
-  /*   putchar(ch); */
-  /* } */
-
-  printf("check_init_char_buffer passed\n");
-#endif
 
 }
 
@@ -333,244 +320,3 @@ void show_buffer (char_buffer *buffer)
   printf ("lineno = %d, column = %d\n", buffer->pos.lineno, buffer->pos.column);
 
 }
-
-char *inline_file=
-"\n"
-"/* tokenizer.c */\n"
-"#include <stdbool.h>\n"
-"#include<stdlib.h>\n"
-"#include <assert.h>\n"
-"#include<stdio.h>\n"
-"#include<string.h>\n"
-"#include<ctype.h>\n"
-"\n"
-"\n"
-"struct token;\n"
-"static transfer_entry transfer_table[MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];\n"
-"\n"
-"void init_transfer (void)\n"
-"{\n"
-"  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i) \n"
-"  {\n"
-"    for (int j=0;j<MAX_TRANSFER_ENTRIES;++j)\n"
-"    {\n"
-"      transfer_table[i][j].state = TK_NULL;\n"
-"      transfer_table[i][j].tkz_act = append_token;\n"
-"      transfer_table[i][j].char_class = "";\n"
-"      transfer_table[i][j].is_accepted = false;\n"
-"      transfer_table[i][j].is_reversed = false;\n"
-"    }\n"
-"  }\n"
-"\n"
-"}\n"
-"\n"
-"  \n"
-"int add_transfer(int this_state, int state, bool is_accepted, bool is_reversed, char *char_class, tkz_action act)\n"
-"{\n"
-"  static int entry_counters[MAX_TRANSFER_ENTRIES]={0};\n"
-"  int entry_counter = entry_counters[this_state];\n"
-"  transfer_entry *this_entry = &transfer_table[this_state][entry_counter];\n"
-"\n"
-"  this_entry->state = state;\n"
-"  this_entry->is_accepted = is_accepted;\n"
-"  this_entry->is_reversed = is_reversed;\n"
-"  this_entry->char_class = char_class;\n"
-"  this_entry->tkz_act = act;\n"
-"\n"
-"  entry_counters[this_state]=entry_counter+1;\n"
-"  return entry_counter;\n"
-"\n"
-"}\n"
-"\n"
-"bool can_transfer(transfer_entry *entry, int character) \n"
-"{\n"
-"  // TODO: delete it\n"
-"  if (entry->char_class == NULL) \n"
-"  {\n"
-"    return false;\n"
-"  }\n"
-"  bool is_in_class = strchr (entry->char_class, character);\n"
-"  return (is_in_class || entry->is_reversed);\n"
-"\n"
-"}\n"
-"\n"
-"tokenizer_state do_transfer (int state, int character, transfer_entry **entry)\n"
-"{\n"
-"  tokenizer_state next_state;\n"
-"\n"
-"  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)\n"
-"  {\n"
-"    next_state = transfer_table[state][i].state;\n"
-"    *entry = &transfer_table[state][i];\n"
-"    if (can_transfer(&transfer_table[state][i], character))\n"
-"      break;\n"
-"  }\n"
-"\n"
-"  return next_state;\n"
-"\n"
-"}\n"
-"\n"
-"transfer_entry *seek_entry (int state_from, int state_to)\n"
-"{\n"
-"  transfer_entry *entry;\n"
-"  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)\n"
-"  {\n"
-"    entry = &transfer_table[state_from][i];\n"
-"    if (entry->state == state_to) \n"
-"    {\n"
-"      break;\n"
-"    }\n"
-"  }\n"
-"  return entry;\n"
-"}\n"
-"\n"
-"void init_table (void)\n"
-"{\n"
-"  init_transfer();\n"
-"\n"
-"  add_transfer(TK_INIT, TK_IDENTIFIER_BEGIN, false, false, CHAR_CLASS_IDENTIFIER_BEGIN, init_token);\n"
-"  add_transfer(TK_INIT, TK_INIT, false, false, CHAR_CLASS_SPACES, skip_token);\n"
-"  add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, true, false, CHAR_CLASS_SPACES, accept_token);\n"
-"  add_transfer(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_BEGIN, false, false, CHAR_CLASS_IDENTIFIER_PART, append_token);\n"
-"\n"
-"}\n"
-"\n"
-"void check_init_table (void)\n"
-"{\n"
-"  void init_table(void);\n"
-"  bool can_transfer(transfer_entry *entry, int character);\n"
-"  init_table ();\n"
-"\n"
-"  /* TK_INIT -> TK_IDENTIFIER_BEGIN */\n"
-"  for (int i=0;i<strlen (CHAR_CLASS_IDENTIFIER_BEGIN);++i) \n"
-"  {\n"
-"    int letter = CHAR_CLASS_IDENTIFIER_BEGIN[i];\n"
-"    assert (can_transfer (seek_entry(TK_INIT, TK_IDENTIFIER_BEGIN), letter));\n"
-"\n"
-"  }\n"
-"\n"
-"  /* check TK_INIT -> TK_INIT */ \n"
-"  for (int i=0;i<strlen (CHAR_CLASS_SPACES); ++i)\n"
-"  {\n"
-"    int space = CHAR_CLASS_SPACES[i];\n"
-"    assert (can_transfer (seek_entry(TK_INIT, TK_INIT), space));\n"
-"  }\n"
-"\n"
-"  /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_END */\n"
-"  for (int i=0;i<strlen (CHAR_CLASS_SPACES); ++i)\n"
-"  {\n"
-"    int letter = CHAR_CLASS_SPACES[i]; \n"
-"    assert (can_transfer (seek_entry(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END), letter));\n"
-"  }\n"
-"\n"
-"  /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_BEGIN */\n"
-"  for (int i=0;i<strlen (CHAR_CLASS_IDENTIFIER_PART); ++i)\n"
-"  {\n"
-"    int letter =CHAR_CLASS_IDENTIFIER_PART[i]; \n"
-"    assert (can_transfer (seek_entry(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_BEGIN), letter));\n"
-"  }\n"
-"\n"
-"\n"
-"}\n"
-"\n"
-"\n"
-"typedef enum char_operation\n"
-"{\n"
-"  CHAR_NEXT,\n"
-"  CHAR_CURR,\n"
-"  CHAR_PREV,\n"
-"\n"
-"  CHAR_GET,\n"
-"  CHAR_PUT\n"
-"\n"
-"} char_operation;\n"
-"\n"
-"int get_next_token(token *tk, char_buffer *buffer)\n"
-"{\n"
-"  tokenizer_state current_state = TK_INIT;\n"
-"  transfer_entry *current_entry;\n"
-"  int current_char;\n"
-"  bool is_accepted=false;\n"
-"  tokenizer_state next_state;\n"
-"  if (peek_char (buffer) == EOF)\n"
-"  {\n"
-"    return EOF;\n"
-"  }\n"
-"\n"
-"  while ((current_char = peek_char (buffer)) != EOF )\n"
-"  {\n"
-"    next_state = do_transfer(current_state, current_char, &current_entry);\n"
-"    if (next_state == TK_NULL)\n"
-"    {\n"
-"      return E_UNEXPECTED_CHAR;\n"
-"    }\n"
-"    is_accepted = current_entry->is_accepted;\n"
-"    current_entry->tkz_act (tk, next_state, buffer);\n"
-"    current_state = next_state;\n"
-"    if (is_accepted)\n"
-"      break;\n"
-"  }\n"
-"\n"
-"  if (is_accepted) {\n"
-"    return 0;\n"
-"  }\n"
-"\n"
-"  return E_PREMATURE_END;\n"
-"\n"
-"}\n"
-"\n"
-"void check_all(void)\n"
-"{\n"
-"  void check_char_buffer(void);\n"
-"  check_char_buffer();\n"
-"  \n"
-"  check_init_table();\n"
-"}\n"
-"\n"
-"\n"
-"int main(int ac,char**av){ \n"
-"  check_all();\n"
-"\n"
-"  if (ac != 2)\n"
-"  {\n"
-"    goto error;\n"
-"  }\n"
-"\n"
-"\n"
-"  FILE *input;\n"
-"  token tk;\n"
-"  int r=0;\n"
-"  char *token_string;\n"
-"  char_buffer buffer;\n"
-"\n"
-"  if (init_char_buffer (&buffer, av[1])<0)\n"
-"  {\n"
-"    perror (av[0]);\n"
-"    goto error;\n"
-"  }\n"
-"\n"
-"  init_table();\n"
-"  while ((r = get_next_token(&tk, &buffer)) != EOF)\n"
-"  {\n"
-"    switch (r)\n"
-"    {\n"
-"      case 0:\n"
-"        token_string = format_token (&tk);\n"
-"        puts(token_string);\n"
-"        break;\n"
-"\n"
-"      default:\n"
-"      case 1:\n"
-"        goto error;\n"
-"    }\n"
-"  }\n"
-"\n"
-"  return 0;\n"
-"\n"
-"error:\n"
-"  exit(1);\n"
-"}\n"
-"\n"
-"\n"
-"\n"
-;

@@ -1,13 +1,12 @@
 #include "tknz_table.h"
 
-transfer_entry tknzr_table[MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
+transfer_table_t tknzr_table;
 int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
 void check_can_transfer (tokenizer_state from, 
     tokenizer_state to, char_class_enum cc);
 
 void clear_tknzr_table(void)
 {
-  void clear_table_r (entry_t *table, int *entry_counters);
   clear_table_r (tknzr_table, tknzr_entry_counters);
 }
 
@@ -51,6 +50,7 @@ void init_identifier(void)
   add_accepted_rev(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, CHAR_CLASS_IDENTIFIER_PART);
 }
 
+#if 0
 static
 void init_dec_integer(void)
 {
@@ -71,10 +71,15 @@ void init_integer_literal(void)
 {
   init_dec_integer();
 }
+#endif
 
 static
 void init_punctuation(void)
 {
+  /* .0 => float_literal */
+  /* .a => period */
+  add_initial(TK_PERIOD,CHAR_CLASS_PERIOD);
+  add_accepted_rev (TK_PERIOD,TK_PERIOD_END,CHAR_CLASS_DEC_PART);
   add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION);
 }
 
@@ -118,11 +123,6 @@ void init_tknzr_table (void)
 
   /* integer -- dec, oct, hex, long or not , unsigned or not */
   init_integer_literal();
-
-  /* slash begin token -- single line coment, multi_line coment, operator div and  operator div_assign */
-
-  /* div and div_assign */
-  /* init_operator_div(); */
 
   /* single line coment */
   init_single_line_coment();

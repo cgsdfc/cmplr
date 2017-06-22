@@ -7,7 +7,57 @@
 #include<ctype.h>
 #include "tokenizer.h"
 
+int a[5][5];
+
+int func0(int a[][4], int rows, int cols)
+{
+  for (int i=0;i<rows;++i)
+  {
+    for(int j=0;j<cols;++j)
+    {
+      printf("%d..\n", a[i][j]);
+    }
+  }
+}
+
+/* segment fault */
+int func1(int **a, int rows, int cols)
+{
+  for (int i=0;i<rows;++i)
+  {
+    for(int j=0;j<cols;++j)
+    {
+      printf("%d..\n", a[i][j]);
+    }
+  }
+}
+
+/* segment fault */
+
+int func(int *a[], int rows, int cols)
+{
+  for (int i=0;i<rows;++i)
+  {
+    for(int j=0;j<cols;++j)
+    {
+      printf("%d..\n", a[i][j]);
+    }
+  }
+}
+
 
 int main(int ac,char**av){ 
-  char *f=""";
+
+  int i=0111111;
+  int j=07lu;
+  int k=02ul;
+  int l=1UL;
+  int a=4u;
+  int n=0ul;
+  int e=0;
+  float f=0.1e0000001011;
+  f=.3;
+
+  puts("compiled!");
+
 }
