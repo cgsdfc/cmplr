@@ -76,6 +76,7 @@ void init_operator(void);
 void init_char_literal(void);
 void init_string_literal(void);
 
+void clear_table(void);
 void init_table (void);
 void check_table (void);
 tokenizer_state do_transfer(tokenizer_state state,

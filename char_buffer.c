@@ -11,6 +11,12 @@ extern char *inline_file;
 typedef char_buffer *cb;
 static int init_char_buffer(cb, FILE*,int,int);
 
+void clear_buffer (char_buffer *buffer)
+{
+  free(buffer->limits);
+  free(buffer->buf);
+}
+
 static int count_chars(char *file)
 {
   struct stat statbuf;

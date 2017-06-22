@@ -8,7 +8,8 @@
 #include "tokenizer.h"
 
 
-
+// TODO: give more sensible error msg 
+// based on errstate
 const char *tokenizer_err_tab [] =
 {
   [E_PREMATURE_END]="premature end of input",
@@ -94,6 +95,50 @@ void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state
 
 }
 
+int print_token_stream (char_buffer *buffer)
+{
+  token tk;
+  int r=0;
+  char *token_string;
+  tokenizer_state errstate;
+
+  init_table();
+  while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
+  {
+    switch (r)
+    {
+      case 0:
+        token_string = format_token (&tk);
+        puts(token_string);
+        break;
+
+      default:
+        goto error;
+    }
+  }
+  clear_table();
+  return 0;
+
+error:
+  clear_table();
+  tokenizer_error(r,buffer, &tk, errstate);
+  return 1;
+
+}
+
+int print_token_stream_from_string(char *string)
+{
+  assert (string);
+  char_buffer cb;
+  if (init_char_buffer_from_string(&cb, string)<0)
+    return -1;
+
+  if (print_token_stream(&cb)<0)
+    return -1;
+
+  clear_buffer(&cb);
+  return 0;
+}
 
 int main(int ac,char**av){ 
 

@@ -15,7 +15,6 @@ typedef struct position
 struct position;
 typedef struct char_buffer 
 {
-  FILE *file;
   char *buf ;
   struct position pos;
   int index;
@@ -25,6 +24,7 @@ typedef struct char_buffer
 
 } char_buffer;
 
+void clear_buffer (char_buffer *buffer);
 int init_char_buffer_from_string (char_buffer *buffer, char *);
 int init_char_buffer_from_file (char_buffer *buffer, char *);
 int peek_char (char_buffer *);

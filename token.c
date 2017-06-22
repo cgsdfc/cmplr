@@ -11,6 +11,7 @@
 #include "char_buffer.h"
 
 // TODO: refactor this file
+// and simplfy token struct
 typedef enum oper_enum 
 {
   IS_OPER, IS_OPER_PUT_BACK
@@ -185,6 +186,8 @@ void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
       _set_token_type(tk, char2type[_char]);
       return ;
 
+      // TODO: rename TK_INT_END
+      // use integer
     case TK_INT_END:
       put_char(buffer);
       _set_token_pos(tk,buffer,POS_END);

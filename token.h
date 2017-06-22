@@ -5,7 +5,7 @@
 #include "state.h"
 #include "token_type.h"
 
-#define MAX_TOKEN_LEN 50
+#define MAX_TOKEN_LEN  BUFSIZ
 typedef enum integer_flag
 {
   INT_FLAG_UNSIGNED=1,

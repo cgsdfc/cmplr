@@ -1,5 +1,82 @@
 #include "escaped.h"
 
+const static transfer_entry es_table [][]=
+{
+  [ES_BEGIN]=
+  {
+    TFE_MAKE_ENTRY(0,),
+  }
+};
+
+static
+void init_table(void)
+{
+  add_initial_r(es_table,ES_BEGIN,CHAR_CLASS_BACKSLASH);
+  add_selfloop_r(
+int do_escaped(char *src, char *dst, int len)
+{
+  assert (src);
+  assert (dst);
+  assert (dst > src+len || src > dst+len);
+  assert (len>=0);
+
+  char *ps;
+  char ch;
+  node state,nstate;
+  entry_t entry;
+  /* if (src[0]=='\''||src[0]=='\"') */
+  /*   src++; */
+  /* if (src[len-1]=='\''||src[len-1]=='\"') */
+  /*   len--; */
+
+
+  for (ps=src;*ps && len;ps++,len--)
+  {
+    ch=*ps;
+    nstate=do_transfer_r(es_table,state,ch, &entry, ES_NULL);
+    if (nstate==ES_NULL)
+      return -1;
+    state=nstate;
+    switch (TFE_ACTION(entry)) {
+      case TFE_ACT_ACCEPT:
+        switch (nstate) {
+          case ES_OCT_END:
+            break;
+          case ES_HEX_END:
+            break;
+          case ES_SINGLE_END:
+            break;
+          default:
+            break;
+        }
+    }
+  }
+
+}
+
+const static char escaped_tab[]=
+{
+  ['a']='\a',
+  ['b']='\b',
+  ['f']='\f',
+  ['n']='\n',
+  ['r']='\r',
+  ['t']='\t',
+  ['v']='\v',
+  ['\\']='\\',
+  ['\'']= '\'',
+  ['\"']='\"',
+  ['\?']='\?',
+  ['0']='\0',
+
+};
+
+void escaped_token(token *tk, node state, char_buffer *buffer)
+{
+  char _char;
+  put_char (buffer);
+
+  _
 /** caller should make sure the
  * transfer: whatever -> ES_BEGIN
  * has been made

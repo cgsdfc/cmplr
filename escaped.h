@@ -5,20 +5,21 @@
 typedef enum escape_states
 {
 
+  ES_INIT=0,
   /* the '\\' is read */
-  ES_BEGIN=0,  
+  ES_BEGIN,  
 
   /* 'x' is read */
-  ES_HEX_BEGIN,
+  ES_HEX0,
 
   /* 2 hex digs are read */
-  ES_HEX_END, 
+  ES_HEX1, 
 
   /* one oct dig is read */
-  ES_OCT_BEGIN,
+  ES_OCT0,
 
   /* 2 oct dig is read */
-  ES_OCT_END, 
+  ES_OCT1, 
   
   /* '0' is read */
   ES_ZERO,

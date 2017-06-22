@@ -35,6 +35,10 @@ typedef enum tokenizer_state
   TK_CHAR_LITERAL_ZERO,
   TK_CHAR_LITERAL_ESCAPED,
   TK_CHAR_LITERAL_PART,
+  TK_CHAR_LITERAL_ESCAPED_0,
+  TK_CHAR_LITERAL_ESCAPED_1,
+  TK_CHAR_LITERAL_ESCAPED_2, 
+  TK_CHAR_LITERAL_ESCAPED_3, 
 
   /* since when oct or hex ends, we still need to jump */ 
   /*   back to TK_**_END, so the following is jump */
@@ -52,7 +56,7 @@ typedef enum tokenizer_state
   TK_STRING_LITERAL_PART,
   TK_STRING_LITERAL_OCT_END,
   TK_STRING_LITERAL_HEX_END,
-  
+
   /* NON ACCEPTED OPERATOR STATES */ 
   TK_EXCLAIM,
   TK_EQUAL,
@@ -87,7 +91,7 @@ typedef enum tokenizer_state
   /* ACCEPTED OPERATOR STATES */
   _TK_OPERATOR_ACCEPT_BEGIN,
   /* PUT BACH OPERATOR STATES */
-   /* 3 states */
+  /* 3 states */
   TK_EXCLAIM_END,
   TK_EQUAL_END,
   TK_STAR_END,
@@ -135,8 +139,8 @@ typedef enum tokenizer_state
   /*!OPERATOR STATES */
   /*!ACCEPTED STATES */
 
-  
-/* SPECIAL STATE FOR FAILURE */
+
+  /* SPECIAL STATE FOR FAILURE */
   TK_NULL 
 } tokenizer_state;
 

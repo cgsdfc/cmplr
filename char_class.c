@@ -89,8 +89,11 @@ char *char_class2string[]=
   [CHAR_CLASS_X]="x",
   [CHAR_CLASS_ZERO]="0",
   [CHAR_CLASS_EQUAL]="=",
-  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE_BACKSLASH]="\\\n\r\""
+  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE_BACKSLASH]="\\\n\r\"",
+  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE]="\n\r\"",
 
+  [ CHAR_CLASS_SINGLE_QUOTE_BACKSLASH_NEWLINE ]="\'\\\n\r",
+  [ CHAR_CLASS_SINGLE_QUOTE_NEWLINE ]="\'\n\r",
 };
 
 void check_char_class(void)
