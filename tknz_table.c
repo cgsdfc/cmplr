@@ -1,21 +1,18 @@
 #include "tknz_table.h"
+#include "token_defs.h"
 
 transfer_table_t tknzr_table;
 int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
 void check_can_transfer (tokenizer_state from, 
     tokenizer_state to, char_class_enum cc);
 
-void clear_tknzr_table(void)
-{
-  clear_table_r (tknzr_table, tknzr_entry_counters);
-}
 
 static
 void check_table (void)
 {
   // TODO: check more throughly
 #ifndef NDEBUG
-  check_char_class();
+  puts("check_table begin");
   init_tknzr_table ();
 
   /* TK_INIT -> TK_IDENTIFIER_BEGIN */
@@ -48,30 +45,10 @@ void init_identifier(void)
   add_initial(TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
   add_selfloop (TK_IDENTIFIER_BEGIN, CHAR_CLASS_IDENTIFIER_PART);
   add_accepted_rev(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, CHAR_CLASS_IDENTIFIER_PART);
+  set_len_type_row(TK_IDENTIFIER_BEGIN,TFE_VARLEN);
+  set_len_type(TK_INIT, TK_IDENTIFIER_BEGIN,TFE_VARLEN);
 }
 
-#if 0
-static
-void init_dec_integer(void)
-{
-  add_initial(TK_INT_DEC_BEGIN, CHAR_CLASS_DEC_BEGIN);
-  add_selfloop(TK_INT_DEC_BEGIN, CHAR_CLASS_DEC_PART);
-  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_LONG, CHAR_CLASS_LONG_SUFIX);
-  add_intermedia(TK_INT_DEC_BEGIN,TK_INT_UNSIGNED, CHAR_CLASS_UNSIGNED_SUFIX);
-  add_intermedia(TK_INT_UNSIGNED,TK_INT_LONG,CHAR_CLASS_LONG_SUFIX);
-  add_intermedia(TK_INT_LONG,TK_INT_UNSIGNED, CHAR_CLASS_UNSIGNED_SUFIX);
-  add_accepted(TK_INT_LONG,TK_INT_END,CHAR_CLASS_SEPARATOR);
-  add_accepted(TK_INT_UNSIGNED,TK_INT_END,CHAR_CLASS_SEPARATOR);
-  add_accepted(TK_INT_DEC_BEGIN,TK_INT_END,CHAR_CLASS_SEPARATOR);
-
-}
-
-static
-void init_integer_literal(void)
-{
-  init_dec_integer();
-}
-#endif
 
 static
 void init_punctuation(void)
@@ -149,13 +126,25 @@ void init_tknzr_table (void)
   init_string_literal();
 
 }
+void check_counters(void)
+{
+  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
+  {
+    assert(tknzr_entry_counters[i] == 0);
+  }
+}
+
 void check_tknzr_table (void) 
 {
-  void check_fields(void);
-  void check_table(void);
-
+  puts("check_tknzr_table begin");
+ 
+  check_operators();
   check_fields();
+  check_char_class();
+  check_set_len_type();
+  check_counters();
   check_table();
+  clear_tknzr_table();
 
   puts ("check_table passed");
 
@@ -166,6 +155,7 @@ void check_fields(void)
 #ifndef NDEBUG
   entry_t entry;
   entry_t flag, action, state, char_class;
+  puts("check fields begin");
 
   /* check all the action fields */
   for (int i=TFE_ACT_INIT;i<TFE_ACT_SKIP+1;++i)
@@ -182,6 +172,7 @@ void check_fields(void)
     entry = TFE_MAKE_ENTRY(0, i,0,0);
     char_class=TFE_CHAR_CLASS (entry);
     assert (char_class== i);
+    assert (char_class2string[i]!=NULL);
   }
   puts ("check char_class passed");
 
@@ -196,6 +187,23 @@ void check_fields(void)
 
   puts ("check state passed");
 
+  for (int l=0;l<_TFE_LEN_TYPE_END;++l)
+  {
+    TFE_SET_LEN_TYPE(entry,l);
+    assert (TFE_LEN_TYPE(entry) == l);
+  }
+
+  puts("check len_type passed");
+
+  entry = TFE_MAKE_ENTRY(0,0,0,TFE_FLAG_ACCEPTED);
+  assert (TFE_IS_ACCEPTED(entry));
+
+  entry = TFE_MAKE_ENTRY(0,0,0,TFE_FLAG_REVERSED);
+  assert(TFE_IS_REVERSED(entry));
+
+  puts("check flags passed");
+
+  puts("check all possible combination begin");
   /* use a big loop to test all possible */
   for (int i=TFE_ACT_INIT;i<TFE_ACT_SKIP+1;++i)
   {
@@ -203,16 +211,19 @@ void check_fields(void)
     {
       for (int k=TK_INIT;k<TK_NULL+1;++k)
       {
-        entry=TFE_MAKE_ENTRY(i,j,k,0);
-        assert (j==TFE_CHAR_CLASS(entry));
-        assert (i==TFE_ACTION(entry));
-        assert (k==TFE_STATE(entry));
-
+        for (int l=0;l<_TFE_LEN_TYPE_END;++l)
+        {
+          entry=TFE_MAKE_ENTRY(i,j,k,0);
+          TFE_SET_LEN_TYPE(entry,l);
+          assert (j==TFE_CHAR_CLASS(entry));
+          assert (i==TFE_ACTION(entry));
+          assert (k==TFE_STATE(entry));
+          assert (TFE_LEN_TYPE(entry) == l);
+        }
       }
     }
   }
 
- 
   puts ("check_fields passed");
 #endif
 

@@ -115,6 +115,7 @@ static op_struct operators[]=
 void check_operators(void)
 {
 #ifndef NDEBUG
+  puts("check_operators begin");
   int op_count=0;
   int rej_count=0;
   op_struct *ops=NULL;
@@ -161,7 +162,6 @@ void check_operators(void)
 
 void init_operator(void) 
 {
-  check_operators();
   add_arrow_operator();
   for (int i=0;i<N_OPERATOR_KINDS;++i)
   {

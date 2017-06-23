@@ -115,12 +115,13 @@ typedef enum token_type
   TKT_STAR,
   TKT_PLUS,
   TKT_MINUS,
+  TKT_FLOAT_LITERAL,
   TKT_UNKNOWN
 
 
 } token_type;
 
-extern const token_type char2type[];
+extern const token_type state2punctuation [];
 extern const token_type state2operator[];
 #endif
 

@@ -1,7 +1,7 @@
 #include "token_type.h"
 #include "state.h"
 
-const token_type char2type [] =
+const token_type state2punctuation [] =
 {
   
   /* PUNCTUATIONS */

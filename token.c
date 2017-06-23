@@ -7,215 +7,264 @@
 #include <stdlib.h>
 #include <string.h>
 #include "token.h"
-#include "state.h"
-#include "char_buffer.h"
+#include "token_defs.h"
+#include "transfer.h"
 
-// TODO: refactor this file
-// and simplfy token struct
-typedef enum oper_enum 
+bool is_oper_type (node state);
+  static 
+token *_init_token(position *begin, size_t len, token_len_type type)
 {
-  IS_OPER, IS_OPER_PUT_BACK
-} oper_enum;
 
-typedef enum pos_enum
-{
-  POS_BEGIN, POS_END
-} pos_enum;
-
-
-void _set_token_pos (token *tk, char_buffer *buffer, pos_enum begin)
-{
-  switch (begin) {
-    case POS_BEGIN:
-      memcpy (&tk->begin, &buffer->pos, sizeof (position));
-      return;
-    case POS_END:
-      memcpy (&tk->end, &buffer->pos, sizeof (position));
-      return;
-    default:
-      return;
-  }
-      
-}
-
-void _terminate_token (token *tk)
-{
-  tk->value.string [tk->len]=0;
-}
-
-void _catchar_token (token *tk, char ch)
-{
-  int len = tk->len;
-  tk->value.string [len] = ch;
-  tk->len=len+1;
+  token *tk=malloc(len);
+  assert (tk);
+  memset(tk,0,len);
+  memcpy(&tk->begin,begin,sizeof(position));
+  tk->type=TKT_UNKNOWN;
+  tk->_type=type;
+  return tk;
 
 }
 
-void _clear_token (token *tk)
+void check_init_token(void)
 {
-  memset (tk, 0, sizeof *tk);
+  token *tk;
+  position pos={0};
+  position *begin=&pos;
+  char tstring[TOKEN_FIXLEN_MAX_LEN -1 ]={'a'};
+  char sstring[TOKEN_VARLEN_INIT_LEN ]={'b'};
+  char *string;
+  int len;
 
-}
-
-void _set_token_type(token *tk, token_type type)
-{
-  tk->type=type;
-}
-
-void init_token(token *tk, tokenizer_state state, char_buffer *buffer)
-{
-  _clear_token(tk);
-  _set_token_pos(tk, buffer, POS_BEGIN);
-  _catchar_token(tk, prev_char(buffer));
-}
-
-void append_token(token *tk, tokenizer_state state, char_buffer *buffer)
-{
-  _catchar_token(tk,prev_char (buffer));
-
-}
-
-void skip_token(token *tk, tokenizer_state state, char_buffer *buffer)
-{
-  /* do nothing */
-#if 0
-  // when debug, print out the comment we collect so far
-  switch (state) {
-    case TK_MULTI_LINE_COMENT_BEGIN:
-    case TK_SINGLE_LINE_COMENT_BEGIN:
-    case TK_MULTI_LINE_COMENT_END:
-      printf ("%c", prev_char (buffer));
-      return;
-  }
-#endif
-}
-
-void acc_identifier(token *tk)
-{
-
-  for (int i=0;i<N_KEYWORDS;++i)
+  puts("check_init_token begin");
+  for (int i=TFE_BRIEF;i<_TFE_LEN_TYPE_END;++i)
   {
-    if (keywords_tab[i] && 0==(strcmp(keywords_tab [i], tk->value.string)))
-    {
-      tk->type = i;
-      return;
+    switch(i) {
+      case TFE_FIXLEN:
+        tk=init_fixlen(begin,'1');
+        len = ((fixlen_token*)tk)->len;
+        string = ((fixlen_token*)tk)->string;
+        assert (TOKEN_LEN_TYPE(tk) == TFE_FIXLEN);
+        assert (len  == 0);
+        strncpy (string, tstring, TOKEN_FIXLEN_MAX_LEN);
+        puts(string);
+        break;
+
+      case TFE_VARLEN:
+        tk=init_varlen(begin,'1');
+        len = ((varlen_token*)tk)->len;
+        string = ((varlen_token*)tk)->string;
+        assert (TOKEN_LEN_TYPE(tk) == TFE_VARLEN);
+        assert (len  == 0);
+        strncpy (string, tstring, TOKEN_VARLEN_INIT_LEN);
+        puts(string);
+        break;
+
+      case TFE_BRIEF:
+        break;
     }
   }
-  tk->type = TKT_IDENTIFIER;
+  puts("check_init_token passed");
+}
+
+
+token *init_breif(position *begin)
+{
+  return _init_token(begin,sizeof(breif_token),TFE_BRIEF);
+}
+
+token *init_fixlen(position *begin, char ch)
+{
+  fixlen_token *ftk=_init_token(begin,sizeof(fixlen_token),TFE_FIXLEN);
+  append_fixlen(ftk,ch);
+  return ftk;
+}
+
+token *init_varlen(position *begin, char ch)
+{
+  varlen_token *tk= (varlen_token*) _init_token(begin,sizeof(varlen_token), TFE_VARLEN);
+  tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
+  tk->max=TOKEN_VARLEN_INIT_LEN;
+  assert(tk->string);
+  append_varlen(tk,ch);
+  return (token*) tk;
 
 }
-  
-bool is_oper_type (node state, oper_enum op)
-{
-  switch (op) {
-    case IS_OPER:
-      return _TK_OPERATOR_ACCEPT_BEGIN < state &&
-        state < _TK_OPERATOR_ACCEPT_END;
 
-    case IS_OPER_PUT_BACK:
-      return _TK_OPERATOR_ACCEPT_BEGIN < state &&
-        state < _TK_OPERATOR_PUT_BACK;
+int append_fixlen(token *_tk, char ch)
+{
+  fixlen_token *tk= (fixlen_token*) _tk;
+
+  if (tk->len == TOKEN_FIXLEN_MAX_LEN)
+    return E_FIXLEN_TOO_LONG;
+  tk->string[tk->len++]=ch;
+  return 0;
+}
+
+void check_append_fixlen(void)
+{
+  token *tk;
+  position pos;
+  tk=init_fixlen(&pos,'0');
+  int r;
+
+  for (int i=0;i<TOKEN_FIXLEN_MAX_LEN-1;++i)
+  {
+    r=append_fixlen(tk,'a');
+    assert(r==0);
+  }
+  puts(TOKEN_FIXLEN_STRING(tk));
+  r=append_fixlen(tk,'a');
+  assert (r!=0);
+  puts("check_append_fixlen passed");
+}
+
+
+int append_varlen(token *_tk, char ch)
+{
+  char *newspace;
+  varlen_token *tk=(varlen_token*)_tk;
+
+  if (tk->len == tk->max)
+  {
+    tk->max=2 *  (tk->len);
+    newspace=malloc(sizeof(char) * tk->max);
+    if (!newspace)
+    {
+      perror("malloc");
+      return E_NOMEM;
+    }
+
+    memcpy(newspace,tk->string,sizeof(char)*(tk->len));
+    newspace[tk->len++]=ch;
+    free(tk->string);
+    tk->string=newspace;
+    return 0;
+  }
+  tk->string[tk->len++]=ch;
+  return 0;
+
+}
+
+// TODO: check_varlen_append
+int accept_brief(token *tk,char ch, node state, bool append)
+{
+  if (is_oper_type(state))
+  {
+    (tk)->type=state2operator[state];
+    return 0;
+  }
+  switch(state) {
+    case TK_PUNCTUATION_END:
+    case TK_PERIOD_END:
+      tk->type=state2punctuation[state];
+      return 0;
 
     default:
-      return false;
+      return E_TOKEN_NOT_BREIF;
   }
 
 }
 
-bool is_tokenizable_operator(tokenizer_state state)
+int accept_varlen(token *tk,char ch,node state, bool append)
 {
-  return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
-}
+  int r=0;
+  varlen_token *vtk=(varlen_token*)tk;
 
+  if(append && (r=append_varlen(tk,ch)) != 0)
+    return r;
 
-/** note: peek_char(buffer) will be one char pass the 
- * char that caused the *ACCEPT*
- * so use prev_char (buffer) to get the char
- */
-void accept_token(token *tk, tokenizer_state state, char_buffer *buffer)
-{
-
-  char _char;
-  void acc_integer(token *tk);
-  if (is_oper_type (state, IS_OPER))
-  {
-     /* never put bach char here, no needed */
-    _clear_token(tk);
-    _set_token_type (tk, state2operator[state]);
-    _terminate_token(tk);
-    _set_token_pos(tk,buffer,POS_BEGIN);
-    _set_token_pos(tk,buffer,POS_END);
-    if (is_oper_type (state, IS_OPER_PUT_BACK))
-    {
-      put_char(buffer);
-    }
-    return;
-  }
+  vtk->string[vtk->len]=0;
   switch (state) {
     case TK_IDENTIFIER_END:
-      _terminate_token(tk);
-      acc_identifier(tk);
-      put_char(buffer);
-      _set_token_pos(tk,buffer,POS_END);
-      return;
-
-    case TK_PUNCTUATION_END:
-      _char=prev_char(buffer);
-      _clear_token(tk);
-      _catchar_token(tk,_char);
-      _terminate_token(tk);
-      _set_token_pos(tk,buffer,POS_BEGIN);
-      _set_token_pos(tk,buffer,POS_END);
-      _set_token_type(tk, char2type[_char]);
-      return ;
-
-      // TODO: rename TK_INT_END
-      // use integer
-    case TK_INT_END:
-      put_char(buffer);
-      _set_token_pos(tk,buffer,POS_END);
-      _terminate_token(tk);
-      acc_integer(tk);
-      return;
-
-    case TK_CHAR_LITERAL_END:
-      _char=prev_char(buffer);
-      _catchar_token(tk,_char);
-      _terminate_token(tk);
-      _set_token_type(tk,TKT_CHARACTER_LITERAL);
-      _set_token_pos(tk,buffer,POS_END);
-      return;
+      tk->type=TKT_IDENTIFIER;
+      return 0;
 
     case TK_STRING_LITERAL_END:
-      _char=prev_char(buffer);
-      _catchar_token(tk,_char);
-      _terminate_token(tk);
-      _set_token_type(tk,TKT_STRING_LITERAL);
-      _set_token_pos(tk,buffer,POS_END);
-      return;
-
+      tk->type=TKT_STRING_LITERAL;
+      return 0;
     default:
+      return E_TOKEN_NOT_VARLEN;
+  }
+
+}
+
+int accept_fixlen(token *tk,char ch,node state,bool append)
+{
+  int r=0;
+  fixlen_token *ftk=(fixlen_token*)tk;
+
+  if(append && (r=append_fixlen(tk,ch)) != 0)
+    return r;
+
+  ftk->string[ftk->len]=0;
+  switch (state) {
+    case TK_INT_END:
+      tk->type=TKT_INTEGER_LITERAL;
       break;
+
+    case TK_CHAR_LITERAL_END:
+      tk->type=TKT_CHARACTER_LITERAL;
+      return 0;
+
+    case TK_FLOAT_END:
+      tk->type=TKT_FLOAT_LITERAL;
+      return 0;
+    default:
+      return E_TOKEN_NOT_FIXLEN;
   }
 
 }
 
 
-void acc_integer (token *tk)
+  
+bool is_oper_type (node state)
 {
-  char *value = tk->value.string;
-  tk->type = TKT_INTEGER_LITERAL;
-
+  return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
 }
 
 
 char *format_token (token *tk) 
 {
   static char buf [ BUFSIZ ];
-  snprintf ( buf , BUFSIZ, "<%s> <%s> <%d,%d> <%d,%d>", 
-      token_tab [ tk->type ], tk->value.string,
-      tk->begin.lineno, tk->begin.column, tk->end.lineno, tk->end.column);
+  breif_token *btk;
+  fixlen_token *ftk;
+  varlen_token *vtk;
+  const char *type_string= token_tab [TOKEN_TYPE(tk)];
+  position *begin= &tk->begin;
+  char *string="";
+
+  switch (TOKEN_LEN_TYPE(tk)) {
+    case TFE_FIXLEN:
+      string=((fixlen_token*)tk)->string;
+      break;
+
+    case TFE_VARLEN:
+      string=((varlen_token*)tk)->string;
+      break;
+  }
+
+  snprintf ( buf , BUFSIZ, "<%s> <%s> <%d>", 
+      type_string, string, begin->lineno);
 
   return buf;
 
 }
+
+void fini_token(token *tk)
+{
+  char *string;
+  switch(TOKEN_LEN_TYPE(tk)) 
+  {
+    case TFE_FIXLEN:
+      string=TOKEN_FIXLEN_STRING(tk);
+      free(string);
+      break;
+
+    case TFE_VARLEN:
+      string=TOKEN_VARLEN_STRING(tk);
+      free(string);
+      break;
+  }
+  free(tk);
+}
+

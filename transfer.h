@@ -32,19 +32,37 @@ typedef enum entry_flag
 /* transfer actions */
 typedef enum entry_action
 {
-  TFE_ACT_INIT = 1,
-  TFE_ACT_APPEND = 2,
-  TFE_ACT_ACCEPT = 3,
-  TFE_ACT_SKIP=4
+  TFE_ACT_SKIP=0,
+
+  TFE_ACT_INIT,
+  TFE_ACT_APPEND,
+  TFE_ACT_ACCEPT,
+
+  _TFE_ACT_NULL,
 
 } entry_action;
 
+
+
 /* bit shift of fields */
 #define TFE_STATE_SHIFT ( 4 )
+
 #define TFE_CHAR_CLASS_SHIFT ( 8 +TFE_STATE_SHIFT  )
+
 #define TFE_ACTION_SHIFT (8 + TFE_CHAR_CLASS_SHIFT )
+
+#define TFE_LEN_TYPE_SHIFT ( 4 + TFE_ACTION_SHIFT )
+
 #define TFE_STATE_MASK ( ~(0XFFFFF << TFE_CHAR_CLASS_SHIFT) )
-#define TFE_CHAR_CLASS_MASK ( ~(0xF << TFE_ACTION_SHIFT) )
+
+#define TFE_CHAR_CLASS_MASK ( ~(0xFFF << TFE_ACTION_SHIFT) )
+
+#define TFE_ACTION_MASK ( ~(0xFF << TFE_LEN_TYPE_SHIFT ) )
+
+#define TFE_SET_LEN_TYPE(e,a) do {\
+  e &= 0XFFFFFF;\
+  e |= (( a ) << TFE_LEN_TYPE_SHIFT);\
+} while (0)
 
 
 /* fields accessor */
@@ -52,11 +70,13 @@ typedef enum entry_action
 
 #define TFE_IS_REVERSED(e) ((e) & TFE_FLAG_REVERSED) 
 
-#define TFE_ACTION(e) ((e) >> TFE_ACTION_SHIFT)
+#define TFE_ACTION(e) (((e) & TFE_ACTION_MASK) >> TFE_ACTION_SHIFT)
 
 #define TFE_CHAR_CLASS(e) (((e)&TFE_CHAR_CLASS_MASK) >> TFE_CHAR_CLASS_SHIFT)
 
 #define TFE_STATE(e) (((e)& TFE_STATE_MASK ) >> TFE_STATE_SHIFT)
+
+#define TFE_LEN_TYPE(e) ((e) >> TFE_LEN_TYPE_SHIFT)
 
 #define TFE_MAKE_ENTRY(a,c,s,f)\
   ( (entry_t) ((a)<<TFE_ACTION_SHIFT | (c) << TFE_CHAR_CLASS_SHIFT |  (s) << TFE_STATE_SHIFT | (f)) )
@@ -67,8 +87,8 @@ typedef enum entry_action
 void add_initial(node , char_class_enum );
 void add_intermedia_rev (node , node , char_class_enum  ); 
 void add_intermedia (node , node , char_class_enum ); 
-void add_selfloop (node , char_class_enum );;
-void add_selfloop_rev (node , char_class_enum );;
+void add_selfloop (node , char_class_enum );
+void add_selfloop_rev (node , char_class_enum );
 void add_accepted_rev(node ,  node , char_class_enum  ); 
 void add_accepted(node , node  , char_class_enum ); 
 
@@ -83,5 +103,6 @@ bool can_transfer(entry_t entry,  int character) ;
 entry_t seek_entry(tokenizer_state , tokenizer_state);
 
 void clear_table_r(transfer_table_t , int*);
+
 #endif
 

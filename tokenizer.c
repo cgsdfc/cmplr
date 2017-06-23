@@ -6,70 +6,158 @@
 #include<string.h>
 #include<ctype.h>
 #include "tokenizer.h"
+#include "token_defs.h"
 
-
+static int tknzr_errno;
 // TODO: give more sensible error msg 
 // based on errstate
 const char *tokenizer_err_tab [] =
 {
+
   [E_PREMATURE_END]="premature end of input",
   [E_UNEXPECTED_CHAR]="unexpected character"
 
 };
 
+token *
+depatch_init(token_len_type len_type , position *pos,char ch)
+{
+  switch (len_type) {
+    case   TFE_BRIEF :
+      return init_breif(pos);
+      break;
 
-int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate)
+    case TFE_FIXLEN:
+      return init_fixlen(pos,ch);
+      break;
+
+    case TFE_VARLEN:
+      return init_varlen(pos,ch);
+
+    default:
+      return NULL;
+
+  }
+}
+
+int depatch_append(token_len_type len_type, token *tk,  char ch)
+{
+  int r=0;
+
+  switch (len_type) {
+    case TFE_VARLEN :
+      if (append_varlen(tk,ch)!=0)
+        return r;
+      return 0;
+
+    case TFE_FIXLEN :
+      if (append_fixlen(tk,ch)!=0)
+        return r;
+      return 0;
+
+    default:
+      return r;
+  }
+}
+
+int depatch_accept(token_len_type len_type, 
+    token *tk,
+    char ch,
+    node state,
+    bool append)
+{
+  int r=0;
+
+  switch (len_type) {
+    case TFE_VARLEN:
+      if ((r=accept_varlen(tk,ch,state, append))!=0)
+        return r;
+      return 0;
+
+    case TFE_FIXLEN:
+      if ((r=accept_fixlen(tk,ch,state, append))!=0)
+        return r;
+      return 0;
+
+    case TFE_BRIEF:
+      if ((r=accept_brief(tk,ch,state,append))!=0)
+        return r;
+      return 0;
+  }
+}
+
+int get_next_token (token **ptoken,
+    char_buffer *buffer,
+    node *errstate)
 {
   if (peek_char(buffer) == EOF) {
     return EOF;
   }
 
   transfer_entry entry;
-  bool accepted=false;
+  bool is_accepted=false;
+  bool is_reversed=false;
   tokenizer_state state=TK_INIT;
   tokenizer_state nstate = TK_NULL;
-  int _char;
+  token_len_type len_type;
+  entry_action action;
+  int ch;
+  int r;
+  token *tk;
 
-  while (!accepted) 
+  while (!is_accepted) 
   {
-    *errstate=state;
-    _char = get_char (buffer);
-    if(_char == EOF) {
-      if (state == TK_INIT)
-        return EOF;
-      else
-        return E_PREMATURE_END;
+    ch = get_char (buffer);
+    if(ch == EOF) 
+    {
+      r=(state == TK_INIT)?EOF:E_PREMATURE_END;
+      goto error;
     }
 
-    nstate = do_transfer(state, _char, &entry);
+    nstate = do_transfer(state, ch, &entry);
     if (nstate == TK_NULL)
     {
-      put_char(buffer);
-      return E_UNEXPECTED_CHAR;
+      r=E_UNEXPECTED_CHAR;
+      goto error;
     }
 
-    accepted = TFE_IS_ACCEPTED(entry);
+    is_accepted = TFE_IS_ACCEPTED(entry);
+    len_type = TFE_LEN_TYPE(entry);
+    is_reversed = TFE_IS_REVERSED(entry);
     state = nstate;
-    switch (TFE_ACTION(entry))
+    action=TFE_ACTION(entry);
+
+    switch (action)
     {
       case TFE_ACT_ACCEPT:
-        accept_token(tk,nstate,buffer);
-        break;
+        /* if !is_reversed, that means the last char of a token is */
+        /*   also part of it. */
+        if ((r=depatch_accept(len_type, tk, ch, state, !is_reversed))!=0)
+          goto error;
+
+        if (is_reversed)
+          put_char (buffer);
+
+        *ptoken=tk;
+        return 0;
 
       case TFE_ACT_APPEND:
-        append_token(tk,nstate,buffer);
+        if ((r=depatch_append(len_type,tk,ch))!=0)
+          goto error;
         break;
 
       case TFE_ACT_INIT:
-        init_token(tk,nstate,buffer);
+        tk=depatch_init(len_type, &buffer->pos,ch);
         break;
+
       case TFE_ACT_SKIP:
-        skip_token(tk,nstate,buffer);
         break;
     }
   } 
+error:
+  *errstate=state;
+  return r;
 
-  return 0;
 }
 
 
@@ -82,8 +170,6 @@ void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state
 
   switch (error) {
     case E_PREMATURE_END:
-      tk->value.string[tk->len]=0;
-      fprintf(stderr, "token `%s\' is unfinished\n", tk->value.string);
       break;
 
     case E_UNEXPECTED_CHAR:
@@ -97,18 +183,19 @@ void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state
 
 int print_token_stream (char_buffer *buffer)
 {
-  token tk;
+  token *tk;
   int r=0;
   char *token_string;
   tokenizer_state errstate;
 
+  check_tknzr_table();
   init_tknzr_table ();
   while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
   {
     switch (r)
     {
       case 0:
-        token_string = format_token (&tk);
+        token_string = format_token (tk);
         puts(token_string);
         break;
 
@@ -116,12 +203,10 @@ int print_token_stream (char_buffer *buffer)
         goto error;
     }
   }
-  clear_tknzr_table();
   return 0;
 
 error:
-  clear_tknzr_table();
-  tokenizer_error(r,buffer, &tk, errstate);
+  tokenizer_error(r,buffer, tk, errstate);
   return 1;
 
 }
@@ -133,7 +218,7 @@ int pss (char *string)
   if (init_char_buffer_from_string(&cb, string)<0)
     return -1;
 
-  if (print_token_stream(&cb)<0)
+  if (print_token_stream(&cb)!=0)
     return -1;
 
   clear_buffer(&cb);
@@ -158,30 +243,14 @@ int main(int ac,char**av){
 
   if (init_char_buffer_from_file (&buffer, av[1])<0)
   {
-    perror (av[0]);
+    perror (av[1]);
     exit(1);
   }
 
-  init_tknzr_table();
-  while ((r = get_next_token(&tk, &buffer, &errstate)) != EOF)
-  {
-    switch (r)
-    {
-      case 0:
-        token_string = format_token (&tk);
-        puts(token_string);
-        break;
+  exit (print_token_stream(&buffer));
 
-      default:
-        goto error;
-    }
-  }
 
-  return 0;
 
-error:
-  tokenizer_error(r,&buffer, &tk, errstate);
-  exit(1);
 }
 
 

@@ -1,9 +1,15 @@
 /* transfer.c */
 #include "transfer.h"
+#include "token_defs.h"
 
 extern transfer_table_t tknzr_table;
 extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES] ;
 
+void clear_tknzr_table(void)
+{
+  memset(tknzr_entry_counters,0,sizeof tknzr_entry_counters);
+
+}
 
 void add_initial(node to, char_class_enum char_class)
 {
@@ -40,8 +46,63 @@ void add_accepted(node from, node to , char_class_enum char_class)
   add_transfer(from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
 }
 
+void set_len_type_r (transfer_table_t table, node from, node to, token_len_type len_type)
+{
+  TFE_SET_LEN_TYPE(table[from][to], len_type);
+}
+
+void set_len_type(node from, node to, token_len_type len_type)
+{
+  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
+  set_len_type_r (tknzr_table, from, to, len_type);
+
+}
+
+void set_len_type_row_r (transfer_table_t table, 
+    int *counter,
+    node from,
+    token_len_type len_type)
+{
+  int len=counter[from];
+  for (int i=0;i<len;++i)
+  {
+    TFE_SET_LEN_TYPE(table[from][i], len_type);
+  }
+
+}
+
+void set_len_type_row (node from, token_len_type len_type)
+{
+  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
+  set_len_type_row_r(tknzr_table, tknzr_entry_counters, from, len_type);
+}
+
+void check_set_len_type(void)
+{
+
+  token_len_type len_type;
+/* loop for all the from=non-accepted and to=all-state with all len_type */
+  puts("check_set_len_type begin");
+  for (int i=TK_INIT; i<_TK_NON_ACCEPTED_END;++i)
+  {
+    for (int j=TK_INIT;j<TK_NULL;++j)
+    {
+      for (int k=TFE_BRIEF;k<_TFE_LEN_TYPE_END;++k)
+      {
+        set_len_type(i,j,k);
+        len_type=TFE_LEN_TYPE(tknzr_table[i][j]);
+        assert(len_type == k);
+      }
+    }
+  }
+  clear_tknzr_table();
+  puts("check_set_len_type passed");
+}
+
+
 /* find the entry that defines a transfer going from */
 /* `state_from` to `state_to` */
+/* should only be called after init_tknzr_table */
 static
 transfer_entry seek_entry_r (transfer_table_t table, int *entry_counters ,int state_from, int state_to)
 {
@@ -77,6 +138,7 @@ bool can_transfer(entry_t entry,  int character)
   char_class_enum cclass = TFE_CHAR_CLASS(entry);
   char *char_class=get_char_class(cclass);
 
+  // TODO: use bsearch
   bool is_in_class = strchr (char_class, character);
   return (is_in_class && ! TFE_IS_REVERSED(entry)) || 
     (!is_in_class && TFE_IS_REVERSED(entry));
@@ -121,6 +183,7 @@ int do_transfer_r (transfer_table_t table, int *entry_counters,
     nstate = TFE_STATE(table[state][i]);
     if (can_transfer (table[state][i], ch)) 
     {
+      // TODO: swap table[state][0] and table[state][i]
       return nstate;
     }
   }
@@ -152,7 +215,3 @@ void add_transfer(tokenizer_state from,
 
 }
 
-void clear_table_r (transfer_table_t table, int *entry_counters)
-{
-  memset(entry_counters, 0, sizeof entry_counters);
-}

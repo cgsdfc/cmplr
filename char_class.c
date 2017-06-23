@@ -116,6 +116,7 @@ char *char_class2string[]=
 
 void check_char_class(void)
 {
+  puts("check_char_class begin");
   for (int i=CHAR_CLASS_EMPTY;i<_CHAR_CLASS_NULL;++i)
   {
     assert (char_class2string[i]);

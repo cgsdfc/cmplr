@@ -26,16 +26,10 @@ typedef struct tokenizer
 } tokenizer ;
 
 
-typedef enum tkz_error
-{
-  E_UNEXPECTED_CHAR=1,
-  E_PREMATURE_END,
-  E_NO_MORE_PUT_CHAR,
-
-} tkz_error ;
 
 void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
-int get_next_token (token *tk, char_buffer *buffer, tokenizer_state *errstate);
+int get_next_token (token **tk, char_buffer *buffer, tokenizer_state *errstate);
+void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
 
 #endif
 
