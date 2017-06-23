@@ -110,7 +110,8 @@ char *char_class2string[]=
 
   [ CHAR_CLASS_DEC_PART_PERIOD ]=CC_DEC_PART CC_PERIOD,
   [ CHAR_CLASS_E ]= CC_E,
-[ CHAR_CLASS_SIGN ]=CC_SIGN,
+  [ CHAR_CLASS_SIGN ]=CC_SIGN,
+  [CHAR_CLASS_STAR_SLASH]="*/",
 };
 
 void check_char_class(void)

@@ -73,6 +73,7 @@ typedef enum char_class_enum
   CHAR_CLASS_PERIOD,
   CHAR_CLASS_E,
   CHAR_CLASS_SIGN,
+  CHAR_CLASS_STAR_SLASH,
   _CHAR_CLASS_NULL,
 
 } char_class_enum ;

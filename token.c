@@ -78,7 +78,8 @@ void append_token(token *tk, tokenizer_state state, char_buffer *buffer)
 void skip_token(token *tk, tokenizer_state state, char_buffer *buffer)
 {
   /* do nothing */
-#ifndef NDEBUG // when debug, print out the comment we collect so far
+#if 0
+  // when debug, print out the comment we collect so far
   switch (state) {
     case TK_MULTI_LINE_COMENT_BEGIN:
     case TK_SINGLE_LINE_COMENT_BEGIN:
