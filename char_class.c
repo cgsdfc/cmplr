@@ -1,10 +1,4 @@
 #include "char_class.h"
-#include <stdbool.h>
-#include<stdlib.h>
-#include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
 
 #define CC_CHAR_LITERAL " `\"#@$" CC_IDENTIFIER_PART\
   CC_OPERATOR CC_PUNCTUATION
@@ -26,7 +20,7 @@
 #define CC_IDENTIFIER_PART CC_IDENTIFIER_BEGIN CC_DEC_PART
 #define CC_SPACES " \t\n\r\f\v"
 #define CC_NEWLINE "\n\r"
-#define CC_PUNCTUATION "(){}[]:;,?"
+#define CC_PUNCTUATION "(){}[]:;,.?"
 #define CC_OPERATOR "~!%^&*-+<>=/|"
 #define CC_BACKSLASH "\\"
 #define CC_L "lL"

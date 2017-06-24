@@ -6,6 +6,11 @@ int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
 void check_can_transfer (tokenizer_state from, 
     tokenizer_state to, char_class_enum cc);
 
+void clear_tknzr_table(void)
+{
+  memset(tknzr_entry_counters,0,sizeof tknzr_entry_counters);
+
+}
 
 static
 void check_table (void)
@@ -13,7 +18,6 @@ void check_table (void)
   // TODO: check more throughly
 #ifndef NDEBUG
   puts("check_table begin");
-  init_tknzr_table ();
 
   /* TK_INIT -> TK_IDENTIFIER_BEGIN */
   check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
@@ -28,13 +32,12 @@ void check_table (void)
   check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
 
   /* check TK_INIT -> TK_PUNCTUATION_END */
-  check_can_transfer(TK_INIT,TK_PUNCTUATION_END,CHAR_CLASS_PUNCTUATION);
+  check_can_transfer(TK_INIT,TK_PUNCTUATION_BEGIN,CHAR_CLASS_PUNCTUATION);
 
   check_can_transfer(TK_STRING_LITERAL_BEGIN,TK_STRING_LITERAL_ESCAPED,
       CHAR_CLASS_BACKSLASH);
 
   printf ("check_init_table passed\n");
-  clear_tknzr_table();
 #endif
 
 }
@@ -53,11 +56,9 @@ void init_identifier(void)
 static
 void init_punctuation(void)
 {
-  /* .0 => float_literal */
-  /* .a => period */
-  add_initial(TK_PERIOD,CHAR_CLASS_PERIOD);
+  add_initial(TK_PUNCTUATION_BEGIN,CHAR_CLASS_PUNCTUATION);
   add_accepted_rev (TK_PERIOD,TK_PERIOD_END,CHAR_CLASS_DEC_PART);
-  add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION);
+  add_accepted_rev(TK_PUNCTUATION_BEGIN, TK_PUNCTUATION_END, CHAR_CLASS_EMPTY);
 }
 
 void init_single_line_coment(void)
@@ -95,6 +96,74 @@ void init_multi_line_coment(void)
 
 }
 
+void check_init_len_type(void)
+{
+
+  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
+  {
+    for (int j=0;j<tknzr_entry_counters[i];++j)
+    {
+      entry_t entry = tknzr_table[i][j];
+      token_len_type len_type = TFE_LEN_TYPE(entry);
+      node to = TFE_STATE(entry);
+
+      if (state_is_brief(to))
+        assert(len_type == TFE_BRIEF);
+
+      else if (state_is_fixlen(to)) {
+        printf("%d\n", to);
+        assert(len_type == TFE_FIXLEN);
+      }
+
+
+      else if (state_is_varlen(to))
+        assert(len_type == TFE_VARLEN);
+
+    }
+  }
+  puts("check_init_len_type passed");
+}  
+void init_len_type(void)
+{
+  node from=TK_INIT;
+  entry_t entry;
+  node to;
+  int len=tknzr_entry_counters[TK_INIT];
+
+  for (int i=0;i < len;++i)
+  {
+    entry=tknzr_table[from][i];
+    to=TFE_STATE(entry);
+    if (state_is_brief(to)) {
+      set_len_type(from,i,TFE_BRIEF);
+    }
+  
+    else if (state_is_fixlen(to)) {
+      set_len_type(from,i,TFE_FIXLEN);
+    }
+
+    else if (state_is_varlen(to)) {
+      set_len_type(from,i,TFE_VARLEN);
+    }
+
+  }
+
+  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
+  {
+    from=i;
+    if (state_is_brief(from))
+      set_len_type_row(from,TFE_BRIEF);
+  
+    else if (state_is_fixlen(from))
+      set_len_type_row(from,TFE_FIXLEN);
+
+
+    else if (state_is_varlen(from))
+      set_len_type_row(from,TFE_VARLEN);
+  }
+
+
+}
 
 void init_tknzr_table (void)
 {
@@ -109,6 +178,9 @@ void init_tknzr_table (void)
 
   /* integer -- dec, oct, hex, long or not , unsigned or not */
   init_integer_literal();
+
+  /* float */ 
+  init_float_literal();
 
   /* single line coment */
   init_single_line_coment();
@@ -125,6 +197,8 @@ void init_tknzr_table (void)
   /* string */
   init_string_literal();
 
+  init_len_type();
+
 }
 void check_counters(void)
 {
@@ -133,17 +207,20 @@ void check_counters(void)
     assert(tknzr_entry_counters[i] == 0);
   }
 }
+void check_operators(void);
+void  check_fields(void);
 
 void check_tknzr_table (void) 
 {
   puts("check_tknzr_table begin");
- 
+  check_char_buffer(); 
   check_operators();
   check_fields();
   check_char_class();
-  check_set_len_type();
-  check_counters();
+
+  init_tknzr_table ();
   check_table();
+  check_init_len_type();
   clear_tknzr_table();
 
   puts ("check_table passed");

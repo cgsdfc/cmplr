@@ -10,6 +10,7 @@
 #include "state.h"
 #include "char_class.h"
 #include "char_buffer.h"
+#include "token_defs.h"
 
 /** entry: lower 2 bit is entry_flag
  * middle 15 bit is state
@@ -102,7 +103,7 @@ void add_transfer(tokenizer_state from,
 bool can_transfer(entry_t entry,  int character) ;
 entry_t seek_entry(tokenizer_state , tokenizer_state);
 
-void clear_table_r(transfer_table_t , int*);
-
+void set_len_type_row (node from, token_len_type len_type);
+void set_len_type(node from, node to, token_len_type len_type);
 #endif
 

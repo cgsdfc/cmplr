@@ -23,6 +23,7 @@ typedef struct token
 typedef struct breif_token
 {
   token _token;
+  char ch;
 } breif_token;
 
 typedef struct varlen_token
@@ -41,11 +42,12 @@ typedef struct fixlen_token
 } fixlen_token;
 
 /* init */
-token *init_breif(position *begin);
+token *init_breif(position *begin, char ch);
 token *init_fixlen(position *begin, char ch);
 token *init_varlen(position *begin, char ch);
 
 /* append */
+int append_brief(token *tk, char ch);
 int append_fixlen(token *tk, char ch);
 int append_varlen(token *tk, char ch);
 

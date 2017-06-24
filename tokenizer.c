@@ -1,10 +1,4 @@
 /* tokenizer.c */
-#include <stdbool.h>
-#include<stdlib.h>
-#include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
 #include "tokenizer.h"
 #include "token_defs.h"
 
@@ -19,12 +13,12 @@ const char *tokenizer_err_tab [] =
 
 };
 
-token *
+  token *
 depatch_init(token_len_type len_type , position *pos,char ch)
 {
   switch (len_type) {
-    case   TFE_BRIEF :
-      return init_breif(pos);
+    case TFE_BRIEF :
+      return init_breif(pos,ch);
       break;
 
     case TFE_FIXLEN:
@@ -35,7 +29,7 @@ depatch_init(token_len_type len_type , position *pos,char ch)
       return init_varlen(pos,ch);
 
     default:
-      return NULL;
+      return init_breif(pos,ch);
 
   }
 }
@@ -79,6 +73,7 @@ int depatch_accept(token_len_type len_type,
         return r;
       return 0;
 
+    default:
     case TFE_BRIEF:
       if ((r=accept_brief(tk,ch,state,append))!=0)
         return r;
@@ -147,7 +142,8 @@ int get_next_token (token **ptoken,
         break;
 
       case TFE_ACT_INIT:
-        tk=depatch_init(len_type, &buffer->pos,ch);
+        if((tk=depatch_init(len_type, &buffer->pos,ch))==NULL)
+          goto error;
         break;
 
       case TFE_ACT_SKIP:

@@ -67,16 +67,19 @@ void check_init_token(void)
 }
 
 
-token *init_breif(position *begin)
+token *init_breif(position *begin, char ch)
 {
-  return _init_token(begin,sizeof(breif_token),TFE_BRIEF);
+  breif_token *btk = (breif_token*)  _init_token(begin,sizeof(breif_token),TFE_BRIEF);
+  btk->ch=ch;
+  return (token*) btk;
+
 }
 
 token *init_fixlen(position *begin, char ch)
 {
-  fixlen_token *ftk=_init_token(begin,sizeof(fixlen_token),TFE_FIXLEN);
+  fixlen_token *ftk= (fixlen_token*) _init_token(begin,sizeof(fixlen_token),TFE_FIXLEN);
   append_fixlen(ftk,ch);
-  return ftk;
+  return (token*) ftk;
 }
 
 token *init_varlen(position *begin, char ch)
@@ -145,18 +148,32 @@ int append_varlen(token *_tk, char ch)
 
 }
 
+void check_state2operator(void)
+{
+  for (int i=TK_INIT;i<MAX_TRANSFER_ENTRIES;++i)
+  {
+    if (is_oper_type(i))
+      assert(state2operator[i]);
+  }
+}
+
 // TODO: check_varlen_append
 int accept_brief(token *tk,char ch, node state, bool append)
 {
+  breif_token *btk=(breif_token*) tk;
+
   if (is_oper_type(state))
   {
     (tk)->type=state2operator[state];
     return 0;
   }
   switch(state) {
-    case TK_PUNCTUATION_END:
     case TK_PERIOD_END:
-      tk->type=state2punctuation[state];
+      tk->type=TKT_PERIOD;
+      return 0;
+
+    case TK_PUNCTUATION_END:
+      tk->type=state2punctuation[btk->ch];
       return 0;
 
     default:
@@ -200,7 +217,7 @@ int accept_fixlen(token *tk,char ch,node state,bool append)
   switch (state) {
     case TK_INT_END:
       tk->type=TKT_INTEGER_LITERAL;
-      break;
+      return 0;
 
     case TK_CHAR_LITERAL_END:
       tk->type=TKT_CHARACTER_LITERAL;
@@ -225,6 +242,8 @@ bool is_oper_type (node state)
 
 char *format_token (token *tk) 
 {
+  assert (tk);
+
   static char buf [ BUFSIZ ];
   breif_token *btk;
   fixlen_token *ftk;

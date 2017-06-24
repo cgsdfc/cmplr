@@ -3,11 +3,11 @@
 #define TOKENIZER_H 1
 #include <sys/types.h>
 #include <stdbool.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "transfer.h"
 #include "tknz_table.h"
 #include "token.h"

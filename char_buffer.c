@@ -99,16 +99,6 @@ int init_char_buffer_from_file (char_buffer *buffer, char *file)
 
 }
 
-void check_last_line(char *line)
-{
-  int len=strlen(line);
-  if (line[len-1]!='\n')
-  {
-    fputs("warning: no newline at the end of input", stderr);
-    line[len]='\n';
-    line[len+1]=0;
-  }
-}
 
 
 
@@ -154,7 +144,7 @@ int init_char_buffer (char_buffer *buffer, FILE *f, int chars, int lines)
     /* if not, add a newline to it, for tokenize purposes */
     if (buffer->buf[chars-1] != '\n')
     {
-      fputs("warning: no newline at the end of input", stderr);
+      puts("warning: no newline at the end of input");
       buffer->buf[chars]='\n';
       buffer->buf[chars+1]=0;
       chars++;
@@ -182,7 +172,7 @@ int prev_char (char_buffer* buffer)
 
 int next_char (char_buffer* buffer)
 {
-  if (buffer -> index == buffer -> end)
+  if (buffer -> index == buffer -> end-1)
     return EOF;
   return buffer -> buf [buffer -> index + 1];
 
@@ -309,6 +299,22 @@ void check_peek_line (char_buffer *buffer)
 
 void check_char_buffer (void)
 {
+  char_buffer buf;
+  init_char_buffer_from_string(&buf,"?\n\n");
+  char ch;
+
+  ch=get_char(&buf);
+  assert(ch=='?');
+  put_char(&buf);
+  assert(peek_char(&buf)=='?');
+
+  ch=get_char(&buf);
+  assert(ch == '?');
+  ch=get_char(&buf);
+  assert(ch == '\n');
+  put_char(&buf);
+  assert(peek_char(&buf) == '\n');
+
 
 }
 

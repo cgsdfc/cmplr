@@ -6,11 +6,11 @@ static op_struct operators[]=
   {
     .kind="init_tilde_like_operator",
     .op_count=1,
-    .op_states=1,
+    .op_states=2,
     .op={CHAR_CLASS_TILDE}, 
     .reject={CHAR_CLASS_EMPTY },
     .states={
-      { TK_TILDE }
+      { TK_TILDE, TK_TILDE_END }
     },
     .init=add_1state
   },
@@ -112,6 +112,87 @@ static op_struct operators[]=
 
 };
 
+static void
+init_len_type(void)
+{
+/* set len type */
+  for (int i=0;i<N_OPERATOR_KINDS;++i)
+  {
+    for (int j=0;j<operators[i].op_count;++j)
+    {
+      for (int k=0;k<operators[i].op_states;++k)
+      {
+        set_len_type(TK_INIT, operators[i].states[j][k], TFE_BRIEF);
+        set_len_type_row(operators[i].states[j][k],TFE_BRIEF);
+      }
+    }
+  }
+  
+}
+
+void init_operator(void) 
+{
+  add_arrow_operator();
+  for (int i=0;i<N_OPERATOR_KINDS;++i)
+  {
+    op_struct *ops=&operators[i];
+    int op_count=ops->op_count;
+
+
+    for (int j=0;j<op_count;++j)
+    {
+      node *state=ops->states[j];
+      char_class_enum op=ops->op[j];
+      char_class_enum rejc=ops->reject[j];
+      ops->init(state,op,rejc);
+
+    }
+  }
+
+}
+
+void add_arrow_operator(void)
+{
+  add_accepted(TK_NEGATIVE, TK_NEGATIVE_GREATER, CHAR_CLASS_GREATER);
+}
+
+/* accepted only needs one state */
+void add_1state(node *state, char_class_enum op, char_class_enum rejc)
+{
+  add_initial(state[0],op);
+  add_accepted_rev(state[0],state[1],CHAR_CLASS_EMPTY);
+}
+
+/** accepted only needs 3 states */
+void add_3states(node *state, char_class_enum op, char_class_enum rej)
+{
+  // ! -> !=
+  add_initial(state[0],op);
+  add_accepted_rev(state[0],state[1],rej);
+  add_accepted(state[0], state[2], CHAR_CLASS_EQUAL);
+
+}
+
+void add_4states(node *state, char_class_enum op, char_class_enum rejc)
+{
+  add_initial(state [0], op);
+  add_accepted_rev(state[0],state [1],rejc);
+  add_accepted(state [0], state [2], op);
+  add_accepted(state [0], state [3], CHAR_CLASS_EQUAL);
+
+}
+
+void add_6states(node *state, char_class_enum op, char_class_enum reject)
+{
+  add_initial(state [0],op); 
+  add_accepted_rev(state [0],state [1],reject);
+  add_accepted(state [0], state [2],CHAR_CLASS_EQUAL);
+  add_intermedia(state [0], state [3],op);
+  add_accepted_rev(state [3], state [4], CHAR_CLASS_EQUAL);
+  add_accepted(state [3], state [5], CHAR_CLASS_EQUAL);
+
+}
+
 void check_operators(void)
 {
 #ifndef NDEBUG
@@ -158,66 +239,6 @@ void check_operators(void)
   assert (ops-operators == N_OPERATOR_KINDS);
   printf("check_operators passed\n");
 #endif
-}
-
-void init_operator(void) 
-{
-  add_arrow_operator();
-  for (int i=0;i<N_OPERATOR_KINDS;++i)
-  {
-    op_struct *ops=&operators[i];
-    int op_count=ops->op_count;
-
-    for (int j=0;j<op_count;++j)
-    {
-      node *state=ops->states[j];
-      char_class_enum op=ops->op[j];
-      char_class_enum rejc=ops->reject[j];
-      ops->init(state,op,rejc);
-    }
-  }
-
-}
-
-void add_arrow_operator(void)
-{
-  add_accepted(TK_NEGATIVE, TK_NEGATIVE_GREATER, CHAR_CLASS_GREATER);
-}
-
-/* accepted only needs one state */
-void add_1state(node *state, char_class_enum op, char_class_enum rejc)
-{
-  add_accepted(TK_INIT,state[0],op);
-}
-
-/** accepted only needs 3 states */
-void add_3states(node *state, char_class_enum op, char_class_enum rej)
-{
-  // ! -> !=
-  add_initial(state[0],op);
-  add_accepted_rev(state[0],state[1],rej);
-  add_accepted(state[0], state[2], CHAR_CLASS_EQUAL);
-
-}
-
-void add_4states(node *state, char_class_enum op, char_class_enum rejc)
-{
-  add_initial(state [0], op);
-  add_accepted_rev(state[0],state [1],rejc);
-  add_accepted(state [0], state [2], op);
-  add_accepted(state [0], state [3], CHAR_CLASS_EQUAL);
-
-}
-
-void add_6states(node *state, char_class_enum op, char_class_enum reject)
-{
-  add_initial(state [0],op); 
-  add_accepted_rev(state [0],state [1],reject);
-  add_accepted(state [0], state [2],CHAR_CLASS_EQUAL);
-  add_intermedia(state [0], state [3],op);
-  add_accepted_rev(state [3], state [4], CHAR_CLASS_EQUAL);
-  add_accepted(state [3], state [5], CHAR_CLASS_EQUAL);
-
 }
 
 

@@ -5,11 +5,6 @@
 extern transfer_table_t tknzr_table;
 extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES] ;
 
-void clear_tknzr_table(void)
-{
-  memset(tknzr_entry_counters,0,sizeof tknzr_entry_counters);
-
-}
 
 void add_initial(node to, char_class_enum char_class)
 {
@@ -46,16 +41,18 @@ void add_accepted(node from, node to , char_class_enum char_class)
   add_transfer(from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
 }
 
-void set_len_type_r (transfer_table_t table, node from, node to, token_len_type len_type)
+void set_len_type_r (transfer_table_t table, int *entry_counters, node from, node to, token_len_type len_type)
 {
-  TFE_SET_LEN_TYPE(table[from][to], len_type);
+  if (from >=0 && from < MAX_TRANSFER_ENTRIES && 0 <= to && to < entry_counters[from])
+    TFE_SET_LEN_TYPE(table[from][to], len_type);
+  else
+    ; /* do nothing */
+
 }
 
 void set_len_type(node from, node to, token_len_type len_type)
 {
-  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
-  set_len_type_r (tknzr_table, from, to, len_type);
-
+  set_len_type_r (tknzr_table, tknzr_entry_counters, from, to, len_type);
 }
 
 void set_len_type_row_r (transfer_table_t table, 
@@ -63,17 +60,21 @@ void set_len_type_row_r (transfer_table_t table,
     node from,
     token_len_type len_type)
 {
-  int len=counter[from];
-  for (int i=0;i<len;++i)
+  if (from >=0 && from < MAX_TRANSFER_ENTRIES) 
   {
-    TFE_SET_LEN_TYPE(table[from][i], len_type);
+    int len=counter[from];
+    for (int i=0;i<len;++i)
+    {
+      TFE_SET_LEN_TYPE(table[from][i], len_type);
+    }
   }
+  else
+    ; /* do nothing */
 
 }
 
 void set_len_type_row (node from, token_len_type len_type)
 {
-  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
   set_len_type_row_r(tknzr_table, tknzr_entry_counters, from, len_type);
 }
 
@@ -81,7 +82,7 @@ void check_set_len_type(void)
 {
 
   token_len_type len_type;
-/* loop for all the from=non-accepted and to=all-state with all len_type */
+  /* loop for all the from=non-accepted and to=all-state with all len_type */
   puts("check_set_len_type begin");
   for (int i=TK_INIT; i<_TK_NON_ACCEPTED_END;++i)
   {
@@ -95,6 +96,7 @@ void check_set_len_type(void)
       }
     }
   }
+  void clear_tknzr_table(void);
   clear_tknzr_table();
   puts("check_set_len_type passed");
 }
@@ -103,7 +105,7 @@ void check_set_len_type(void)
 /* find the entry that defines a transfer going from */
 /* `state_from` to `state_to` */
 /* should only be called after init_tknzr_table */
-static
+  static
 transfer_entry seek_entry_r (transfer_table_t table, int *entry_counters ,int state_from, int state_to)
 {
 
@@ -197,7 +199,7 @@ tokenizer_state do_transfer (tokenizer_state state,
   assert (state >=0 && state < MAX_TRANSFER_ENTRIES);
   return
     (tokenizer_state) do_transfer_r(
-         tknzr_table, tknzr_entry_counters,
+        tknzr_table, tknzr_entry_counters,
         state, ch, entry, TK_NULL);
 
 }

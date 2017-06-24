@@ -22,8 +22,8 @@ const token_type state2punctuation [] =
 // TODO: map accepted operator state to operator type's
 const token_type state2operator []=
 {
-  /* tilde_like_operator */
-  [TK_TILDE]=TKT_UNARY_OP_BIT_NOT,
+    /* tilde_like_operator */
+  [TK_TILDE_END]=TKT_UNARY_OP_BIT_NOT,
 
   /* slash_like_operator */ 
   /* slash */

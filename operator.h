@@ -10,6 +10,7 @@
 #include<string.h>
 #include<ctype.h>
 #include "transfer.h"
+#include "token_defs.h"
 
 #define OP_MAX_STATE 7
 #define N_OPERATOR_KINDS 4
@@ -62,5 +63,7 @@ void add_4states(node *state, char_class_enum op, char_class_enum rej);
 void add_6states(node *state, char_class_enum op, char_class_enum rej);
 void add_arrow_operator(void);
 void init_operator(void);
+void check_operator(void);
+
 #endif
 

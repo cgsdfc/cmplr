@@ -3,7 +3,9 @@
 
 void init_float_literal(void)
 {
- add_intermedia(TK_PERIOD,TK_FLOAT_BEGIN,CHAR_CLASS_DEC_PART);
+  // forbit .2 .44 float_literal for easier tokenize
+  // TODO: put it into error handle 
+ /* add_intermedia(TK_PERIOD,TK_FLOAT_BEGIN,CHAR_CLASS_DEC_PART); */
  add_intermedia(TK_INT_ZERO,TK_FLOAT_BEGIN,CHAR_CLASS_PERIOD);
  add_intermedia(TK_INT_BEGIN,TK_FLOAT_BEGIN,CHAR_CLASS_PERIOD);
 

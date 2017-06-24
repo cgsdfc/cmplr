@@ -1,5 +1,6 @@
 #ifndef STATE_H
 #define STATE_H 1
+#include <stdbool.h>
 #define N_NON_ACCEPTED_STATES    (_TK_NON_ACCEPTED_END-TK_INIT)
 #define MAX_TRANSFER_ENTRIES N_NON_ACCEPTED_STATES
 
@@ -10,63 +11,24 @@ typedef enum tokenizer_state
 {
   /* NOT ACCEPTED STATES */
   TK_INIT=0,
-  TK_IDENTIFIER_BEGIN,
-  TK_PUNCTUATION_BEGIN,
 
   /* coments */
   TK_SINGLE_LINE_COMENT_BEGIN,
   TK_MULTI_LINE_COMENT_BEGIN,
-
-  /* since when a coment ends, we need to jump back */
-  /*   to TK_INIT, so the following is **not** accepted */
   TK_SINGLE_LINE_COMENT_END,
   TK_MULTI_LINE_COMENT_END,
+  /*!coments */
 
-  /* char_literals */
-  TK_CHAR_LITERAL_BEGIN,
-  TK_CHAR_LITERAL_HEX_BEGIN,
-  TK_CHAR_LITERAL_OCT_BEGIN,
-  TK_CHAR_LITERAL_ZERO,
-  TK_CHAR_LITERAL_ESCAPED,
-  TK_CHAR_LITERAL_PART,
-  TK_CHAR_LITERAL_ESCAPED_0,
-  TK_CHAR_LITERAL_ESCAPED_1,
-  TK_CHAR_LITERAL_ESCAPED_2, 
-  TK_CHAR_LITERAL_ESCAPED_3, 
+  /* BREIF */
+  _TK_NON_ACCEPTED_BRIEF_BEGIN,
+  TK_PUNCTUATION_BEGIN,
 
-  /* since when oct or hex ends, we still need to jump */ 
-  /*   back to TK_**_END, so the following is jump */
-  /*   part of the path to the accepted states */
-  /*   and it is **not** accepted */
-  TK_CHAR_LITERAL_OCT_END,
-  TK_CHAR_LITERAL_HEX_END,
-
-  /* string_literal */
-  TK_STRING_LITERAL_BEGIN,
-  TK_STRING_LITERAL_HEX_BEGIN,
-  TK_STRING_LITERAL_OCT_BEGIN,
-  TK_STRING_LITERAL_ZERO,
-  TK_STRING_LITERAL_ESCAPED,
-  TK_STRING_LITERAL_PART,
-  TK_STRING_LITERAL_OCT_END,
-  TK_STRING_LITERAL_HEX_END,
-
-  /* integer, float and period */
-  TK_INT_BEGIN,
-  TK_INT_ZERO,
-  TK_INT_HEX_BEGIN,
-  TK_INT_OCT_BEGIN,
-  TK_INT_LONG,
-  TK_INT_UNSIGNED,
+  /* 2 state */
+  TK_TILDE,
   TK_PERIOD,
-  TK_FLOAT_BEGIN,
-  TK_FLOAT_FRACTION,
-  TK_FLOAT_EXPONENT,
-  TK_FLOAT_SIGN,
-  TK_FLOAT_EXPONENT_PART,
-  TK_FLOAT_END,
 
   /* NON ACCEPTED OPERATOR STATES */ 
+  /* 3 states */
   TK_EXCLAIM,
   TK_EQUAL,
   TK_STAR,
@@ -86,12 +48,70 @@ typedef enum tokenizer_state
   TK_GREATER_GREATER,
   TK_LESS_LESS,
   /*!NON ACCEPTED OPERATOR STATES */ 
+  _TK_NON_ACCEPTED_BRIEF_END,
+  /* ! BREIF */
+
+  /* FIXLEN */
+  /* char_literals */
+  _TK_NON_ACCEPTED_FIXLEN_BEGIN,
+  TK_CHAR_LITERAL_BEGIN,
+  TK_CHAR_LITERAL_HEX_BEGIN,
+  TK_CHAR_LITERAL_OCT_BEGIN,
+  TK_CHAR_LITERAL_ZERO,
+  TK_CHAR_LITERAL_ESCAPED,
+  TK_CHAR_LITERAL_PART,
+  TK_CHAR_LITERAL_ESCAPED_0,
+  TK_CHAR_LITERAL_ESCAPED_1,
+  TK_CHAR_LITERAL_ESCAPED_2, 
+  TK_CHAR_LITERAL_ESCAPED_3, 
+  TK_CHAR_LITERAL_OCT_END,
+  TK_CHAR_LITERAL_HEX_END,
+  /*!char_literals */
+
+  /* integer, float */
+  TK_INT_BEGIN,
+  TK_INT_ZERO,
+  TK_INT_HEX_BEGIN,
+  TK_INT_OCT_BEGIN,
+  TK_INT_LONG,
+  TK_INT_UNSIGNED,
+  TK_FLOAT_BEGIN,
+  TK_FLOAT_FRACTION,
+  TK_FLOAT_EXPONENT,
+  TK_FLOAT_SIGN,
+  TK_FLOAT_EXPONENT_PART,
+  /*!integer, float */
+  _TK_NON_ACCEPTED_FIXLEN_END,
+  /*!FIXLEN */
+
+  /* VARLEN */
+  _TK_NON_ACCEPTED_VARLEN_BEGIN,
+  /* identifier */
+  TK_IDENTIFIER_BEGIN,
+  /*!identifier */
+
+  /* string_literal */
+  TK_STRING_LITERAL_BEGIN,
+  TK_STRING_LITERAL_HEX_BEGIN,
+  TK_STRING_LITERAL_OCT_BEGIN,
+  TK_STRING_LITERAL_ZERO,
+  TK_STRING_LITERAL_ESCAPED,
+  TK_STRING_LITERAL_PART,
+  TK_STRING_LITERAL_OCT_END,
+  TK_STRING_LITERAL_HEX_END,
+  /*!string_literal */
+  _TK_NON_ACCEPTED_VARLEN_END, 
+  /*!VARLEN */
+
   _TK_NON_ACCEPTED_END,
   /*!NOT ACCEPTED STATES */
+
+
 
   /* ACCEPTED STATES */
   TK_IDENTIFIER_END,
   TK_INT_END,
+  TK_FLOAT_END,
   TK_PUNCTUATION_END,
   TK_CHAR_LITERAL_END,
   TK_STRING_LITERAL_END,
@@ -100,6 +120,9 @@ typedef enum tokenizer_state
   /* ACCEPTED OPERATOR STATES */
   _TK_OPERATOR_ACCEPT_BEGIN,
   /* PUT BACH OPERATOR STATES */
+  /* 1 state */
+  TK_TILDE_END,
+
   /* 3 states */
   TK_EXCLAIM_END,
   TK_EQUAL_END,
@@ -122,7 +145,6 @@ typedef enum tokenizer_state
   _TK_OPERATOR_PUT_BACK,
   /*!PUT BACH OPERATOR STATES */
 
-  TK_TILDE,
   TK_AMPERSAND_AMPERSAND,
   TK_LESS_LESS_EQUAL,
   TK_GREATER_GREATER_EQUAL,
@@ -155,6 +177,9 @@ typedef enum tokenizer_state
 
 enum token_type;
 typedef tokenizer_state node;
+bool state_is_brief(tokenizer_state state);
+bool state_is_varlen(tokenizer_state state);
+bool state_is_fixlen(tokenizer_state state);
 
 
 #endif

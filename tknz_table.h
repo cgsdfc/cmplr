@@ -6,6 +6,8 @@ void init_operator(void);
 void init_char_literal(void);
 void init_string_literal(void);
 void init_integer_literal(void);
+void init_float_literal(void);
+
 void init_tknzr_table(void);
 void check_tknzr_table (void) ;
 void clear_tknzr_table(void);
