@@ -125,7 +125,7 @@ void init_escaped(void)
 
 }
 
-const static char escaped_tab[]=
+const char escaped_tab[]=
 {
   ['a']='\a',
   ['b']='\b',
@@ -196,50 +196,6 @@ is_quote(char ch)
   return ch=='\'' || ch == '\"';
 }
 
-/* ch is the first char in the string */
-/* if ch is a quote, return ptr to next char */
-/* else return ch */
-static char *skip_quote_head(char *ch)
-{
-  if(is_quote(ch[0]))
-    return ch+1;
-  else
-    return ch;
-}
-
-/* ch is the char when '\0' should go */
-/* if char before ch is a quote, return */
-/* the char before ch, else return ch */ 
-static char *skip_quote_tail(char *ch)
-{
-   if(is_quote(*(ch-1)))
-    return ch-1;
-  else
-    return ch;
-}
-
-  void
-check_skip_quote(void)
-{
-  char *no_q="no_q";
-  assert(*skip_quote_head(no_q)=='n');
-  assert(*skip_quote_tail(no_q + strlen(no_q))==0);
-
-  char *h_q="\"h";
-  assert(*skip_quote_head(h_q)=='h');
-  assert(*skip_quote_tail(h_q + strlen(h_q))==0);
-
-  char *t_q="t_q\"";
-  assert(*skip_quote_head(t_q)=='t');
-  assert(*skip_quote_tail( t_q + strlen(t_q) ) =='\"');
-
-  char *d_q="\"double quoted\"";
-  assert(*skip_quote_head(d_q)=='d');
-  assert(*skip_quote_tail((d_q+strlen(d_q))) == '\"' );
-
-}
-
-
 int eval_string(char *src, char *dst)
 {
   assert (src);
@@ -255,16 +211,6 @@ int eval_string(char *src, char *dst)
   int r=0;
   int len = strlen(src);
   // the caller should make sure the quotes are stripped
-#if 0
-  if (len >= 2){
-    if(is_quote(src[len-1])) {
-      src[len-1]=0;
-    }
-    if( is_quote(src[0])) {
-      src++;
-    }
-  }
-#endif
 
 
   for (cc=src;*cc; ++cc) 
@@ -339,96 +285,10 @@ int eval_string(char *src, char *dst)
 
 }
 
-int des(char *src, char *dst)
-{
-  /* donot ignore error when checking */
-  return eval_string(src,dst);
-}
 
 void fini_escaped(void)
 {
   memset (&escaped_table, 0, sizeof escaped_table);
 }
 
-void check_escaped(void)
-{
-  puts("check_escaped begin");
-  check_skip_quote();
-  puts("check_skip_quote passed");
-
-  fini_escaped();
-  init_escaped();
-  char dst[BUFSIZ];
-  char src[BUFSIZ]="a";
-  int r=0;
-
-  /* should copy src to dst; */
-  r=des(src,dst);
-  puts(dst);
-  assert(r==0);
-  assert (strcmp (dst, src)==0);
-  puts("single char passed");
-
-  r=des("", dst);
-  assert(r==0);
-  assert (strcmp(dst,"")==0);
-  puts("empty string passed");
-
-  r=des("3333333333", dst);
-  assert(r==0);
-  assert (strcmp(dst,"3333333333")==0);
-  puts("not-a-escaped string passed");
-
-
-  /* check each single escaped */
-  src[0]='\\';
-  src[2]=0;
-  for (int i=0;i<strlen(CC_SINGLE_ESCAPE);++i)
-  {
-    char es=CC_SINGLE_ESCAPE[i];
-    src[1]=es;
-    r=des(src,dst);
-    assert (r==0);
-    assert (dst[0] == escaped_tab[es]);
-  }
-  puts("single char escaped passed");
-
-  /* check oct of diff digits */
-  char *octs[]={
-    "\1", "\01", "\001", "\112"
-  };
-
-  for (int i=1;i<=3;++i) {
-    for (char c=0;c<SCHAR_MAX;++c) 
-    {
-      snprintf(src, BUFSIZ, "\\%.*o",i, c);
-      r=des(src,dst);
-      assert(r==0);
-      assert(c == dst[0]);
-    }
-    printf("oct of %d dig passed\n", i);
-  }
-  puts("all oct escaped passed");
-
-  for (int i=1;i<=2;++i) {
-    for (char c=0;c<SCHAR_MAX;++c) 
-    {
-      snprintf(src, BUFSIZ, "\\x%.*x",i, c);
-      r=des(src,dst);
-      assert(r==0);
-      assert(c == dst[0]);
-    }
-    printf("hex of %d dig passed\n", i);
-  }
-
-  puts("all hex escaped passed");
-
-  des("My name is\0YOU CAN NOT SEE", dst);
-  assert (strcmp(dst, "My name is")==0);
-
-
-  fini_escaped();
-  puts("check_escaped passed");
-
-}
 

@@ -41,5 +41,9 @@ typedef enum escape_state
 void init_escaped(void);
 void fini_escaped(void);
 
+void check_escaped(void);
+int eval_string(char *src, char *dst);
+extern const char escaped_tab[];
+
 #endif
 

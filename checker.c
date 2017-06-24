@@ -4,6 +4,98 @@
 #include "operator.h"
 #include "token.h"
 #include "char_class.h"
+#include "escaped.h"
+#include <limits.h>
+
+
+
+/* short hand */
+int des(char *src, char *dst)
+{
+  /* donot ignore error when checking */
+  return eval_string(src,dst);
+}
+
+
+void check_escaped(void)
+{
+  puts("check_escaped begin");
+
+  fini_escaped();
+  init_escaped();
+  char dst[BUFSIZ];
+  char src[BUFSIZ]="a";
+  int r=0;
+
+  /* should copy src to dst; */
+  r=des(src,dst);
+  puts(dst);
+  assert(r==0);
+  assert (strcmp (dst, src)==0);
+  puts("single char passed");
+
+  r=des("", dst);
+  assert(r==0);
+  assert (strcmp(dst,"")==0);
+  puts("empty string passed");
+
+  r=des("3333333333", dst);
+  assert(r==0);
+  assert (strcmp(dst,"3333333333")==0);
+  puts("not-a-escaped string passed");
+
+
+  /* check each single escaped */
+  src[0]='\\';
+  src[2]=0;
+  for (int i=0;i<strlen(CC_SINGLE_ESCAPE);++i)
+  {
+    char es=CC_SINGLE_ESCAPE[i];
+    src[1]=es;
+    r=des(src,dst);
+    assert (r==0);
+    assert (dst[0] == escaped_tab[es]);
+  }
+  puts("single char escaped passed");
+
+  /* check oct of diff digits */
+  char *octs[]={
+    "\1", "\01", "\001", "\112"
+  };
+
+  for (int i=1;i<=3;++i) {
+    for (char c=0;c<SCHAR_MAX;++c) 
+    {
+      snprintf(src, BUFSIZ, "\\%.*o",i, c);
+      r=des(src,dst);
+      assert(r==0);
+      assert(c == dst[0]);
+    }
+    printf("oct of %d dig passed\n", i);
+  }
+  puts("all oct escaped passed");
+
+  for (int i=1;i<=2;++i) {
+    for (char c=0;c<SCHAR_MAX;++c) 
+    {
+      snprintf(src, BUFSIZ, "\\x%.*x",i, c);
+      r=des(src,dst);
+      assert(r==0);
+      assert(c == dst[0]);
+    }
+    printf("hex of %d dig passed\n", i);
+  }
+
+  puts("all hex escaped passed");
+
+  des("My name is\0YOU CAN NOT SEE", dst);
+  assert (strcmp(dst, "My name is")==0);
+
+
+  fini_escaped();
+  puts("check_escaped passed");
+
+}
 
 
 void check_char_class(void)

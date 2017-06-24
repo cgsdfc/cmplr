@@ -2,6 +2,7 @@
 #include "tokenizer.h"
 #include "token_defs.h"
 
+static char *filename;
 static int tknzr_errno;
 // TODO: give more sensible error msg 
 // based on errstate
@@ -160,7 +161,8 @@ error:
 void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state)
 {
   char *errline = peek_line (buffer, get_lineno(buffer));
-  fprintf(stderr, "state %s, line %d, column %d: error: %s\n\n", token_state_tab[last_state],
+  fprintf(stderr, "file %s state %s, line %d, column %d: error: %s\n\n",filename,
+      token_state_tab[last_state],
       buffer->pos.lineno, buffer->pos.column, tokenizer_err_tab[error]);
   fprintf(stderr, "-> %s", errline);
 
@@ -184,7 +186,7 @@ int print_token_stream (char_buffer *buffer)
   char *token_string;
   tokenizer_state errstate;
 
-  check_tknzr_table();
+  /* check_tknzr_table(); */
   init_tknzr_table ();
   while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
   {
@@ -242,6 +244,8 @@ int main(int ac,char**av){
     perror (av[1]);
     exit(1);
   }
+  
+  filename=av[1];
 
   exit (print_token_stream(&buffer));
 

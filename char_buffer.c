@@ -4,8 +4,10 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "char_buffer.h"
 
+static bool skip_directives=true;
 typedef char_buffer *cb;
 static int init_char_buffer(cb, FILE*,int,int);
 
@@ -134,11 +136,18 @@ int init_char_buffer (char_buffer *buffer, FILE *f, int chars, int lines)
     buffer->buf[0]=0;
     while (NULL != fgets (line, BUFSIZ, f))
     {
-      buffer->limits[++i]=strlen (line);
+      int len=strlen (line);
+      if (line[0]=='#' && skip_directives)
+      {
+        chars-=len;
+        continue;
+      }
+
+      buffer->limits[++i]=len;
       strncat (buffer->buf, line, BUFSIZ);
     }
 
-    assert (strlen(buffer->buf) == chars);
+    /* assert (strlen(buffer->buf) == chars); */
     /* check the last line, whether it has a newline as terminator */
     /* if not, add a newline to it, for tokenize purposes */
     if (buffer->buf[chars-1] != '\n')
