@@ -85,7 +85,7 @@ typedef enum entry_action
 
 
 /* needed by operator.c string_literal.c char_literal.c */
-void add_initial(node , char_class_enum );
+void add_initial(node, char_class_enum );
 void add_intermedia_rev (node , node , char_class_enum  ); 
 void add_intermedia (node , node , char_class_enum ); 
 void add_selfloop (node , char_class_enum );
@@ -102,7 +102,12 @@ void add_transfer(tokenizer_state from,
     char_class_enum cclass);
 bool can_transfer(entry_t entry,  int character) ;
 entry_t seek_entry(tokenizer_state , tokenizer_state);
-
+void add_transfer_r(transfer_table_t table, int *entry_counters,
+    int from,
+    int state, 
+    entry_flag flags,
+    entry_action act,
+    char_class_enum cclass);
 void set_len_type_row (node from, token_len_type len_type);
 void set_len_type(node from, node to, token_len_type len_type);
 #endif

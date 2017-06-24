@@ -25,61 +25,20 @@ token *_init_token(position *begin, size_t len, token_len_type type)
 
 }
 
-void check_init_token(void)
-{
-  token *tk;
-  position pos={0};
-  position *begin=&pos;
-  char tstring[TOKEN_FIXLEN_MAX_LEN -1 ]={'a'};
-  char sstring[TOKEN_VARLEN_INIT_LEN ]={'b'};
-  char *string;
-  int len;
-
-  puts("check_init_token begin");
-  for (int i=TFE_BRIEF;i<_TFE_LEN_TYPE_END;++i)
-  {
-    switch(i) {
-      case TFE_FIXLEN:
-        tk=init_fixlen(begin,'1');
-        len = ((fixlen_token*)tk)->len;
-        string = ((fixlen_token*)tk)->string;
-        assert (TOKEN_LEN_TYPE(tk) == TFE_FIXLEN);
-        assert (len  == 0);
-        strncpy (string, tstring, TOKEN_FIXLEN_MAX_LEN);
-        puts(string);
-        break;
-
-      case TFE_VARLEN:
-        tk=init_varlen(begin,'1');
-        len = ((varlen_token*)tk)->len;
-        string = ((varlen_token*)tk)->string;
-        assert (TOKEN_LEN_TYPE(tk) == TFE_VARLEN);
-        assert (len  == 0);
-        strncpy (string, tstring, TOKEN_VARLEN_INIT_LEN);
-        puts(string);
-        break;
-
-      case TFE_BRIEF:
-        break;
-    }
-  }
-  puts("check_init_token passed");
-}
-
 
 token *init_breif(position *begin, char ch)
 {
-  breif_token *btk = (breif_token*)  _init_token(begin,sizeof(breif_token),TFE_BRIEF);
-  btk->ch=ch;
-  return (token*) btk;
+  token *tk = _init_token(begin,sizeof(breif_token),TFE_BRIEF);
+  ( (breif_token* )tk) ->ch=ch;
+  return tk;
 
 }
 
 token *init_fixlen(position *begin, char ch)
 {
-  fixlen_token *ftk= (fixlen_token*) _init_token(begin,sizeof(fixlen_token),TFE_FIXLEN);
-  append_fixlen(ftk,ch);
-  return (token*) ftk;
+  token *tk=  _init_token(begin,sizeof(fixlen_token),TFE_FIXLEN);
+  append_fixlen(tk,ch);
+  return  tk;
 }
 
 token *init_varlen(position *begin, char ch)
@@ -101,24 +60,6 @@ int append_fixlen(token *_tk, char ch)
     return E_FIXLEN_TOO_LONG;
   tk->string[tk->len++]=ch;
   return 0;
-}
-
-void check_append_fixlen(void)
-{
-  token *tk;
-  position pos;
-  tk=init_fixlen(&pos,'0');
-  int r;
-
-  for (int i=0;i<TOKEN_FIXLEN_MAX_LEN-1;++i)
-  {
-    r=append_fixlen(tk,'a');
-    assert(r==0);
-  }
-  puts(TOKEN_FIXLEN_STRING(tk));
-  r=append_fixlen(tk,'a');
-  assert (r!=0);
-  puts("check_append_fixlen passed");
 }
 
 
@@ -148,14 +89,6 @@ int append_varlen(token *_tk, char ch)
 
 }
 
-void check_state2operator(void)
-{
-  for (int i=TK_INIT;i<MAX_TRANSFER_ENTRIES;++i)
-  {
-    if (is_oper_type(i))
-      assert(state2operator[i]);
-  }
-}
 
 // TODO: check_varlen_append
 int accept_brief(token *tk,char ch, node state, bool append)
@@ -234,10 +167,6 @@ int accept_fixlen(token *tk,char ch,node state,bool append)
 
 
   
-bool is_oper_type (node state)
-{
-  return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
-}
 
 
 char *format_token (token *tk) 

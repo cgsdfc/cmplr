@@ -6,6 +6,41 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#define CC_CHAR_LITERAL " `\"#@$" CC_IDENTIFIER_PART\
+  CC_OPERATOR CC_PUNCTUATION
+
+#define CC_SINGLE_ESCAPE_NON_ZERO "abfnrtv\\\'\"?"
+#define CC_SINGLE_ESCAPE "0" CC_SINGLE_ESCAPE_NON_ZERO 
+#define CC_HEX_LETTER "abcdefABCDEF"
+#define CC_HEX_BEGIN CC_DEC_PART CC_HEX_LETTER
+#define CC_OCT_BEGIN_NOT_ZERO "1234567"
+#define CC_OCT_BEGIN "0" CC_OCT_BEGIN_NOT_ZERO
+#define CC_SINGLE_QUOTE "\'"
+#define CC_DOUBLE_QUOTE "\""
+
+#define CC_LOWER_CASE "abcdefghijklmnopqrstuvwxyz"
+#define CC_UPPER_CASE "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+#define CC_DEC_BEGIN "123456789" 
+#define CC_DEC_PART "0123456789" 
+#define CC_IDENTIFIER_BEGIN "_" CC_LOWER_CASE CC_UPPER_CASE
+#define CC_IDENTIFIER_PART CC_IDENTIFIER_BEGIN CC_DEC_PART
+#define CC_SPACES " \t\n\r\f\v"
+#define CC_NEWLINE "\n\r"
+#define CC_PUNCTUATION "(){}[]:;,.?"
+#define CC_OPERATOR "~!%^&*-+<>=/|"
+#define CC_BACKSLASH "\\"
+#define CC_L "lL"
+#define CC_U "uU"
+#define CC_E "eE"
+#define CC_X "x"
+#define CC_ZERO "0"
+#define CC_PERIOD "."
+#define CC_SIGN "-+"
+#define CC_DOUBLE_QUOTE_SINGLE_QUOTE CC_DOUBLE_QUOTE CC_SINGLE_QUOTE
+
+#define CC_SEPARATOR \
+  CC_SPACES CC_PUNCTUATION CC_OPERATOR
+
 
 typedef enum char_class_enum
 {
@@ -34,6 +69,7 @@ typedef enum char_class_enum
   CHAR_CLASS_OCT_BEGIN ,
   CHAR_CLASS_SINGLE_QUOTE,
   CHAR_CLASS_DOUBLE_QUOTE,
+  CHAR_CLASS_DOUBLE_QUOTE_SINGLE_QUOTE,
   CHAR_CLASS_L,
   CHAR_CLASS_U,
   CAHR_CLASS_SLASH,

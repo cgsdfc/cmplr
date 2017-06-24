@@ -11,6 +11,7 @@
 #include "transfer.h"
 #include "tknz_table.h"
 #include "token.h"
+#include "checker.h"
 
 // TODO: clear TODOs, 
 // impl token_buffer that can look

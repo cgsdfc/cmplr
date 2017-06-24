@@ -27,6 +27,7 @@ typedef enum tkz_error
   E_TOKEN_NOT_BREIF,
   E_TOKEN_NOT_VARLEN,
   E_TOKEN_NOT_FIXLEN,
+  E_BAD_ESCAPED,
 
 } tkz_error ;
 

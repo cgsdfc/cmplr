@@ -1,7 +1,7 @@
 /* operator.c */
 #include "operator.h"
 
-static op_struct operators[]=
+op_struct operators[]=
 {
   {
     .kind="init_tilde_like_operator",
@@ -192,53 +192,4 @@ void add_6states(node *state, char_class_enum op, char_class_enum reject)
   add_accepted(state [3], state [5], CHAR_CLASS_EQUAL);
 
 }
-
-void check_operators(void)
-{
-#ifndef NDEBUG
-  puts("check_operators begin");
-  int op_count=0;
-  int rej_count=0;
-  op_struct *ops=NULL;
-  char_class_enum *op;
-  char_class_enum *rejc;
-  op_struct null_ops={0};
-
-  for (ops=operators; memcmp(ops, &null_ops, sizeof null_ops)!=0;ops++)
-  {
-    /* init func is not null */
-    assert (ops->init);
-
-    /* count reject */
-    for (rejc=ops->reject;*rejc;++rejc);
-    /* do nothing */
-
-    rej_count=rejc-ops->reject;
-    assert (rej_count == ops->op_count);
-
-
-    /* count op */
-    for (op=ops->op;*op;++op); 
-    /* do nothing */
-
-    op_count=op - ops->op;
-    assert (op_count == ops->op_count);
-
-    /* count states */
-    for (int i=0;i<op_count;++i)
-    {
-      assert (ops->states[i]!=NULL);
-      for (int j=0;j<ops->op_states;++j)
-      {
-        assert (ops->states[i][j]!=0);
-      }
-
-    }
-  }
-
-  assert (ops-operators == N_OPERATOR_KINDS);
-  printf("check_operators passed\n");
-#endif
-}
-
 

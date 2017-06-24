@@ -1,4 +1,3 @@
-#include "char_buffer.h"
 #include <string.h>
 #include<stdlib.h>
 #include <assert.h>
@@ -290,32 +289,6 @@ char *peek_line (char_buffer *buffer, int lineno)
 int get_line_limit (char_buffer *buffer, int lineno)
 {
   return buffer->limits[lineno];
-}
-
-
-void check_peek_line (char_buffer *buffer)
-{
-}
-
-void check_char_buffer (void)
-{
-  char_buffer buf;
-  init_char_buffer_from_string(&buf,"?\n\n");
-  char ch;
-
-  ch=get_char(&buf);
-  assert(ch=='?');
-  put_char(&buf);
-  assert(peek_char(&buf)=='?');
-
-  ch=get_char(&buf);
-  assert(ch == '?');
-  ch=get_char(&buf);
-  assert(ch == '\n');
-  put_char(&buf);
-  assert(peek_char(&buf) == '\n');
-
-
 }
 
 void show_buffer (char_buffer *buffer)

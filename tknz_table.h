@@ -13,5 +13,8 @@ void check_tknzr_table (void) ;
 void clear_tknzr_table(void);
 void init_tknzr_table (void);
 
+extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
+extern transfer_table_t tknzr_table;
+
 #endif
 

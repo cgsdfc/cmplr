@@ -55,9 +55,11 @@ int main(int ac,char**av){
   int a=4u;
   int n=0ul;
   int e=0;
-  float f=0.1e0000001011;
-  f=.3;
+ 
+  char c='\1';
 
+  char *hhh="\xff";
+  printf("%s", hhh);
   puts("compiled!");
 
 }

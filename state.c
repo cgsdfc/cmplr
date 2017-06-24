@@ -105,4 +105,8 @@ bool state_is_brief(tokenizer_state state)
   return _TK_NON_ACCEPTED_BRIEF_BEGIN < state && state < _TK_NON_ACCEPTED_BRIEF_END;
 }
 
+bool is_oper_type (node state)
+{
+  return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
+}
 

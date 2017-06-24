@@ -180,6 +180,7 @@ typedef tokenizer_state node;
 bool state_is_brief(tokenizer_state state);
 bool state_is_varlen(tokenizer_state state);
 bool state_is_fixlen(tokenizer_state state);
+bool is_oper_type (node state);
 
 
 #endif

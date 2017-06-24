@@ -6,6 +6,7 @@ extern transfer_table_t tknzr_table;
 extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES] ;
 
 
+
 void add_initial(node to, char_class_enum char_class)
 {
   add_transfer (TK_INIT, to, 0,TFE_ACT_INIT,char_class);
@@ -147,7 +148,6 @@ bool can_transfer(entry_t entry,  int character)
 
 }
 
-  static
 void add_transfer_r(transfer_table_t table, int *entry_counters,
     int from,
     int state, 

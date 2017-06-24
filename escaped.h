@@ -1,8 +1,11 @@
 #ifndef ESCAPED_H
 #define ESCAPED_H 1
 #include "transfer.h"
+#define N_ES_ROWS (ES_END - ES_INIT+1)
+#define N_ES_COLS (ES_NULL - ES_INIT+1)
 
-typedef enum escape_states
+
+typedef enum escape_state
 {
 
   ES_INIT=0,
@@ -10,32 +13,33 @@ typedef enum escape_states
   ES_BEGIN,  
 
   /* 'x' is read */
-  ES_HEX0,
+  ES_HEX_BEGIN,
 
   /* 2 hex digs are read */
-  ES_HEX1, 
+  ES_HEX_END, 
 
   /* one oct dig is read */
-  ES_OCT0,
+  ES_OCT_BEGIN,
 
   /* 2 oct dig is read */
-  ES_OCT1, 
+  ES_OCT_END, 
   
   /* '0' is read */
   ES_ZERO,
 
+  /* skip quotes */
+  ES_SKIP,
+
   /* 1 letter or 2 hex digs or 3 oct digs are read */
   ES_END,
- 
-  /* this state is meant for finishing escaped but */
-  /*   the quote is yet to met */
-  ES_PART
-} escape_states;
 
-void add_escape_hex_literal(node *state, char_class_enum quote);
-void add_escape_oct_literal(node *state, char_class_enum quote);
-void add_escape_single(node *state, char_class_enum quote);
-void add_escape_all (node *state, char_class_enum quote);
+
+  ES_NULL,
+ 
+} escape_state;
+
+void init_escaped(void);
+void fini_escaped(void);
 
 #endif
 

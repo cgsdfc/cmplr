@@ -65,5 +65,7 @@ void add_arrow_operator(void);
 void init_operator(void);
 void check_operator(void);
 
+extern op_struct operators[];
+
 #endif
 
