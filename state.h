@@ -2,7 +2,11 @@
 #define STATE_H 1
 #include <stdbool.h>
 #define N_NON_ACCEPTED_STATES    (_TK_NON_ACCEPTED_END-TK_INIT)
-#define MAX_TRANSFER_ENTRIES N_NON_ACCEPTED_STATES
+#define N_TOTAL_STATES (TK_NULL - TK_INIT)
+
+#define N_TOKENIZER_ROWS N_NON_ACCEPTED_STATES
+#define N_TOKENIZER_COLS N_TOTAL_STATES
+
 
 
 extern const char *token_state_tab[];
@@ -160,6 +164,7 @@ typedef enum tokenizer_state
   TK_STAR_EQUAL,
   TK_POSITIVE_EQUAL,
   TK_NEGATIVE_EQUAL,
+  TK_NEGATIVE_LESS,
   TK_LESS_EQUAL,
   TK_GREATER_EQUAL,
   TK_EQUAL_EQUAL,

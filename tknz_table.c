@@ -1,78 +1,25 @@
 #include "tknz_table.h"
 #include "token_defs.h"
 
-transfer_table_t tknzr_table;
-int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
+static state_table *table;
 
-
-void clear_tknzr_table(void)
+node do_transfer(node state, char ch, entry_t *entry)
 {
-  memset(tknzr_entry_counters,0,sizeof tknzr_entry_counters);
+  *entry = st_do_transfer(table,state,ch,TK_NULL);
+  return TFE_STATE(*entry);
 }
 
 static
-void init_identifier(void)
-{
-  add_initial(TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
-  add_selfloop (TK_IDENTIFIER_BEGIN, CHAR_CLASS_IDENTIFIER_PART);
-  add_accepted_rev(TK_IDENTIFIER_BEGIN, TK_IDENTIFIER_END, CHAR_CLASS_IDENTIFIER_PART);
-  set_len_type_row(TK_IDENTIFIER_BEGIN,TFE_VARLEN);
-  set_len_type(TK_INIT, TK_IDENTIFIER_BEGIN,TFE_VARLEN);
-}
-
-
-static
-void init_punctuation(void)
-{
-  add_initial(TK_PUNCTUATION_BEGIN,CHAR_CLASS_PUNCTUATION);
-  add_accepted_rev (TK_PERIOD,TK_PERIOD_END,CHAR_CLASS_DEC_PART);
-  add_accepted_rev(TK_PUNCTUATION_BEGIN, TK_PUNCTUATION_END, CHAR_CLASS_EMPTY);
-}
-
-void init_single_line_coment(void)
-{
-  /* single line coment */
-  add_transfer(TK_SLASH,TK_SINGLE_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,CAHR_CLASS_SLASH);
-  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN,TK_SINGLE_LINE_COMENT_BEGIN, 
-      TFE_FLAG_REVERSED,TFE_ACT_SKIP, CHAR_CLASS_NEWLINE);
-  add_transfer(TK_SINGLE_LINE_COMENT_BEGIN, TK_INIT,0,TFE_ACT_SKIP,CHAR_CLASS_NEWLINE);
-
-
-}
-
-// TODO: check bad comment in error handle
-void init_multi_line_coment(void)
-{
-  /* multi_line coment */
-  add_transfer(TK_SLASH,TK_MULTI_LINE_COMENT_BEGIN,0,TFE_ACT_SKIP,CHAR_CLASS_STAR);
-
-  // loop on stars
-  add_transfer(TK_MULTI_LINE_COMENT_END, TK_MULTI_LINE_COMENT_END,0,
-      TFE_ACT_SKIP, CHAR_CLASS_STAR);
-
-  // selfloop on non stars
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN, TK_MULTI_LINE_COMENT_BEGIN, TFE_FLAG_REVERSED, TFE_ACT_SKIP,
-      CHAR_CLASS_STAR);
-
-  add_transfer(TK_MULTI_LINE_COMENT_END,TK_MULTI_LINE_COMENT_BEGIN,TFE_FLAG_REVERSED, TFE_ACT_SKIP,CHAR_CLASS_STAR_SLASH);
-
-  add_transfer(TK_MULTI_LINE_COMENT_BEGIN,TK_MULTI_LINE_COMENT_END,0,TFE_ACT_SKIP,CHAR_CLASS_STAR);
-
-  // end
-  add_transfer(TK_MULTI_LINE_COMENT_END, TK_INIT,0,TFE_ACT_SKIP,CAHR_CLASS_SLASH);
-
-}
-
 void init_len_type(void)
 {
   node from=TK_INIT;
   entry_t entry;
   node to;
-  int len=tknzr_entry_counters[TK_INIT];
+  int len=table->count[from];
 
   for (int i=0;i < len;++i)
   {
-    entry=tknzr_table[from][i];
+    entry=table->diagram[from][i];
     to=TFE_STATE(entry);
     if (state_is_brief(to)) {
       set_len_type(from,i,TFE_BRIEF);
@@ -88,7 +35,7 @@ void init_len_type(void)
 
   }
 
-  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
+  for (int i=0;i<N_TOKENIZER_ROWS;++i)
   {
     from=i;
     if (state_is_brief(from))
@@ -105,10 +52,34 @@ void init_len_type(void)
 
 }
 
+state_table *alloc_tokenizer_table(void)
+{
+  state_table *atable = alloc_table();
+  if(init_state_table(atable,
+        "tokenizer's table",
+        N_TOKENIZER_ROWS,
+        N_TOKENIZER_COLS,
+        TK_INIT,0)<0) {
+    return NULL;
+  }
+  return atable;
+
+}
+
+state_table *get_tokenizer_table(void)
+{
+  return table;
+}
+
 void init_tknzr_table (void)
 {
+  table =  alloc_tokenizer_table();
+  if (table == NULL) {
+    perror("alloc_tokenizer_table");
+    exit(2);
+  }
   /* skip spaces */
-  add_transfer(TK_INIT, TK_INIT, 0, TFE_ACT_SKIP, CHAR_CLASS_SPACES);
+  add_skip(TK_INIT,TK_INIT,CHAR_CLASS_SPACES);
 
   /* identifier */
   init_identifier();
@@ -123,10 +94,10 @@ void init_tknzr_table (void)
   init_float_literal();
 
   /* single line coment */
-  init_single_line_coment();
+  init_single_line_comment_cfamily();
 
   /* multi_line coment */
-  init_multi_line_coment();
+  init_multi_line_comment_cfamily();
 
   /* operators */
   init_operator();
@@ -140,7 +111,7 @@ void init_tknzr_table (void)
   /* len type */
   init_len_type();
 
-  /* escaped */
+  /* escaped must be the last as it has its own table*/
   init_escaped();
 
 }

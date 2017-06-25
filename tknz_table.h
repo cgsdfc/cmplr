@@ -1,20 +1,21 @@
 #ifndef TKNZ_TABLE_H
 #define TKNZ_TABLE_H 1
 #include "transfer.h"
+#include "string_literal.h"
+#include "char_literal.h"
+#include "identifier.h"
+#include "operator.h"
+#include "comment.h"
+#include "float_literal.h"
+#include "integer_literal.h"
 
-void init_operator(void);
-void init_char_literal(void);
-void init_string_literal(void);
-void init_integer_literal(void);
-void init_float_literal(void);
 
 void init_tknzr_table(void);
-void check_tknzr_table (void) ;
-void clear_tknzr_table(void);
-void init_tknzr_table (void);
+node do_transfer(node,char,entry_t*);
+state_table *alloc_tokenizer_table(void);
+state_table *get_tokenizer_table(void);
 
-extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES];
-extern transfer_table_t tknzr_table;
+
 
 #endif
 

@@ -34,9 +34,9 @@ void init_integer_literal(void)
 
   /* accepted_rev */
   add_accepted_rev(TK_INT_ZERO,TK_INT_END,CHAR_CLASS_OCT_BEGIN_X_U_L_PERIOD);
-  add_accepted_rev(TK_INT_HEX_BEGIN,TK_INT_END,CHAR_CLASS_OCT_BEGIN_X_U_L);
-  add_accepted_rev(TK_INT_OCT_BEGIN,TK_INT_END,CHAR_CLASS_OCT_BEGIN_X_U_L);
-  add_accepted_rev(TK_INT_BEGIN,TK_INT_END,CHAR_CLASS_DEC_PART_PERIOD);
+  add_accepted_rev(TK_INT_HEX_BEGIN,TK_INT_END,CHAR_CLASS_HEX_BEGIN_U_L);
+  add_accepted_rev(TK_INT_OCT_BEGIN,TK_INT_END,CHAR_CLASS_OCT_BEGIN_U_L);
+  add_accepted_rev(TK_INT_BEGIN,TK_INT_END,CHAR_CLASS_DEC_PART_PERIOD_U_L);
 
   /* accepted */
   add_accepted_rev(TK_INT_LONG,TK_INT_END,CHAR_CLASS_U);

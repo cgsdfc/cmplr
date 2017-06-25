@@ -17,9 +17,21 @@
  * upper 15 bit is char_class
  * entry_t needs to have at least 32 bit
  */ 
-typedef unsigned int transfer_entry;
-typedef transfer_entry entry_t;
-typedef entry_t transfer_table_t[MAX_TRANSFER_ENTRIES][MAX_TRANSFER_ENTRIES];
+typedef unsigned int entry_t;
+typedef bool (*find_func)(entry_t cond, char ch);
+
+typedef struct state_table
+{
+  char *name;
+  int nrows;
+  int ncols;
+  int *count;
+  find_func func;
+  entry_t **diagram;
+  entry_t init_st;
+
+} state_table;
+
 
 
 /* transfer_entry flags */
@@ -48,15 +60,15 @@ typedef enum entry_action
 /* bit shift of fields */
 #define TFE_STATE_SHIFT ( 4 )
 
-#define TFE_CHAR_CLASS_SHIFT ( 8 +TFE_STATE_SHIFT  )
+#define TFE_COND_SHIFT ( 8 +TFE_STATE_SHIFT  )
 
-#define TFE_ACTION_SHIFT (8 + TFE_CHAR_CLASS_SHIFT )
+#define TFE_ACTION_SHIFT (8 + TFE_COND_SHIFT )
 
 #define TFE_LEN_TYPE_SHIFT ( 4 + TFE_ACTION_SHIFT )
 
-#define TFE_STATE_MASK ( ~(0XFFFFF << TFE_CHAR_CLASS_SHIFT) )
+#define TFE_STATE_MASK ( ~(0XFFFFF << TFE_COND_SHIFT) )
 
-#define TFE_CHAR_CLASS_MASK ( ~(0xFFF << TFE_ACTION_SHIFT) )
+#define TFE_COND_MASK ( ~(0xFFF << TFE_ACTION_SHIFT) )
 
 #define TFE_ACTION_MASK ( ~(0xFF << TFE_LEN_TYPE_SHIFT ) )
 
@@ -73,42 +85,55 @@ typedef enum entry_action
 
 #define TFE_ACTION(e) (((e) & TFE_ACTION_MASK) >> TFE_ACTION_SHIFT)
 
-#define TFE_CHAR_CLASS(e) (((e)&TFE_CHAR_CLASS_MASK) >> TFE_CHAR_CLASS_SHIFT)
+#define TFE_COND(e) (((e)&TFE_COND_MASK) >> TFE_COND_SHIFT)
 
 #define TFE_STATE(e) (((e)& TFE_STATE_MASK ) >> TFE_STATE_SHIFT)
 
 #define TFE_LEN_TYPE(e) ((e) >> TFE_LEN_TYPE_SHIFT)
 
 #define TFE_MAKE_ENTRY(a,c,s,f)\
-  ( (entry_t) ((a)<<TFE_ACTION_SHIFT | (c) << TFE_CHAR_CLASS_SHIFT |  (s) << TFE_STATE_SHIFT | (f)) )
+  ( (entry_t) ((a)<<TFE_ACTION_SHIFT | (c) << TFE_COND_SHIFT |  (s) << TFE_STATE_SHIFT | (f)) )
 
+ int
+init_state_table(state_table *table,
+    char *name,
+    int nrows,
+    int ncols, 
+    entry_t init_st,
+    find_func func);
 
+state_table *alloc_table(void);
 
-/* needed by operator.c string_literal.c char_literal.c */
-void add_initial(node, char_class_enum );
-void add_intermedia_rev (node , node , char_class_enum  ); 
-void add_intermedia (node , node , char_class_enum ); 
-void add_selfloop (node , char_class_enum );
-void add_selfloop_rev (node , char_class_enum );
-void add_accepted_rev(node ,  node , char_class_enum  ); 
-void add_accepted(node , node  , char_class_enum ); 
+entry_t st_do_transfer(state_table *table, entry_t state, entry_t cc, entry_t nonf);
 
+void st_add_initial(state_table *table, entry_t state,entry_t cond);
 
-tokenizer_state do_transfer (tokenizer_state state, int ch, transfer_entry *entry);
+void st_add_intermedia(state_table *table, entry_t from, entry_t to, entry_t cond);
+void st_add_accepted(state_table *table, entry_t from, entry_t to,  entry_t cond);
 
-void add_transfer(tokenizer_state from,
-    tokenizer_state state, 
-    entry_flag flags, entry_action act,
-    char_class_enum cclass);
-bool can_transfer(entry_t entry,  int character) ;
-entry_t seek_entry(tokenizer_state , tokenizer_state);
-void add_transfer_r(transfer_table_t table, int *entry_counters,
-    int from,
-    int state, 
-    entry_flag flags,
-    entry_action act,
-    char_class_enum cclass);
-void set_len_type_row (node from, token_len_type len_type);
+void st_add_selfloop(state_table *table, entry_t state, entry_t cond);
+
+void st_add_intermedia_rev (state_table *table, entry_t from, entry_t to, entry_t cond);
+
+void st_add_accepted_rev (state_table *table,entry_t from, entry_t to, entry_t cond);
+void st_add_selfloop_rev (state_table *table, entry_t state, entry_t cond);
+void st_set_len_type (state_table*table, node from, node to, token_len_type len_type);
+void st_set_len_type_row (state_table*table,
+    node from,
+    token_len_type len_type);
+
+void add_initial(node to, entry_t cond);
+void add_intermedia_rev (node from, node to, entry_t cond );
+void add_intermedia(node from, node to, entry_t cond );
+void add_selfloop (node from, entry_t cond);
+void add_selfloop_rev (node from, entry_t cond);
+void add_accepted_rev(node from,  node to, entry_t cond);
+void add_accepted(node from, node to , entry_t cond);
+void add_skip(node from, node to, entry_t cond);
+void add_skip_rev (node from, node to, entry_t cond);
+void add_skip_loop(node from, entry_t cond);
+void add_skip_rev_loop (node from, entry_t cond);
 void set_len_type(node from, node to, token_len_type len_type);
+void set_len_type_row (node from, token_len_type len_type);
 #endif
 

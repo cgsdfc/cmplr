@@ -78,7 +78,7 @@ op_struct operators[]=
       CHAR_CLASS_AMPERSAND_EQUAL ,
       CHAR_CLASS_VERTICAL_BAR_EQUAL ,
       CHAR_CLASS_POSITIVE_EQUAL ,
-      CHAR_CLASS_NEGATIVE_EQUAL ,
+      CHAR_CLASS_NEGATIVE_EQUAL_GREATER ,
     },
     .init=add_4states
 

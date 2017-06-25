@@ -2,218 +2,241 @@
 #include "transfer.h"
 #include "token_defs.h"
 
-extern transfer_table_t tknzr_table;
-extern int tknzr_entry_counters[MAX_TRANSFER_ENTRIES] ;
+/* TODO: change this file's name to state_table, */
+/*   as transfer is only part of a state_table */
+/*   and how to `do_transfer` is defined by clients */
+#define STATE_TABLE_MAN_LEN 10
+static state_table all_tables[STATE_TABLE_MAN_LEN];
+static int all_tables_count;
+static state_table *cur_table;
 
+static bool char_is_in_class(entry_t cond,char ch);
 
-
-void add_initial(node to, char_class_enum char_class)
+state_table *alloc_table(void)
 {
-  add_transfer (TK_INIT, to, 0,TFE_ACT_INIT,char_class);
+  assert (all_tables_count < STATE_TABLE_MAN_LEN);
+  cur_table = &all_tables[all_tables_count++];
+  return cur_table;
+
 }
 
-
-void add_intermedia_rev (node from, node to, char_class_enum char_class ) 
+/* reenterable api */
+ int
+init_state_table(state_table *table,
+    char *name,
+    int nrows,
+    int ncols, 
+    entry_t init_st,
+    find_func func)
 {
-  add_transfer(from, to, TFE_FLAG_REVERSED, TFE_ACT_APPEND, char_class);
+  assert (name);
+  assert(nrows>0);
+  assert(ncols>0);
+  assert(init_st>=0);
+  assert(table);
+
+  table->name=name;
+  table->nrows=nrows;
+  table->ncols=ncols;
+  table->init_st=init_st;
+  table->func = (func ? func : char_is_in_class);
+  if (NULL == (table->diagram=malloc(sizeof(entry_t*) * nrows)))
+  {
+    perror("malloc");
+    return -1;
+  }
+  table->count=malloc(sizeof(int) * nrows);
+
+  for (int i=0;i<nrows;++i)
+  {
+    table->diagram[i]=malloc(sizeof(entry_t) * ncols);
+    table->count[i]=0;
+  }
+
+  return 0;
+} 
+
+  void 
+st_add_transfer(state_table *table, entry_t from, entry_t to, entry_t flags, entry_t act, entry_t cond)
+{
+  assert(0<=from && from < table->nrows);
+  assert(0<= to && to < table->ncols);
+  entry_t entry = TFE_MAKE_ENTRY(act,cond,to,flags);
+  table->diagram[from][table->count[from]++]=entry;
 }
 
-void add_intermedia (node from, node to, char_class_enum char_class) 
+static bool char_is_in_class(entry_t cond, char ch)
 {
-  add_transfer(from, to, 0, TFE_ACT_APPEND, char_class);
+  char *chcl=char_class2string[cond];
+  assert (chcl);
+  bool in_class = strchr(chcl, ch);
+  return in_class;
 }
 
-void add_selfloop (node from, char_class_enum char_class)
+ 
+
+entry_t st_do_transfer(state_table *table, entry_t state, entry_t cc, entry_t nonf)
 {
-  add_intermedia(from,from,char_class);
+  assert (state >= 0 && state < table->nrows);
+  entry_t *ent;
+  entry_t entry;
+  int len;
+
+  ent=table->diagram[state];
+  len=table->count[state];
+
+  for (int i=0;i<len;++i)
+  {
+    bool in_class = table->func (TFE_COND(ent[i]), cc);
+    bool is_reversed = TFE_IS_REVERSED(ent[i]);
+    if (in_class && !is_reversed
+        || !in_class && is_reversed)
+    {
+      entry=ent[i];
+      ent[i]=ent[0];
+      ent[0]=entry;
+      return entry;
+    }
+  }
+
+  return nonf;
 }
 
-void add_selfloop_rev (node from, char_class_enum char_class)
+/* reenterable api to add transfers into the state_table */
+  void
+st_add_initial(state_table *table, entry_t state,entry_t cond)
 {
-  add_intermedia_rev(from,from,char_class);
+  st_add_transfer(table,table->init_st,state,0,TFE_ACT_INIT,cond);
 }
 
-void add_accepted_rev(node from,  node to, char_class_enum  char_class) 
+  void 
+st_add_intermedia(state_table *table, entry_t from, entry_t to, entry_t cond)
 {
-  add_transfer(from, to, TFE_FLAG_REVERSED|TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
-}
-void add_accepted(node from, node to , char_class_enum char_class) 
-{
-  add_transfer(from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, char_class);
+  st_add_transfer(table,from,to,0,TFE_ACT_APPEND,cond);
 }
 
-void set_len_type_r (transfer_table_t table, int *entry_counters, node from, node to, token_len_type len_type)
+  void 
+st_add_accepted(state_table *table, entry_t from, entry_t to,  entry_t cond)
 {
-  if (from >=0 && from < MAX_TRANSFER_ENTRIES && 0 <= to && to < entry_counters[from])
-    TFE_SET_LEN_TYPE(table[from][to], len_type);
+  st_add_transfer(table,from,to,TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,cond);
+}
+
+  void
+st_add_selfloop(state_table *table, entry_t state, entry_t cond)
+{
+  st_add_transfer(table,state,state,0,TFE_ACT_APPEND,cond);
+}
+
+/* reversed versions */
+  void 
+st_add_intermedia_rev (state_table *table, entry_t from, entry_t to, entry_t cond)
+{
+  st_add_transfer(table,from,to,TFE_FLAG_REVERSED,TFE_ACT_APPEND,cond);
+}
+
+  void 
+st_add_accepted_rev (state_table *table,entry_t from, entry_t to, entry_t cond)
+{
+  st_add_transfer(table,from ,to,TFE_FLAG_REVERSED | TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,cond);
+}
+
+  void
+st_add_selfloop_rev (state_table *table, entry_t state, entry_t cond)
+{
+  st_add_transfer(table,state,state,TFE_FLAG_REVERSED,TFE_ACT_APPEND,cond);
+}
+
+void st_set_len_type (state_table*table, node from, node to, token_len_type len_type)
+{
+  if (from >=0 && from < table->nrows && 0 <= to && to < table->count[from])
+    TFE_SET_LEN_TYPE(table->diagram[from][to], len_type);
   else
     ; /* do nothing */
 
+}
+
+void st_set_len_type_row (state_table*table,
+    node from,
+    token_len_type len_type)
+{
+  if (from >=0 && from < table->nrows) 
+  {
+    int len=table->count[from];
+    for (int i=0;i<len;++i)
+    {
+      TFE_SET_LEN_TYPE(table->diagram[from][i], len_type);
+    }
+  }
+  else
+    ; /* do nothing */
+
+}
+
+/* no reenterable but convenient api to add transfers into `cur_table` */
+/* which should be the immediate result of `alloc_table` */
+void add_initial(node to, entry_t cond)
+{
+  st_add_transfer(cur_table, cur_table->init_st, to, 0,TFE_ACT_INIT,cond);
+}
+
+void add_intermedia_rev (node from, node to, entry_t cond ) 
+{
+  st_add_transfer(cur_table, from, to, TFE_FLAG_REVERSED, TFE_ACT_APPEND, cond);
+}
+
+void add_intermedia (node from, node to, entry_t cond) 
+{
+  st_add_transfer(cur_table, from, to, 0, TFE_ACT_APPEND, cond);
+}
+
+void add_selfloop (node from, entry_t cond)
+{
+  add_intermedia(from,from,cond);
+}
+
+void add_selfloop_rev (node from, entry_t cond)
+{
+  add_intermedia_rev(from,from,cond);
+}
+
+void add_accepted_rev(node from,  node to, entry_t cond) 
+{
+  st_add_transfer(cur_table, from, to, TFE_FLAG_REVERSED|TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, cond);
+}
+void add_accepted(node from, node to , entry_t cond) 
+{
+  st_add_transfer(cur_table, from, to, TFE_FLAG_ACCEPTED, TFE_ACT_ACCEPT, cond);
+}
+
+void add_skip(node from, node to, entry_t cond)
+{
+  st_add_transfer(cur_table,from,to,0,TFE_ACT_SKIP,cond);
+}
+
+void add_skip_rev (node from, node to, entry_t cond)
+{
+  st_add_transfer (cur_table,from,to,TFE_FLAG_REVERSED,TFE_ACT_SKIP,cond);
+}
+
+void add_skip_loop (node from, entry_t cond)
+{
+  st_add_transfer(cur_table,from,from,0,TFE_ACT_SKIP,cond);
+}
+
+void add_skip_rev_loop (node from, entry_t cond)
+{
+  st_add_transfer (cur_table,from,from,TFE_FLAG_REVERSED,TFE_ACT_SKIP,cond);
 }
 
 void set_len_type(node from, node to, token_len_type len_type)
 {
-  set_len_type_r (tknzr_table, tknzr_entry_counters, from, to, len_type);
-}
-
-void set_len_type_row_r (transfer_table_t table, 
-    int *counter,
-    node from,
-    token_len_type len_type)
-{
-  if (from >=0 && from < MAX_TRANSFER_ENTRIES) 
-  {
-    int len=counter[from];
-    for (int i=0;i<len;++i)
-    {
-      TFE_SET_LEN_TYPE(table[from][i], len_type);
-    }
-  }
-  else
-    ; /* do nothing */
-
+  st_set_len_type (cur_table, from, to, len_type);
 }
 
 void set_len_type_row (node from, token_len_type len_type)
 {
-  set_len_type_row_r(tknzr_table, tknzr_entry_counters, from, len_type);
-}
-
-void check_set_len_type(void)
-{
-
-  token_len_type len_type;
-  /* loop for all the from=non-accepted and to=all-state with all len_type */
-  puts("check_set_len_type begin");
-  for (int i=TK_INIT; i<_TK_NON_ACCEPTED_END;++i)
-  {
-    for (int j=TK_INIT;j<TK_NULL;++j)
-    {
-      for (int k=TFE_BRIEF;k<_TFE_LEN_TYPE_END;++k)
-      {
-        set_len_type(i,j,k);
-        len_type=TFE_LEN_TYPE(tknzr_table[i][j]);
-        assert(len_type == k);
-      }
-    }
-  }
-  void clear_tknzr_table(void);
-  clear_tknzr_table();
-  puts("check_set_len_type passed");
+  st_set_len_type_row(cur_table, from, len_type);
 }
 
 
-/* find the entry that defines a transfer going from */
-/* `state_from` to `state_to` */
-/* should only be called after init_tknzr_table */
-  static
-transfer_entry seek_entry_r (transfer_table_t table, int *entry_counters ,int state_from, int state_to)
-{
-
-  transfer_entry entry;
-  for (int i=0;i<entry_counters[state_from];++i)
-  {
-    entry = table[state_from][i];
-    if (TFE_STATE(entry) == state_to)
-      return entry;
-  }
-  return 0;
-}
-
-entry_t seek_entry(tokenizer_state from,
-    tokenizer_state to)
-{
-  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
-  return seek_entry_r (tknzr_table, tknzr_entry_counters,from,to);
-
-}
-
-  static
-char *get_char_class(char_class_enum char_class)
-{
-  char *ch=char_class2string[char_class];
-  assert (ch != NULL);
-  return ch;
-}
-
-bool can_transfer(entry_t entry,  int character) 
-{
-  char_class_enum cclass = TFE_CHAR_CLASS(entry);
-  char *char_class=get_char_class(cclass);
-
-  // TODO: use bsearch
-  bool is_in_class = strchr (char_class, character);
-  return (is_in_class && ! TFE_IS_REVERSED(entry)) || 
-    (!is_in_class && TFE_IS_REVERSED(entry));
-
-}
-
-void add_transfer_r(transfer_table_t table, int *entry_counters,
-    int from,
-    int state, 
-    entry_flag flags,
-    entry_action act,
-    char_class_enum cclass)
-{
-  int len=entry_counters[from];
-
-  /* the order is : */
-  /* (action | char_class | state | flags) */
-  transfer_entry entry = TFE_MAKE_ENTRY(act,cclass,state,flags);
-  table[from][len]=entry;
-  entry_counters[from]++;
-
-}
-
-  static
-int do_transfer_r (transfer_table_t table, int *entry_counters,
-    int state, /* state must be a non-accepted and not null */
-    int ch, transfer_entry *entry, int state_not_found)
-{
-  assert (entry);
-  assert (state != state_not_found);
-  assert (table);
-  assert(entry_counters);
-  assert (state >= 0);
-
-  int  nstate;
-  char_class_enum char_class;
-
-  for (int i=0;i<entry_counters[state];++i)
-  {
-    *entry = table[state][i];
-    nstate = TFE_STATE(table[state][i]);
-    if (can_transfer (table[state][i], ch)) 
-    {
-      // TODO: swap table[state][0] and table[state][i]
-      return nstate;
-    }
-  }
-  return state_not_found;
-
-}
-
-tokenizer_state do_transfer (tokenizer_state state,
-    int ch, transfer_entry *entry)
-{
-  assert (state >=0 && state < MAX_TRANSFER_ENTRIES);
-  return
-    (tokenizer_state) do_transfer_r(
-        tknzr_table, tknzr_entry_counters,
-        state, ch, entry, TK_NULL);
-
-}
-
-/** add a transfer from `from` to `to`
- * the `from` must be a non-accepted
- */
-void add_transfer(tokenizer_state from,
-    tokenizer_state state, 
-    entry_flag flags, entry_action act,
-    char_class_enum cclass)
-{
-  assert (from >=0 && from < MAX_TRANSFER_ENTRIES);
-  add_transfer_r( tknzr_table, tknzr_entry_counters, from,state,flags,act,cclass);
-
-}
 

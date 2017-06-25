@@ -2,6 +2,7 @@
 #define TOKEN_TYPE_H 1
 
 #define N_KEYWORDS ( 32 )
+#define FIRST_KEYWORD TKT_KW_FOR 
 
 extern const char *token_tab[];
 extern const char *keywords_tab[];
@@ -11,7 +12,7 @@ typedef enum token_type
 {
   /* keywords must come first */
    /* KEYWORDS */
-  TKT_KW_FOR=0,
+  TKT_KW_FOR=1,
   TKT_KW_WHILE,
   TKT_KW_CASE,
   TKT_KW_RETURN,

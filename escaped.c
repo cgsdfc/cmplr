@@ -1,104 +1,15 @@
 #include "escaped.h"
 #include <limits.h>
 
-typedef struct state_table
-{
-  int nrows;
-  int ncols;
-  int *count;
-  entry_t **diagram;
-  entry_t init_st;
-
-} state_table;
-
-
-
-  int
-init_state_table(state_table *table, int nrows, int ncols, entry_t init_st)
-{
-  assert(nrows>0);
-  assert(ncols>0);
-  assert(init_st>=0);
-  assert(table);
-
-  table->nrows=nrows;
-  table->ncols=ncols;
-  table->init_st=init_st;
-  if (NULL == (table->diagram=malloc(sizeof(entry_t*) * nrows)))
-  {
-    perror("malloc");
-    return -1;
-  }
-  table->count=malloc(sizeof(int) * nrows);
-
-  for (int i=0;i<nrows;++i)
-  {
-    table->diagram[i]=malloc(sizeof(entry_t) * ncols);
-    table->count[i]=0;
-  }
-
-  return 0;
-} 
-
-  void 
-st_add_transfer(state_table *table, entry_t from, entry_t to, entry_t flags, entry_t act, entry_t chcl)
-{
-  assert(0<=from && from < table->nrows);
-  assert(0<= to && to < table->ncols);
-  entry_t entry = TFE_MAKE_ENTRY(act,chcl,to,flags);
-  table->diagram[from][table->count[from]++]=entry;
-}
-
-
-  void
-st_add_initial(state_table *table, entry_t state,entry_t chcl)
-{
-  st_add_transfer(table,table->init_st,state,0,TFE_ACT_INIT,chcl);
-}
-
-  void 
-st_add_intermedia(state_table *table, entry_t from, entry_t to, entry_t chcl)
-{
-  st_add_transfer(table,from,to,0,TFE_ACT_APPEND,chcl);
-}
-
-  void 
-st_add_accepted(state_table *table, entry_t from, entry_t to,  entry_t chcl)
-{
-  st_add_transfer(table,from,to,TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,chcl);
-}
-
-  void
-st_add_selfloop(state_table *table, entry_t state, entry_t chcl)
-{
-  st_add_transfer(table,state,state,0,TFE_ACT_APPEND,chcl);
-}
-
-/* reversed versions */
-  void 
-st_add_intermedia_rev (state_table *table, entry_t from, entry_t to, entry_t chcl)
-{
-  st_add_transfer(table,from,to,TFE_FLAG_REVERSED,TFE_ACT_APPEND,chcl);
-}
-
-  void 
-st_add_accepted_rev (state_table *table,entry_t from, entry_t to, entry_t chcl)
-{
-  st_add_transfer(table,from ,to,TFE_FLAG_REVERSED | TFE_FLAG_ACCEPTED,TFE_ACT_ACCEPT,chcl);
-}
-
-  void
-st_add_selfloop_rev (state_table *table, entry_t state, entry_t chcl)
-{
-  st_add_transfer(table,state,state,TFE_FLAG_REVERSED,TFE_ACT_APPEND,chcl);
-}
 
 state_table escaped_table;
 
 void init_escaped(void)
 {
   /* initial */
-  init_state_table(&escaped_table,N_ES_ROWS,N_ES_COLS,ES_INIT);
+  init_state_table(&escaped_table,"escaped's table",
+      N_ES_ROWS,N_ES_COLS,ES_INIT,0);
+  /* use char_is_in_class default */
   st_add_initial(&escaped_table,ES_BEGIN, CHAR_CLASS_BACKSLASH);
 
   /* intermedia */
@@ -142,36 +53,6 @@ const char escaped_tab[]=
   ['0']='\0',
 
 };
-
-
-entry_t st_do_transfer(state_table *table, entry_t state, char cc, entry_t nonf)
-{
-  assert (state >= 0 && state < table->nrows);
-  entry_t *ent;
-  entry_t entry;
-  char *chcl;
-  int len;
-
-  ent=table->diagram[state];
-  len=table->count[state];
-
-  for (int i=0;i<len;++i)
-  {
-    chcl=char_class2string[TFE_CHAR_CLASS(ent[i])];
-    bool in_class = strchr(chcl,cc);
-    bool is_reversed = TFE_IS_REVERSED(ent[i]);
-    if (in_class && !is_reversed
-        || !in_class && is_reversed)
-    {
-      entry=ent[i];
-      ent[i]=ent[0];
-      ent[0]=entry;
-      return entry;
-    }
-  }
-
-  return nonf;
-}
 
 char eval_escaped(char *buf, entry_t kind)
 {

@@ -7,19 +7,73 @@
 #include "escaped.h"
 #include <limits.h>
 
+bool can_transfer (state_table *tb, entry_t ent, char ch)
+{
+  bool in_class=tb->func(TFE_COND(ent), ch);
+  bool is_reversed=TFE_IS_REVERSED(ent);
+  return (in_class && !is_reversed) || (!in_class && is_reversed);
+}
+
+
+
+
+
+void check_defininess(void)
+{
+  /* for each transfer-to state of a non-accepted state, under a certain char */
+  /*   there should only be 2 consequences: 1. can transfer to ONE state(hit) */
+  /*     2. can transfer to NO state (miss) */
+  /*     this check makes sure this. */
+  int len, sum;
+  int totalcnt=0;
+  state_table *tb=get_tokenizer_table();
+  char *cbuf=malloc(sizeof(char)*tb->ncols);
+  entry_t *buf=malloc(sizeof(entry_t)*tb->ncols);
+  entry_t ent;
+
+  puts("check_defininess BEGIN");
+  for (int i=tb->init_st;i<tb->nrows;++i)
+  {
+    const char *from=token_state_tab[i];
+    printf("checking %s...", from);
+    const char *to;
+    bool failed=false;
+    for (char c=1;c<SCHAR_MAX;++c)
+    {
+      int sum=0;
+      for (int j=0;j<tb->count[i];++j)
+      {
+        ent=tb->diagram[i][j];
+        to=token_state_tab[TFE_STATE(ent)];
+        if (can_transfer(tb, ent,c)) {
+          sum++;
+          if (sum > 1) {
+            failed=true;
+            printf("\t\nfuck from %s to %s char is %c\n", from,to, c);
+          }
+        }
+      }
+    }
+    if (failed) {
+      printf("FAILED, more than one state can go from %s\n", from);
+    } else {
+      printf("PASSED\n");
+    }
+  }
+}
+
 
 
 /* short hand */
 int des(char *src, char *dst)
 {
-  /* donot ignore error when checking */
   return eval_string(src,dst);
 }
 
 
 void check_escaped(void)
 {
-  puts("check_escaped begin");
+  puts("check_escaped BEGIN");
 
   fini_escaped();
   init_escaped();
@@ -32,17 +86,17 @@ void check_escaped(void)
   puts(dst);
   assert(r==0);
   assert (strcmp (dst, src)==0);
-  puts("single char passed");
+  puts("single char PASSED");
 
   r=des("", dst);
   assert(r==0);
   assert (strcmp(dst,"")==0);
-  puts("empty string passed");
+  puts("empty string PASSED");
 
   r=des("3333333333", dst);
   assert(r==0);
   assert (strcmp(dst,"3333333333")==0);
-  puts("not-a-escaped string passed");
+  puts("not-a-escaped string PASSED");
 
 
   /* check each single escaped */
@@ -56,7 +110,7 @@ void check_escaped(void)
     assert (r==0);
     assert (dst[0] == escaped_tab[es]);
   }
-  puts("single char escaped passed");
+  puts("single char escaped PASSED");
 
   /* check oct of diff digits */
   char *octs[]={
@@ -71,9 +125,9 @@ void check_escaped(void)
       assert(r==0);
       assert(c == dst[0]);
     }
-    printf("oct of %d dig passed\n", i);
+    printf("oct of %d dig PASSED\n", i);
   }
-  puts("all oct escaped passed");
+  puts("all oct escaped PASSED");
 
   for (int i=1;i<=2;++i) {
     for (char c=0;c<SCHAR_MAX;++c) 
@@ -83,29 +137,29 @@ void check_escaped(void)
       assert(r==0);
       assert(c == dst[0]);
     }
-    printf("hex of %d dig passed\n", i);
+    printf("hex of %d dig PASSED\n", i);
   }
 
-  puts("all hex escaped passed");
+  puts("all hex escaped PASSED");
 
   des("My name is\0YOU CAN NOT SEE", dst);
   assert (strcmp(dst, "My name is")==0);
 
 
   fini_escaped();
-  puts("check_escaped passed");
+  puts("check_escaped PASSED");
 
 }
 
 
 void check_char_class(void)
 {
-  puts("check_char_class begin");
+  puts("check_char_class BEGIN");
   for (int i=CHAR_CLASS_EMPTY;i<_CHAR_CLASS_NULL;++i)
   {
     assert (char_class2string[i]);
   }
-  puts("check_char_class passed");
+  puts("check_char_class PASSED");
 }
 
 
@@ -124,13 +178,13 @@ void check_append_fixlen(void)
   puts(TOKEN_FIXLEN_STRING(tk));
   r=append_fixlen(tk,'a');
   assert (r!=0);
-  puts("check_append_fixlen passed");
+  puts("check_append_fixlen PASSED");
 }
 
 
 void check_state2operator(void)
 {
-  for (int i=TK_INIT;i<MAX_TRANSFER_ENTRIES;++i)
+  for (int i=TK_INIT;i<TK_NULL;++i)
   {
     if (is_oper_type(i))
       assert(state2operator[i]);
@@ -147,7 +201,7 @@ void check_init_token(void)
   char *string;
   int len;
 
-  puts("check_init_token begin");
+  puts("check_init_token BEGIN");
   for (int i=TFE_BRIEF;i<_TFE_LEN_TYPE_END;++i)
   {
     switch(i) {
@@ -175,33 +229,24 @@ void check_init_token(void)
         break;
     }
   }
-  puts("check_init_token passed");
+  puts("check_init_token PASSED");
 }
 
-void check_counters(void)
-{
-  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
-  {
-    assert(tknzr_entry_counters[i] == 0);
-  }
-}
-
-
+// TODO: rename
 void check_tknzr_table (void) 
 {
-  puts("check_tknzr_table begin");
+  puts("check_tknzr_table BEGIN");
   check_char_buffer(); 
   check_operators();
   check_fields();
   check_char_class();
 
   init_tknzr_table ();
-  check_table();
+  check_defininess();
   check_init_len_type();
-  clear_tknzr_table();
 
   check_escaped();
-  puts ("check_table passed");
+  puts ("check_tknzr_table PASSED");
 
 }
 
@@ -209,7 +254,7 @@ void check_fields(void)
 {
   entry_t entry;
   entry_t flag, action, state, char_class;
-  puts("check fields begin");
+  puts("check fields BEGIN");
 
   /* check all the action fields */
   for (int i=TFE_ACT_INIT;i<TFE_ACT_SKIP+1;++i)
@@ -218,17 +263,17 @@ void check_fields(void)
     action = TFE_ACTION(entry);
     assert (action == i );
   }
-  puts ("check action passed");
+  puts ("check action PASSED");
 
   /* check all the char_class fields */
   for (int i=CHAR_CLASS_EMPTY;i<_CHAR_CLASS_NULL;++i)
   {
     entry = TFE_MAKE_ENTRY(0, i,0,0);
-    char_class=TFE_CHAR_CLASS (entry);
+    char_class=TFE_COND (entry);
     assert (char_class== i);
     assert (char_class2string[i]!=NULL);
   }
-  puts ("check char_class passed");
+  puts ("check char_class PASSED");
 
 
   /* check all the state fields */
@@ -239,7 +284,7 @@ void check_fields(void)
     assert (state == i);
   }
 
-  puts ("check state passed");
+  puts ("check state PASSED");
 
   for (int l=0;l<_TFE_LEN_TYPE_END;++l)
   {
@@ -247,7 +292,7 @@ void check_fields(void)
     assert (TFE_LEN_TYPE(entry) == l);
   }
 
-  puts("check len_type passed");
+  puts("check len_type PASSED");
 
   entry = TFE_MAKE_ENTRY(0,0,0,TFE_FLAG_ACCEPTED);
   assert (TFE_IS_ACCEPTED(entry));
@@ -255,9 +300,9 @@ void check_fields(void)
   entry = TFE_MAKE_ENTRY(0,0,0,TFE_FLAG_REVERSED);
   assert(TFE_IS_REVERSED(entry));
 
-  puts("check flags passed");
+  puts("check flags PASSED");
 
-  puts("check all possible combination begin");
+  puts("check all possible combination BEGIN");
   /* use a big loop to test all possible */
   for (int i=TFE_ACT_INIT;i<TFE_ACT_SKIP+1;++i)
   {
@@ -269,7 +314,7 @@ void check_fields(void)
         {
           entry=TFE_MAKE_ENTRY(i,j,k,0);
           TFE_SET_LEN_TYPE(entry,l);
-          assert (j==TFE_CHAR_CLASS(entry));
+          assert (j==TFE_COND(entry));
           assert (i==TFE_ACTION(entry));
           assert (k==TFE_STATE(entry));
           assert (TFE_LEN_TYPE(entry) == l);
@@ -278,59 +323,21 @@ void check_fields(void)
     }
   }
 
-  puts ("check_fields passed");
+  puts ("check_fields PASSED");
 
 }
 
-/** for each char in `char_class`, check `from` can transfer to `to` */
-void check_can_transfer (tokenizer_state from, 
-    tokenizer_state to, char_class_enum cc)
-{
-  char *char_class=char_class2string[cc];
-  for (int i=0;i<strlen(char_class);++i) 
-  {
-    int letter = char_class[i];
-    assert (can_transfer(seek_entry(from, to), letter));
 
-  }
-
-}
-
-void check_table (void)
-{
-  // TODO: check more throughly
-  puts("check_table begin");
-
-  /* TK_INIT -> TK_IDENTIFIER_BEGIN */
-  check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
-
-  /* check TK_INIT -> TK_INIT */ 
-  check_can_transfer(TK_INIT,TK_INIT,CHAR_CLASS_SPACES);
-
-  /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_END */
-  check_can_transfer(TK_IDENTIFIER_BEGIN,TK_IDENTIFIER_END,CHAR_CLASS_SEPARATOR);
-
-  /* check TK_IDENTIFIER_BEGIN -> TK_IDENTIFIER_BEGIN */
-  check_can_transfer(TK_INIT,TK_IDENTIFIER_BEGIN,CHAR_CLASS_IDENTIFIER_BEGIN);
-
-  /* check TK_INIT -> TK_PUNCTUATION_END */
-  check_can_transfer(TK_INIT,TK_PUNCTUATION_BEGIN,CHAR_CLASS_PUNCTUATION);
-
-  check_can_transfer(TK_STRING_LITERAL_BEGIN,TK_STRING_LITERAL_ESCAPED,
-      CHAR_CLASS_BACKSLASH);
-
-  printf ("check_init_table passed\n");
-
-}
 
 void check_init_len_type(void)
 {
+  state_table *tb=get_tokenizer_table();
 
-  for (int i=0;i<MAX_TRANSFER_ENTRIES;++i)
+  for (int i=0;i<tb->nrows;++i)
   {
-    for (int j=0;j<tknzr_entry_counters[i];++j)
+    for (int j=0;j<tb->count[i];++j)
     {
-      entry_t entry = tknzr_table[i][j];
+      entry_t entry = tb->diagram[i][j];
       token_len_type len_type = TFE_LEN_TYPE(entry);
       node to = TFE_STATE(entry);
 
@@ -341,13 +348,12 @@ void check_init_len_type(void)
         assert(len_type == TFE_FIXLEN);
       }
 
-
       else if (state_is_varlen(to))
         assert(len_type == TFE_VARLEN);
 
     }
   }
-  puts("check_init_len_type passed");
+  puts("check_init_len_type PASSED");
 }  
 void check_peek_line (char_buffer *buffer)
 {
@@ -376,7 +382,7 @@ void check_char_buffer (void)
 
 void check_operators(void)
 {
-  puts("check_operators begin");
+  puts("check_operators BEGIN");
   int op_count=0;
   int rej_count=0;
   op_struct *ops=NULL;
@@ -417,7 +423,7 @@ void check_operators(void)
   }
 
   assert (ops-operators == N_OPERATOR_KINDS);
-  printf("check_operators passed\n");
+  printf("check_operators PASSED\n");
 }
 
 

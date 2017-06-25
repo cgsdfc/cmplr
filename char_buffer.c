@@ -137,13 +137,12 @@ int init_char_buffer (char_buffer *buffer, FILE *f, int chars, int lines)
     while (NULL != fgets (line, BUFSIZ, f))
     {
       int len=strlen (line);
+      buffer->limits[++i]=len;
       if (line[0]=='#' && skip_directives)
       {
         chars-=len;
         continue;
       }
-
-      buffer->limits[++i]=len;
       strncat (buffer->buf, line, BUFSIZ);
     }
 

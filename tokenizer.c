@@ -82,15 +82,13 @@ int depatch_accept(token_len_type len_type,
   }
 }
 
+
 int get_next_token (token **ptoken,
     char_buffer *buffer,
     node *errstate)
 {
-  if (peek_char(buffer) == EOF) {
-    return EOF;
-  }
-
-  transfer_entry entry;
+  
+  entry_t entry;
   bool is_accepted=false;
   bool is_reversed=false;
   tokenizer_state state=TK_INIT;
@@ -99,7 +97,7 @@ int get_next_token (token **ptoken,
   entry_action action;
   int ch;
   int r;
-  token *tk;
+  token *tk=NULL;
 
   while (!is_accepted) 
   {
@@ -148,6 +146,12 @@ int get_next_token (token **ptoken,
         break;
 
       case TFE_ACT_SKIP:
+        if(tk!=NULL)
+        {
+          fini_token(tk);
+          tk=NULL;
+        }
+        
         break;
     }
   } 
@@ -186,7 +190,7 @@ int print_token_stream (char_buffer *buffer)
   char *token_string;
   tokenizer_state errstate;
 
-  /* check_tknzr_table(); */
+  check_tknzr_table();
   init_tknzr_table ();
   while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
   {
