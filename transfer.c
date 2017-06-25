@@ -74,13 +74,22 @@ static bool char_is_in_class(entry_t cond, char ch)
 }
 
  
-
-entry_t st_do_transfer(state_table *table, entry_t state, entry_t cc, entry_t nonf)
+/** look up possible transfer in `table` for `state` and `cc`
+ * if found, return the destination and store the corresponding
+ * entry into `entry`.
+ * if no found, return `nonf` to indicate that.
+ * caller should make sure `nonf` is not a valid state
+ */
+node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry, node nonf)
 {
   assert (state >= 0 && state < table->nrows);
+  assert (entry);
+  assert (table);
+  assert (state != nonf);
+  assert (cc);
   entry_t *ent;
-  entry_t entry;
   int len;
+  node nstate=nonf;
 
   ent=table->diagram[state];
   len=table->count[state];
@@ -92,10 +101,12 @@ entry_t st_do_transfer(state_table *table, entry_t state, entry_t cc, entry_t no
     if (in_class && !is_reversed
         || !in_class && is_reversed)
     {
-      entry=ent[i];
+      *entry=ent[i];
       ent[i]=ent[0];
-      ent[0]=entry;
-      return entry;
+      ent[0]=*entry;
+      nstate=TFE_STATE(*entry);
+      assert(nonf != nstate);
+      return nstate;
     }
   }
 

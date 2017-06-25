@@ -138,11 +138,12 @@ int init_char_buffer (char_buffer *buffer, FILE *f, int chars, int lines)
     {
       int len=strlen (line);
       buffer->limits[++i]=len;
-      if (line[0]=='#' && skip_directives)
-      {
-        chars-=len;
-        continue;
-      }
+      if (line[len-1] == '\\' || line[0]=='#')
+        if(skip_directives)
+        {
+          chars-=len;
+          continue;
+        }
       strncat (buffer->buf, line, BUFSIZ);
     }
 

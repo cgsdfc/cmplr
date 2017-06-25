@@ -95,7 +95,7 @@ int get_next_token (token **ptoken,
   tokenizer_state nstate = TK_NULL;
   token_len_type len_type;
   entry_action action;
-  int ch;
+  char ch;
   int r;
   token *tk=NULL;
 

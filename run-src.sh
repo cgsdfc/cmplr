@@ -8,7 +8,8 @@ fi
 
 verb=$2
 under=$1
-
+logf=./errlog
+echo `date` > $logf
 
 kases="$under/*.c $under/*.h"
 
@@ -17,11 +18,13 @@ for x in $kases;do
   if [ $verb -eq 1 ];then
     ./bin/tokenizer $x
   else
-    ./bin/tokenizer $x > /dev/null 
+    ./bin/tokenizer $x > /dev/null 2>> $logf
   fi
 
   if [ $? -ne 0 ];then 
-    echo [FAIL] at $x
+    errmsg="[FAIL] at $x" 
+    echo $errmsg
+    echo $errmsg >> $logf
   else
     echo [PASS]
   fi

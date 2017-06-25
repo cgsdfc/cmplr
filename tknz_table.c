@@ -5,8 +5,7 @@ static state_table *table;
 
 node do_transfer(node state, char ch, entry_t *entry)
 {
-  *entry = st_do_transfer(table,state,ch,TK_NULL);
-  return TFE_STATE(*entry);
+  return st_do_transfer(table,state,ch,entry, TK_NULL);
 }
 
 static

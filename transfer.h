@@ -2,11 +2,11 @@
 #ifndef TRANSFER_H
 #define TRANSFER_H 1
 #include <stdbool.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "state.h"
 #include "char_class.h"
 #include "char_buffer.h"
@@ -104,7 +104,11 @@ init_state_table(state_table *table,
 
 state_table *alloc_table(void);
 
-entry_t st_do_transfer(state_table *table, entry_t state, entry_t cc, entry_t nonf);
+node st_do_transfer(state_table *table,
+    entry_t state,
+    entry_t cc,
+    entry_t* entry,
+    node nonf);
 
 void st_add_initial(state_table *table, entry_t state,entry_t cond);
 

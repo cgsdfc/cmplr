@@ -2,37 +2,41 @@
 #include <limits.h>
 
 
-state_table escaped_table;
+state_table *escaped_table;
 
 void init_escaped(void)
 {
+  escaped_table = alloc_table();
+  assert (escaped_table);
+
   /* initial */
-  init_state_table(&escaped_table,"escaped's table",
+  init_state_table(escaped_table,
+      "escaped's table",
       N_ES_ROWS,N_ES_COLS,ES_INIT,0);
   /* use char_is_in_class default */
-  st_add_initial(&escaped_table,ES_BEGIN, CHAR_CLASS_BACKSLASH);
+  add_initial(ES_BEGIN, CHAR_CLASS_BACKSLASH);
 
   /* intermedia */
-  st_add_intermedia(&escaped_table,ES_BEGIN,ES_ZERO, CHAR_CLASS_ZERO);
-  st_add_intermedia(&escaped_table,ES_ZERO,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
-  st_add_intermedia(&escaped_table,ES_BEGIN,ES_HEX_BEGIN,CHAR_CLASS_X);
-  st_add_intermedia(&escaped_table,ES_HEX_BEGIN,ES_HEX_END,CHAR_CLASS_HEX_BEGIN);
-  st_add_intermedia(&escaped_table,ES_ZERO,ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN);
-  st_add_intermedia(&escaped_table,ES_OCT_BEGIN,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
-  st_add_intermedia(&escaped_table, ES_BEGIN, ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN_NOT_ZERO);
+  add_intermedia(ES_BEGIN,ES_ZERO, CHAR_CLASS_ZERO);
+  add_intermedia(ES_ZERO,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
+  add_intermedia(ES_BEGIN,ES_HEX_BEGIN,CHAR_CLASS_X);
+  add_intermedia(ES_HEX_BEGIN,ES_HEX_END,CHAR_CLASS_HEX_BEGIN);
+  add_intermedia(ES_ZERO,ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN);
+  add_intermedia(ES_OCT_BEGIN,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
+  add_intermedia( ES_BEGIN, ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN_NOT_ZERO);
 
   /* accepted-rev */
-  st_add_accepted_rev(&escaped_table,ES_END,ES_ZERO,CHAR_CLASS_OCT_BEGIN);
-  st_add_accepted_rev(&escaped_table, ES_END,ES_HEX_BEGIN,CHAR_CLASS_HEX_BEGIN);
-  st_add_accepted_rev(&escaped_table, ES_END,ES_OCT_BEGIN, CHAR_CLASS_OCT_BEGIN);
+  add_accepted_rev(ES_END,ES_ZERO,CHAR_CLASS_OCT_BEGIN);
+  add_accepted_rev( ES_END,ES_HEX_BEGIN,CHAR_CLASS_HEX_BEGIN);
+  add_accepted_rev( ES_END,ES_OCT_BEGIN, CHAR_CLASS_OCT_BEGIN);
 
   /* accepted */
-  st_add_accepted(&escaped_table,ES_HEX_END,ES_END, CHAR_CLASS_HEX_BEGIN);
-  st_add_accepted(&escaped_table,ES_OCT_END,ES_END, CHAR_CLASS_OCT_BEGIN);
-  st_add_accepted(&escaped_table,ES_BEGIN,ES_END, CHAR_CLASS_SINGLE_ESCAPE_NON_ZERO);
+  add_accepted(ES_HEX_END,ES_END, CHAR_CLASS_HEX_BEGIN);
+  add_accepted(ES_OCT_END,ES_END, CHAR_CLASS_OCT_BEGIN);
+  add_accepted(ES_BEGIN,ES_END, CHAR_CLASS_SINGLE_ESCAPE_NON_ZERO);
 
   /* selfloop */
-  st_add_selfloop_rev(&escaped_table,ES_INIT,CHAR_CLASS_BACKSLASH);
+  add_selfloop_rev(ES_INIT,CHAR_CLASS_BACKSLASH);
 
 }
 
@@ -96,8 +100,7 @@ int eval_string(char *src, char *dst)
 
   for (cc=src;*cc; ++cc) 
   {
-    ent=st_do_transfer(&escaped_table,nsa,*cc, ES_NULL);
-    nsa=TFE_STATE(ent);
+    nsa=st_do_transfer(escaped_table,nsa,*cc, &ent, ES_NULL);
 
     switch (nsa) {
       case ES_NULL:
