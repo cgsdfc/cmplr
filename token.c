@@ -126,7 +126,7 @@ int accept_varlen(token *tk,char ch,node state, bool append)
   vtk->string[vtk->len]=0;
   switch (state) {
     case TK_IDENTIFIER_END:
-      for (int i=FIRST_KEYWORD;i<N_KEYWORDS;++i)
+      for (int i=FIRST_KEYWORD;i<=LAST_KEYWORD;++i)
       {
         if (strcmp (vtk->string, keywords_tab[i])==0)
         {

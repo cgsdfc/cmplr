@@ -3,6 +3,8 @@
 
 #define N_KEYWORDS ( 32 )
 #define FIRST_KEYWORD TKT_KW_FOR 
+#define LAST_KEYWORD TKT_KW_INT
+
 
 extern const char *token_tab[];
 extern const char *keywords_tab[];
