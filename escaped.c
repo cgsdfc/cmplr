@@ -12,7 +12,7 @@ void init_escaped(void)
   /* initial */
   init_state_table(escaped_table,
       "escaped's table",
-      N_ES_ROWS,N_ES_COLS,ES_INIT,0);
+      N_ES_ROWS,N_ES_COLS,ES_NULL,char_is_in_class);
   /* use char_is_in_class default */
   add_initial(ES_BEGIN, CHAR_CLASS_BACKSLASH);
 
@@ -100,7 +100,7 @@ int eval_string(char *src, char *dst)
 
   for (cc=src;*cc; ++cc) 
   {
-    nsa=st_do_transfer(escaped_table,nsa,*cc, &ent, ES_NULL);
+    nsa=st_do_transfer(escaped_table,nsa,*cc, &ent);
 
     switch (nsa) {
       case ES_NULL:

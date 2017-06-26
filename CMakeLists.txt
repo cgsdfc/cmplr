@@ -26,3 +26,4 @@ target_link_libraries(tokenizer tokenizer_lib)
 
 
 add_executable(intlit intlit.c)
+add_executable(t t.c)

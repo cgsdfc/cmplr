@@ -56,6 +56,7 @@ int accept_brief(token *tk, char ch,node state, bool append);
 int accept_varlen(token *tk,char ch,node state, bool append);
 int accept_fixlen(token *tk,char ch,node state,bool append);
 char *format_token (token *tk);
+void fini_token(token *tk);
 
 
 

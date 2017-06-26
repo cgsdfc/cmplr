@@ -47,7 +47,7 @@ token *init_varlen(position *begin, char ch)
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
   tk->max=TOKEN_VARLEN_INIT_LEN;
   assert(tk->string);
-  append_varlen(tk,ch);
+  append_varlen((token*)tk,ch);
   return (token*) tk;
 
 }
@@ -128,7 +128,8 @@ int accept_varlen(token *tk,char ch,node state, bool append)
     case TK_IDENTIFIER_END:
       for (int i=FIRST_KEYWORD;i<=LAST_KEYWORD;++i)
       {
-        if (strcmp (vtk->string, keywords_tab[i])==0)
+        const char *kw=keywords_tab[i];
+        if (kw != NULL && strcmp (vtk->string, kw)==0)
         {
           tk->type=i;
           return 0;

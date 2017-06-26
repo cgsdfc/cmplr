@@ -1,3 +1,74 @@
+#include "type_specifier.h"
+
+static state_table *tsp_table;
+static token_buffer tsp_token_buffer;
+
+static bool
+tsp_is_in_class(entry_t cond, char ch)
+{
+  return _TKT_TSP_BEGIN < ch && ch < _TKT_TSP_END;
+}
+
+void init_tsp_table(token_buffer *buf)
+{
+  assert(buf);
+  tsp_token_buffer=buf;
+  tsp_table = alloc_table();
+  assert(tsp_table);
+  int r;
+
+  r= init_table(tsp_table,
+      "type specifier's table",
+      N_TSP_TABLE_ROWS,
+      N_TSP_TABLE_COLS,
+      TSP_NULL,
+      tsp_is_in_class);
+
+  /* signed and unsigned */
+  add_intermedia(TSP_INIT,TSP_SIGNED, TKT_KW_SIGNED);
+  add_intermedia(TSP_INIT,TSP_UNSIGNED, TKT_KW_UNSIGNED);
+
+  /* no specifier mean for int */
+  add_accepted_rev(TSP_INIT,TSP_INT_END,TKT_TSP_EMPTY);
+
+  /* char,short,int,long */
+  add_accepted(TSP_INIT,TSP_CHAR_END,TKT_KW_CHAR);
+  add_accepted(TSP_INIT,TSP_SHORT,TKT_KW_SHORT);
+  add_intermedia(TSP_INIT,TSP_INT,TKT_KW_INT);
+  add_intermedia(TSP_INIT,TSP_LONG,TKT_KW_LONG);
+
+  /* unsigned or signed char , short, int , long */
+  add_accepted(TSP_SIGNED,TSP_CHAR_END,TKT_KW_CHAR);
+  add_accepted(TSP_SIGNED,TSP_SHORT,TKT_KW_SHORT);
+  add_intermedia(TSP_UNSIGNED,TSP_INT,TKT_KW_INT);
+  add_intermedia(TSP_UNSIGNED,TSP_LONG,TKT_KW_LONG);
+
+
+
+  add_accepted(TSP_LONG,TSP_LONG_LONG_end,TKT_KW_LONG);
+  add_accepted(TSP_INIT,TSP_CHAR_end,TKT_KW_CHAR);
+
+  add_intermedia(TSP_UNSIGNED,TSP_CHAR,TKT_KW_CHAR);
+  add_intermedia(TSP_UNSIGNED,TSP_INT,TKT_KW_INT);
+  add_intermedia(TSP_UNSIGNED,TSP_SHORT,TKT_KW_SHORT);
+  add_intermedia(TSP_UNSIGNED,TSP_LONG,TKT_KW_LONG);
+
+  add_intermedia(TSP_SIGNED,TSP_CHAR,TKT_KW_CHAR);
+  add_intermedia(TSP_SIGNED,TSP_INT,TKT_KW_INT);
+  add_intermedia(TSP_SIGNED,TSP_SHORT,TKT_KW_SHORT);
+  add_intermedia(TSP_SIGNED,TSP_LONG,TKT_KW_LONG);
+  add_intermedia(TSP_SIGNED,TSP_LONG_LONG,TKT_KW_LONG);
+
+  add_accepted_rev(TSP_SIGNED,TSP_INT,TKT_TSP_EMPTY);
+  add_accepted_rev(TSP_UNSIGNED,TSP_INT,TKT_TSP_EMPTY);
+
+} 
+
+
+
+
+
+#if 0
 #ifndef TOKEN_TYPE_H 
 #define TOKEN_TYPE_H 1
 
@@ -33,9 +104,12 @@ typedef enum token_type
   TKT_KW_CONST ,
   TKT_KW_VOLATILE ,
   
+  /* compose type */
+  TKT_KW_STRUCT,
+  TKT_KW_ENUM,
+  TKT_KW_UNION ,
 
   /* specifier */
-  _TKT_TSP_BEGIN,
   TKT_KW_DOUBLE,
   TKT_KW_SIGNED ,
   TKT_KW_INT,
@@ -45,14 +119,8 @@ typedef enum token_type
   TKT_KW_SHORT ,
   TKT_KW_UNSIGNED ,
   TKT_KW_VOID ,
-  /* compose type */
-  TKT_KW_STRUCT,
-  TKT_KW_ENUM,
-  TKT_KW_UNION ,
-  _TKT_TSP_END,
 
   /* storage */ 
-  // can has at most one
   TKT_KW_TYPEDEF,
   TKT_KW_EXTERN,
   TKT_KW_STATIC ,
@@ -150,5 +218,27 @@ typedef enum token_type
 
 extern const token_type state2punctuation [];
 extern const token_type state2operator[];
+#endif
+
+
+#ifndef TYPE_SPECIFIER_H
+#define TYPE_SPECIFIER_H 1
+
+typedef enum tsp_state
+{
+  TSP_INIT,
+  TSP_SIGNED,
+  TSP_UNSIGNED,
+  TSP_CHAR,
+  TSP_INT,
+  TSP_SHORT,
+  TSP_LONG,
+  TSP_VOID,
+} tsp_state;
+
+
+
+#endif
+
 #endif
 

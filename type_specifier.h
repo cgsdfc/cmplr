@@ -1,0 +1,34 @@
+#ifndef TYPE_SPECIFIER_H
+#define TYPE_SPECIFIER_H 1
+
+typedef enum tsp_state
+{
+  TSP_INIT=0,
+  TSP_SIGNED,
+  TSP_UNSIGNED,
+  TSP_INT,
+  TSP_LONG,
+  TSP_LONG_INT,
+  TSP_LONG_LONG,
+  TSP_LONG_LONG_END,
+  TSP_LONG_LONG_INT,
+  TSP_SHORT,
+  TSP_SHORT_INT,
+
+  TSP_CHAR_END,
+  TSP_INT_END,
+  TSP_SHORT_END,
+  TSP_LONG_END,
+  TSP_VOID_END,
+  TSP_DOUBLE_END,
+  TSP_LONG_DOUBLE_END,
+  TSP_FLOAT_END,
+
+  TSP_NULL,
+  
+} tsp_state;
+
+
+
+#endif
+

@@ -10,7 +10,6 @@ static state_table all_tables[STATE_TABLE_MAN_LEN];
 static int all_tables_count;
 static state_table *cur_table;
 
-static bool char_is_in_class(entry_t cond,char ch);
 
 state_table *alloc_table(void)
 {
@@ -21,25 +20,28 @@ state_table *alloc_table(void)
 }
 
 /* reenterable api */
+/* zero is reserved for initial state, thus no need to set */
  int
 init_state_table(state_table *table,
     char *name,
     int nrows,
     int ncols, 
-    entry_t init_st,
+    entry_t null_st,
     find_func func)
 {
   assert (name);
   assert(nrows>0);
   assert(ncols>0);
-  assert(init_st>=0);
   assert(table);
+  assert(null_st != 0);
+  assert(func);
 
   table->name=name;
   table->nrows=nrows;
   table->ncols=ncols;
-  table->init_st=init_st;
-  table->func = (func ? func : char_is_in_class);
+  table->null_st=null_st;
+  table->func = func;
+
   if (NULL == (table->diagram=malloc(sizeof(entry_t*) * nrows)))
   {
     perror("malloc");
@@ -65,13 +67,14 @@ st_add_transfer(state_table *table, entry_t from, entry_t to, entry_t flags, ent
   table->diagram[from][table->count[from]++]=entry;
 }
 
-static bool char_is_in_class(entry_t cond, char ch)
+bool char_is_in_class(entry_t cond, char ch)
 {
   char *chcl=char_class2string[cond];
   assert (chcl);
   bool in_class = strchr(chcl, ch);
   return in_class;
 }
+
 
  
 /** look up possible transfer in `table` for `state` and `cc`
@@ -80,16 +83,16 @@ static bool char_is_in_class(entry_t cond, char ch)
  * if no found, return `nonf` to indicate that.
  * caller should make sure `nonf` is not a valid state
  */
-node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry, node nonf)
+node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry)
 {
   assert (state >= 0 && state < table->nrows);
   assert (entry);
   assert (table);
-  assert (state != nonf);
+  assert (state != table->null_st);
   assert (cc);
   entry_t *ent;
   int len;
-  node nstate=nonf;
+  node nstate;
 
   ent=table->diagram[state];
   len=table->count[state];
@@ -105,19 +108,19 @@ node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry
       ent[i]=ent[0];
       ent[0]=*entry;
       nstate=TFE_STATE(*entry);
-      assert(nonf != nstate);
+      assert(table->null_st != nstate);
       return nstate;
     }
   }
 
-  return nonf;
+  return table->null_st;
 }
 
 /* reenterable api to add transfers into the state_table */
   void
 st_add_initial(state_table *table, entry_t state,entry_t cond)
 {
-  st_add_transfer(table,table->init_st,state,0,TFE_ACT_INIT,cond);
+  st_add_transfer(table,0,state,0,TFE_ACT_INIT,cond);
 }
 
   void 
@@ -187,7 +190,7 @@ void st_set_len_type_row (state_table*table,
 /* which should be the immediate result of `alloc_table` */
 void add_initial(node to, entry_t cond)
 {
-  st_add_transfer(cur_table, cur_table->init_st, to, 0,TFE_ACT_INIT,cond);
+  st_add_transfer(cur_table, 0, to, 0,TFE_ACT_INIT,cond);
 }
 
 void add_intermedia_rev (node from, node to, entry_t cond ) 

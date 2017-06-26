@@ -2,6 +2,7 @@
 #include "tokenizer.h"
 #include "token_defs.h"
 
+static bool do_check=false;
 static char *filename;
 static int tknzr_errno;
 // TODO: give more sensible error msg 
@@ -190,7 +191,10 @@ int print_token_stream (char_buffer *buffer)
   char *token_string;
   tokenizer_state errstate;
 
-  check_tknzr_table();
+  if(do_check)
+  {
+    check_tknzr_table();
+  }
   init_tknzr_table ();
   while ((r = get_next_token(&tk, buffer, &errstate)) != EOF)
   {
@@ -231,6 +235,7 @@ int main(int ac,char**av){
 
   if (ac != 2)
   {
+    puts(__BASE_FILE__);
     printf("Usage: %s input \n", av[0]);
     exit(0);
   }

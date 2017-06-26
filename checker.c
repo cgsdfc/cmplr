@@ -32,7 +32,7 @@ void check_defininess(void)
   entry_t ent;
 
   puts("check_defininess BEGIN");
-  for (int i=tb->init_st;i<tb->nrows;++i)
+  for (int i=0; i<tb->nrows;++i)
   {
     const char *from=token_state_tab[i];
     printf("checking %s...", from);

@@ -28,7 +28,7 @@ typedef struct state_table
   int *count;
   find_func func;
   entry_t **diagram;
-  entry_t init_st;
+  entry_t null_st;
 
 } state_table;
 
@@ -83,6 +83,8 @@ typedef enum entry_action
 
 #define TFE_IS_REVERSED(e) ((e) & TFE_FLAG_REVERSED) 
 
+#define TFE_IS_LOOK_HEAD(e) (TFE_IS_ACCEPTED(e) && TFE_IS_REVERSED(e))
+
 #define TFE_ACTION(e) (((e) & TFE_ACTION_MASK) >> TFE_ACTION_SHIFT)
 
 #define TFE_COND(e) (((e)&TFE_COND_MASK) >> TFE_COND_SHIFT)
@@ -99,7 +101,7 @@ init_state_table(state_table *table,
     char *name,
     int nrows,
     int ncols, 
-    entry_t init_st,
+    entry_t null_st,
     find_func func);
 
 state_table *alloc_table(void);
@@ -107,8 +109,7 @@ state_table *alloc_table(void);
 node st_do_transfer(state_table *table,
     entry_t state,
     entry_t cc,
-    entry_t* entry,
-    node nonf);
+    entry_t* entry);
 
 void st_add_initial(state_table *table, entry_t state,entry_t cond);
 
@@ -139,5 +140,8 @@ void add_skip_loop(node from, entry_t cond);
 void add_skip_rev_loop (node from, entry_t cond);
 void set_len_type(node from, node to, token_len_type len_type);
 void set_len_type_row (node from, token_len_type len_type);
+
+/* value that find_func can take */
+bool char_is_in_class(entry_t cond,char ch);
 #endif
 

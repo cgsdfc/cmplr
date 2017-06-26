@@ -5,7 +5,7 @@ static state_table *table;
 
 node do_transfer(node state, char ch, entry_t *entry)
 {
-  return st_do_transfer(table,state,ch,entry, TK_NULL);
+  return st_do_transfer(table,state,ch,entry);
 }
 
 static
@@ -54,11 +54,13 @@ void init_len_type(void)
 state_table *alloc_tokenizer_table(void)
 {
   state_table *atable = alloc_table();
+  int r=0;
   if(init_state_table(atable,
         "tokenizer's table",
         N_TOKENIZER_ROWS,
         N_TOKENIZER_COLS,
-        TK_INIT,0)<0) {
+        TK_NULL,
+        char_is_in_class)<0) {
     return NULL;
   }
   return atable;
