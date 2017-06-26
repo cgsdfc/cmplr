@@ -1,9 +1,19 @@
 /* token.h */
 #ifndef TOKEN_H
 #define TOKEN_H 1
+#include <stdio.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 #include "char_buffer.h"
-#include "state.h"
+#include "tknzr_state.h"
 #include "token_type.h"
+#include "operator.h"
+#include "tknzr_error.h"
 
 #define TOKEN_LEN_TYPE(t) ((t)->_type) 
 #define TOKEN_TYPE(t)    (((token*) t)->type)
@@ -11,6 +21,14 @@
 #define TOKEN_VARLEN_STRING(t) (((varlen_token*) t)->string)
 #define TOKEN_FIXLEN_MAX_LEN 20
 #define TOKEN_VARLEN_INIT_LEN 50
+
+typedef enum token_len_type 
+{
+  TFE_BRIEF=1,
+  TFE_VARLEN,
+  TFE_FIXLEN,
+  _TFE_LEN_TYPE_END
+} token_len_type;
 
 
 typedef struct token 
@@ -52,9 +70,11 @@ int append_fixlen(token *tk, char ch);
 int append_varlen(token *tk, char ch);
 
 /* accept */
-int accept_brief(token *tk, char ch,node state, bool append);
-int accept_varlen(token *tk,char ch,node state, bool append);
-int accept_fixlen(token *tk,char ch,node state,bool append);
+int accept_brief(token *tk, char ch,tknzr_state state, bool append);
+int accept_varlen(token *tk,char ch,tknzr_state state, bool append);
+int accept_fixlen(token *tk,char ch,tknzr_state state,bool append);
+
+/* helpers */
 char *format_token (token *tk);
 void fini_token(token *tk);
 

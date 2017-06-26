@@ -1,6 +1,7 @@
-#ifndef STATE_H
-#define STATE_H 1
+#ifndef TKNZR_STATE_H
+#define TKNZR_STATE_H 1
 #include <stdbool.h>
+#include <stdio.h>
 #define N_NON_ACCEPTED_STATES    (_TK_NON_ACCEPTED_END-TK_INIT)
 #define N_TOTAL_STATES (TK_NULL - TK_INIT)
 
@@ -8,10 +9,7 @@
 #define N_TOKENIZER_COLS N_TOTAL_STATES
 
 
-
-extern const char *token_state_tab[];
-
-typedef enum tokenizer_state
+typedef enum tknzr_state
 {
   /* NOT ACCEPTED STATES */
   TK_INIT=0,
@@ -178,14 +176,20 @@ typedef enum tokenizer_state
   TK_PERIOD_END,
   /* SPECIAL STATE FOR FAILURE */
   TK_NULL 
-} tokenizer_state;
+} tknzr_state;
 
-enum token_type;
-typedef tokenizer_state node;
-bool state_is_brief(tokenizer_state state);
-bool state_is_varlen(tokenizer_state state);
-bool state_is_fixlen(tokenizer_state state);
-bool is_oper_type (node state);
+// todo: entry_t and node 
+// usage is too easily to mix
+// but one is signed another is
+// unsigned.
+// especially after I changed st_do_transfer
+// to report error by returning a -1 node
+// check this!
+bool state_is_brief(tknzr_state state);
+bool state_is_varlen(tknzr_state state);
+bool state_is_fixlen(tknzr_state state);
+bool is_oper_type (tknzr_state state);
+char *tknzr_state_string(tknzr_state state);
 
 
 #endif

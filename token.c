@@ -1,22 +1,15 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
-#include <stdlib.h>
-#include <string.h>
 #include "token.h"
-#include "token_defs.h"
-#include "transfer.h"
 
-bool is_oper_type (node state);
   static 
 token *_init_token(position *begin, size_t len, token_len_type type)
 {
 
   token *tk=malloc(len);
-  assert (tk);
+  if (!tk) {
+    tknzr_error_set(TERR_NOMEM);
+    return NULL;
+  }
+
   memset(tk,0,len);
   memcpy(&tk->begin,begin,sizeof(position));
   tk->type=TKT_UNKNOWN;
@@ -57,7 +50,10 @@ int append_fixlen(token *_tk, char ch)
   fixlen_token *tk= (fixlen_token*) _tk;
 
   if (tk->len == TOKEN_FIXLEN_MAX_LEN)
-    return E_FIXLEN_TOO_LONG;
+  {
+    tknzr_error_set(TERR_TOKEN_TOO_LONG);
+    return -1;
+  }
   tk->string[tk->len++]=ch;
   return 0;
 }
@@ -74,8 +70,8 @@ int append_varlen(token *_tk, char ch)
     newspace=malloc(sizeof(char) * tk->max);
     if (!newspace)
     {
-      perror("malloc");
-      return E_NOMEM;
+      tknzr_error_set(TERR_NOMEM);
+      return -1;
     }
 
     memcpy(newspace,tk->string,sizeof(char)*(tk->len));
@@ -90,14 +86,13 @@ int append_varlen(token *_tk, char ch)
 }
 
 
-// TODO: check_varlen_append
-int accept_brief(token *tk,char ch, node state, bool append)
+int accept_brief(token *tk,char ch, tknzr_state state, bool append)
 {
   breif_token *btk=(breif_token*) tk;
 
   if (is_oper_type(state))
   {
-    (tk)->type=state2operator[state];
+    (tk)->type=state2oper(state);
     return 0;
   }
   switch(state) {
@@ -110,12 +105,13 @@ int accept_brief(token *tk,char ch, node state, bool append)
       return 0;
 
     default:
-      return E_TOKEN_NOT_BREIF;
+      tknzr_error_set(TERR_NOT_BRIEF);
+      return -1;
   }
 
 }
 
-int accept_varlen(token *tk,char ch,node state, bool append)
+int accept_varlen(token *tk,char ch,tknzr_state state, bool append)
 {
   int r=0;
   varlen_token *vtk=(varlen_token*)tk;
@@ -142,12 +138,13 @@ int accept_varlen(token *tk,char ch,node state, bool append)
       tk->type=TKT_STRING_LITERAL;
       return 0;
     default:
-      return E_TOKEN_NOT_VARLEN;
+      tknzr_error_set(TERR_NOT_VARLEN);
+      return -1;
   }
 
 }
 
-int accept_fixlen(token *tk,char ch,node state,bool append)
+int accept_fixlen(token *tk,char ch,tknzr_state state,bool append)
 {
   int r=0;
   fixlen_token *ftk=(fixlen_token*)tk;
@@ -169,7 +166,8 @@ int accept_fixlen(token *tk,char ch,node state,bool append)
       tk->type=TKT_FLOAT_LITERAL;
       return 0;
     default:
-      return E_TOKEN_NOT_FIXLEN;
+      tknzr_error_set(TERR_NOT_FIXLEN);
+      return -1;
   }
 
 }

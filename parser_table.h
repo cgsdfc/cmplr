@@ -1,6 +1,7 @@
 #ifndef PARSER_TABLE_H
 #define PARSER_TABLE_H 1
-#include "transfer.h"
+#include "state_table.h"
+
 #define N_PARSER_TABLE_ROWS (_PA_NON_ACCEPTED_END - PA_INIT)
 #define N_PARSER_TABLE_COLS (PA_NULL - PA_INIT)
 

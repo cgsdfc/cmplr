@@ -1,11 +1,4 @@
 #include "checker.h"
-#include "transfer.h"
-#include "tknz_table.h"
-#include "operator.h"
-#include "token.h"
-#include "char_class.h"
-#include "escaped.h"
-#include <limits.h>
 
 bool can_transfer (state_table *tb, entry_t ent, char ch)
 {
@@ -26,7 +19,7 @@ void check_defininess(void)
   /*     this check makes sure this. */
   int len, sum;
   int totalcnt=0;
-  state_table *tb=get_tokenizer_table();
+  state_table *tb=tknzr_table;
   char *cbuf=malloc(sizeof(char)*tb->ncols);
   entry_t *buf=malloc(sizeof(entry_t)*tb->ncols);
   entry_t ent;
@@ -34,7 +27,7 @@ void check_defininess(void)
   puts("check_defininess BEGIN");
   for (int i=0; i<tb->nrows;++i)
   {
-    const char *from=token_state_tab[i];
+    const char *from=tknzr_state_string(i);
     printf("checking %s...", from);
     const char *to;
     bool failed=false;
@@ -44,7 +37,7 @@ void check_defininess(void)
       for (int j=0;j<tb->count[i];++j)
       {
         ent=tb->diagram[i][j];
-        to=token_state_tab[TFE_STATE(ent)];
+        to=tknzr_state_string(TFE_STATE(ent));
         if (can_transfer(tb, ent,c)) {
           sum++;
           if (sum > 1) {
@@ -331,8 +324,7 @@ void check_fields(void)
 
 void check_init_len_type(void)
 {
-  state_table *tb=get_tokenizer_table();
-
+  state_table *tb= tknzr_table;
   for (int i=0;i<tb->nrows;++i)
   {
     for (int j=0;j<tb->count[i];++j)
@@ -386,8 +378,8 @@ void check_operators(void)
   int op_count=0;
   int rej_count=0;
   op_struct *ops=NULL;
-  char_class_enum *op;
-  char_class_enum *rejc;
+  char_class *op;
+  char_class *rejc;
   op_struct null_ops={0};
 
   for (ops=operators; memcmp(ops, &null_ops, sizeof null_ops)!=0;ops++)

@@ -1,7 +1,9 @@
 /* string_literal.c */
 #include "string_literal.h"
 
-
+//TODO: concat of adjacent string 
+// use a new accepted state to build 
+// a long string
 void init_string_literal(void)
 {
   add_initial(TK_STRING_LITERAL_BEGIN,CHAR_CLASS_DOUBLE_QUOTE);

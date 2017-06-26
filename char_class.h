@@ -6,6 +6,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "state_table.h"
+
+// todo: move these macros else where
+// it is too ugly
+// string concat is not a good trick at all
+// very unreadable
+
 #define CC_CHAR_LITERAL " `\"#@$" CC_IDENTIFIER_PART\
   CC_OPERATOR CC_PUNCTUATION
 
@@ -42,7 +49,7 @@
   CC_SPACES CC_PUNCTUATION CC_OPERATOR
 
 
-typedef enum char_class_enum
+typedef enum char_class
 {
   /* legal char class id starts from 1 */
   CHAR_CLASS_EMPTY=1,
@@ -117,12 +124,13 @@ typedef enum char_class_enum
   CHAR_CLASS_STAR_SLASH,
   CHAR_CLASS_DEC_PART_E,
   CHAR_CLASS_DEC_PART_E_SIGN,
+  CHAR_CLASS_XX,
   _CHAR_CLASS_NULL,
 
-} char_class_enum ;
+} char_class;
 
 extern char *char_class2string[];
-void check_char_class(void);
+int  char_is_in_class(entry_t cond, entry_t meet);
 
 #endif
 

@@ -1,11 +1,31 @@
-#include "tknz_table.h"
-#include "token_defs.h"
+#include "tknzr_table.h"
 
-static state_table *table;
+state_table *tknzr_table;
 
-node do_transfer(node state, char ch, entry_t *entry)
+static
+void set_len_type (node from, node to, token_len_type len_type)
 {
-  return st_do_transfer(table,state,ch,entry);
+  if (from >=0 && from < tknzr_table->nrows && 0 <= to && to < tknzr_table->count[from])
+    TFE_SET_LEN_TYPE(tknzr_table->diagram[from][to], len_type);
+  else
+    ; /* do nothing */
+
+}
+
+static
+void set_len_type_row (node from, token_len_type len_type)
+{
+  if (from >=0 && from < tknzr_table->nrows) 
+  {
+    int len=tknzr_table->count[from];
+    for (int i=0;i<len;++i)
+    {
+      TFE_SET_LEN_TYPE(tknzr_table->diagram[from][i], len_type);
+    }
+  }
+  else
+    ; /* do nothing */
+
 }
 
 static
@@ -14,11 +34,11 @@ void init_len_type(void)
   node from=TK_INIT;
   entry_t entry;
   node to;
-  int len=table->count[from];
+  int len=tknzr_table->count[from];
 
   for (int i=0;i < len;++i)
   {
-    entry=table->diagram[from][i];
+    entry=tknzr_table->diagram[from][i];
     to=TFE_STATE(entry);
     if (state_is_brief(to)) {
       set_len_type(from,i,TFE_BRIEF);
@@ -51,34 +71,21 @@ void init_len_type(void)
 
 }
 
-state_table *alloc_tokenizer_table(void)
+int init_tknzr_table (void)
 {
-  state_table *atable = alloc_table();
-  int r=0;
-  if(init_state_table(atable,
+  tknzr_table = alloc_table();
+  if (init_state_table(tknzr_table,
         "tokenizer's table",
         N_TOKENIZER_ROWS,
         N_TOKENIZER_COLS,
         TK_NULL,
-        char_is_in_class)<0) {
-    return NULL;
+        char_is_in_class)<0)
+  {
+    return -1;
   }
-  return atable;
 
-}
-
-state_table *get_tokenizer_table(void)
-{
-  return table;
-}
-
-void init_tknzr_table (void)
-{
-  table =  alloc_tokenizer_table();
-  if (table == NULL) {
-    perror("alloc_tokenizer_table");
-    exit(2);
-  }
+  // TODO tokenizer does not do this!
+  // pp does it.
   /* skip spaces */
   add_skip(TK_INIT,TK_INIT,CHAR_CLASS_SPACES);
 
@@ -111,8 +118,5 @@ void init_tknzr_table (void)
 
   /* len type */
   init_len_type();
-
-  /* escaped must be the last as it has its own table*/
-  init_escaped();
 
 }

@@ -1,6 +1,9 @@
-#include "state.h"
+#include "tknzr_state.h"
+#include <string.h>
 
-const char *token_state_tab[]=
+
+
+const char *tknzr_state_tab[]=
 {
 
   [TK_INIT]="TK_INIT",
@@ -90,25 +93,32 @@ const char *token_state_tab[]=
   [TK_NULL]="TK_NULL"
 };
 
-bool state_is_fixlen(tokenizer_state state)
+char *tknzr_state_string(tknzr_state state)
+{
+  static char buf[BUFSIZ];
+  strncpy(buf, tknzr_state_tab[state],BUFSIZ);
+  return buf;
+}
+
+bool state_is_fixlen(tknzr_state state)
 {
   return _TK_NON_ACCEPTED_FIXLEN_BEGIN < state && state < _TK_NON_ACCEPTED_FIXLEN_END;
 }
 
 
-bool state_is_varlen(tokenizer_state state)
+bool state_is_varlen(tknzr_state state)
 {
   return _TK_NON_ACCEPTED_VARLEN_BEGIN < state && state < _TK_NON_ACCEPTED_VARLEN_END;
 }
 
 
 
-bool state_is_brief(tokenizer_state state)
+bool state_is_brief(tknzr_state state)
 {
   return _TK_NON_ACCEPTED_BRIEF_BEGIN < state && state < _TK_NON_ACCEPTED_BRIEF_END;
 }
 
-bool is_oper_type (node state)
+bool is_oper_type (tknzr_state state)
 {
   return _TK_OPERATOR_ACCEPT_BEGIN < state && state < _TK_OPERATOR_ACCEPT_END;
 }

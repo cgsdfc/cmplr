@@ -4,15 +4,23 @@
 
 state_table *escaped_table;
 
-void init_escaped(void)
+int init_escaped(void)
 {
   escaped_table = alloc_table();
   assert (escaped_table);
+  int r=0;
 
   /* initial */
-  init_state_table(escaped_table,
+  r = init_state_table(escaped_table,
       "escaped's table",
-      N_ES_ROWS,N_ES_COLS,ES_NULL,char_is_in_class);
+      N_ES_ROWS,
+      N_ES_COLS,
+      ES_NULL,
+      char_is_in_class);
+  if (r<0) {
+    return -1;
+  }
+
   /* use char_is_in_class default */
   add_initial(ES_BEGIN, CHAR_CLASS_BACKSLASH);
 
@@ -104,7 +112,7 @@ int eval_string(char *src, char *dst)
 
     switch (nsa) {
       case ES_NULL:
-        r=E_BAD_ESCAPED;
+        r=PERR_BAD_ESCAPED;
         *pesbuf=0;
         strcpy(dst,esbuf);
         continue;
@@ -135,7 +143,7 @@ int eval_string(char *src, char *dst)
         *pesbuf=0;
         value=eval_escaped(esbuf, es_kind);
         if (value < 0){
-          r=E_BAD_ESCAPED;
+          parser_error_set (PERR_BAD_ESCAPED);
         }
         *dst++=value;
         nsa=ES_INIT;
@@ -152,18 +160,19 @@ int eval_string(char *src, char *dst)
     case ES_SKIP:
     case ES_END:
       *dst=0;
-      return r;
+      return -1;
 
     case ES_OCT_BEGIN: case ES_OCT_END: case ES_ZERO:
     case ES_HEX_BEGIN: case ES_HEX_END:
       *pesbuf=0;
       value=eval_escaped(esbuf, es_kind);
-      if (value < 0)
-        r=E_BAD_ESCAPED;
+      if (value < 0) {
+        parser_error_set (PERR_BAD_ESCAPED);
+      }
 
       *dst++=value;
       *dst=0;
-      return r;
+      return -1;
   }
 
 

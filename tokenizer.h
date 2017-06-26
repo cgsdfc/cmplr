@@ -8,29 +8,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "transfer.h"
-#include "tknz_table.h"
 #include "token.h"
-#include "checker.h"
+#include "token_type.h"
 
-// TODO: clear TODOs, 
-// impl token_buffer that can look
-// ahead token, consum and discard
-// tokens
-typedef struct tokenizer
-{
-  char_buffer buffer;
-  entry_t *table;
-  int *counter;
-  int len;
+// this should be an interface
+// file to parser, so never
+// expose too much token**
+// or tknzr** stuffs here.
 
-} tokenizer ;
-
-
-
-void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
-int get_next_token (token **tk, char_buffer *buffer, tokenizer_state *errstate);
-void tokenizer_error (int error, char_buffer *buffer, token *tk, tokenizer_state last_state);
 
 #endif
 

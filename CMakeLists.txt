@@ -2,21 +2,24 @@ project (cmplr)
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(tokenizer_src 
+  parser_error.c
+  tknzr_error.c
   comment.c
   identifier.c
   escaped.c
   checker.c
   float_literal.c
   integer_literal.c
-  tknz_table.c  transfer.c
+  tknzr_table.c  
+  state_table.c
   char_class.c
   string_literal.c
   char_literal.c
   keyword.c
   token_type.c
-  tab.c
+  punctuation.c
   token.c
-  state.c
+  tknzr_state.c
   char_buffer.c
   operator.c
   )

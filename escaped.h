@@ -1,6 +1,9 @@
 #ifndef ESCAPED_H
 #define ESCAPED_H 1
-#include "transfer.h"
+#include "parser_error.h"
+#include "state_table.h"
+#include "char_class.h"
+#include "tknzr_state.h"
 #define N_ES_ROWS (ES_END - ES_INIT+1)
 #define N_ES_COLS (ES_NULL - ES_INIT+1)
 
@@ -38,7 +41,7 @@ typedef enum escape_state
  
 } escape_state;
 
-void init_escaped(void);
+int init_escaped(void);
 void fini_escaped(void);
 
 void check_escaped(void);

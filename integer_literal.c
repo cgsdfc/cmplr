@@ -1,6 +1,7 @@
 /* integer_literal.c */
 #include "integer_literal.h"
 
+// TODO: LL long long 
 void init_integer_literal(void)
 {
   /* initial */ 
@@ -9,7 +10,7 @@ void init_integer_literal(void)
 
   /* intermedia */
   add_intermedia(TK_INT_ZERO,TK_INT_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN);
-  add_intermedia(TK_INT_ZERO,TK_INT_HEX_BEGIN,CHAR_CLASS_X);
+  add_intermedia(TK_INT_ZERO,TK_INT_HEX_BEGIN,CHAR_CLASS_XX);
 
   /* selfloop */
   add_selfloop(TK_INT_BEGIN,CHAR_CLASS_DEC_PART);

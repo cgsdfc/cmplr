@@ -1,11 +1,7 @@
-/* transfer.c */
-#include "transfer.h"
-#include "token_defs.h"
+/* state_table.c */
+#include "state_table.h"
 
-/* TODO: change this file's name to state_table, */
-/*   as transfer is only part of a state_table */
-/*   and how to `do_transfer` is defined by clients */
-#define STATE_TABLE_MAN_LEN 10
+#define STATE_TABLE_MAN_LEN 20
 static state_table all_tables[STATE_TABLE_MAN_LEN];
 static int all_tables_count;
 static state_table *cur_table;
@@ -67,21 +63,21 @@ st_add_transfer(state_table *table, entry_t from, entry_t to, entry_t flags, ent
   table->diagram[from][table->count[from]++]=entry;
 }
 
-bool char_is_in_class(entry_t cond, char ch)
-{
-  char *chcl=char_class2string[cond];
-  assert (chcl);
-  bool in_class = strchr(chcl, ch);
-  return in_class;
-}
 
 
  
 /** look up possible transfer in `table` for `state` and `cc`
+ * 
  * if found, return the destination and store the corresponding
  * entry into `entry`.
+ * 
  * if no found, return `nonf` to indicate that.
- * caller should make sure `nonf` is not a valid state
+ * caller should make sure `nonf` is not a valid state.
+ * 
+ * if error happened, -1 is returned and caller should
+ * consult the **errno according to what `table->find_func`
+ * ought to set. caller should make sure -1 is not a valid
+ * state.
  */
 node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry)
 {
@@ -99,7 +95,13 @@ node st_do_transfer(state_table *table, entry_t state, entry_t cc,entry_t *entry
 
   for (int i=0;i<len;++i)
   {
-    bool in_class = table->func (TFE_COND(ent[i]), cc);
+    int in_class = table->func (TFE_COND(ent[i]), cc);
+    if (in_class == -1)
+    {
+      // error happened
+      return -1;
+    }
+
     bool is_reversed = TFE_IS_REVERSED(ent[i]);
     if (in_class && !is_reversed
         || !in_class && is_reversed)
@@ -160,32 +162,6 @@ st_add_selfloop_rev (state_table *table, entry_t state, entry_t cond)
   st_add_transfer(table,state,state,TFE_FLAG_REVERSED,TFE_ACT_APPEND,cond);
 }
 
-void st_set_len_type (state_table*table, node from, node to, token_len_type len_type)
-{
-  if (from >=0 && from < table->nrows && 0 <= to && to < table->count[from])
-    TFE_SET_LEN_TYPE(table->diagram[from][to], len_type);
-  else
-    ; /* do nothing */
-
-}
-
-void st_set_len_type_row (state_table*table,
-    node from,
-    token_len_type len_type)
-{
-  if (from >=0 && from < table->nrows) 
-  {
-    int len=table->count[from];
-    for (int i=0;i<len;++i)
-    {
-      TFE_SET_LEN_TYPE(table->diagram[from][i], len_type);
-    }
-  }
-  else
-    ; /* do nothing */
-
-}
-
 /* no reenterable but convenient api to add transfers into `cur_table` */
 /* which should be the immediate result of `alloc_table` */
 void add_initial(node to, entry_t cond)
@@ -241,16 +217,4 @@ void add_skip_rev_loop (node from, entry_t cond)
 {
   st_add_transfer (cur_table,from,from,TFE_FLAG_REVERSED,TFE_ACT_SKIP,cond);
 }
-
-void set_len_type(node from, node to, token_len_type len_type)
-{
-  st_set_len_type (cur_table, from, to, len_type);
-}
-
-void set_len_type_row (node from, token_len_type len_type)
-{
-  st_set_len_type_row(cur_table, from, len_type);
-}
-
-
 

@@ -1,14 +1,19 @@
 #ifndef CHECKER_H 
 #define CHECKER_H 1
-#include "char_class.h"
-#include "state.h"
-#include "char_buffer.h"
 
-void check_counters(void);
+#include "tknzr_table.h"
+#include "operator.h"
+#include "token.h"
+#include "char_class.h"
+#include "escaped.h"
+#include <limits.h>
+/* this is the checker for all the */ 
+/* functions, it provides checks */
+/* TODO: split it */ 
 void check_tknzr_table (void);
 void  check_fields(void);
-void check_can_transfer (tokenizer_state from, 
-    tokenizer_state to, char_class_enum cc);
+void check_can_transfer (tknzr_state from, 
+    tknzr_state to, char_class cc);
 void check_table (void);
 void check_init_len_type(void);
 void check_peek_line (char_buffer *buffer);

@@ -1,22 +1,23 @@
 /* operator.h */
-/* this is a private header */
 #ifndef OPERATOR_H
 #define OPERATOR_H
 #include <stdio.h>
 #include <stdbool.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <assert.h>
-#include<stdio.h>
-#include<string.h>
-#include<ctype.h>
-#include "transfer.h"
-#include "token_defs.h"
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include "state_table.h"
+#include "tknzr_state.h"
+#include "token_type.h"
+#include "char_class.h"
 
 #define OP_MAX_STATE 7
 #define N_OPERATOR_KINDS 4
 #define OP_MAX_PER_KIND 7
 
-typedef void (*op_init)(node *,  char_class_enum , char_class_enum );
+typedef void (*op_init)(tknzr_state *,  char_class , char_class);
 /** the `reject` field is quite tricky:
  * for every kind of operators, 
  * there are more than one rejection
@@ -43,13 +44,13 @@ typedef struct op_struct
   int op_states; 
 
   // their states
-  node states[OP_MAX_PER_KIND][OP_MAX_STATE];
+  tknzr_state states[OP_MAX_PER_KIND][OP_MAX_STATE];
 
   // the op char of them
-  char_class_enum op[OP_MAX_PER_KIND]; 
+  char_class op[OP_MAX_PER_KIND]; 
 
   // as memtioned above, the last rejection of them
-  char_class_enum reject[OP_MAX_PER_KIND]; 
+  char_class reject[OP_MAX_PER_KIND]; 
 
   // a function adding their diagrams into the state machine
   op_init init; 
@@ -57,13 +58,16 @@ typedef struct op_struct
 } op_struct;
 
 
-void add_1state(node *state, char_class_enum op, char_class_enum rej);
-void add_3states(node *state, char_class_enum op, char_class_enum rej);
-void add_4states(node *state, char_class_enum op, char_class_enum rej);
-void add_6states(node *state, char_class_enum op, char_class_enum rej);
+void add_1state(tknzr_state *state, char_class op, char_class rej);
+void add_3states(tknzr_state *state, char_class op, char_class rej);
+void add_4states(tknzr_state *state, char_class op, char_class rej);
+void add_6states(tknzr_state *state, char_class op, char_class rej);
+
+
 void add_arrow_operator(void);
 void init_operator(void);
 void check_operator(void);
+token_type state2oper(tknzr_state state);
 
 extern op_struct operators[];
 

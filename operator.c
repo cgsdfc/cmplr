@@ -1,5 +1,6 @@
 /* operator.c */
 #include "operator.h"
+#include "tknzr_state.h"
 
 op_struct operators[]=
 {
@@ -112,24 +113,6 @@ op_struct operators[]=
 
 };
 
-static void
-init_len_type(void)
-{
-/* set len type */
-  for (int i=0;i<N_OPERATOR_KINDS;++i)
-  {
-    for (int j=0;j<operators[i].op_count;++j)
-    {
-      for (int k=0;k<operators[i].op_states;++k)
-      {
-        set_len_type(TK_INIT, operators[i].states[j][k], TFE_BRIEF);
-        set_len_type_row(operators[i].states[j][k],TFE_BRIEF);
-      }
-    }
-  }
-  
-}
-
 void init_operator(void) 
 {
   add_arrow_operator();
@@ -141,9 +124,9 @@ void init_operator(void)
 
     for (int j=0;j<op_count;++j)
     {
-      node *state=ops->states[j];
-      char_class_enum op=ops->op[j];
-      char_class_enum rejc=ops->reject[j];
+      tknzr_state *state=ops->states[j];
+      char_class op=ops->op[j];
+      char_class rejc=ops->reject[j];
       ops->init(state,op,rejc);
 
     }
@@ -157,14 +140,14 @@ void add_arrow_operator(void)
 }
 
 /* accepted only needs one state */
-void add_1state(node *state, char_class_enum op, char_class_enum rejc)
+void add_1state(tknzr_state *state, char_class op, char_class rejc)
 {
   add_initial(state[0],op);
   add_accepted_rev(state[0],state[1],CHAR_CLASS_EMPTY);
 }
 
 /** accepted only needs 3 states */
-void add_3states(node *state, char_class_enum op, char_class_enum rej)
+void add_3states(tknzr_state *state, char_class op, char_class rej)
 {
   // ! -> !=
   add_initial(state[0],op);
@@ -173,7 +156,7 @@ void add_3states(node *state, char_class_enum op, char_class_enum rej)
 
 }
 
-void add_4states(node *state, char_class_enum op, char_class_enum rejc)
+void add_4states(tknzr_state *state, char_class op, char_class rejc)
 {
   add_initial(state [0], op);
   add_accepted_rev(state[0],state [1],rejc);
@@ -182,7 +165,7 @@ void add_4states(node *state, char_class_enum op, char_class_enum rejc)
 
 }
 
-void add_6states(node *state, char_class_enum op, char_class_enum reject)
+void add_6states(tknzr_state *state, char_class op, char_class reject)
 {
   add_initial(state [0],op); 
   add_accepted_rev(state [0],state [1],reject);
@@ -191,5 +174,84 @@ void add_6states(node *state, char_class_enum op, char_class_enum reject)
   add_accepted_rev(state [3], state [4], CHAR_CLASS_EQUAL);
   add_accepted(state [3], state [5], CHAR_CLASS_EQUAL);
 
+}
+
+
+const token_type state2operator []=
+{
+    /* tilde_like_operator */
+  [TK_TILDE_END]=TKT_UNARY_OP_BIT_NOT,
+
+  /* slash_like_operator */ 
+  /* slash */
+  [TK_SLASH_END]=TKT_BINARY_OP_DIV,
+  [TK_SLASH_EQUAL]=TKT_BINARY_OP_DIV_ASSIGN,
+
+  /* exlaim_like_operator */
+  /* exlaim */
+  [TK_EXCLAIM_END]=TKT_UNARY_OP_LOGICAL_NOT,
+  [TK_EXCLAIM_EQUAL]=TKT_BINARY_OP_CMP_NOT_EQUAL,
+
+  /* equal */
+  [TK_EQUAL_END]=TKT_BINARY_OP_ASSIGN,
+  [TK_EQUAL_EQUAL]=TKT_BINARY_OP_CMP_EQUAL,
+
+  /* percent */
+  [TK_PERCENT_END]=TKT_BINARY_OP_MOD,
+  [TK_PERCENT_EQUAL]=TKT_BINARY_OP_MOD_ASSIGN,
+
+  /* caret */
+  [TK_CARET_END]=TKT_BINARY_OP_BIT_XOR,
+  [TK_CARET_EQUAL]=TKT_BINARY_OP_BIT_XOR_ASSIGN,
+
+  /* star */
+  [TK_STAR_END]=TKT_STAR,
+  [TK_STAR_EQUAL]=TKT_BINARY_OP_MUL_ASSIGN,
+
+  /* ampersand_like_operator */
+  /* ampersand */
+  [TK_AMPERSAND_END]=TKT_AMPERSAND,
+  [TK_AMPERSAND_EQUAL]=TKT_BINARY_OP_BIT_AND_ASSIGN,
+  [TK_AMPERSAND_AMPERSAND]=TKT_BINARY_OP_LOGICAL_AND,
+
+  /* vertical bar */
+  [TK_VERTICAL_BAR_END]=TKT_BINARY_OP_BIT_OR,
+  [TK_VERTICAL_BAR_EQUAL]=TKT_BINARY_OP_BIT_OR_ASSIGN,
+  [TK_VERTICAL_BAR_BAR]=TKT_BINARY_OP_LOGICAL_OR,
+
+  /* positive */
+  [TK_POSITIVE_END]=TKT_PLUS,
+  [TK_POSITIVE_POSITIVE]=TKT_UNARY_OP_PLUS_PLUS,
+  [TK_POSITIVE_EQUAL]=TKT_BINARY_OP_ADD_ASSIGN,
+
+
+  /* negative */
+  [TK_NEGATIVE_END]=TKT_MINUS,
+  [TK_NEGATIVE_NEGATIVE]=TKT_UNARY_OP_MINUS_MINUS,
+  [TK_NEGATIVE_EQUAL]=TKT_BINARY_OP_SUB_ASSIGN,
+
+  /* less_like_operator */
+  /* less */ 
+  [TK_LESS_END]=TKT_BINARY_OP_CMP_LESS,
+  [TK_LESS_EQUAL]=TKT_BINARY_OP_CMP_LESS_EQUAL,
+  [TK_LESS_LESS_END]=TKT_BINARY_OP_BIT_LEFT_SHIFT,
+  [TK_LESS_LESS_EQUAL]=TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN,
+
+  /* greater */ 
+  [TK_GREATER_END]=TKT_BINARY_OP_CMP_GREATER,
+  [TK_GREATER_EQUAL]=TKT_BINARY_OP_CMP_GREATER_EQUAL,
+  [TK_GREATER_GREATER_END]=TKT_BINARY_OP_BIT_RIGHT_SHIFT,
+  [TK_GREATER_GREATER_EQUAL]=TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN,
+
+  /* arrow */
+  [TK_NEGATIVE_GREATER]=TKT_BINARY_OP_MEMBER_ARROW,
+};
+
+bool is_oper_type (tknzr_state state);
+// caller should check state is
+// a valid operator accepted one
+token_type state2oper(tknzr_state state)
+{
+  return state2operator[state];
 }
 

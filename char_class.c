@@ -76,5 +76,16 @@ char *char_class2string[]=
   [ CHAR_CLASS_DOUBLE_QUOTE_SINGLE_QUOTE ]=CC_DOUBLE_QUOTE_SINGLE_QUOTE,
   [ CHAR_CLASS_DEC_PART_E ]=CC_DEC_PART CC_E,
   [ CHAR_CLASS_DEC_PART_E_SIGN ]=CC_DEC_PART CC_SIGN CC_E,
+  [ CHAR_CLASS_XX]="xX",
 };
 
+int char_is_in_class(entry_t cond, entry_t ch)
+{
+  assert (CHAR_CLASS_EMPTY <= cond && cond < _CHAR_CLASS_NULL);
+  assert (ch); // '\0' does no good
+
+  char *chcl=char_class2string[cond];
+  assert (chcl);
+  bool in_class = strchr(chcl, ch);
+  return in_class;
+}

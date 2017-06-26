@@ -1,5 +1,8 @@
 #include "comment.h"
 
+// TODO comments are replaced with a single space
+// in **preprocess** stage, not in tokenize, move
+// this to preprocess
 /* different language use different kinds of comments */
 void init_single_line_comment_cfamily(void)
 {

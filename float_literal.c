@@ -1,5 +1,11 @@
 #include "float_literal.h"
 
+// TODO Ff mean for float type
+// Ll means for long double type
+// none means for double type
+// they can not combine
+// TODO let .222 be recognized
+
 
 void init_float_literal(void)
 {

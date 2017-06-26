@@ -1,24 +1,31 @@
-/* transfer.h */
-#ifndef TRANSFER_H
-#define TRANSFER_H 1
+/* state_table.h */
+#ifndef STATE_TABLE_H 
+#define STATE_TABLE_H 1
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "state.h"
-#include "char_class.h"
-#include "char_buffer.h"
-#include "token_defs.h"
 
-/** entry: lower 2 bit is entry_flag
- * middle 15 bit is state
- * upper 15 bit is char_class
- * entry_t needs to have at least 32 bit
- */ 
+/** this file contains declaration
+ * for a quite general defininess finite state machine.
+ * (DFA)
+ * the state_table struct, the add* initializors
+ * and the st_do_transfer, together form the machine.
+ * currently the impl use bit fields for information
+ * about a table entry and use use match-or-not for
+ * transfer conditions*/
+
 typedef unsigned int entry_t;
-typedef bool (*find_func)(entry_t cond, char ch);
+
+/* another name of state */
+typedef int node;
+
+/* this function should return 1 if ch satisfies */
+/* the condition `cond`, 0 if not, and -1 if error */
+/* happened */
+typedef int (*find_func)(entry_t cond, entry_t meet);
 
 typedef struct state_table
 {
@@ -54,6 +61,13 @@ typedef enum entry_action
   _TFE_ACT_NULL,
 
 } entry_action;
+
+/** how the bit fields of entry are used:
+ * lower 2 bit is entry_flag
+ * middle 15 bit is state
+ * upper 15 bit is char_class
+ * entry_t needs to have at least 32 bit
+ */ 
 
 
 
@@ -112,21 +126,14 @@ node st_do_transfer(state_table *table,
     entry_t* entry);
 
 void st_add_initial(state_table *table, entry_t state,entry_t cond);
-
 void st_add_intermedia(state_table *table, entry_t from, entry_t to, entry_t cond);
 void st_add_accepted(state_table *table, entry_t from, entry_t to,  entry_t cond);
-
 void st_add_selfloop(state_table *table, entry_t state, entry_t cond);
-
 void st_add_intermedia_rev (state_table *table, entry_t from, entry_t to, entry_t cond);
-
 void st_add_accepted_rev (state_table *table,entry_t from, entry_t to, entry_t cond);
 void st_add_selfloop_rev (state_table *table, entry_t state, entry_t cond);
-void st_set_len_type (state_table*table, node from, node to, token_len_type len_type);
-void st_set_len_type_row (state_table*table,
-    node from,
-    token_len_type len_type);
 
+/* **use** global ptr */
 void add_initial(node to, entry_t cond);
 void add_intermedia_rev (node from, node to, entry_t cond );
 void add_intermedia(node from, node to, entry_t cond );
@@ -138,10 +145,6 @@ void add_skip(node from, node to, entry_t cond);
 void add_skip_rev (node from, node to, entry_t cond);
 void add_skip_loop(node from, entry_t cond);
 void add_skip_rev_loop (node from, entry_t cond);
-void set_len_type(node from, node to, token_len_type len_type);
-void set_len_type_row (node from, token_len_type len_type);
 
-/* value that find_func can take */
-bool char_is_in_class(entry_t cond,char ch);
 #endif
 
