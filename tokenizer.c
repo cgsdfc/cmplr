@@ -6,139 +6,100 @@
 static bool do_check=false;
 char *filename;
 char_buffer cbuffer;
-
-  token *
-depatch_init(token_len_type len_type , position *pos,char ch)
-{
-  switch (len_type) {
-    case TFE_BRIEF :
-      return init_breif(pos,ch);
-      break;
-
-    case TFE_FIXLEN:
-      return init_fixlen(pos,ch);
-      break;
-
-    case TFE_VARLEN:
-      return init_varlen(pos,ch);
-
-    default:
-      return init_breif(pos,ch);
-
-  }
-}
-
-int depatch_append(token_len_type len_type, token *tk,  char ch)
-{
-  int r=0;
-
-  switch (len_type) {
-    case TFE_VARLEN :
-      if (append_varlen(tk,ch)<0)
-        return -1;
-      return 0;
-
-    case TFE_FIXLEN :
-      if (append_fixlen(tk,ch)<0)
-        return -1;
-      return 0;
-  }
-}
-
-int depatch_accept(token_len_type len_type, 
-    token *tk,
-    char ch,
-    tknzr_state state,
-    bool append)
-{
-  int r=0;
-
-  switch (len_type) {
-    case TFE_VARLEN:
-      if ((r=accept_varlen(tk,ch,state, append))<0)
-        return -1;
-      return 0;
-
-    case TFE_FIXLEN:
-      if ((r=accept_fixlen(tk,ch,state, append))<0)
-        return -1;
-      return 0;
-
-    default:
-    case TFE_BRIEF:
-      if ((r=accept_brief(tk,ch,state,append))<0)
-        return -1;
-      return 0;
-  }
-}
-
+void depatch_errno(tknzr_state state);
 
 int get_next_token (token **ptoken,
-    char_buffer *buffer,
-    tknzr_state *errstate)
+    char_buffer *buffer)
 {
   
-  entry_t entry;
-  bool is_accepted=false;
+  entry_t entry=0;
   bool is_reversed=false;
+  bool is_varlen=false;
   tknzr_state state=TK_INIT;
-  token_len_type len_type;
-  entry_action action;
+  tknzr_state prev_state;
   char ch;
   int r;
   token *tk=NULL;
 
-  while (!is_accepted) 
+  while (TFE_IS_ACCEPTED(entry))
   {
     ch = get_char (buffer);
     if(ch == EOF) 
     {
-      tknzr_error_set(state == TK_INIT ? TERR_END_OF_INPUT:
-          TERR_UNEXPECTED_END);
+      depatch_errno(state);
       return -1;
     }
 
+    if (is_white_space(ch))
+    {
+      continue;
+    }
+
+    if (is_punctuation_accept(ch))
+    {
+      *ptoken=accept_punctuation (&buffer->pos,ch);
+      if(*ptoken == NULL)
+      {
+        return -1;
+      }
+      return 0;
+    }
+
+    prev_state=state;
     state = st_do_transfer(tknzr_table, state, ch, &entry);
     if (state == TK_NULL)
     {
-      tknzr_error_set(TERR_UNEXPECTED_CHAR);
+      depatch_errno(prev_state);
       return -1;
     }
 
-    is_accepted = TFE_IS_ACCEPTED(entry);
-    len_type = TFE_LEN_TYPE(entry);
-    is_reversed = TFE_IS_REVERSED(entry);
-    action=TFE_ACTION(entry);
-
-    switch (action)
+    switch (TFE_ACTION(entry))
     {
       case TFE_ACT_ACCEPT:
-        if ((r=depatch_accept(len_type, tk, ch, state, !is_reversed))!=0)
+        if (is_varlen_accept(state) && accept_varlen(tk,ch,state)<0)
+        {
           return -1;
-
-        if (is_reversed)
+        }
+        else if(is_operator_accept(state)) 
+        {
+          tk=accept_operator(&buffer->pos,state);
+          if(tk==NULL)
+            return -1;
+        }
+        if (TFE_IS_REVERSED(entry) ||
+            is_punctuation_char(ch) ||
+            is_operator_char(ch))
+        {
           put_char (buffer);
+        }
 
         *ptoken=tk;
         return 0;
 
       case TFE_ACT_APPEND:
-        if ((r=depatch_append(len_type,tk,ch))!=0)
+        if (is_varlen && append_varlen(tk,ch)<0)
+        {
           return -1;
+        }
         break;
 
       case TFE_ACT_INIT:
-        if((tk=depatch_init(len_type, &buffer->pos,ch))==NULL)
+        is_varlen=is_varlen_init(state);
+        if (is_varlen && !( tk=init_varlen(&buffer->pos,ch)))
+        {
           return -1;
+        }
         break;
 
+        // TODO when comment is no longer 
+        // handle by tokenizer, this is no need
       case TFE_ACT_SKIP:
         if(tk!=NULL)
         {
           fini_token(tk);
           tk=NULL;
         }
-        
+
         break;
     }
   } 
@@ -152,7 +113,6 @@ int print_token_stream (void)
   token *tk;
   int r=0;
   char *token_string;
-  tknzr_state errstate;
 
   if(do_check)
   {
@@ -161,7 +121,7 @@ int print_token_stream (void)
   init_tknzr_table ();
   while (true)
   {
-    get_next_token(&tk, &cbuffer, &errstate);
+    r=get_next_token(&tk, &cbuffer);
     switch (r)
     {
       case 0:
@@ -174,7 +134,7 @@ int print_token_stream (void)
           return 0;
         }
         else {
-          tknzr_error_handle(errstate);
+          tknzr_error_handle();
           return -1;
         }
     }
@@ -196,7 +156,7 @@ int main(int ac,char**av){
     perror (av[1]);
     exit(1);
   }
-  
+
   filename=av[1];
 
   exit (print_token_stream());

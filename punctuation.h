@@ -5,4 +5,5 @@
 #include "token_type.h"
 #include "char_class.h"
 
+token_type char2punctuation (char);
 #endif

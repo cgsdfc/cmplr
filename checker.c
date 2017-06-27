@@ -7,10 +7,6 @@ bool can_transfer (state_table *tb, entry_t ent, char ch)
   return (in_class && !is_reversed) || (!in_class && is_reversed);
 }
 
-
-
-
-
 void check_defininess(void)
 {
   /* for each transfer-to state of a non-accepted state, under a certain char */
@@ -156,74 +152,17 @@ void check_char_class(void)
 }
 
 
-void check_append_fixlen(void)
-{
-  token *tk;
-  position pos;
-  tk=init_fixlen(&pos,'0');
-  int r;
-
-  for (int i=0;i<TOKEN_FIXLEN_MAX_LEN-1;++i)
-  {
-    r=append_fixlen(tk,'a');
-    assert(r==0);
-  }
-  puts(TOKEN_FIXLEN_STRING(tk));
-  r=append_fixlen(tk,'a');
-  assert (r!=0);
-  puts("check_append_fixlen PASSED");
-}
 
 
 void check_state2operator(void)
 {
   for (int i=TK_INIT;i<TK_NULL;++i)
   {
-    if (is_oper_type(i))
+    if (is_operator_accept(i))
       assert(state2operator[i]);
   }
 }
 
-void check_init_token(void)
-{
-  token *tk;
-  position pos={0};
-  position *begin=&pos;
-  char tstring[TOKEN_FIXLEN_MAX_LEN -1 ]={'a'};
-  char sstring[TOKEN_VARLEN_INIT_LEN ]={'b'};
-  char *string;
-  int len;
-
-  puts("check_init_token BEGIN");
-  for (int i=TFE_BRIEF;i<_TFE_LEN_TYPE_END;++i)
-  {
-    switch(i) {
-      case TFE_FIXLEN:
-        tk=init_fixlen(begin,'1');
-        len = ((fixlen_token*)tk)->len;
-        string = ((fixlen_token*)tk)->string;
-        assert (TOKEN_LEN_TYPE(tk) == TFE_FIXLEN);
-        assert (len  == 0);
-        strncpy (string, tstring, TOKEN_FIXLEN_MAX_LEN);
-        puts(string);
-        break;
-
-      case TFE_VARLEN:
-        tk=init_varlen(begin,'1');
-        len = ((varlen_token*)tk)->len;
-        string = ((varlen_token*)tk)->string;
-        assert (TOKEN_LEN_TYPE(tk) == TFE_VARLEN);
-        assert (len  == 0);
-        strncpy (string, tstring, TOKEN_VARLEN_INIT_LEN);
-        puts(string);
-        break;
-
-      case TFE_BRIEF:
-        break;
-    }
-  }
-  puts("check_init_token PASSED");
-}
 
 // TODO: rename
 void check_tknzr_table (void) 
@@ -236,7 +175,6 @@ void check_tknzr_table (void)
 
   init_tknzr_table ();
   check_defininess();
-  check_init_len_type();
 
   check_escaped();
   puts ("check_tknzr_table PASSED");
@@ -279,14 +217,6 @@ void check_fields(void)
 
   puts ("check state PASSED");
 
-  for (int l=0;l<_TFE_LEN_TYPE_END;++l)
-  {
-    TFE_SET_LEN_TYPE(entry,l);
-    assert (TFE_LEN_TYPE(entry) == l);
-  }
-
-  puts("check len_type PASSED");
-
   entry = TFE_MAKE_ENTRY(0,0,0,TFE_FLAG_ACCEPTED);
   assert (TFE_IS_ACCEPTED(entry));
 
@@ -303,50 +233,19 @@ void check_fields(void)
     {
       for (int k=TK_INIT;k<TK_NULL+1;++k)
       {
-        for (int l=0;l<_TFE_LEN_TYPE_END;++l)
-        {
           entry=TFE_MAKE_ENTRY(i,j,k,0);
-          TFE_SET_LEN_TYPE(entry,l);
           assert (j==TFE_COND(entry));
           assert (i==TFE_ACTION(entry));
           assert (k==TFE_STATE(entry));
-          assert (TFE_LEN_TYPE(entry) == l);
         }
       }
     }
-  }
-
   puts ("check_fields PASSED");
 
 }
 
 
-
-void check_init_len_type(void)
-{
-  state_table *tb= tknzr_table;
-  for (int i=0;i<tb->nrows;++i)
-  {
-    for (int j=0;j<tb->count[i];++j)
-    {
-      entry_t entry = tb->diagram[i][j];
-      token_len_type len_type = TFE_LEN_TYPE(entry);
-      node to = TFE_STATE(entry);
-
-      if (state_is_brief(to))
-        assert(len_type == TFE_BRIEF);
-
-      else if (state_is_fixlen(to)) {
-        assert(len_type == TFE_FIXLEN);
-      }
-
-      else if (state_is_varlen(to))
-        assert(len_type == TFE_VARLEN);
-
-    }
-  }
-  puts("check_init_len_type PASSED");
-}  
+ 
 void check_peek_line (char_buffer *buffer)
 {
 }

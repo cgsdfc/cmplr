@@ -1,6 +1,7 @@
 #ifndef CHECKER_H 
 #define CHECKER_H 1
 
+#include "tknzr_state.h"
 #include "tknzr_table.h"
 #include "operator.h"
 #include "token.h"

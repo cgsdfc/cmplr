@@ -1,6 +1,6 @@
 #!/bin/sh
 
-TESTFILE="char_literal comment id keywords number operators "
+TESTFILE="string_literal char_literal comment id keywords float_literal integer_literal operators "
 
 testdir="test"
 testbin="./bin/tokenizer"
@@ -22,13 +22,6 @@ for x in $TESTFILE;do
     echo "$x run wrong!"
     nerr=$((nerr+1))
     continue
-  fi
-  if [ -f $testdir/$x.out ];then
-    cmp $testdir/$x.out $testdir/$x\$
-    if [ $? -ne 0 ];then
-      echo "error detected file is $x"
-    nerr=$((nerr+1))
-    fi
   fi
 done
 

@@ -2,17 +2,23 @@
 #define TKNZR_STATE_H 1
 #include <stdbool.h>
 #include <stdio.h>
-#define N_NON_ACCEPTED_STATES    (_TK_NON_ACCEPTED_END-TK_INIT)
-#define N_TOTAL_STATES (TK_NULL - TK_INIT)
-
-#define N_TOKENIZER_ROWS N_NON_ACCEPTED_STATES
-#define N_TOKENIZER_COLS N_TOTAL_STATES
+#define N_MARKER_STATES 5
+#define N_TOKENIZER_ROWS (_TK_NON_ACCEPTED_END-TK_INIT)
+#define N_TOKENIZER_COLS (TK_NULL - TK_INIT-N_MARKER_STATES)
+#include "char_class.h"
 
 
 typedef enum tknzr_state
 {
-  /* NOT ACCEPTED STATES */
   TK_INIT=0,
+
+  _TK_VARLEN_INIT_BEGIN,
+  TK_CHAR_LITERAL_BEGIN,
+  TK_STRING_LITERAL_BEGIN,
+  TK_IDENTIFIER_BEGIN,
+  TK_INT_ZERO,
+  TK_INT_DEC_BEGIN,
+  _TK_VARLEN_INIT_END,
 
   /* coments */
   TK_SINGLE_LINE_COMENT_BEGIN,
@@ -21,15 +27,10 @@ typedef enum tknzr_state
   TK_MULTI_LINE_COMENT_END,
   /*!coments */
 
-  /* BREIF */
-  _TK_NON_ACCEPTED_BRIEF_BEGIN,
-  TK_PUNCTUATION_BEGIN,
-
   /* 2 state */
   TK_TILDE,
   TK_PERIOD,
 
-  /* NON ACCEPTED OPERATOR STATES */ 
   /* 3 states */
   TK_EXCLAIM,
   TK_EQUAL,
@@ -49,79 +50,38 @@ typedef enum tknzr_state
   TK_GREATER,
   TK_GREATER_GREATER,
   TK_LESS_LESS,
-  /*!NON ACCEPTED OPERATOR STATES */ 
-  _TK_NON_ACCEPTED_BRIEF_END,
-  /* ! BREIF */
 
-  /* FIXLEN */
-  /* char_literals */
-  _TK_NON_ACCEPTED_FIXLEN_BEGIN,
-  TK_CHAR_LITERAL_BEGIN,
-  TK_CHAR_LITERAL_HEX_BEGIN,
-  TK_CHAR_LITERAL_OCT_BEGIN,
-  TK_CHAR_LITERAL_ZERO,
-  TK_CHAR_LITERAL_ESCAPED,
-  TK_CHAR_LITERAL_PART,
-  TK_CHAR_LITERAL_ESCAPED_0,
-  TK_CHAR_LITERAL_ESCAPED_1,
-  TK_CHAR_LITERAL_ESCAPED_2, 
-  TK_CHAR_LITERAL_ESCAPED_3, 
-  TK_CHAR_LITERAL_OCT_END,
-  TK_CHAR_LITERAL_HEX_END,
-  /*!char_literals */
 
-  /* integer, float */
-  TK_INT_BEGIN,
-  TK_INT_ZERO,
+  TK_INT_HEX_PREFIX,
   TK_INT_HEX_BEGIN,
   TK_INT_OCT_BEGIN,
-  TK_INT_LONG,
-  TK_INT_UNSIGNED,
-  TK_FLOAT_BEGIN,
+  TK_INT_SUFFIX_0,
+  TK_INT_SUFFIX_1,
+
   TK_FLOAT_FRACTION,
+  TK_FLOAT_EXPONENT_BEGIN,
   TK_FLOAT_EXPONENT,
   TK_FLOAT_SIGN,
-  TK_FLOAT_EXPONENT_PART,
-  /*!integer, float */
-  _TK_NON_ACCEPTED_FIXLEN_END,
-  /*!FIXLEN */
+  TK_FLOAT_SUFFIX_0,
 
-  /* VARLEN */
-  _TK_NON_ACCEPTED_VARLEN_BEGIN,
-  /* identifier */
-  TK_IDENTIFIER_BEGIN,
-  /*!identifier */
+  TK_CHAR_LITERAL_ESCAPED,
+  TK_CHAR_LITERAL_PART,
 
-  /* string_literal */
-  TK_STRING_LITERAL_BEGIN,
-  TK_STRING_LITERAL_HEX_BEGIN,
-  TK_STRING_LITERAL_OCT_BEGIN,
-  TK_STRING_LITERAL_ZERO,
   TK_STRING_LITERAL_ESCAPED,
-  TK_STRING_LITERAL_PART,
-  TK_STRING_LITERAL_OCT_END,
-  TK_STRING_LITERAL_HEX_END,
-  /*!string_literal */
-  _TK_NON_ACCEPTED_VARLEN_END, 
-  /*!VARLEN */
 
   _TK_NON_ACCEPTED_END,
-  /*!NOT ACCEPTED STATES */
 
 
-
-  /* ACCEPTED STATES */
+  _TK_VARLEN_ACCEPT_BEGIN,
   TK_IDENTIFIER_END,
   TK_INT_END,
   TK_FLOAT_END,
-  TK_PUNCTUATION_END,
   TK_CHAR_LITERAL_END,
   TK_STRING_LITERAL_END,
+  _TK_VARLEN_ACCEPT_END,
 
 
-  /* ACCEPTED OPERATOR STATES */
   _TK_OPERATOR_ACCEPT_BEGIN,
-  /* PUT BACH OPERATOR STATES */
   /* 1 state */
   TK_TILDE_END,
 
@@ -144,8 +104,6 @@ typedef enum tknzr_state
   TK_GREATER_GREATER_END,
   TK_LESS_END,
   TK_LESS_LESS_END,
-  _TK_OPERATOR_PUT_BACK,
-  /*!PUT BACH OPERATOR STATES */
 
   TK_AMPERSAND_AMPERSAND,
   TK_LESS_LESS_EQUAL,
@@ -169,12 +127,8 @@ typedef enum tknzr_state
   TK_SLASH_EQUAL,
   TK_VERTICAL_BAR_EQUAL,
   _TK_OPERATOR_ACCEPT_END,
-  /*!ACCEPTED OPERATOR STATES */
-  /*!OPERATOR STATES */
-  /*!ACCEPTED STATES */
 
   TK_PERIOD_END,
-  /* SPECIAL STATE FOR FAILURE */
   TK_NULL 
 } tknzr_state;
 
@@ -185,12 +139,14 @@ typedef enum tknzr_state
 // especially after I changed st_do_transfer
 // to report error by returning a -1 node
 // check this!
-bool state_is_brief(tknzr_state state);
-bool state_is_varlen(tknzr_state state);
-bool state_is_fixlen(tknzr_state state);
-bool is_oper_type (tknzr_state state);
+bool is_varlen_accept (tknzr_state state);
+bool is_varlen_init (tknzr_state state);
+bool is_operator_accept (tknzr_state state);
+bool is_operator_char(char ch);
+bool is_punctuation_accept (char ch);
+bool is_punctuation_char (char ch);
 char *tknzr_state_string(tknzr_state state);
 
-
+extern const char *tknzr_state_tab[];
 #endif
 

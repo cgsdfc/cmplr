@@ -26,21 +26,21 @@ int init_escaped(void)
 
   /* intermedia */
   add_intermedia(ES_BEGIN,ES_ZERO, CHAR_CLASS_ZERO);
-  add_intermedia(ES_ZERO,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
+  add_intermedia(ES_ZERO,ES_OCT_END,CHAR_CLASS_OCT_DIGITS);
   add_intermedia(ES_BEGIN,ES_HEX_BEGIN,CHAR_CLASS_X);
-  add_intermedia(ES_HEX_BEGIN,ES_HEX_END,CHAR_CLASS_HEX_BEGIN);
-  add_intermedia(ES_ZERO,ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN);
-  add_intermedia(ES_OCT_BEGIN,ES_OCT_END,CHAR_CLASS_OCT_BEGIN);
+  add_intermedia(ES_HEX_BEGIN,ES_HEX_END,CHAR_CLASS_HEX_DIGITS);
+  add_intermedia(ES_ZERO,ES_OCT_BEGIN,CHAR_CLASS_OCT_DIGITS);
+  add_intermedia(ES_OCT_BEGIN,ES_OCT_END,CHAR_CLASS_OCT_DIGITS);
   add_intermedia( ES_BEGIN, ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN_NOT_ZERO);
 
   /* accepted-rev */
-  add_accepted_rev(ES_END,ES_ZERO,CHAR_CLASS_OCT_BEGIN);
-  add_accepted_rev( ES_END,ES_HEX_BEGIN,CHAR_CLASS_HEX_BEGIN);
-  add_accepted_rev( ES_END,ES_OCT_BEGIN, CHAR_CLASS_OCT_BEGIN);
+  add_accepted_rev(ES_END,ES_ZERO,CHAR_CLASS_OCT_DIGITS);
+  add_accepted_rev( ES_END,ES_HEX_BEGIN,CHAR_CLASS_HEX_DIGITS);
+  add_accepted_rev( ES_END,ES_OCT_BEGIN, CHAR_CLASS_OCT_DIGITS);
 
   /* accepted */
-  add_accepted(ES_HEX_END,ES_END, CHAR_CLASS_HEX_BEGIN);
-  add_accepted(ES_OCT_END,ES_END, CHAR_CLASS_OCT_BEGIN);
+  add_accepted(ES_HEX_END,ES_END, CHAR_CLASS_HEX_DIGITS);
+  add_accepted(ES_OCT_END,ES_END, CHAR_CLASS_OCT_DIGITS);
   add_accepted(ES_BEGIN,ES_END, CHAR_CLASS_SINGLE_ESCAPE_NON_ZERO);
 
   /* selfloop */

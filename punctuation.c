@@ -1,6 +1,6 @@
 #include "punctuation.h"
 
-const token_type state2punctuation [] =
+static const token_type _char2punc [] =
 {
   
   /* PUNCTUATIONS */
@@ -17,4 +17,11 @@ const token_type state2punctuation [] =
   ['?']=TKT_QUESTION,
 
 };
+
+token_type char2punctuation(char ch)
+{
+  token_type tkt=_char2punc[ch];
+  assert (tkt);
+  return tkt;
+}
 
