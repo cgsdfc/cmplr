@@ -22,7 +22,7 @@ void init_float_literal(void)
 
   // optional sign -/+
   add_intermedia(TK_FLOAT_EXPONENT_BEGIN,TK_FLOAT_SIGN,CHAR_CLASS_SIGN);
-  add_intermedia(TK_FLOAT_SIGN,TK_FLOAT_EXPONENT_BEGIN,CHAR_CLASS_DEC_DIGITS);
+  add_intermedia(TK_FLOAT_SIGN,TK_FLOAT_EXPONENT,CHAR_CLASS_DEC_DIGITS);
 
   /* exponent must have at least one digit */
   add_intermedia(TK_FLOAT_EXPONENT_BEGIN,TK_FLOAT_EXPONENT,CHAR_CLASS_DEC_DIGITS);

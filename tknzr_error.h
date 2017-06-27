@@ -26,6 +26,7 @@ typedef enum tknzr_error
   TERR_EMPTY_CHAR_LITERAL,
   _TERR_WARNING,
   TERR_END_OF_INPUT,
+  TERR_UNKNOWN,
   _TERR_NULL,
 } tknzr_error;
 

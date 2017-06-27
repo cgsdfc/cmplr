@@ -17,7 +17,7 @@
 #include "tknzr_error.h"
 
 #define TOKEN_TYPE(t)    (((token*) t)->type)
-#define TOKEN_STRING(t) (((token*) t)->string == NULL ? (t)->string : "")
+#define TOKEN_STRING(t) (((token*) t)->string != NULL ? (t)->string : "")
 #define TOKEN_VARLEN_INIT_LEN 50
 
 

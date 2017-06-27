@@ -30,11 +30,11 @@ bool is_punctuation_char (char ch)
 
 bool is_punctuation_accept (char ch)
 {
-  return char_is_in_class(ch, CHAR_CLASS_PUNCTUATION);
+  return char_is_in_class(CHAR_CLASS_PUNCTUATION, ch);
 }
 
 bool is_operator_char(char ch)
 {
-  return char_is_in_class(ch, CHAR_CLASS_OPERATOR);
+  return char_is_in_class(CHAR_CLASS_OPERATOR, ch);
 }
 

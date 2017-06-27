@@ -2,7 +2,7 @@
 
 bool is_white_space(char ch)
 {
-  return char_is_in_class(ch, CHAR_CLASS_SPACES);
+  return char_is_in_class(CHAR_CLASS_SPACES, ch);
 }
 
 // TODO too much , messy, clear up

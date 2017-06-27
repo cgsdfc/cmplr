@@ -10,6 +10,7 @@ token *alloc_token (position *begin)
   }
 
   memset(tk,0,sizeof (token));
+  memcpy(&tk->begin, begin, sizeof (position));
   tk->type=TKT_UNKNOWN;
   return tk;
 
@@ -20,7 +21,7 @@ token *init_varlen(position *begin, char ch)
   token *tk=alloc_token(begin);
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
   tk->max=TOKEN_VARLEN_INIT_LEN;
-  assert(tk->string);
+  if (!tk->string) { return NULL; }
   append_varlen((token*)tk,ch);
   return tk;
 }
@@ -60,15 +61,14 @@ token *accept_punctuation (position *begin, char ch)
 token *accept_operator (position *begin, tknzr_state state)
 {
   token *tk=alloc_token(begin);
+  if (!tk) { return NULL; }
   (tk)->type=state2oper(state);
-    return tk;
+  return tk;
 }
 
 
 int accept_varlen(token *tk,char ch,tknzr_state state)
 {
-  if(append_varlen(tk,ch) < 0)
-    return -1;
 
   tk->string[tk->len]=0;
   switch (state) {
@@ -86,6 +86,8 @@ int accept_varlen(token *tk,char ch,tknzr_state state)
       return 0;
 
     case TK_CHAR_LITERAL_END:
+      if(append_varlen(tk,ch) < 0)
+        return -1;
       tk->type=TKT_CHARACTER_LITERAL;
       return 0;
     case TK_INT_END:
@@ -95,6 +97,8 @@ int accept_varlen(token *tk,char ch,tknzr_state state)
       tk->type=TKT_FLOAT_LITERAL;
       break;
     case TK_STRING_LITERAL_END:
+      if(append_varlen(tk,ch) < 0)
+        return -1;
       tk->type=TKT_STRING_LITERAL;
       return 0;
   }
@@ -122,7 +126,7 @@ void fini_token(token *tk)
   char *string;
   if (tk->string)
   {
-   free(tk->string);
+    free(tk->string);
   } 
   free(tk);
 }

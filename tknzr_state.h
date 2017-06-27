@@ -2,9 +2,8 @@
 #define TKNZR_STATE_H 1
 #include <stdbool.h>
 #include <stdio.h>
-#define N_MARKER_STATES 5
 #define N_TOKENIZER_ROWS (_TK_NON_ACCEPTED_END-TK_INIT)
-#define N_TOKENIZER_COLS (TK_NULL - TK_INIT-N_MARKER_STATES)
+#define N_TOKENIZER_COLS (TK_NULL - TK_INIT)
 #include "char_class.h"
 
 

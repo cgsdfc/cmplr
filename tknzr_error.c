@@ -21,7 +21,16 @@ const char *tokenizer_err_tab [] =
   [TERR_STRING_UNTERMINATED]="missing terminating \" character",
   [TERR_CHAR_UNTERMINATED]="missing terminating \' character",
   [TERR_EMPTY_CHAR_LITERAL]="empty character constant",
+  [TERR_UNKNOWN]="check your code, there should not be TERR_UNKNOWN",
 };
+
+char *tknzr_error_string(void)
+{
+  static char buf[BUFSIZ];
+  snprintf(buf,BUFSIZ,COLOR_FORMAT,WHITE,
+      tokenizer_err_tab[tknzr_errno]);
+  return buf;
+}
 
 tknzr_error  tknzr_error_get(void)
 {
@@ -39,13 +48,6 @@ void tknzr_error_clear(void)
   tknzr_errno = TERR_SUCCESS;
 }
 
-char *tknzr_error_string(void)
-{
-  static char buf[BUFSIZ];
-  snprintf(buf,BUFSIZ,COLOR_FORMAT,WHITE,
-      tokenizer_err_tab[tknzr_errno]);
-  return buf;
-}
 
 char *tknzr_level_string(void)
 {
@@ -73,7 +75,7 @@ void tknzr_error_handle (void)
   char *errmsg=tknzr_error_string();
   char *level=tknzr_level_string();
 
-  fprintf(stderr, "file %s, line %d, column %d:%s:%s\n",
+  fprintf(stderr, "%s:%d:%d:%s %s\n",
       filename,
       cbuffer.pos.lineno,
       cbuffer.pos.column,
@@ -133,8 +135,12 @@ void depatch_errno(tknzr_state errstate)
       break;
 
     case TK_CHAR_LITERAL_PART:
+    case TK_CHAR_LITERAL_ESCAPED:
+    case TK_CHAR_LITERAL_BEGIN:
         tknzr_error_set(TERR_CHAR_UNTERMINATED);
         break;
+    default:
+        tknzr_error_set(TERR_UNKNOWN);
   }
 }
 

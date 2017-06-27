@@ -9,8 +9,13 @@ char_buffer cbuffer;
 void depatch_errno(tknzr_state state);
 
 int get_next_token (token **ptoken,
-    char_buffer *buffer)
+    char_buffer *buf)
 {
+  if (peek_char(buf) == EOF)
+  {
+    tknzr_error_set(TERR_END_OF_INPUT);
+    return -1;
+  }
   
   entry_t entry=0;
   bool is_reversed=false;
@@ -21,30 +26,15 @@ int get_next_token (token **ptoken,
   int r;
   token *tk=NULL;
 
-  while (TFE_IS_ACCEPTED(entry))
+  while (!TFE_IS_ACCEPTED(entry))
   {
-    ch = get_char (buffer);
+    ch = get_char (buf);
     if(ch == EOF) 
     {
       depatch_errno(state);
       return -1;
     }
-
-    if (is_white_space(ch))
-    {
-      continue;
-    }
-
-    if (is_punctuation_accept(ch))
-    {
-      *ptoken=accept_punctuation (&buffer->pos,ch);
-      if(*ptoken == NULL)
-      {
-        return -1;
-      }
-      return 0;
-    }
-
+    
     prev_state=state;
     state = st_do_transfer(tknzr_table, state, ch, &entry);
     if (state == TK_NULL)
@@ -56,24 +46,33 @@ int get_next_token (token **ptoken,
     switch (TFE_ACTION(entry))
     {
       case TFE_ACT_ACCEPT:
-        if (is_varlen_accept(state) && accept_varlen(tk,ch,state)<0)
+        if (is_varlen_accept(state))
         {
-          return -1;
+          if (accept_varlen(tk,ch,state)<0)
+            return -1;
+          if (is_punctuation_char(ch) || 
+              is_operator_char(ch))
+          {
+            put_char(buf);
+          }
         }
         else if(is_operator_accept(state)) 
         {
-          tk=accept_operator(&buffer->pos,state);
-          if(tk==NULL)
-            return -1;
+          tk=accept_operator(&buf->pos,state);
         }
-        if (TFE_IS_REVERSED(entry) ||
-            is_punctuation_char(ch) ||
-            is_operator_char(ch))
+        if (is_punctuation_accept(ch))
         {
-          put_char (buffer);
+          tk=accept_punctuation (&buf->pos,ch);
         }
 
+        if (tk == NULL) {
+          return -1;
+        }
         *ptoken=tk;
+        if (TFE_IS_REVERSED(entry))
+        {
+          put_char (buf);
+        }
         return 0;
 
       case TFE_ACT_APPEND:
@@ -85,7 +84,7 @@ int get_next_token (token **ptoken,
 
       case TFE_ACT_INIT:
         is_varlen=is_varlen_init(state);
-        if (is_varlen && !( tk=init_varlen(&buffer->pos,ch)))
+        if (is_varlen && !( tk=init_varlen(&buf->pos,ch)))
         {
           return -1;
         }
@@ -113,6 +112,7 @@ int print_token_stream (void)
   token *tk;
   int r=0;
   char *token_string;
+  int nall=0;
 
   if(do_check)
   {
@@ -127,10 +127,12 @@ int print_token_stream (void)
       case 0:
         token_string = format_token (tk);
         puts(token_string);
+        nall++;
         break;
       case -1:
         if (tknzr_error_get() == TERR_END_OF_INPUT)
         {
+          printf("read %d tokens in total\n", nall);
           return 0;
         }
         else {
