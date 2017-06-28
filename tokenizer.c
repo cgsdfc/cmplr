@@ -19,7 +19,11 @@ int get_next_token (token **ptoken,
   tknzr_state prev_state;
   char ch;
   int r;
-  token *tk=NULL;
+  token *tk=alloc_token();
+  if (tk==NULL)
+  {
+    return -1;
+  }
 
   while (!TFE_IS_ACCEPTED(entry))
   {
@@ -41,21 +45,12 @@ int get_next_token (token **ptoken,
     switch (TFE_ACTION(entry))
     {
       case TFE_ACT_ACCEPT:
-        if (is_varlen_accept(state))
+        if (is_varlen &&  accept_varlen(tk,ch,state)<0)
         {
-          if (accept_varlen(tk,ch,state)<0)
             return -1;
         }
-        else if(is_operator_accept(state)) 
+        else if(accept_token(tk,&buf->pos, state, ch)<0)
         {
-          tk=accept_operator(&buf->pos,state);
-        }
-        else if (is_punctuation_accept(ch))
-        {
-          tk=accept_punctuation (&buf->pos,ch);
-        }
-
-        if (tk == NULL) {
           return -1;
         }
         *ptoken=tk;
@@ -74,7 +69,7 @@ int get_next_token (token **ptoken,
 
       case TFE_ACT_INIT:
         is_varlen=is_varlen_init(state);
-        if (is_varlen && !( tk=init_varlen(&buf->pos,ch)))
+        if (is_varlen && !( init_varlen(tk, &buf->pos,ch)))
         {
           return -1;
         }
@@ -83,12 +78,6 @@ int get_next_token (token **ptoken,
         // TODO when comment is no longer 
         // handle by tokenizer, this is no need
       case TFE_ACT_SKIP:
-        if(tk!=NULL)
-        {
-          fini_token(tk);
-          tk=NULL;
-        }
-
         break;
     }
   } 

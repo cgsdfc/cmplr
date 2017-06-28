@@ -3,7 +3,7 @@
 verb=$2
 under=$1
 logf=./errlog
-defsrcf=./test/c-source
+defsrcf=./c-source/gxemul-src
 
 if [ $# -ne 1 ];then
   under=$defsrcf
@@ -15,7 +15,7 @@ kases="$under/*.c $under/*.h"
 
 for x in $kases;do
   printf "[case-$x]"
-  ./bin/tokenizer $x > /dev/null 2>> $logf
+  ./bin/tokenizer $x 2>> $logf | more
 
   if [ $? -ne 0 ];then 
     errmsg="[FAIL] at $x" 

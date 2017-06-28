@@ -12,11 +12,8 @@ extern const char *keywords_tab[];
 
 typedef enum token_type 
 {
-  /* keywords must come first */
-   /* KEYWORDS */
 
-  /* used in control */
-  TKT_KW_FOR=1,
+  TKT_KW_FOR=0,
   TKT_KW_WHILE,
   TKT_KW_CASE,
   TKT_KW_RETURN,

@@ -30,6 +30,8 @@ token_type char2punctuation(char ch)
 
 void init_punctuation(void)
 {
-  add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION);
+  add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION_NON_DOT);
+  add_intermedia(TK_INIT,TK_DOT,CHAR_CLASS_DOT);
+  add_accepted_rev(TK_DOT,TK_DOT_END,CHAR_CLASS_DEC_DIGITS);
 }
 

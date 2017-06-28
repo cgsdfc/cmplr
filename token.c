@@ -1,6 +1,6 @@
 #include "token.h"
 
-token *alloc_token (position *begin)
+token *alloc_token ()
 {
 // TODO use token_buffer instead
   token *tk=malloc(sizeof(token));
@@ -10,20 +10,19 @@ token *alloc_token (position *begin)
   }
 
   memset(tk,0,sizeof (token));
-  memcpy(&tk->begin, begin, sizeof (position));
   tk->type=TKT_UNKNOWN;
   return tk;
 
 }
 
-token *init_varlen(position *begin, char ch)
+int init_varlen(token *tk, position *begin, char ch)
 {
-  token *tk=alloc_token(begin);
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
   tk->max=TOKEN_VARLEN_INIT_LEN;
-  if (!tk->string) { return NULL; }
-  append_varlen((token*)tk,ch);
-  return tk;
+  if (!tk->string) { return -1; }
+  if (append_varlen((token*)tk,ch)<0)
+    return -1;
+  return 0;
 }
 
 
@@ -51,19 +50,23 @@ int append_varlen(token *tk, char ch)
 
 }
 
-token *accept_punctuation (position *begin, char ch)
+int accept_token(token *tk, position *pos, tknzr_state state, char ch)
 {
-  token *tk=alloc_token(begin);
-  tk->type=char2punctuation(ch);
-  return tk;
-}
-
-token *accept_operator (position *begin, tknzr_state state)
-{
-  token *tk=alloc_token(begin);
-  if (!tk) { return NULL; }
-  (tk)->type=state2oper(state);
-  return tk;
+  memcpy(&tk->begin,pos, sizeof(position));
+  if (is_operator_accept(state))
+  {
+    tk->type=state2oper(state);
+    return 0;
+  }
+  switch(state) {
+    case TK_PUNCTUATION_END:
+      tk->type=char2punctuation(ch);
+      return 0;
+    case TK_DOT_END:
+      tk->type=TKT_DOT;
+      return 0;
+  }
+  return 0;
 }
 
 

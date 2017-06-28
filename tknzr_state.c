@@ -31,7 +31,7 @@ bool is_punctuation_char (char ch)
   return is_punctuation_accept(ch);
 }
 
-bool is_punctuation_accept (char ch)
+bool is_punctuation_accept (tknzr_state state)
 {
-  return char_is_in_class(CHAR_CLASS_PUNCTUATION, ch);
+  return state == TK_PUNCTUATION_END || state == TK_DOT_END;
 }

@@ -30,9 +30,6 @@ typedef enum escape_state
   /* '0' is read */
   ES_ZERO,
 
-  /* skip quotes */
-  ES_SKIP,
-
   /* 1 letter or 2 hex digs or 3 oct digs are read */
   ES_END,
 

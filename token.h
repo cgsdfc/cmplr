@@ -31,16 +31,12 @@ typedef struct token
 
 } token;
 
-/* operator */ 
-token *accept_operator(position *, tknzr_state);
-
-/* punctuation */
-token *accept_punctuation(position *, char);
-
-/* varlen */
-token *init_varlen(position *,char ch);
-int append_varlen(token *tk, char ch);
+int accept_token(token *tk, position *, tknzr_state , char);
 int accept_varlen(token *tk,char ch,tknzr_state state);
+int append_varlen(token *tk, char ch);
+int init_varlen(token *tk, position *,char ch);
+
+token *alloc_token(void);
 
 /* helpers */
 char *format_token (token *tk);

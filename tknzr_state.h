@@ -142,7 +142,7 @@ bool is_varlen_accept (tknzr_state state);
 bool is_varlen_init (tknzr_state state);
 bool is_operator_accept (tknzr_state state);
 bool is_operator_char(char ch);
-bool is_punctuation_accept (char ch);
+bool is_punctuation_accept (tknzr_state state);
 bool is_punctuation_char (char ch);
 char *tknzr_state_string(tknzr_state state);
 

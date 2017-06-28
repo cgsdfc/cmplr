@@ -44,11 +44,13 @@ void check_defininess(void)
       }
     }
     if (failed) {
+      totalcnt++;
       printf("FAILED, more than one state can go from %s\n", from);
     } else {
       printf("PASSED\n");
     }
   }
+  printf("check_defininess %s\n", totalcnt ? "FAILED":"PASSED");
 }
 
 
@@ -72,7 +74,6 @@ void check_escaped(void)
 
   /* should copy src to dst; */
   r=des(src,dst);
-  puts(dst);
   assert(r==0);
   assert (strcmp (dst, src)==0);
   puts("single char PASSED");
