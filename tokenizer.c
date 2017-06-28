@@ -3,7 +3,7 @@
 #include "tknzr_error.h"
 #include "tknzr_state.h"
 
-static bool do_check=false;
+static bool do_check=true;
 char *filename;
 char_buffer cbuffer;
 void depatch_errno(tknzr_state state);
@@ -11,12 +11,7 @@ void depatch_errno(tknzr_state state);
 int get_next_token (token **ptoken,
     char_buffer *buf)
 {
-  if (peek_char(buf) == EOF)
-  {
-    tknzr_error_set(TERR_END_OF_INPUT);
-    return -1;
-  }
-  
+    
   entry_t entry=0;
   bool is_reversed=false;
   bool is_varlen=false;
@@ -50,17 +45,12 @@ int get_next_token (token **ptoken,
         {
           if (accept_varlen(tk,ch,state)<0)
             return -1;
-          if (is_punctuation_char(ch) || 
-              is_operator_char(ch))
-          {
-            put_char(buf);
-          }
         }
         else if(is_operator_accept(state)) 
         {
           tk=accept_operator(&buf->pos,state);
         }
-        if (is_punctuation_accept(ch))
+        else if (is_punctuation_accept(ch))
         {
           tk=accept_punctuation (&buf->pos,ch);
         }

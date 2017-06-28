@@ -21,6 +21,7 @@ const char *tokenizer_err_tab [] =
   [TERR_STRING_UNTERMINATED]="missing terminating \" character",
   [TERR_CHAR_UNTERMINATED]="missing terminating \' character",
   [TERR_EMPTY_CHAR_LITERAL]="empty character constant",
+  [TERR_INVALID_IDENTIFIER]="invalid identifier", 
   [TERR_UNKNOWN]="check your code, there should not be TERR_UNKNOWN",
 };
 
@@ -113,10 +114,6 @@ void depatch_errno(tknzr_state errstate)
       tknzr_error_set(TERR_DIGIT_NOT_HEXADECIMAL);
       break;
 
-    case TK_INT_SUFFIX_0:case TK_INT_SUFFIX_1:
-      tknzr_error_set(TERR_BAD_INTEGER_SUFFIX);
-      break;
-
       /* a float ends with 13e or 13e- */
     case TK_FLOAT_SIGN: case TK_FLOAT_EXPONENT_BEGIN:
       tknzr_error_set(TERR_FLOAT_EXP_NO_DIGIT);
@@ -124,7 +121,6 @@ void depatch_errno(tknzr_state errstate)
 
       /* bad suffix for float */ 
     case TK_FLOAT_FRACTION: case TK_FLOAT_EXPONENT:
-    case TK_FLOAT_SUFFIX_0:
       tknzr_error_set(TERR_BAD_FLOAT_SUFFIX);
       break;
 
@@ -138,6 +134,9 @@ void depatch_errno(tknzr_state errstate)
     case TK_CHAR_LITERAL_ESCAPED:
     case TK_CHAR_LITERAL_BEGIN:
         tknzr_error_set(TERR_CHAR_UNTERMINATED);
+        break;
+    case TK_IDENTIFIER_BEGIN:
+        tknzr_error_set(TERR_INVALID_IDENTIFIER);
         break;
     default:
         tknzr_error_set(TERR_UNKNOWN);

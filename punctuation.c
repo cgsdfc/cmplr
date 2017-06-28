@@ -1,5 +1,8 @@
 #include "punctuation.h"
 
+// TODO make mapping from accepted state
+// to token_type use less space
+// but it is not ness
 static const token_type _char2punc [] =
 {
   
@@ -13,7 +16,7 @@ static const token_type _char2punc [] =
   [':']=TKT_COLON,
   [';']=TKT_SEMICOLON,
   [',']=TKT_COMMA,
-  ['.']=TKT_PERIOD,
+  ['.']=TKT_DOT,
   ['?']=TKT_QUESTION,
 
 };
@@ -23,5 +26,10 @@ token_type char2punctuation(char ch)
   token_type tkt=_char2punc[ch];
   assert (tkt);
   return tkt;
+}
+
+void init_punctuation(void)
+{
+  add_accepted(TK_INIT, TK_PUNCTUATION_END, CHAR_CLASS_PUNCTUATION);
 }
 

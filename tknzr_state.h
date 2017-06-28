@@ -28,7 +28,7 @@ typedef enum tknzr_state
 
   /* 2 state */
   TK_TILDE,
-  TK_PERIOD,
+  TK_DOT,
 
   /* 3 states */
   TK_EXCLAIM,
@@ -54,14 +54,13 @@ typedef enum tknzr_state
   TK_INT_HEX_PREFIX,
   TK_INT_HEX_BEGIN,
   TK_INT_OCT_BEGIN,
-  TK_INT_SUFFIX_0,
-  TK_INT_SUFFIX_1,
+  TK_INT_SUFFIX,
 
   TK_FLOAT_FRACTION,
   TK_FLOAT_EXPONENT_BEGIN,
   TK_FLOAT_EXPONENT,
   TK_FLOAT_SIGN,
-  TK_FLOAT_SUFFIX_0,
+  TK_FLOAT_SUFFIX,
 
   TK_CHAR_LITERAL_ESCAPED,
   TK_CHAR_LITERAL_PART,
@@ -79,6 +78,7 @@ typedef enum tknzr_state
   TK_STRING_LITERAL_END,
   _TK_VARLEN_ACCEPT_END,
 
+  TK_PUNCTUATION_END,
 
   _TK_OPERATOR_ACCEPT_BEGIN,
   /* 1 state */
@@ -127,7 +127,7 @@ typedef enum tknzr_state
   TK_VERTICAL_BAR_EQUAL,
   _TK_OPERATOR_ACCEPT_END,
 
-  TK_PERIOD_END,
+  TK_DOT_END,
   TK_NULL 
 } tknzr_state;
 

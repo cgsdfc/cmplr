@@ -34,7 +34,7 @@ op_struct operators[]=
       CHAR_CLASS_STAR,
       CHAR_CLASS_PERCENT ,
       CHAR_CLASS_CARET ,
-      CAHR_CLASS_SLASH
+      CHAR_CLASS_SLASH
     },
     .reject={
       CHAR_CLASS_EQUAL,

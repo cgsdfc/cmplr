@@ -4,6 +4,9 @@
 char *tknzr_state_string(tknzr_state state)
 {
   static char buf[BUFSIZ];
+  if (!tknzr_state_tab[state])
+    return 0;
+
   strncpy(buf, tknzr_state_tab[state],BUFSIZ);
   return buf;
 }
@@ -32,9 +35,3 @@ bool is_punctuation_accept (char ch)
 {
   return char_is_in_class(CHAR_CLASS_PUNCTUATION, ch);
 }
-
-bool is_operator_char(char ch)
-{
-  return char_is_in_class(CHAR_CLASS_OPERATOR, ch);
-}
-

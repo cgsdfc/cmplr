@@ -1,6 +1,35 @@
 #include "escaped.h"
 #include <limits.h>
 
+typedef enum escaped_cc
+{
+  ECC_ZERO,
+  ECC_OCT_DIGITS,
+  ECC_HEX_DIGITS,
+  ECC_OCT_DIGITS_NON_ZERO,
+  ECC_SINGLE_ESCAPED_NON_ZERO,
+  ECC_BACKSLASH,
+  ECC_X,
+} escaped_cc;
+
+const static char* cc_tab[]=
+{
+
+  [ECC_ZERO ]="0",
+  [ECC_OCT_DIGITS ]="01234567",
+  [ECC_HEX_DIGITS ]="0123456789abcdefABCDEF",
+  [ECC_OCT_DIGITS_NON_ZERO ]="1234567",
+  [ECC_SINGLE_ESCAPED_NON_ZERO ]="abfnrtv\\\'\"?",
+  [ECC_BACKSLASH ]="\\",
+  [ECC_X]="x",
+
+};
+
+static int 
+ecc_char_cond(entry_t cond, entry_t ch)
+{
+  return strchr(cc_tab[cond],ch)!=NULL;
+}
 
 state_table *escaped_table;
 
@@ -16,35 +45,35 @@ int init_escaped(void)
       N_ES_ROWS,
       N_ES_COLS,
       ES_NULL,
-      char_is_in_class);
+      ecc_char_cond);
   if (r<0) {
     return -1;
   }
 
   /* use char_is_in_class default */
-  add_initial(ES_BEGIN, CHAR_CLASS_BACKSLASH);
+  add_initial(ES_BEGIN, ECC_BACKSLASH);
 
   /* intermedia */
-  add_intermedia(ES_BEGIN,ES_ZERO, CHAR_CLASS_ZERO);
-  add_intermedia(ES_ZERO,ES_OCT_END,CHAR_CLASS_OCT_DIGITS);
-  add_intermedia(ES_BEGIN,ES_HEX_BEGIN,CHAR_CLASS_X);
-  add_intermedia(ES_HEX_BEGIN,ES_HEX_END,CHAR_CLASS_HEX_DIGITS);
-  add_intermedia(ES_ZERO,ES_OCT_BEGIN,CHAR_CLASS_OCT_DIGITS);
-  add_intermedia(ES_OCT_BEGIN,ES_OCT_END,CHAR_CLASS_OCT_DIGITS);
-  add_intermedia( ES_BEGIN, ES_OCT_BEGIN,CHAR_CLASS_OCT_BEGIN_NOT_ZERO);
+  add_intermedia(ES_BEGIN,ES_ZERO, ECC_ZERO);
+  add_intermedia(ES_ZERO,ES_OCT_END,ECC_OCT_DIGITS);
+  add_intermedia(ES_BEGIN,ES_HEX_BEGIN,ECC_X);
+  add_intermedia(ES_HEX_BEGIN,ES_HEX_END,ECC_HEX_DIGITS);
+  add_intermedia(ES_ZERO,ES_OCT_BEGIN,ECC_OCT_DIGITS);
+  add_intermedia(ES_OCT_BEGIN,ES_OCT_END,ECC_OCT_DIGITS);
+  add_intermedia( ES_BEGIN, ES_OCT_BEGIN,ECC_OCT_DIGITS_NON_ZERO);
 
   /* accepted-rev */
-  add_accepted_rev(ES_END,ES_ZERO,CHAR_CLASS_OCT_DIGITS);
-  add_accepted_rev( ES_END,ES_HEX_BEGIN,CHAR_CLASS_HEX_DIGITS);
-  add_accepted_rev( ES_END,ES_OCT_BEGIN, CHAR_CLASS_OCT_DIGITS);
+  add_accepted_rev(ES_END,ES_ZERO,ECC_OCT_DIGITS);
+  add_accepted_rev( ES_END,ES_HEX_BEGIN,ECC_HEX_DIGITS);
+  add_accepted_rev( ES_END,ES_OCT_BEGIN, ECC_OCT_DIGITS);
 
   /* accepted */
-  add_accepted(ES_HEX_END,ES_END, CHAR_CLASS_HEX_DIGITS);
-  add_accepted(ES_OCT_END,ES_END, CHAR_CLASS_OCT_DIGITS);
-  add_accepted(ES_BEGIN,ES_END, CHAR_CLASS_SINGLE_ESCAPE_NON_ZERO);
+  add_accepted(ES_HEX_END,ES_END, ECC_HEX_DIGITS);
+  add_accepted(ES_OCT_END,ES_END, ECC_OCT_DIGITS);
+  add_accepted(ES_BEGIN,ES_END, ECC_SINGLE_ESCAPED_NON_ZERO);
 
   /* selfloop */
-  add_selfloop_rev(ES_INIT,CHAR_CLASS_BACKSLASH);
+  add_selfloop_rev(ES_INIT,ECC_BACKSLASH);
 
 }
 
@@ -66,6 +95,8 @@ const char escaped_tab[]=
 
 };
 
+// the errors eval_escaped may set
+// are who knows
 char eval_escaped(char *buf, entry_t kind)
 {
   long val;
@@ -112,7 +143,8 @@ int eval_string(char *src, char *dst)
 
     switch (nsa) {
       case ES_NULL:
-        r=PERR_BAD_ESCAPED;
+        parser_error_set( PERR_BAD_ESCAPED );
+        r=-1;
         *pesbuf=0;
         strcpy(dst,esbuf);
         continue;
@@ -144,6 +176,7 @@ int eval_string(char *src, char *dst)
         value=eval_escaped(esbuf, es_kind);
         if (value < 0){
           parser_error_set (PERR_BAD_ESCAPED);
+          r=-1;
         }
         *dst++=value;
         nsa=ES_INIT;
@@ -157,10 +190,9 @@ int eval_string(char *src, char *dst)
 
   switch (nsa) {
     case ES_INIT:
-    case ES_SKIP:
     case ES_END:
       *dst=0;
-      return -1;
+      return r;
 
     case ES_OCT_BEGIN: case ES_OCT_END: case ES_ZERO:
     case ES_HEX_BEGIN: case ES_HEX_END:
@@ -168,11 +200,12 @@ int eval_string(char *src, char *dst)
       value=eval_escaped(esbuf, es_kind);
       if (value < 0) {
         parser_error_set (PERR_BAD_ESCAPED);
+        r=-1;
       }
 
       *dst++=value;
       *dst=0;
-      return -1;
+      return r;
   }
 
 

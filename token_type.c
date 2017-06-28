@@ -1,6 +1,7 @@
 #include "token_type.h"
 
-
+// TODO remove it after parser is 
+// done
 /** this tab is for debug purpose */
 const char *token_tab [] = 
 {
@@ -49,7 +50,7 @@ const char *token_tab [] =
   [TKT_COLON]="TKT_COLON",
   [TKT_SEMICOLON]="TKT_SEMICOLON",
   [TKT_COMMA]="TKT_COMMA",
-  [TKT_PERIOD]="TKT_PERIOD",
+  [TKT_DOT]="TKT_DOT",
   [TKT_QUESTION]="TKT_QUESTION",
 
   /* OPERATORS */

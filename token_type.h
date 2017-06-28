@@ -73,7 +73,7 @@ typedef enum token_type
   TKT_COLON,
   TKT_SEMICOLON,
   TKT_COMMA,
-  TKT_PERIOD,
+  TKT_DOT,
   TKT_QUESTION,
 
   /* binary arithmetic operator */
