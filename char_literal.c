@@ -26,22 +26,25 @@ void init_char_literal(void)
   TK_CHAR_LITERAL_BEGIN=alloc_state(true);
   TK_CHAR_LITERAL_ESCAPED=alloc_state(true);
 
-  config_from(0);
-    config_condition(cc_sq);
-      add_to(TK_CHAR_LITERAL_BEGIN);
-  config_from(TK_CHAR_LITERAL_BEGIN);
-    config_condition(cc_sq_nl_bs_rev);
-      add_to(TK_CHAR_LITERAL_PART);
-    config_condition(cc_bs);
-      add_to(TK_CHAR_LITERAL_ESCAPED);
-  config_from(TK_CHAR_LITERAL_ESCAPED);
-    config_condition(cc_nl_rev);
-      add_to(TK_CHAR_LITERAL_PART);
-  config_from(TK_CHAR_LITERAL_PART);
-    config_condition(cc_sq_nl_bs_rev);
-      add_to(TK_CHAR_LITERAL_PART);
-    config_condition(cc_sq);
-      add_to(TK_CHAR_LITERAL_END);
+  config_action(TKA_ALLOC_BUF);
+    config_from(0);
+      config_condition(cc_sq);
+        add_to(TK_CHAR_LITERAL_BEGIN);
+  config_action(TKA_COLLECT_CHAR);
+    config_from(TK_CHAR_LITERAL_BEGIN);
+      config_condition(cc_sq_nl_bs_rev);
+        add_to(TK_CHAR_LITERAL_PART);
+      config_condition(cc_bs);
+        add_to(TK_CHAR_LITERAL_ESCAPED);
+    config_from(TK_CHAR_LITERAL_ESCAPED);
+      config_condition(cc_nl_rev);
+        add_to(TK_CHAR_LITERAL_PART);
+    config_from(TK_CHAR_LITERAL_PART);
+      config_condition(cc_sq_nl_bs_rev);
+        add_to(TK_CHAR_LITERAL_PART);
+  config_action(TKA_ACC_LIT);
+      config_condition(cc_sq);
+        add_to(TK_CHAR_LITERAL_END);
 
 }
 

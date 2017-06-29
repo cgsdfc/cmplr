@@ -1,109 +1,112 @@
 #include "char_class.h"
+#define CHAR_CLASS_MAX_TAB_LEN 100
+const static char dec* = "123456789";
+const static char Dec* = "0123456789";
+const static char Oct* = "01234567";
+const static char oct* = "1234567";
+const static char Hex* = "0123456789abcdefABCDEF";
+const static char hex* =  "123456789abcdefABCDEF";
+const static char Word = "0123456789\
+                          _abcdefghijklmnopqrstuvwxyz\
+                          ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const static char word =  "_abcdefghijklmnopqrstuvwxyz\
+                          ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const static char spaces=" \v\f\n\r\t";
+const static char 
+const static char 
+const static char 
+const static char 
+const static char 
+const static char 
 
-bool is_white_space(char ch)
+static char *all_cc[CHAR_CLASS_MAX_TAB_LEN];
+static int all_count;
+
+int alloc_char_class(char *chcl)
 {
-  return char_is_in_class(CHAR_CLASS_SPACES, ch);
+  // some short cut is supported:
+  // \\D dec with 0
+  // \\d dec without 0
+  // \\O oct with 0
+  // \\H hex ...
+  // \\N newline
+  // \\S spaces
+  // \\W letter, number and _
+  // \\w letter and _
+  // \\p punctuation with dot
+  // \\P with dot
+  
+  static char buf[BUFSIZ];
+  for (char *s=chcl;*s;++s)
+  {
+    if (*s=='\\')
+    {
+      switch (*s++)
+      {
+        case 'D':
+          spec=Dec;
+          offset=10;
+          break;
+        case 'd':
+          spec=dec;
+          offset=9;
+          break;
+        case 'O':
+          spec=Oct;
+          offset=8;
+          break;
+        case 'o':
+          spec=oct;
+          offset=7;
+          break;
+        case 'h':
+          spec=hex;
+          offset=15;
+          break;
+        case 'H':
+          spec=Hex;
+          offset=16;
+          break;
+        case 'W':
+          spec=Word;
+          offset=26 + 26 + 10 + 1;
+          break;
+        case 'w':
+          spec=word;
+          offset=26 + 26 + 1;
+          break;
+        case 'S':
+          spec=spaces;
+          offset=2;
+          break;
+        case 'N':
+        case 'p':
+        case '\\':
+      }
+      continue;
+    }
+    *pstr++=*s;
+  }
+
+
+  for (int i=0;i<all_count;++i)
+  {
+    if (strcmp(buf, all_cc[i])==0)
+    {
+      return i;
+    }
+  }
+  all_cc[all_count++]=strdup(buf);
+  return  all_count-1;
+  
 }
 
-// TODO too much , messy, clear up
-char *char_class2string[]=
+int cond_char_class(dfa_state *st, int ch)
 {
-  [CHAR_CLASS_EMPTY]="",
-
-  /* number */
-  [CHAR_CLASS_DOT]=".",
-  [CHAR_CLASS_ZERO]="0",
-  [CHAR_CLASS_DEC_DIGITS]="0123456789",
-  [CHAR_CLASS_LETTER]=CC_UPPER CC_LOWER,
-  [ CHAR_CLASS_E ]= "eE",
-  [CHAR_CLASS_DEC_DIGITS_LETTERS]=CC_DEC_DIGITS CC_UPPER CC_LOWER,
-  [ CHAR_CLASS_DEC_DIGITS_LETTERS_DOT ]=CC_DOT  CC_DEC_DIGITS CC_UPPER CC_LOWER, 
-  [ CHAR_CLASS_SIGN ]="-+",
-  [ CHAR_CLASS_XX]="xX",
-  [CHAR_CLASS_OCT_DIGITS]="01234567",
-  [ CHAR_CLASS_HEX_DIGITS]="0123456789abcdefABCDEF",
-  [CHAR_CLASS_DEC_DIGITS_NON_ZERO]="123456789",
-  [ CHAR_CLASS_FLOAT_SUFFIX]="fFlL",
-  [ CHAR_CLASS_INT_SUFFIX]="lLuU",
-
-  [ CHAR_CLASS_DEC_DIGITS_INT_SUFFIX ]=CC_DEC_DIGITS CC_INT_SUFFIX , /* [^dec, isf] */
-  [ CHAR_CLASS_OCT_DIGITS_INT_SUFFIX ]=CC_OCT_DIGITS CC_INT_SUFFIX , /* [^oct, isf] */
-  [ CHAR_CLASS_HEX_DIGITS_INT_SUFFIX ]=CC_HEX_DIGITS CC_INT_SUFFIX , /* [^hex, isf] */
-  /* the rev class */
-  [ CHAR_CLASS_DEC_DIGITS_FLOAT_SUFFIX ]=CC_DEC_DIGITS CC_FLOAT_SUFFIX, /* [^dec,fsf] */
-  [ CHAR_CLASS_DEC_DIGITS_INT_SUFFIX_DOT_E ]=CC_DEC_DIGITS CC_INT_SUFFIX CC_DOT "eE", /* [^dec, isf, .] */
-  [ CHAR_CLASS_OCT_DIGITS_INT_SUFFIX_DOT ]=CC_OCT_DIGITS CC_INT_SUFFIX CC_DOT, /* [^oct, isf, .] */
-  [ CHAR_CLASS_HEX_DIGITS_INT_SUFFIX_DOT ]=CC_HEX_DIGITS CC_INT_SUFFIX CC_DOT, /* [^hex isf, .] */
-  /* for single 0 */
-  /* [^oct, isf, ., xX] */
-  [ CHAR_CLASS_OCT_DIGITS_INT_SUFFIX_DOT_X_E ]=CC_OCT_DIGITS CC_INT_SUFFIX CC_DOT "eExX",
-  [ CHAR_CLASS_DEC_DIGITS_FLOAT_SUFFIX_E ]=CC_DEC_DIGITS CC_FLOAT_SUFFIX "eE",
-  /* number */
-
-  /* id */
-  [CHAR_CLASS_IDENTIFIER_BEGIN]=
-    "_" CC_UPPER CC_LOWER,
-  [CHAR_CLASS_IDENTIFIER_PART] = CC_IDENTIFIER_BEGIN CC_DEC_DIGITS,
-  /* id */
-
-
-  [CHAR_CLASS_SPACES]=CC_SPACES,
-  [CHAR_CLASS_PUNCTUATION_NON_DOT]=CC_PUNCTUATION_NON_DOT,
-
-
-  /* operator */
-  [CHAR_CLASS_SLASH]="/",
-  [CHAR_CLASS_STAR]="*",
-
-  [CHAR_CLASS_TILDE]="~",
-  [CHAR_CLASS_EXCLAIM]="!",
-  [CHAR_CLASS_PERCENT]="%",
-  [CHAR_CLASS_CARET]="^",
-  [CHAR_CLASS_AMPERSAND]="&",
-  [CHAR_CLASS_VERTICAL_BAR]="|",
-  [CHAR_CLASS_POSITIVE]="+",
-  [CHAR_CLASS_NEGATIVE]="-",
-
-  [CHAR_CLASS_AMPERSAND_EQUAL]="&=",
-  [CHAR_CLASS_VERTICAL_BAR_EQUAL]="|=",
-  [CHAR_CLASS_POSITIVE_EQUAL]="+=",
-  [CHAR_CLASS_NEGATIVE_EQUAL]="-=",
-  [CHAR_CLASS_NEGATIVE_EQUAL_GREATER ]="-=>",
-  [CHAR_CLASS_STAR_SLASH]="*/",
-
-
-  [CHAR_CLASS_LESS]="<",
-  [CHAR_CLASS_GREATER]=">",
-  [CHAR_CLASS_LESS_EQUAL]="<=",
-  [CHAR_CLASS_GREATER_EQUAL]=">=",
-  [CHAR_CLASS_SLASH_STAR_EQUAL]="/*=",
-  [CHAR_CLASS_EQUAL]="=",
-  /* operator */
-
-  /* string and char */ 
-  [CHAR_CLASS_BACKSLASH]="\\",
-  [CHAR_CLASS_SINGLE_QUOTE]="\'",
-  [CHAR_CLASS_DOUBLE_QUOTE]="\"",
-  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE_BACKSLASH]="\\\n\r\"",
-  [CHAR_CLASS_SINGLE_QUOTE_NEWLINE_BACKSLASH]="\\\n\r\'",
-  [CHAR_CLASS_DOUBLE_QUOTE_NEWLINE]="\n\r\"",
-  [ CHAR_CLASS_SINGLE_QUOTE_BACKSLASH_NEWLINE ]="\'\\\n\r",
-  [ CHAR_CLASS_SINGLE_QUOTE_NEWLINE ]="\'\n\r",
-  [ CHAR_CLASS_DOUBLE_QUOTE_SINGLE_QUOTE ]="\'\"",
-  [CHAR_CLASS_NEWLINE]="\n\r",
-  /* string and char */ 
-
-
-
-};
-
-int char_is_in_class(entry_t cond, entry_t ch)
-{
-  assert (CHAR_CLASS_EMPTY <= cond && cond < _CHAR_CLASS_NULL);
-  assert (ch); // '\0' does no good
-
-  char *chcl=char_class2string[cond];
-  assert (chcl);
-  bool in_class = strchr(chcl, ch);
-  return in_class;
+  char *cc=all_cc[st->cond];
+  bool rev=st->usrd;
+  bool incl=strchr(cc,ch);
+  return (!rev && incl || rev && !incl);
 }
+
+  
