@@ -15,15 +15,17 @@
 #include "operator.h"
 #include "punctuation.h"
 #include "tknzr_error.h"
-
+#define TYPE_DESCRIPTOR_MAX_LEN 6
 #define TOKEN_TYPE(t)    (((token*) t)->type)
 #define TOKEN_STRING(t) (((token*) t)->string != NULL ? (t)->string : "")
 #define TOKEN_VARLEN_INIT_LEN 50
 
-
 typedef struct token 
 {
-  enum token_type type;
+  // index into global type description
+  // array
+  int type_id;
+  token_type type;
   position begin;
   char *string;
   int len;

@@ -2,16 +2,19 @@ project (cmplr)
 cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(tokenizer_src 
-  tknzr_tab.c
+# tknzr_tab.c
+  dfa.c
+  block_buffer.c
+  token_buffer.c
   parser_error.c
   tknzr_error.c
   comment.c
   identifier.c
-  escaped.c
-  checker.c
+# escaped.c
+# checker.c
   float_literal.c
   integer_literal.c
-  tknzr_table.c  
+# tknzr_table.c  
   state_table.c
   char_class.c
   string_literal.c
@@ -20,12 +23,13 @@ set(tokenizer_src
   token_type.c
   punctuation.c
   token.c
-  tknzr_state.c
+# tknzr_state.c
   char_buffer.c
   operator.c
+  tokenizer.c
   )
 add_library(tokenizer_lib ${tokenizer_src})
-add_executable(tokenizer tokenizer.c)
+add_executable(tokenizer tknzr_driver.c)
 target_link_libraries(tokenizer tokenizer_lib)
 
 

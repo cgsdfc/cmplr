@@ -32,6 +32,7 @@ void init_integer_literal(void)
   add_accepted_rev (TK_INT_ZERO,TK_INT_END,CHAR_CLASS_OCT_DIGITS_INT_SUFFIX_DOT_X_E);
 }
 
+#if 0
 int TK_INT_END;
 void init_integer_literal(void)
 {
@@ -45,5 +46,8 @@ void init_integer_literal(void)
   int rev_suffix=alloc_char_rev("lLUu");
   int rev_oct_suffix_dot_x_e=alloc_char_rev("\\OlLUu.Xx");
   int rev_hex_suffix_dot_x_e=alloc_char_rev("\\HlLUu.Xx");
+}
+
+#endif
 
 
