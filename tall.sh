@@ -3,7 +3,7 @@
 TESTFILE="string_literal char_literal comment id keywords float_literal integer_literal operators "
 
 testdir="test"
-testbin="./bin/tokenizer"
+testbin="./bin/tokenizer/tokenizer"
 nerr=0
 
 echo build the tokenizer 
