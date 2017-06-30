@@ -2,7 +2,7 @@
 #include "dfa.h"
 #include "chcl.h"
 #include "tokenizer.h"
-#define N_TOKENIZER_ROWS 30
+#define N_TOKENIZER_ROWS 50
 
 int TK_SLASH;
 int TK_INT_ZERO;
@@ -13,11 +13,11 @@ static dfa_table *table;
 
 void init_comment_state(void)
 {
-  TK_SLASH=alloc_state(true);
   TK_INT_ZERO=alloc_state(true);
   TK_INT_DEC_BEGIN=alloc_state(true);
-  TK_NEGATIVE=alloc_state(true);
   TK_DOT=alloc_state(true);
+  TK_NEGATIVE=alloc_state(true);
+  TK_SLASH=alloc_state(true);
 
 }
 
@@ -129,7 +129,6 @@ void init_char_literal(void)
   int char_part=alloc_state(true);
   int char_begin=alloc_state(true);
   int char_escape=alloc_state(true);
-  printf("char_escape is %d\n", char_escape);
   int char_end=alloc_state(false);
   
 
@@ -179,7 +178,6 @@ void init_float_literal(void)
   int Dec_suffix_e=alloc_char_class("\\D\\F\\E");
 
   int fraction=alloc_state(true);
-  printf("fraction is %d\n",fraction);
   int exponent=alloc_state(true);
   int exp_begin=alloc_state(true);
   int float_sign=alloc_state(true);
@@ -342,6 +340,8 @@ int init_tokenizer(void)
   init_integer_literal();
   init_float_literal();
   init_string_literal();
+  void init_operator(void);
+  init_operator();
   config_table(TERR_EMPTY_CHAR_LITERAL);
 
 }
@@ -397,6 +397,10 @@ int get_next_token (char_buffer *buf, token *tk)
             put_char(buf);
             return accept_integer(tk,ch);
           case TKA_ACC_OPER:
+            if (entry->usrd)
+              put_char(buf);
+            else
+              collect_char(tk,ch);
             return accept_operator(tk,ch);
           default:
             break;

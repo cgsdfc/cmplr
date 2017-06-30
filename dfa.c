@@ -1,5 +1,7 @@
 #include "dfa.h"
 #define DFA_TAB_MAX_LEN 10
+static int
+add_state(int from, int to);
 
 enum 
 {
@@ -123,6 +125,11 @@ dfa_state *resize_row(dfa_state *ds, int len, int *newlen)
   free(ds);
   return newspace;
 
+}
+
+int add_config(void)
+{
+  add_state(cur_config.from, cur_config.to);
 }
 
 static int

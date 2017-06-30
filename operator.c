@@ -2,20 +2,20 @@
 #include "chcl.h"
 #include "tokenizer.h"
 
-#define N_AMPERSAND 4
-#define N_LESS 2
-#define N_EXCLAIM 6
+#define N_AMPERSAND  (sizeof b / sizeof b[0])
+#define N_LESS (sizeof c / sizeof c[0])
+#define N_EXCLAIM (sizeof a / sizeof a[0])
 extern int TK_SLASH;
 extern int TK_NEGATIVE;
 
 const static char *a[]=
 {
- "!", "=","*","%","^","/",
+ "!", "=","*","%","^",
  };
 
 const static char *b[]=
 {
- "&","|","+","-",
+ "&","|","+",
 };
 
 const static char *c[]=
@@ -24,14 +24,9 @@ const static char *c[]=
 };
 
 
-const static char *A[]=
-{
- "!=", "==","=*","%=","=^","=/",
- };
-
 const static char *B[]=
 {
- "&=","=|","=+","=-",
+ "&=","=|","=+"
 };
 
 const static char *C[]=
@@ -50,86 +45,119 @@ void init_operator(void)
 
   for (int i=0;i<N_EXCLAIM;++i)
   {
-    begin=alloc_state(true);
     op=alloc_char_class(a[i]);
-    if (strcmp(a[i], "/")==0)
-    {
-      TK_SLASH=begin;
-    }
+    begin=alloc_state(true);
 
-    op_equal=alloc_char_class(A[i]);
-
-    config_from(0);
     config_action(TKA_ALLOC_BUF);
-    config_condition(op);
-    add_to(begin);
-    config_from(begin);
+      config_from(0);
+        config_condition(op);
+          add_to(begin);
+
     config_action(TKA_ACC_OPER);  
-    config_condition(op);
-    add_to(accepted);
-    config_condition(equal);
-    add_to(accepted);
-    config_condition(op_equal);
-    config_usrd(true);
-    add_to(accepted);
+      config_from(begin);
+        config_to(accepted);
+          config_condition(equal);
+            add_config();
+            config_usrd(true);
+              add_config();
     config_end();
   }
   for (int i=0;i<N_AMPERSAND;++i)
   {
-    begin=alloc_state(true);
     op=alloc_char_class(b[i]);
-    if (strcmp(b[i], "-")==0)
-    {
-      TK_NEGATIVE=begin;
-    }
     op_equal=alloc_char_class(B[i]);
 
-    config_from(0);
+    begin=alloc_state(true);
+
     config_action(TKA_ALLOC_BUF);
-    config_condition(op);
-    add_to(begin);
-    config_from(begin);
+      config_from(0);
+        config_condition(op);
+          add_to(begin);
+
     config_action(TKA_ACC_OPER);
-    config_condition(equal);
-    add_to(accepted);
-    config_usrd(true);
-    add_to(accepted);
+      config_to(accepted);
+        config_from(begin);
+          config_condition(equal);
+            add_config();
+      config_condition(op);
+        add_config();
+      config_condition(op_equal);
+        config_usrd(true);
+          add_config();
     config_end();
   }
 
 
   for (int i=0;i<N_LESS;++i)
   {
-    begin=alloc_state(true);
     op=alloc_char_class(c[i]);
     op_equal=alloc_char_class(C[i]);
 
+    begin=alloc_state(true);
+    middle=alloc_state(true);
+
     config_from(0);
-    config_action(TKA_ALLOC_BUF);
-    config_condition(op);
-    add_to(begin);
-    config_to(accepted);
-    config_action(TKA_ACC_OPER);
-    config_condition(op_equal);
-    config_usrd(true);
-    add_from(begin);
-    add_from(middle);
-    config_condition(equal);
-    config_usrd(false);
-    add_from(begin);
-    add_from(middle);
-    config_from(begin);
-    config_condition(op);
+      config_action(TKA_ALLOC_BUF);
+        config_condition(op);
+          add_to(begin);
+
     config_action(TKA_COLLECT_CHAR);
-    add_to(middle);
+      config_from(begin);
+        config_condition(op);
+          add_to(middle);
+
+    config_action(TKA_ACC_OPER);
+      config_to(accepted);
+        config_condition(equal);
+          add_from(begin);
+          add_from(middle);
+      config_usrd(true);
+        add_from(middle);
+          config_condition(op_equal);
+            add_from(begin);
+
     config_end();
   }
 
-  config_from(TK_NEGATIVE);
-    config_condition(alloc_char_class(">"));
-      config_action(TKA_ACC_OPER);
-        add_to(accepted);
+  int slash_begin=TK_SLASH;
+  int nega_begin=TK_NEGATIVE;
+  int tilde_begin=alloc_state(true);
 
+  config_action(TKA_ALLOC_BUF);
+    config_from(0);
+      config_condition(alloc_char_class("-"));
+        add_to(nega_begin);
+      config_condition(alloc_char_class("/"));
+        add_to(nega_begin);
+      config_condition(alloc_char_class("~"));
+        add_to(tilde_begin);
 
+  config_action(TKA_ACC_OPER);
+    config_to(accepted);
+      config_from(nega_begin);
+        config_condition(alloc_char_class(">"));
+          add_config();
+        config_condition(alloc_char_class("-"));
+          add_config();
+        config_condition(equal);
+          add_config();
+        config_condition(alloc_char_class("->="));
+          config_usrd(true);
+            add_config();
+          config_usrd(false);
+
+      config_from(slash_begin);
+        config_condition(equal);
+          add_config();
+        config_condition(alloc_char_class("/*="));
+          config_usrd(true);
+            add_config();
+
+      config_from(tilde_begin);
+        config_usrd(true);
+          config_condition(alloc_char_class(""));
+            add_config();
+  config_end();
+  
 }
 

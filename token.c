@@ -47,7 +47,6 @@ int accept_char(token*tk,char ch)
 int accept_operator (token*tk,char ch)
 {
   int type;
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   type = lookup_special(FIRST_OPER, LAST_OPER, tk->string);
   if (type == TKT_UNKNOWN)

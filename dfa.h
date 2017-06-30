@@ -51,6 +51,7 @@ int config_handler(int state, int handler);
 void config_end(void);
 int add_from(int from);
 int add_to(int to);
+int add_config(void);
 int alloc_state(bool is_non_terminal);
 int transfer(dfa_table *dfa,int from, int cond, dfa_state **to);
 int config_table(int);
