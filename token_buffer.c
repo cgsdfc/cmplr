@@ -1,5 +1,6 @@
 #include "token_buffer.h"
 #include "block_buffer.h"
+#include "tokenizer.h"
 
 // there should be one and only one
 // perfect token_buffer. it does
@@ -25,8 +26,7 @@ int init_token_buffer(char_buffer *cb)
   tbuffer.index=0;
   tbuffer.limit=0;
   tbuffer.cur=tbuffer.bb->cur;
-
-
+  init_tokenizer();
   return 0;
 }
 
@@ -45,7 +45,8 @@ int fill_token_buffer(void)
     token *tk= (token*) block_buffer_alloc(tbuffer.bb);
     if (!tk)
       return -1;
-    switch (get_next_token(tbuffer.cb, &tk))
+    memset(tk, 0, sizeof(token));
+    switch (get_next_token(tk, tbuffer.cb))
     {
       case 0:
         tbuffer.limit++;
@@ -78,7 +79,7 @@ int next_token(token **tk)
   }
 
   char *curtk=tbuffer.cur->mem + (tbuffer.index+1) * sizeof(token);
-  *tk=curtk;
+  *tk= (token*) curtk;
   return 0;
 
 }
@@ -88,7 +89,7 @@ int prev_token(token **tk)
   if (tbuffer.index==0)
   {
     char *prevtk=tbuffer.cur->prev->mem + (tbuffer.bb->blksz * sizeof(token));
-    *tk=prevtk;
+    *tk=(token*)prevtk;
     return 0;
   }
   *tk=(token*) tbuffer.cur->mem + (tbuffer.index-1) * sizeof(token);
@@ -107,7 +108,7 @@ int peek_token(token **tk)
   }
 
   char *curtk=tbuffer.cur->mem + (tbuffer.index * sizeof(token));
-  *tk=curtk;
+  *tk=(token*)curtk;
   return 0;
 
 }

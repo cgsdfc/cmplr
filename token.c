@@ -1,32 +1,18 @@
 #include "token.h"
+#include "token_type.h"
+#define TERMINATE_STRING(tk) ((tk)->string[(tk)->len]=0)
+#define MARK_NO_STRING(tk) ((tk)->string=0)
 
-token *alloc_token ()
-{
-// TODO use token_buffer instead
-  token *tk=malloc(sizeof(token));
-  if (!tk) {
-    tknzr_error_set(TERR_NOMEM);
-    return NULL;
-  }
-
-  memset(tk,0,sizeof (token));
-  tk->type=TKT_UNKNOWN;
-  return tk;
-
-}
-
-int init_varlen(token *tk, position *begin, char ch)
+int alloc_buffer (token *tk, position *begin)
 {
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
   tk->max=TOKEN_VARLEN_INIT_LEN;
   if (!tk->string) { return -1; }
-  if (append_varlen((token*)tk,ch)<0)
-    return -1;
   return 0;
 }
 
 
-int append_varlen(token *tk, char ch)
+int collect_char (token *tk, char ch)
 {
   char *newspace;
   if (tk->len == tk->max)
@@ -50,69 +36,92 @@ int append_varlen(token *tk, char ch)
 
 }
 
-int accept_token(token *tk, position *pos, tknzr_state state, char ch)
+int accept_char(token*tk,char ch)
 {
-  memcpy(&tk->begin,pos, sizeof(position));
-  if (is_operator_accept(state))
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  tk->type=TKT_CHAR_CONST;
+  return 0;
+}
+
+int accept_operator (token*tk,char ch)
+{
+  int type;
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  type = lookup_special(FIRST_OPER, LAST_OPER, tk->string);
+  if (type == TKT_UNKNOWN)
   {
-    tk->type=state2oper(state);
-    return 0;
+    return -1;
   }
-  switch(state) {
-    case TK_PUNCTUATION_END:
-      tk->type=char2punctuation(ch);
-      return 0;
-    case TK_DOT_END:
-      tk->type=TKT_DOT;
-      return 0;
-  }
+  tk->type=type;
+  free(tk->string);
   return 0;
 }
 
-
-int accept_varlen(token *tk,char ch,tknzr_state state)
+int accept_identifier(token*tk,char ch)
 {
-
-  tk->string[tk->len]=0;
-  switch (state) {
-    case TK_IDENTIFIER_END:
-      for (int i=FIRST_KEYWORD;i<=LAST_KEYWORD;++i)
-      {
-        const char *kw=keywords_tab[i];
-        if (kw != NULL && strcmp (tk->string, kw)==0)
-        {
-          tk->type=i;
-          return 0;
-        }
-      }
-      tk->type=TKT_IDENTIFIER;
-      return 0;
-
-    case TK_CHAR_LITERAL_END:
-      if(append_varlen(tk,ch) < 0)
-        return -1;
-      tk->type=TKT_CHARACTER_LITERAL;
-      return 0;
-    case TK_INT_END:
-      tk->type=TKT_INTEGER_LITERAL;
-      return 0;
-    case TK_FLOAT_END:
-      tk->type=TKT_FLOAT_LITERAL;
-      break;
-    case TK_STRING_LITERAL_END:
-      if(append_varlen(tk,ch) < 0)
-        return -1;
-      tk->type=TKT_STRING_LITERAL;
-      return 0;
+  int type;
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  type = lookup_special(FIRST_KW, LAST_KW, tk->string);
+  if (type == TKT_UNKNOWN)
+  {
+    type=TKT_IDENTIFIER;
   }
+  else {
+    free(tk->string);
+  }
+  tk->type=type;
   return 0;
 }
 
+
+
+
+int accept_float(token*tk,char ch)
+{
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  tk->type=TKT_FLOAT_CONST;
+  return 0;
+}
+
+int accept_integer (token*tk,char ch)
+{
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  tk->type=TKT_INT_CONST;
+  return 0;
+}
+
+int accept_punctuation(token*tk,char ch)
+{
+  int type;
+  TERMINATE_STRING(tk);
+  type = lookup_special(FIRST_OPER, LAST_OPER, tk->string);
+  if (type == TKT_UNKNOWN)
+  {
+    return -1;
+  }
+  tk->type=type;
+  free(tk->string);
+  return 0;
+}
+
+
+int accept_string (token*tk,char ch)
+{
+  collect_char(tk,ch);
+  TERMINATE_STRING(tk);
+  tk->type=TKT_STRING_CONST;
+  return 0;
+}
 
 char *format_token (token *tk) 
 {
   assert (tk);
-
+  extern const char *token_tab[];
   static char buf [ BUFSIZ ];
   const char *type_string= token_tab[TOKEN_TYPE(tk)];
   position *begin= &tk->begin;

@@ -21,6 +21,7 @@ typedef struct char_buffer
   int end;
   int *limits;
   int lines;
+  char *filename;
 
 } char_buffer;
 

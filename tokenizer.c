@@ -2,6 +2,7 @@
 #include "dfa.h"
 #include "chcl.h"
 #include "tokenizer.h"
+#define N_TOKENIZER_ROWS 70
 
 int TK_SLASH;
 int TK_INT_ZERO;
@@ -59,7 +60,7 @@ void init_muli_comment(void)
   config_end();
 }
       
-void init_punc(void)
+void init_punctuation(void)
 {
   int punc=alloc_char_class("\\p");
   int dot=alloc_char_class(".");
@@ -221,6 +222,85 @@ void init_string_literal(void)
 
 }
 
+void init_integer_literal(void)
+{
+  int zero=alloc_char_class("\\Z");
+  int dec=alloc_char_class("\\d");
+  int Dec=alloc_char_class("\\D");
+  int Oct=alloc_char_class("\\O");
+  int Hex=alloc_char_class("\\H");
+  int suffix=alloc_char_class("\\I");
+  int x=alloc_char_class("\\X");
+  int oct_suffix_dot=alloc_char_class("\\O\\I.");
+  int hex_suffix_dot=alloc_char_class("\\H\\I.");
+  int dec_suffix_dot_e=alloc_char_class("\\D.\\E");
+int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
+  int dec_begin=alloc_state(true);
+  int oct_begin=alloc_state(true);
+  int hex_begin=alloc_state(true);
+  int int_suffix=alloc_state(true);
+  int hex_prefix=alloc_state(true);
+  int fini=alloc_state(false);
+
+
+  config_action(TKA_ALLOC_BUF);
+    config_from(0);
+      config_condition(zero);
+        add_to(TK_INT_ZERO);
+      config_condition(dec);
+        add_to(dec_begin);
+  config_action(TKA_COLLECT_CHAR);
+    config_from(TK_INT_ZERO);
+      config_condition(Oct);
+        add_to(oct_begin);
+      config_condition(x);
+        add_to(hex_prefix);
+    config_from(hex_prefix);
+      config_condition(Hex);
+        add_to(hex_begin);
+    config_from(dec_begin);
+      config_condition(Dec);
+        add_to(dec_begin);
+    config_from(oct_begin);
+      config_condition(Oct);
+        add_to(oct_begin);
+    config_from(hex_begin);
+      config_condition(Hex);
+        add_to(hex_begin);
+    config_to(int_suffix);
+      config_condition(suffix);
+        add_from(dec_begin);
+        add_from(oct_begin);
+        add_from(hex_begin);
+        add_from(TK_INT_ZERO);
+  config_action(TKA_ACC_INT);
+    config_to(fini);
+      config_usrd(true);
+        config_condition(suffix);
+          add_from(int_suffix);
+        config_condition(dec_suffix_dot_e);
+          add_from(dec_begin);
+        config_condition(oct_suffix_dot);
+          add_from(oct_begin);
+        config_condition(hex_suffix_dot);
+          add_from(hex_begin);
+        config_condition(oct_suffix_dot_x_e);
+          add_from(TK_INT_ZERO);
+  config_end();
+}
+
+int init_tokenizer(void)
+{
+  table=alloc_dfa(N_TOKENIZER_ROWS, cond_char_class);
+  init_punctuation();
+  init_identifier();
+  init_string_literal();
+  init_muli_comment();
+  init_single_comment();
+  init_float_literal();
+  init_integer_literal();
+}
+
 int get_next_token (token *tk, char_buffer *buf)
 {
   dfa_state *entry=NULL;
@@ -238,9 +318,29 @@ int get_next_token (token *tk, char_buffer *buf)
         switch (entry->action)
         {
           case TKA_ALLOC_BUF:
+            alloc_buffer(tk,&buf->pos);
+            collect_char (tk,ch);
             break;
           case TKA_COLLECT_CHAR:
+            collect_char (tk,ch);
             break;
+          case TKA_ACC_CHAR:
+            return accept_char(tk,ch);
+          case TKA_ACC_IDFR:
+            return  accept_identifier(tk,ch);
+          case TKA_ACC_STRING:
+            return accept_string(tk,ch);
+          case TKA_ACC_PUNC:
+            return accept_punctuation (tk,ch);
+          case TKA_ACC_FLOAT:
+            return accept_float(tk,ch);
+          case TKA_ACC_INT:
+            return accept_integer(tk,ch);
+          case TKA_ACC_OPER:
+            return accept_operator(tk,ch);
+          default:
+            break;
+
         }
         break;
       case 1:

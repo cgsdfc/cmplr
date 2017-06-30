@@ -19,16 +19,24 @@
 
 typedef struct token 
 {
-  // index into global type description
-  // array
-  int type_id;
-  token_type type;
+  int type;
   position begin;
   char *string;
   int len;
   int max;
 
 } token;
+
+
+int collect_char (token *tk, char ch);
+int alloc_buffer (token *tk, position *begin);
+int accept_char(token*tk,char ch);
+int accept_operator (token*tk,char ch);
+int accept_identifier(token*tk,char ch);
+int accept_float(token*tk,char ch);
+int accept_integer (token*tk,char ch);
+int accept_punctuation (token*tk,char ch);
+int accept_string (token*tk,char ch);
 
 
 #endif

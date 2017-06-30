@@ -6,7 +6,15 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include "char_buffer.h"
-
+// this file is out of date
+// it should be consistent with
+// token_buffer:
+// 1. make interface to outside
+// singleton, but to the inside
+// use object
+// 2. it should make sure there should only
+// init and api can be called from
+// 
 static bool skip_directives=true;
 typedef char_buffer *cb;
 static int init_char_buffer(cb, FILE*,int,int);
@@ -92,7 +100,7 @@ int init_char_buffer_from_file (char_buffer *buffer, char *file)
     {
       break;
     }
-
+    buffer->filename=file;
     return init_char_buffer (buffer, f, chars, lines);
   } while (0);
   perror (file);

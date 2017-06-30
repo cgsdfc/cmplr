@@ -9,7 +9,6 @@
 #include <string.h>
 #include <ctype.h>
 #include "token.h"
-#include "token_type.h"
 
 enum
 {
@@ -25,6 +24,8 @@ enum
   TKA_PUTBACK,
 };
 
+int get_next_token(token *, char_buffer*);
+int init_tokenizer(void);
 
 
 #endif

@@ -2,8 +2,6 @@
 #include "char_buffer.h"
 #include "color.h"
 
-extern char *filename;
-extern char_buffer cbuffer;
 
 static tknzr_error tknzr_errno;
 static
@@ -71,12 +69,13 @@ char *tknzr_level_string(void)
 
 void tknzr_error_handle (void)
 {
+  extern char_buffer cbuffer;
   char *errline = peek_line (&cbuffer, get_lineno(&cbuffer));
   char *errmsg=tknzr_error_string();
   char *level=tknzr_level_string();
 
   fprintf(stderr, "%s:%d:%d:%s %s\n",
-      filename,
+      cbuffer.filename,
       cbuffer.pos.lineno,
       cbuffer.pos.column,
       level,

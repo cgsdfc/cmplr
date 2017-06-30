@@ -20,9 +20,9 @@ set(tokenizer_src
 # string_literal.c
 # char_literal.c
   keyword.c
-# token_type.c
+ token_type.c
 # punctuation.c
-# token.c
+  token.c
 # tknzr_state.c
   char_buffer.c
   operator.c

@@ -27,7 +27,6 @@ typedef struct token_buffer
 
 } token_buffer;
 
-int get_next_token(char_buffer *, token *);
 int init_token_buffer(char_buffer *cb);
 int next_token(token **tk);
 int prev_token(token **tk);

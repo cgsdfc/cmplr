@@ -1,7 +1,8 @@
 #include "token_type.h"
+#include <string.h>
 
 /** NOTICE: do not change this */
-const char *keywords_tab [] = 
+static const char *keywords_tab [] = 
 {
   [TKT_KW_FOR]="for",
   [TKT_KW_WHILE]="while",
