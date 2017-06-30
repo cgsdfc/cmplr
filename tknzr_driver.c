@@ -39,6 +39,12 @@ int main(int ac,char**av){
     exit(1);
   }
 
+  if (init_token_buffer(&cbuffer)<0)
+  {
+    puts("init_token_buffer failed");
+    exit(2);
+  }
+
   exit(print_token_stream());
 
 }

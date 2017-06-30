@@ -13,7 +13,7 @@ block_buffer *alloc_block_buffer(
     int init_nblk,
     int elesz)
 {
-  if (all_buffer_count < BLOCK_BUFFER_MAX_N)
+  if (all_buffer_count == BLOCK_BUFFER_MAX_N)
   {
     return NULL;
   }

@@ -6,19 +6,27 @@ const static char *Oct = "01234567";
 const static char *oct = "1234567";
 const static char *Hex = "0123456789abcdefABCDEF";
 const static char *hex =  "123456789abcdefABCDEF";
-const static char *Word = "0123456789\
-                          _abcdefghijklmnopqrstuvwxyz\
-                          ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const static char *word =  "_abcdefghijklmnopqrstuvwxyz\
-                          ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const static char *Word = "0123456789"
+                          "_abcdefghijklmnopqrstuvwxyz"
+                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const static char *word =  "_abcdefghijklmnopqrstuvwxyz"
+                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const static char *spaces=" \v\f\n\r\t";
 const static char *newline="\n\r";
 const static char *oper="~!%^&*-+<>=/|";
 const static char *punc="(){}[]:;,?";
-
+const static char *int_suffix="lLuU";
+const static char *float_suffix="fFlL";
 
 static char *all_cc[CHAR_CLASS_MAX_TAB_LEN];
 static int all_count;
+
+char *lookup_char_class(int chcl)
+{
+  if (chcl >= CHAR_CLASS_MAX_TAB_LEN)
+    return NULL;
+  return all_cc[chcl];
+}
 
 int alloc_char_class(const char *chcl)
 {
@@ -40,33 +48,47 @@ int alloc_char_class(const char *chcl)
   int offset;
   char *pstr=buf;
   const char *s;
+  *pstr=0;
 
   for (s=chcl;*s;++s)
   {
     if (*s=='\\')
     {
-      switch (*s++)
+      switch (*++s)
       {
+        case 'B':
+          *pstr++='\\';
+          continue;
+
+        case 'E':
+          *pstr++='e';
+          *pstr++='E';
+          continue;
+
+        case 'X':
+          *pstr++='x';
+          *pstr++='X';
+          continue;
         case 'Q':
           *pstr++='\"';
-          break;
+          continue;
         case 'q':
           *pstr++='\'';
-          break;
+          continue;
         case 'Z':
           *pstr++='0';
-          break;
+          continue;
         case 'D':
           spec=Dec;
-          offset=10;
+          offset=strlen(Dec);
           break;
         case 'd':
           spec=dec;
-          offset=9;
+          offset=strlen(dec);
           break;
         case 'O':
           spec=Oct;
-          offset=8;
+          offset=strlen(Oct);
           break;
         case 'o':
           spec=oct;
@@ -74,11 +96,11 @@ int alloc_char_class(const char *chcl)
           break;
         case 'h':
           spec=hex;
-          offset=15;
+          offset=strlen(hex);
           break;
         case 'H':
           spec=Hex;
-          offset=16;
+          offset=strlen(Hex);
           break;
         case 'W':
           spec=Word;
@@ -100,17 +122,25 @@ int alloc_char_class(const char *chcl)
           spec=punc;
           offset=strlen(punc);
           break;
-        case 'B':
-          *pstr++='\\';
+        case 'I':
+          spec=int_suffix;
+          offset=strlen(int_suffix);
           break;
+
+        case 'F':
+          spec=float_suffix;
+          offset=strlen(float_suffix);
+          break;
+
       }
-      strcat(pstr, spec);
+      strcpy (pstr, spec);
       pstr+=offset;
       continue;
     }
     *pstr++=*s;
   }
 
+  *pstr=0;
 
   for (int i=0;i<all_count;++i)
   {
@@ -119,9 +149,10 @@ int alloc_char_class(const char *chcl)
       return i;
     }
   }
+
   all_cc[all_count++]=strdup(buf);
   return  all_count-1;
-  
+
 }
 
 int cond_char_class(dfa_state *st, int ch)
@@ -132,4 +163,4 @@ int cond_char_class(dfa_state *st, int ch)
   return (!rev && incl || rev && !incl);
 }
 
-  
+
