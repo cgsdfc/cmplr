@@ -45,7 +45,7 @@ int fill_token_buffer(token_buffer *buf, int nfill)
     if (!tk)
       return -1;
     memset(tk, 0, sizeof(token));
-    switch (get_next_token(tk, buf->cb))
+    switch (get_next_token(buf->cb, tk))
     {
       case 1:
         block_buffer_dealloc(buf->bb);

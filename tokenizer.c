@@ -2,7 +2,7 @@
 #include "dfa.h"
 #include "chcl.h"
 #include "tokenizer.h"
-#define N_TOKENIZER_ROWS 70
+#define N_TOKENIZER_ROWS 30
 
 int TK_SLASH;
 int TK_INT_ZERO;
@@ -16,8 +16,8 @@ void init_identifier(void)
 {
   int word=alloc_char_class("\\w");
   int Word=alloc_char_class("\\W");
+
   int init=alloc_state(true);
-  int loop=alloc_state(true);
   int fini=alloc_state(false);
 
   config_action(TKA_ALLOC_BUF);
@@ -39,23 +39,26 @@ void init_identifier(void)
 void init_muli_comment(void)
 {
   int star=alloc_char_class("*");
-  int multi=alloc_state(true);
+  int slash=alloc_char_class("/");
+
+
   int star_loop=alloc_state(true);
   int char_loop=alloc_state(true);
 
   config_action(0);
     config_from(TK_SLASH);
       config_condition(star);
-        add_to(multi);
+        add_to(char_loop);
     config_from(char_loop);
       config_condition(star);
         config_usrd(true);
           add_to(char_loop);
         config_usrd(false);
-          add_to(star);
+          add_to(star_loop);
     config_from(star_loop);
+      config_condition(slash);
           add_to(0);
-        config_usrd(true);
+          config_usrd(true);
           add_to(char_loop);
   config_end();
 }
@@ -65,30 +68,34 @@ void init_punctuation(void)
   int punc=alloc_char_class("\\p");
   int dot=alloc_char_class(".");
   int dec=alloc_char_class("\\D");
+  int empty=alloc_char_class("");
+
   TK_DOT=alloc_state(true);
+  int init=alloc_state(true);
   int fini=alloc_state(false);
   
-  config_action(TKA_ACC_PUNC);
+  config_action(TKA_ALLOC_BUF);
     config_from(0);
       config_condition(punc);
-        add_to(fini);
+        add_to(init);
       config_condition(dot);
         add_to(TK_DOT);
-    config_from(TK_DOT);
-      config_condition(dec);
-        config_usrd(true);
-          add_to(fini);
+  config_action(TKA_ACC_PUNC);
+    config_to(fini);
+      config_usrd(true);
+        config_condition(dec);
+            add_from(TK_DOT);
+        config_condition(empty);
+          add_from(init);
   config_end();
 }
 
 void init_single_comment(void)
 {
   int slash=alloc_char_class("\\B");
-  
   int newline=alloc_char_class("\\N");
+
   int single=alloc_state(true);
-
-
   config_action(0);
     config_from(TK_SLASH);
       config_condition(slash);
@@ -108,6 +115,7 @@ void init_char_literal(void)
   int newline=alloc_char_class("\\N");
   int bs=alloc_char_class("\\B");
   int single_newline_bs=alloc_char_class("\\q\\N\\B");
+
   int char_part=alloc_state(true);
   int char_begin=alloc_state(true);
   int char_escape=alloc_state(true);
@@ -142,7 +150,7 @@ void init_skipspace(void)
   config_action(0);
     config_from(0);
       config_condition(sp);
-        config_to(0);
+        add_to(0);
   config_end();
 }
 
@@ -178,10 +186,11 @@ void init_float_literal(void)
           add_from(fraction);
       config_condition(sign);
         config_to(float_sign);
-          add_from(exponent);
+          add_from(exp_begin);
       config_condition(Dec);
         config_to(exponent);
           add_from(exponent);
+          add_from(exp_begin);
           add_from(float_sign);
         config_to(fraction);
           add_from(fraction);
@@ -206,6 +215,7 @@ void init_string_literal(void)
   int str_begin=alloc_state(true);
   int str_escape=alloc_state(true);
   int fini=alloc_state(false);
+
   int dq_nl_bs=alloc_char_class("\\Q\\N\\B");
   int bs=alloc_char_class("\\B");
   int newline=alloc_char_class("\\N");
@@ -244,7 +254,8 @@ void init_integer_literal(void)
   int oct_suffix_dot=alloc_char_class("\\O\\I.");
   int hex_suffix_dot=alloc_char_class("\\H\\I.");
   int dec_suffix_dot_e=alloc_char_class("\\D.\\E");
-int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
+  int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
+
   int dec_begin=alloc_state(true);
   int oct_begin=alloc_state(true);
   int hex_begin=alloc_state(true);
@@ -255,6 +266,7 @@ int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
 
   config_action(TKA_ALLOC_BUF);
     config_from(0);
+
       config_condition(zero);
         add_to(TK_INT_ZERO);
       config_condition(dec);
@@ -302,29 +314,42 @@ int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
 int init_tokenizer(void)
 {
   table=alloc_dfa(N_TOKENIZER_ROWS, cond_char_class);
-  init_punctuation();
   init_identifier();
-  init_string_literal();
   init_muli_comment();
+  init_punctuation();
   init_single_comment();
+  init_char_literal();
+  init_skipspace();
   init_float_literal();
+  init_string_literal();
   init_integer_literal();
+  config_table(TERR_EMPTY_CHAR_LITERAL);
+
 }
 
-int get_next_token (token *tk, char_buffer *buf)
+int get_next_token (char_buffer *buf, token *tk)
 {
   dfa_state *entry=NULL;
   int state=0;
   int r=0;
-  int ch;
+  char ch;
 
   while (true)
   {
     ch = get_char(buf);
+    if (ch == EOF && state == 0)
+    {
+      return EOF;
+    }
+    // let it fill through, the 
+    // cond_char_class makes sure
+    // -1 return -1 as an error
+    // so handler can catch it 
     r = transfer(table,state,ch,&entry);
     switch (r)
     {
       case 0:
+        state = entry->state;
         switch (entry->action)
         {
           case TKA_ALLOC_BUF:
@@ -335,16 +360,23 @@ int get_next_token (token *tk, char_buffer *buf)
             collect_char (tk,ch);
             break;
           case TKA_ACC_CHAR:
+            collect_char(tk,ch);
             return accept_char(tk,ch);
           case TKA_ACC_IDFR:
-            return  accept_identifier(tk,ch);
+            put_char(buf);
+            return accept_identifier(tk,ch);
           case TKA_ACC_STRING:
+            collect_char(tk,ch);
             return accept_string(tk,ch);
           case TKA_ACC_PUNC:
             return accept_punctuation (tk,ch);
           case TKA_ACC_FLOAT:
+            collect_char(tk,ch);
+            put_char(buf);
             return accept_float(tk,ch);
           case TKA_ACC_INT:
+            collect_char(tk,ch);
+            put_char(buf);
             return accept_integer(tk,ch);
           case TKA_ACC_OPER:
             return accept_operator(tk,ch);
@@ -353,13 +385,13 @@ int get_next_token (token *tk, char_buffer *buf)
 
         }
         break;
-      case 1:
+      case 1: // not found
         // exception handler
         tknzr_error_set(entry->action);
-      case -1:
-        // this error happened in transfer
-        // in which transfer_func should 
-        // set errno.
+        return 1;
+      case -1: // premature end of input
+        dfa_get_handler(table, state, &entry);
+        tknzr_error_set(entry->action);
         return 1;
     }
   }

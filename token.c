@@ -8,6 +8,7 @@ int alloc_buffer (token *tk, position *begin)
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
   tk->max=TOKEN_VARLEN_INIT_LEN;
   if (!tk->string) { return -1; }
+  memcpy(&tk->begin, begin, sizeof (position));
   return 0;
 }
 
@@ -56,13 +57,13 @@ int accept_operator (token*tk,char ch)
   }
   tk->type=type;
   free(tk->string);
+  MARK_NO_STRING(tk);
   return 0;
 }
 
 int accept_identifier(token*tk,char ch)
 {
   int type;
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   type = lookup_special(FIRST_KW, LAST_KW, tk->string);
   if (type == TKT_UNKNOWN)
@@ -71,17 +72,14 @@ int accept_identifier(token*tk,char ch)
   }
   else {
     free(tk->string);
+    MARK_NO_STRING(tk);
   }
   tk->type=type;
   return 0;
 }
 
-
-
-
 int accept_float(token*tk,char ch)
 {
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   tk->type=TKT_FLOAT_CONST;
   return 0;
@@ -89,7 +87,6 @@ int accept_float(token*tk,char ch)
 
 int accept_integer (token*tk,char ch)
 {
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   tk->type=TKT_INT_CONST;
   return 0;
@@ -106,13 +103,14 @@ int accept_punctuation(token*tk,char ch)
   }
   tk->type=type;
   free(tk->string);
+  MARK_NO_STRING(tk);
+
   return 0;
 }
 
 
 int accept_string (token*tk,char ch)
 {
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   tk->type=TKT_STRING_CONST;
   return 0;

@@ -24,7 +24,7 @@ enum
   TKA_PUTBACK,
 };
 
-int get_next_token(token *, char_buffer*);
+int get_next_token(char_buffer *, token *);
 int init_tokenizer(void);
 
 

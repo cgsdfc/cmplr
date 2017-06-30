@@ -8,13 +8,15 @@ token_buffer buf;
 
 int print_token_stream (void)
 {
-  token *tk;
+  /* token *tk; */
+  token tk;
   while (true)
   {
-    switch (get_token(&buf, &tk))
+    memset(&tk,0,sizeof(token));
+    switch (get_next_token(&cbuffer, &tk))
     {
       case 0:
-        puts(format_token(tk));
+        puts(format_token(&tk));
         continue;
       case EOF:
         return 0;
@@ -39,7 +41,7 @@ int main(int ac,char**av){
     perror(filename);
     exit(1);
   }
-  init_token_buffer(&buf, &cbuffer);
+  init_tokenizer();
 
   exit(print_token_stream());
 

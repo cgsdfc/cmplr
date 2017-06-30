@@ -157,6 +157,10 @@ int alloc_char_class(const char *chcl)
 
 int cond_char_class(dfa_state *st, int ch)
 {
+  if (ch == EOF)
+  {
+    return -1;
+  }
   char *cc=all_cc[st->cond];
   bool rev=st->usrd;
   bool incl=strchr(cc,ch);

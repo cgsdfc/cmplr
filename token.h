@@ -37,6 +37,7 @@ int accept_float(token*tk,char ch);
 int accept_integer (token*tk,char ch);
 int accept_punctuation (token*tk,char ch);
 int accept_string (token*tk,char ch);
+char *format_token(token*);
 
 
 #endif

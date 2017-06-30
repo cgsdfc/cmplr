@@ -122,13 +122,14 @@ typedef enum token_type
   TKT_COMMA,
   TKT_DOT,
   TKT_QUESTION,
+  _TKT_END,
 
 } token_type;
 
 
 enum
 {
-  TKT_INT_CONST=TKT_MINUS+1,
+  TKT_INT_CONST=_TKT_END,
   TKT_BINARY_OP_MUL,
   TKT_FLOAT_CONST,
   TKT_CHAR_CONST,
