@@ -95,7 +95,7 @@ int accept_punctuation(token*tk,char ch)
 {
   int type;
   TERMINATE_STRING(tk);
-  type = lookup_special(FIRST_OPER, LAST_OPER, tk->string);
+  type = lookup_special(FIRST_PUNC, LAST_PUNC, tk->string);
   if (type == TKT_UNKNOWN)
   {
     return -1;

@@ -67,7 +67,7 @@ void init_punctuation(void)
 {
   int punc=alloc_char_class("\\p");
   int dot=alloc_char_class(".");
-  int dec=alloc_char_class("\\D");
+  int Dec=alloc_char_class("\\D");
   int empty=alloc_char_class("");
 
   TK_DOT=alloc_state(true);
@@ -83,7 +83,7 @@ void init_punctuation(void)
   config_action(TKA_ACC_PUNC);
     config_to(fini);
       config_usrd(true);
-        config_condition(dec);
+        config_condition(Dec);
             add_from(TK_DOT);
         config_condition(empty);
           add_from(init);
@@ -377,6 +377,7 @@ int get_next_token (char_buffer *buf, token *tk)
             collect_char(tk,ch);
             return accept_string(tk,ch);
           case TKA_ACC_PUNC:
+            put_char(buf);
             return accept_punctuation (tk,ch);
           case TKA_ACC_FLOAT:
             collect_char(tk,ch);
