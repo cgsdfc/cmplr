@@ -11,6 +11,15 @@ int TK_NEGATIVE;
 int TK_DOT;
 static dfa_table *table;
 
+void init_comment_state(void)
+{
+  TK_SLASH=alloc_state(true);
+  TK_INT_ZERO=alloc_state(true);
+  TK_INT_DEC_BEGIN=alloc_state(true);
+  TK_NEGATIVE=alloc_state(true);
+  TK_DOT=alloc_state(true);
+
+}
 
 void init_identifier(void)
 {
@@ -70,7 +79,6 @@ void init_punctuation(void)
   int Dec=alloc_char_class("\\D");
   int empty=alloc_char_class("");
 
-  TK_DOT=alloc_state(true);
   int init=alloc_state(true);
   int fini=alloc_state(false);
   
@@ -121,6 +129,7 @@ void init_char_literal(void)
   int char_part=alloc_state(true);
   int char_begin=alloc_state(true);
   int char_escape=alloc_state(true);
+  printf("char_escape is %d\n", char_escape);
   int char_end=alloc_state(false);
   
 
@@ -170,20 +179,20 @@ void init_float_literal(void)
   int Dec_suffix_e=alloc_char_class("\\D\\F\\E");
 
   int fraction=alloc_state(true);
+  printf("fraction is %d\n",fraction);
   int exponent=alloc_state(true);
   int exp_begin=alloc_state(true);
   int float_sign=alloc_state(true);
   int float_suffix=alloc_state(true);
   int fini=alloc_state(false);
 
-  config_action(TKA_ALLOC_BUF);
+  config_action(TKA_COLLECT_CHAR);
     config_to(fraction);
       config_condition(Dec);
         add_from(TK_DOT);
       config_condition(dot);
         add_from(TK_INT_ZERO);
         add_from(TK_INT_DEC_BEGIN);
-    config_action(TKA_COLLECT_CHAR);
       config_condition(eE);
         config_to(exp_begin);
           add_from(TK_INT_ZERO);
@@ -208,7 +217,7 @@ void init_float_literal(void)
       config_to(fini);
         config_usrd(true);
           config_condition(Dec_suffix);
-            add_from(fraction);
+            add_from(float_suffix);
             add_from(exponent);
           config_condition(Dec_suffix_e);
             add_from(fraction);
@@ -261,10 +270,9 @@ void init_integer_literal(void)
   int x=alloc_char_class("\\X");
   int oct_suffix_dot=alloc_char_class("\\O\\I.");
   int hex_suffix_dot=alloc_char_class("\\H\\I.");
-  int dec_suffix_dot_e=alloc_char_class("\\D.\\E");
-  int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X");
+  int dec_suffix_dot_e=alloc_char_class("\\D\\I.\\E");
+  int oct_suffix_dot_x_e=alloc_char_class("\\O\\I.\\X\\E");
 
-  int dec_begin=alloc_state(true);
   int oct_begin=alloc_state(true);
   int hex_begin=alloc_state(true);
   int int_suffix=alloc_state(true);
@@ -274,11 +282,10 @@ void init_integer_literal(void)
 
   config_action(TKA_ALLOC_BUF);
     config_from(0);
-
       config_condition(zero);
         add_to(TK_INT_ZERO);
       config_condition(dec);
-        add_to(dec_begin);
+        add_to(TK_INT_DEC_BEGIN);
   config_action(TKA_COLLECT_CHAR);
     config_from(TK_INT_ZERO);
       config_condition(Oct);
@@ -288,9 +295,9 @@ void init_integer_literal(void)
     config_from(hex_prefix);
       config_condition(Hex);
         add_to(hex_begin);
-    config_from(dec_begin);
+    config_from(TK_INT_DEC_BEGIN);
       config_condition(Dec);
-        add_to(dec_begin);
+        add_to(TK_INT_DEC_BEGIN);
     config_from(oct_begin);
       config_condition(Oct);
         add_to(oct_begin);
@@ -299,17 +306,20 @@ void init_integer_literal(void)
         add_to(hex_begin);
     config_to(int_suffix);
       config_condition(suffix);
-        add_from(dec_begin);
+        add_from(TK_INT_DEC_BEGIN);
         add_from(oct_begin);
         add_from(hex_begin);
         add_from(TK_INT_ZERO);
+    config_to(int_suffix);
+      config_condition(suffix);
+        add_from(int_suffix);
   config_action(TKA_ACC_INT);
     config_to(fini);
       config_usrd(true);
         config_condition(suffix);
           add_from(int_suffix);
         config_condition(dec_suffix_dot_e);
-          add_from(dec_begin);
+          add_from(TK_INT_DEC_BEGIN);
         config_condition(oct_suffix_dot);
           add_from(oct_begin);
         config_condition(hex_suffix_dot);
@@ -322,15 +332,16 @@ void init_integer_literal(void)
 int init_tokenizer(void)
 {
   table=alloc_dfa(N_TOKENIZER_ROWS, cond_char_class);
+  init_comment_state();
   init_identifier();
   init_muli_comment();
   init_punctuation();
   init_single_comment();
   init_char_literal();
   init_skipspace();
+  init_integer_literal();
   init_float_literal();
   init_string_literal();
-  init_integer_literal();
   config_table(TERR_EMPTY_CHAR_LITERAL);
 
 }
@@ -380,11 +391,9 @@ int get_next_token (char_buffer *buf, token *tk)
             put_char(buf);
             return accept_punctuation (tk,ch);
           case TKA_ACC_FLOAT:
-            collect_char(tk,ch);
             put_char(buf);
             return accept_float(tk,ch);
           case TKA_ACC_INT:
-            collect_char(tk,ch);
             put_char(buf);
             return accept_integer(tk,ch);
           case TKA_ACC_OPER:
