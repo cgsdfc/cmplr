@@ -16,7 +16,7 @@ int alloc_buffer (token *tk, position *begin)
 int collect_char (token *tk, char ch)
 {
   char *newspace;
-  if (tk->len == tk->max)
+  if (tk->len == tk->max - 1)
   {
     tk->max=2 *  (tk->len);
     newspace=malloc(sizeof(char) * tk->max);

@@ -1,5 +1,9 @@
 #include "block_buffer.h"
 #define BLOCK_BUFFER_MAX_N 10
+/** note: index points to the **Nth** element,
+ * not the **Nth** char!
+ */
+
 static block_buffer all_buffer[BLOCK_BUFFER_MAX_N];
 static int all_buffer_count;
 static
@@ -69,14 +73,10 @@ int init_block_buffer(block_buffer *buf,
 }
 
 
-bool block_buffer_hit_end(block_buffer *buf, block_pos *pblk)
-{
-  return memcmp (&buf->freemem, pblk, sizeof (block_pos))==0;
-}
 
 int block_buffer_next(block_buffer *buf, block_pos *here, block_pos *next)
 {
-  if (here->index == buf->blksz)
+  if (here->index == buf->blksz-1)
   {
     next->index=0;
     next->blk=here->blk->next;
@@ -139,6 +139,8 @@ int block_buffer_alloc_blk(block_buffer *buf)
   // tail=bmem
   buf->head->prev->next=bmem;
   bmem->prev=buf->head;
+  buf->head->prev=bmem;
+  bmem->next=buf->head;
   return 0;
 }
 
@@ -160,7 +162,7 @@ block_buffer_alloc (block_buffer *buf)
   }
 
   char *alloc=buf->freemem.blk->mem + (buf->elesz * buf->freemem.index);
-  buf->freemem.index += buf->elesz;
+  buf->freemem.index ++;
   return alloc;
 
 }
@@ -183,6 +185,12 @@ block_buffer_dealloc(block_buffer *buf)
     return;
   }
 
-  buf->freemem.index -= buf->elesz;
+  buf->freemem.index --;
+}
+
+bool block_pos_equal(block_pos *s, block_pos *t)
+{
+  return (s->index == t-> index 
+      && s->blk == t->blk);
 }
 

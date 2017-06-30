@@ -3,6 +3,9 @@
 #include "tokenizer.h"
 #define N_TOKEN_FILL  100
 
+static
+int fill_token_buffer(token_buffer *buf, int nfill);
+
 // there should be one and only one
 // perfect token_buffer. it does
 // memory alloc of tokens for tokenizer and
@@ -27,8 +30,12 @@ int init_token_buffer(token_buffer *buf, char_buffer *cb)
   buf->cb=cb;
   // keep sync with freemem
   memcpy (&buf->curtk, &bb->freemem, sizeof (block_pos));
+  memcpy (&buf->limit, &buf->curtk, sizeof (block_pos));
   buf->bb=bb;
   init_tokenizer();
+  if (fill_token_buffer(buf, N_TOKEN_FILL)<0)
+    return -1;
+
   return 0;
 }
 
@@ -38,6 +45,7 @@ static
 int fill_token_buffer(token_buffer *buf, int nfill)
 {
   int r;
+  block_pos next;
   
   for (int i=0;i<nfill;++i)
   {
@@ -56,6 +64,9 @@ int fill_token_buffer(token_buffer *buf, int nfill)
         // TODO free up all memory 
 
       case 0:
+        // increaments the pointer
+        block_buffer_next(buf->bb, &buf->limit, &next);
+        memcpy (&buf->limit, &next, sizeof(block_pos));
         continue;
       case EOF:
         block_buffer_dealloc(buf->bb);
@@ -83,7 +94,7 @@ int next_token(token_buffer *buf, token **tk)
   // so if one block is consumed, we hit the end
   block_pos next;
   block_buffer_next(buf->bb,&buf->curtk, &next);
-  if (block_buffer_hit_end(buf->bb, &next))
+  if (block_pos_equal(&next, &buf->limit))
   {
       if( fill_token_buffer(buf, N_TOKEN_FILL)==EOF)
         return EOF;
@@ -101,7 +112,7 @@ int prev_token(token_buffer *buf, token **tk)
   block_pos prev;
   block_buffer_prev(buf->bb,&buf->curtk, &prev);
 
-  if (block_buffer_hit_end(buf->bb, &prev))
+  if (prev.blk == buf->bb->head && prev.index == 0)
   {
       return EOF;
   }
@@ -116,7 +127,7 @@ int prev_token(token_buffer *buf, token **tk)
 // success returns 0
 int peek_token(token_buffer *buf, token **tk)
 {
-  if (block_buffer_hit_end(buf->bb, &buf->curtk))
+  if (block_pos_equal(&buf->curtk, &buf->limit))
   {
       if( fill_token_buffer(buf, N_TOKEN_FILL)==EOF)
         return EOF;

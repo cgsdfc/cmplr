@@ -353,6 +353,7 @@ int init_tokenizer(void)
 
 int get_next_token (char_buffer *buf, token *tk)
 {
+  assert (tk);
   dfa_state *entry=NULL;
   int state=0;
   int r=0;
@@ -370,9 +371,6 @@ int get_next_token (char_buffer *buf, token *tk)
     // -1 return -1 as an error
     // so handler can catch it 
     r = transfer(table,state,ch,&entry);
-    char *line=peek_line(buf, get_lineno(buf));
-    printf("line %d\n", get_lineno(buf));
-    puts(line);
     switch (r)
     {
       case 0:
@@ -380,11 +378,11 @@ int get_next_token (char_buffer *buf, token *tk)
         switch (entry->action)
         {
           case TKA_SKIP:
-            if (tk->string)
-            {
-              free(tk->string);
-              tk->string=0;
-            }
+            /* if (tk->string) */
+            /* { */
+            /*   free(tk->string); */
+            /*   tk->string=0; */
+            /* } */
             break;
 
           case TKA_ALLOC_BUF:

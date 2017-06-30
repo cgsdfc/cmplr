@@ -14,14 +14,15 @@
 #include "block_buffer.h"
 #include "token.h"
 
-#define N_TKB_BLKSZ 100
-#define N_TKB_INIT_NBLK 10
+#define N_TKB_BLKSZ 1
+#define N_TKB_INIT_NBLK 1
 
 typedef struct token_buffer
 {
   char_buffer *cb;
   block_buffer *bb;
   block_pos curtk;
+  block_pos limit;
 
 } token_buffer;
 

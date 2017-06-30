@@ -51,7 +51,7 @@ char *block_buffer_alloc(block_buffer *buf);
 void block_buffer_dealloc(block_buffer *buf);
 int block_buffer_prev(block_buffer *buf, block_pos *, block_pos *pblk);
 int block_buffer_next(block_buffer *buf, block_pos *, block_pos *pblk);
+bool block_pos_equal(block_pos *s, block_pos *t);
 void *block_buffer_get_elem(block_buffer *buf, block_pos *pblk);
-bool block_buffer_hit_end(block_buffer *buf, block_pos *pblk);
 #endif
 

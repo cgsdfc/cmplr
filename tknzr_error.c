@@ -89,6 +89,7 @@ int  tknzr_error_handle (void)
   }
 
   fprintf(stderr, "%s\n", GREEN_CARET);
+  return 0;
 
   
 }
