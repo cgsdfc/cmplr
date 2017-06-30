@@ -111,34 +111,39 @@ void init_single_comment(void)
 
 void init_char_literal(void)
 {
-  int singleq=alloc_char_class("\\q");
+  int sq=alloc_char_class("\\q");
   int newline=alloc_char_class("\\N");
   int bs=alloc_char_class("\\B");
-  int single_newline_bs=alloc_char_class("\\q\\N\\B");
+  int sq_newlines=alloc_char_class("\\q\\N");
+  int sq_newline=alloc_char_class("\\q\\N");
+  int sq_newline_bs=alloc_char_class("\\q\\N\\B");
 
   int char_part=alloc_state(true);
   int char_begin=alloc_state(true);
   int char_escape=alloc_state(true);
   int char_end=alloc_state(false);
+  
 
   config_action(TKA_ALLOC_BUF);
     config_from(0);
-      config_condition(singleq);
+      config_condition(sq);
         add_to(char_begin);
   config_action(TKA_COLLECT_CHAR);
-    config_from(char_begin);
-      config_condition(single_newline_bs);
-        add_to(char_part);
+    config_to(char_part);
+      config_usrd(true);
+        config_condition(sq_newline_bs);
+          add_from(char_part);
+        config_condition(newline);
+          add_from(char_escape);
+        config_condition(sq_newline_bs);
+          add_from(char_begin);
+      config_usrd(false);
+    config_to(char_escape);
       config_condition(bs);
-        add_to(char_escape);
-    config_from(char_escape);
-      config_condition(newline);
-        add_to(char_part);
-    config_from(char_part);
-      config_condition(single_newline_bs);
-        add_to(char_part);
+        add_from(char_begin);
   config_action(TKA_ACC_CHAR);
-      config_condition(singleq);
+    config_from(char_part);
+      config_condition(sq);
         add_to(char_end);
   config_end();
 

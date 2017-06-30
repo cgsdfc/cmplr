@@ -39,7 +39,6 @@ int collect_char (token *tk, char ch)
 
 int accept_char(token*tk,char ch)
 {
-  collect_char(tk,ch);
   TERMINATE_STRING(tk);
   tk->type=TKT_CHAR_CONST;
   return 0;
