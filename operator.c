@@ -128,7 +128,7 @@ void init_operator(void)
       config_condition(alloc_char_class("-"));
         add_to(nega_begin);
       config_condition(alloc_char_class("/"));
-        add_to(nega_begin);
+        add_to(slash_begin);
       config_condition(alloc_char_class("~"));
         add_to(tilde_begin);
 

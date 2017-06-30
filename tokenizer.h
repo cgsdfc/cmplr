@@ -12,6 +12,7 @@
 
 enum
 {
+  TKA_SKIP=0,
   TKA_COLLECT_CHAR=1,
   TKA_ALLOC_BUF,
   TKA_ACC_IDFR,

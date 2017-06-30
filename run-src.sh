@@ -15,7 +15,7 @@ kases="$under/*.c $under/*.h"
 
 for x in $kases;do
   printf "[case-$x]"
-  ./bin/tokenizer $x 2>> $logf | more
+  ./bin/tokenizer $x 2>> $logf >/dev/null
 
   if [ $? -ne 0 ];then 
     errmsg="[FAIL] at $x" 

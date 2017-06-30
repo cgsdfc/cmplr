@@ -11,7 +11,8 @@ int TK_NEGATIVE;
 int TK_DOT;
 static dfa_table *table;
 
-void init_comment_state(void)
+static
+void init_state(void)
 {
   TK_INT_ZERO=alloc_state(true);
   TK_INT_DEC_BEGIN=alloc_state(true);
@@ -49,12 +50,13 @@ void init_muli_comment(void)
 {
   int star=alloc_char_class("*");
   int slash=alloc_char_class("/");
+  int star_slash=alloc_char_class("/*");
 
 
   int star_loop=alloc_state(true);
   int char_loop=alloc_state(true);
 
-  config_action(0);
+  config_action(TKA_SKIP);
     config_from(TK_SLASH);
       config_condition(star);
         add_to(char_loop);
@@ -65,9 +67,12 @@ void init_muli_comment(void)
         config_usrd(false);
           add_to(star_loop);
     config_from(star_loop);
+      config_condition(star);
+        add_to(star_loop);
       config_condition(slash);
-          add_to(0);
-          config_usrd(true);
+        add_to(0);
+      config_condition(star_slash);
+        config_usrd(true);
           add_to(char_loop);
   config_end();
 }
@@ -100,11 +105,11 @@ void init_punctuation(void)
 
 void init_single_comment(void)
 {
-  int slash=alloc_char_class("\\B");
+  int slash=alloc_char_class("/");
   int newline=alloc_char_class("\\N");
 
   int single=alloc_state(true);
-  config_action(0);
+  config_action(TKA_SKIP);
     config_from(TK_SLASH);
       config_condition(slash);
         add_to(single);
@@ -330,7 +335,7 @@ void init_integer_literal(void)
 int init_tokenizer(void)
 {
   table=alloc_dfa(N_TOKENIZER_ROWS, cond_char_class);
-  init_comment_state();
+  init_state();
   init_identifier();
   init_muli_comment();
   init_punctuation();
@@ -365,12 +370,23 @@ int get_next_token (char_buffer *buf, token *tk)
     // -1 return -1 as an error
     // so handler can catch it 
     r = transfer(table,state,ch,&entry);
+    char *line=peek_line(buf, get_lineno(buf));
+    printf("line %d\n", get_lineno(buf));
+    puts(line);
     switch (r)
     {
       case 0:
         state = entry->state;
         switch (entry->action)
         {
+          case TKA_SKIP:
+            if (tk->string)
+            {
+              free(tk->string);
+              tk->string=0;
+            }
+            break;
+
           case TKA_ALLOC_BUF:
             alloc_buffer(tk,&buf->pos);
             collect_char (tk,ch);
