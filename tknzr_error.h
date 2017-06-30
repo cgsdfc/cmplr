@@ -34,7 +34,7 @@ typedef enum tknzr_error
 tknzr_error  tknzr_error_get(void);
 void tknzr_error_set(tknzr_error err);
 void tknzr_error_clear(void);
-void tknzr_error_handle(void);
+int tknzr_error_handle(void);
 
 #endif
 

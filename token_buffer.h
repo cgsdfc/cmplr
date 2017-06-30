@@ -21,16 +21,14 @@ typedef struct token_buffer
 {
   char_buffer *cb;
   block_buffer *bb;
-  int index;
-  block_mem *cur;
-  int limit;
+  block_pos curtk;
 
 } token_buffer;
 
-int init_token_buffer(char_buffer *cb);
-int next_token(token **tk);
-int prev_token(token **tk);
-int put_token(void);
-int get_token(token **tk);
+int init_token_buffer(token_buffer *buf,char_buffer *cb);
+int next_token(token_buffer *buf,token **tk);
+int prev_token(token_buffer *buf,token **tk);
+int put_token(token_buffer *buf);
+int get_token(token_buffer *buf,token **tk);
 #endif
 

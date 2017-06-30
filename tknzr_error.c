@@ -67,7 +67,7 @@ char *tknzr_level_string(void)
   return CYAN_NOTE;
 }
 
-void tknzr_error_handle (void)
+int  tknzr_error_handle (void)
 {
   extern char_buffer cbuffer;
   char *errline = peek_line (&cbuffer, get_lineno(&cbuffer));

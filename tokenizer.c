@@ -136,6 +136,16 @@ void init_char_literal(void)
 
 }
 
+void init_skipspace(void)
+{
+  int sp=alloc_char_class("\\S");
+  config_action(0);
+    config_from(0);
+      config_condition(sp);
+        config_to(0);
+  config_end();
+}
+
 void init_float_literal(void)
 {
   int Dec=alloc_char_class("\\D");
@@ -356,5 +366,13 @@ int get_next_token (token *tk, char_buffer *buf)
 }
 
 
+// TODO install handlers, especailly for 
+// the init(0) state -- stray char.
+// TODO error lv tab, assign each errno
+// a lv, changeable.
+// TODO the token_buffer catch the error 
+// by get_next_token, it hands it to handler
+// function, which should output errmsg and tell
+// if should go on or die.
 
 

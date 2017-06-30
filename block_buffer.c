@@ -37,7 +37,7 @@ int init_block_buffer(block_buffer *buf,
   assert(elesz>0);
   assert(init_nblk>0);
 
-  buf->index=0;
+  buf->freemem.index=0;
   buf->blksz=blksz;
   buf->elesz=elesz;
 
@@ -55,7 +55,7 @@ int init_block_buffer(block_buffer *buf,
 
     if (i==0) {
       buf->head=mem;
-      buf->cur=mem;
+      buf->freemem.blk=buf->head;
       prv=mem;
       continue;
     }
@@ -68,12 +68,57 @@ int init_block_buffer(block_buffer *buf,
   return 0;
 }
 
+
+bool block_buffer_hit_end(block_buffer *buf, block_pos *pblk)
+{
+  return memcmp (&buf->freemem, pblk, sizeof (block_pos))==0;
+}
+
+int block_buffer_next(block_buffer *buf, block_pos *here, block_pos *next)
+{
+  if (here->index == buf->blksz)
+  {
+    next->index=0;
+    next->blk=here->blk->next;
+  }
+  else {
+    next->index=here->index+1;
+    next->blk=here->blk;
+  }
+  return 0;
+}
+
+int block_buffer_prev(block_buffer *buf, block_pos *here, block_pos *next)
+{
+  if (here->index == 0)
+  {
+    next->index=buf->blksz-1;
+    next->blk=here->blk->prev;
+  }
+  else {
+    next->index=here->index-1;
+    next->blk=here->blk;
+  }
+  return 0;
+}
+
+void *
+block_buffer_get_elem(block_buffer *buf, block_pos *where)
+{
+  if (0<=where->index && where->index < buf->blksz)
+  {
+    return where->blk->mem + where->index * buf->elesz;
+  }
+  return NULL;
+}
+
+
 static
 bool block_buffer_is_full(block_buffer *buf)
 {
   return 
-  (buf->index == buf->blksz) && 
-  (buf->cur == buf->head->prev);
+  (buf->freemem.index == buf->blksz) && 
+  (buf->freemem.blk == buf->head->prev);
 }
 
 static
@@ -108,15 +153,14 @@ block_buffer_alloc (block_buffer *buf)
     return NULL;
   }
 
-  if (buf->index == buf->blksz)
+  if (buf->freemem.index == buf->blksz)
   {
-    buf->index = buf->elesz;
-    buf->cur = buf->cur->next;
-    return buf->cur->mem;
+    buf->freemem.index = 0;
+    buf->freemem.blk = buf->freemem.blk->next;
   }
 
-  char *alloc=buf->cur->mem + buf->index;
-  buf->index += buf->elesz;
+  char *alloc=buf->freemem.blk->mem + (buf->elesz * buf->freemem.index);
+  buf->freemem.index += buf->elesz;
   return alloc;
 
 }
@@ -125,20 +169,20 @@ block_buffer_alloc (block_buffer *buf)
 void
 block_buffer_dealloc(block_buffer *buf)
 {
-  if (buf->cur == buf->head
-      && buf->index == 0)
+  if (buf->freemem.blk == buf->head
+      && buf->freemem.index == 0)
   {
     // nothing inside 
     return;
   }
 
-  if (buf->index == 0)
+  if (buf->freemem.index == 0)
   {
-    buf->cur = buf->cur->prev;
-    buf->index = buf->blksz;
+    buf->freemem.blk = buf->freemem.blk->prev;
+    buf->freemem.index = buf->blksz;
     return;
   }
 
-  buf->index -= buf->elesz;
+  buf->freemem.index -= buf->elesz;
 }
 

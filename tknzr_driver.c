@@ -4,13 +4,14 @@
 #include "token.h"
 
 char_buffer cbuffer;
+token_buffer buf;
 
 int print_token_stream (void)
 {
   token *tk;
   while (true)
   {
-    switch (get_token(&tk))
+    switch (get_token(&buf, &tk))
     {
       case 0:
         puts(format_token(tk));
@@ -38,12 +39,7 @@ int main(int ac,char**av){
     perror(filename);
     exit(1);
   }
-
-  if (init_token_buffer(&cbuffer)<0)
-  {
-    puts("init_token_buffer failed");
-    exit(2);
-  }
+  init_token_buffer(&buf, &cbuffer);
 
   exit(print_token_stream());
 

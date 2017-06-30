@@ -1,31 +1,33 @@
 #include "token_buffer.h"
 #include "block_buffer.h"
 #include "tokenizer.h"
+#define N_TOKEN_FILL  100
 
 // there should be one and only one
 // perfect token_buffer. it does
 // memory alloc of tokens for tokenizer and
 // lookahead for parser
-static token_buffer tbuffer;
   
-int init_token_buffer(char_buffer *cb)
+// TODO make the char_buffer part of token_buffer
+int init_token_buffer(token_buffer *buf, char_buffer *cb)
 {
   if (!cb) 
     return -1;
+  block_buffer *bb;
 
-  tbuffer.bb=alloc_block_buffer(
+  bb=alloc_block_buffer(
         N_TKB_BLKSZ,
         N_TKB_INIT_NBLK,
         sizeof(token));
 
-  if (!tbuffer.bb)
+  if (!bb)
   {
     return -1;
   }
-  tbuffer.cb=cb;
-  tbuffer.index=0;
-  tbuffer.limit=0;
-  tbuffer.cur=tbuffer.bb->cur;
+  buf->cb=cb;
+  // keep sync with freemem
+  memcpy (&buf->curtk, &bb->freemem, sizeof (block_pos));
+  buf->bb=bb;
   init_tokenizer();
   return 0;
 }
@@ -33,26 +35,30 @@ int init_token_buffer(char_buffer *cb)
 
 /* fill one block of the buffer */
 static
-int fill_token_buffer(void)
+int fill_token_buffer(token_buffer *buf, int nfill)
 {
   int r;
-  int nfill;
-
-  nfill=tbuffer.bb->blksz;
   
   for (int i=0;i<nfill;++i)
   {
-    token *tk= (token*) block_buffer_alloc(tbuffer.bb);
+    token *tk= (token*) block_buffer_alloc(buf->bb);
     if (!tk)
       return -1;
     memset(tk, 0, sizeof(token));
-    switch (get_next_token(tk, tbuffer.cb))
+    switch (get_next_token(tk, buf->cb))
     {
+      case 1:
+        block_buffer_dealloc(buf->bb);
+        r=tknzr_error_handle();
+        if (r==0)
+          continue;
+        exit(r);
+        // TODO free up all memory 
+
       case 0:
-        tbuffer.limit++;
         continue;
       case EOF:
-        block_buffer_dealloc(tbuffer.bb);
+        block_buffer_dealloc(buf->bb);
         return EOF;
     }
   }
@@ -67,78 +73,82 @@ int fill_token_buffer(void)
 // one block at a time, the condition
 // telling end is index == blksz
 
+// the next_token, prev_token and peek_token
+// **should** not modify the `curtk` pointer
 
-int next_token(token **tk)
+
+int next_token(token_buffer *buf, token **tk)
 {
-  if (tbuffer.index + 1 == tbuffer.bb->blksz)
+  // for simplicity, each time alloc **one** block
+  // so if one block is consumed, we hit the end
+  block_pos next;
+  block_buffer_next(buf->bb,&buf->curtk, &next);
+  if (block_buffer_hit_end(buf->bb, &next))
   {
-      if( fill_token_buffer()==EOF)
+      if( fill_token_buffer(buf, N_TOKEN_FILL)==EOF)
         return EOF;
-      tbuffer.index=0;
-      tbuffer.cur=tbuffer.cur->next;
   }
 
-  char *curtk=tbuffer.cur->mem + (tbuffer.index+1) * sizeof(token);
-  *tk= (token*) curtk;
+  *tk= (token*) block_buffer_get_elem(buf->bb, &next);
   return 0;
 
 }
 
-int prev_token(token **tk)
+int prev_token(token_buffer *buf, token **tk)
 {
-  if (tbuffer.index==0)
+  int index;
+  block_mem *blk;
+  block_pos prev;
+  block_buffer_prev(buf->bb,&buf->curtk, &prev);
+
+  if (block_buffer_hit_end(buf->bb, &prev))
   {
-    char *prevtk=tbuffer.cur->prev->mem + (tbuffer.bb->blksz * sizeof(token));
-    *tk=(token*)prevtk;
-    return 0;
+      return EOF;
   }
-  *tk=(token*) tbuffer.cur->mem + (tbuffer.index-1) * sizeof(token);
+  *tk=(token*) block_buffer_get_elem(buf->bb,&prev); 
   return 0;
 
 }
 
-int peek_token(token **tk)
+// return the token under the index
+// if EOF reached, return EOF,
+// if error happened , return -1
+// success returns 0
+int peek_token(token_buffer *buf, token **tk)
 {
-  if (tbuffer.index  == tbuffer.bb->blksz)
+  if (block_buffer_hit_end(buf->bb, &buf->curtk))
   {
-      if( fill_token_buffer()==EOF)
+      if( fill_token_buffer(buf, N_TOKEN_FILL)==EOF)
         return EOF;
-      tbuffer.index=0;
-      tbuffer.cur=tbuffer.cur->next;
   }
-
-  char *curtk=tbuffer.cur->mem + (tbuffer.index * sizeof(token));
-  *tk=(token*)curtk;
+  *tk=(token*) block_buffer_get_elem(buf->bb, &buf->curtk);
   return 0;
 
 }
 
-int put_token(void)
-{
-  if (tbuffer.index == 0)
-  {
-    tbuffer.cur=tbuffer.cur->prev;
-    tbuffer.index=tbuffer.bb->blksz;
-  }
-
-  tbuffer.index--;
+// the put_token, get_token must update
+// the `curtk`
+// note that, **one** call to put_token
+// must happen after **one** call to get_token
+// so no need to check 
+int put_token(token_buffer *buf)
+{  
+  block_pos prev;
+  block_buffer_prev(buf->bb,&buf->curtk, &prev);
+  memcpy(&buf->curtk, &prev, sizeof(block_pos));
   return 0;
 
 }
 
 
-int get_token(token **tk)
+int get_token(token_buffer *buf, token **tk)
 {
-  if (next_token(tk) < 0)
-    return -1;
+  if (peek_token(buf, tk) == EOF)
+    return EOF;
 
-  if (tbuffer.index == tbuffer.bb->blksz)
-  {
-    tbuffer.cur=tbuffer.cur->next;
-    tbuffer.index=0;
-  }
-
-  tbuffer.index++;
+  block_pos next;
+  block_buffer_next(buf->bb, &buf->curtk, &next);
+  memcpy(&buf->curtk, &next, sizeof(block_pos));
   return 0;
 
 }
