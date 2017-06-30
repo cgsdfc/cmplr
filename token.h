@@ -10,10 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "char_buffer.h"
-#include "tknzr_state.h"
 #include "token_type.h"
-#include "operator.h"
-#include "punctuation.h"
 #include "tknzr_error.h"
 #define TYPE_DESCRIPTOR_MAX_LEN 6
 #define TOKEN_TYPE(t)    (((token*) t)->type)
@@ -32,17 +29,6 @@ typedef struct token
   int max;
 
 } token;
-
-int accept_token(token *tk, position *, tknzr_state , char);
-int accept_varlen(token *tk,char ch,tknzr_state state);
-int append_varlen(token *tk, char ch);
-int init_varlen(token *tk, position *,char ch);
-
-token *alloc_token(void);
-
-/* helpers */
-char *format_token (token *tk);
-void fini_token(token *tk);
 
 
 #endif

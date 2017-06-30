@@ -1,29 +1,28 @@
-#include "char_class.h"
+#include "chcl.h"
 #define CHAR_CLASS_MAX_TAB_LEN 100
-const static char dec* = "123456789";
-const static char Dec* = "0123456789";
-const static char Oct* = "01234567";
-const static char oct* = "1234567";
-const static char Hex* = "0123456789abcdefABCDEF";
-const static char hex* =  "123456789abcdefABCDEF";
-const static char Word = "0123456789\
+const static char *dec = "123456789";
+const static char *Dec = "0123456789";
+const static char *Oct = "01234567";
+const static char *oct = "1234567";
+const static char *Hex = "0123456789abcdefABCDEF";
+const static char *hex =  "123456789abcdefABCDEF";
+const static char *Word = "0123456789\
                           _abcdefghijklmnopqrstuvwxyz\
                           ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const static char word =  "_abcdefghijklmnopqrstuvwxyz\
+const static char *word =  "_abcdefghijklmnopqrstuvwxyz\
                           ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const static char spaces=" \v\f\n\r\t";
-const static char 
-const static char 
-const static char 
-const static char 
-const static char 
-const static char 
+const static char *spaces=" \v\f\n\r\t";
+const static char *newline="\n\r";
+const static char *oper="~!%^&*-+<>=/|";
+const static char *punc="(){}[]:;,?";
+
 
 static char *all_cc[CHAR_CLASS_MAX_TAB_LEN];
 static int all_count;
 
-int alloc_char_class(char *chcl)
+int alloc_char_class(const char *chcl)
 {
+  assert (all_count != CHAR_CLASS_MAX_TAB_LEN);
   // some short cut is supported:
   // \\D dec with 0
   // \\d dec without 0
@@ -37,12 +36,26 @@ int alloc_char_class(char *chcl)
   // \\P with dot
   
   static char buf[BUFSIZ];
-  for (char *s=chcl;*s;++s)
+  const char *spec;
+  int offset;
+  char *pstr=buf;
+  const char *s;
+
+  for (s=chcl;*s;++s)
   {
     if (*s=='\\')
     {
       switch (*s++)
       {
+        case 'Q':
+          *pstr++='\"';
+          break;
+        case 'q':
+          *pstr++='\'';
+          break;
+        case 'Z':
+          *pstr++='0';
+          break;
         case 'D':
           spec=Dec;
           offset=10;
@@ -69,20 +82,30 @@ int alloc_char_class(char *chcl)
           break;
         case 'W':
           spec=Word;
-          offset=26 + 26 + 10 + 1;
+          offset=strlen(Word);
           break;
         case 'w':
           spec=word;
-          offset=26 + 26 + 1;
+          offset=strlen(word);
           break;
         case 'S':
           spec=spaces;
-          offset=2;
+          offset=strlen(spaces);
           break;
         case 'N':
+          spec=newline;
+          offset=strlen(newline);
+          break;
         case 'p':
-        case '\\':
+          spec=punc;
+          offset=strlen(punc);
+          break;
+        case 'B':
+          *pstr++='\\';
+          break;
       }
+      strcat(pstr, spec);
+      pstr+=offset;
       continue;
     }
     *pstr++=*s;

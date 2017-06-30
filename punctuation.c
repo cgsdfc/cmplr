@@ -35,24 +35,4 @@ void init_punctuation(void)
   add_accepted_rev(TK_DOT,TK_DOT_END,CHAR_CLASS_DEC_DIGITS);
 }
 
-void init_punc(void)
-{
-  int punc=alloc_char_class("\\p");
-  int dot=alloc_char_class(".");
-  int dec=alloc_char_class("\\D");
-  TK_DOT=alloc_state(true);
-  TK_PUNCTUATION_END=alloc_state(false);
-  
-  config_action();
-    config_from(0);
-      config_condition(punc);
-        add_to(TK_PUNCTUATION_END);
-      config_condition(dot);
-        add_to(TK_DOT);
-    config_from(TK_DOT);
-      config_condition(dec);
-        config_usrd(true);
-          add_to(TK_PUNCTUATION_END);
-}
-
 

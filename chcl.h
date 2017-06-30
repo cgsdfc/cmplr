@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include "dfa.h"
 
-int alloc_char_class(char *chcl);
+int alloc_char_class(const char *chcl);
 int cond_char_class(dfa_state*,int);
 
 #endif

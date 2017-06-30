@@ -78,6 +78,15 @@ void config_usrd(int usrd)
   cur_config.usrd=usrd;
 }
 
+void config_end(void)
+{
+  cur_config.from=0;
+  cur_config.to=0;
+  cur_config.action=0;
+  cur_config.cond=0;
+  cur_config.usrd=0;
+}
+
 // when add_** finds that one
 // row of entries is full, resize_row
 // will be called to enlarge the row
@@ -156,9 +165,15 @@ int alloc_state(bool is_non_terminal)
 // this function look up the diagram inside 
 // `dfa`, to find a suitabl state to go to
 // the return value depends on the usr `func`
-// `func` returns 0 if can go, 1 if can not,
+// `func` returns 1 if can go, 0 if can not,
 // -1 if error happened.
-// this function does as the usr function does.
+// this function does a little diff than the
+// usr func does: if success, it returns 0,
+// if fail, it return 1, error is -1, which
+// is the same as the usr
+// the last entry of each row is the error 
+// handler's state, every one should install 
+// this.
 int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
 {
   int len=dfa->len[from];
@@ -166,17 +181,24 @@ int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
 
   for (int i=0;i<len;++i)
   {
+    *to=(ds+i);
     switch (dfa->func(ds + i, cond))
     {
-      case 0:
-        *to=(ds+i);
+      case 1:
         return 0;
       case -1:
         return -1;
-      case 1:
+      case 0:
         continue;
     }
   }
   return 1;
+}
+
+void config_handler(int state, int handler)
+{
+  int to=-1; // not a valid state
+  cur_config.action=handler;
+  add_state(state,to);
 }
 

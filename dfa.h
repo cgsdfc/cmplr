@@ -47,6 +47,8 @@ void config_to(int to);
 void config_condition(int cond);
 void config_action(int action);
 void config_usrd(int usrd);
+void config_handler(int state, int handler);
+void config_end(void);
 int add_from(int from);
 int add_to(int to);
 int alloc_state(bool is_non_terminal);

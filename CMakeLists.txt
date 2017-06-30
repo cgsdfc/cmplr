@@ -8,21 +8,21 @@ set(tokenizer_src
   token_buffer.c
   parser_error.c
   tknzr_error.c
-  comment.c
-  identifier.c
+# comment.c
+# identifier.c
 # escaped.c
 # checker.c
-  float_literal.c
-  integer_literal.c
+# float_literal.c
+# integer_literal.c
 # tknzr_table.c  
-  state_table.c
-  char_class.c
-  string_literal.c
-  char_literal.c
+#state_table.c
+  chcl.c
+# string_literal.c
+# char_literal.c
   keyword.c
-  token_type.c
-  punctuation.c
-  token.c
+# token_type.c
+# punctuation.c
+# token.c
 # tknzr_state.c
   char_buffer.c
   operator.c

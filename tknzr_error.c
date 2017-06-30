@@ -1,5 +1,4 @@
 #include "tknzr_error.h"
-#include "tknzr_state.h"
 #include "char_buffer.h"
 #include "color.h"
 
@@ -94,52 +93,3 @@ void tknzr_error_handle (void)
 
   
 }
-
-void depatch_errno(tknzr_state errstate)
-{
-  switch (errstate) {
-    case TK_MULTI_LINE_COMENT_BEGIN:
-      tknzr_error_set(TERR_COMMENT_UNTERMINATED);
-      break;
-
-    case TK_INIT:
-      tknzr_error_set(TERR_END_OF_INPUT);
-      break;
-
-    case TK_INT_OCT_BEGIN:
-      tknzr_error_set(TERR_DIGIT_NOT_OCTONARY);
-      break;
-
-    case TK_INT_HEX_BEGIN:
-      tknzr_error_set(TERR_DIGIT_NOT_HEXADECIMAL);
-      break;
-
-      /* a float ends with 13e or 13e- */
-    case TK_FLOAT_SIGN: case TK_FLOAT_EXPONENT_BEGIN:
-      tknzr_error_set(TERR_FLOAT_EXP_NO_DIGIT);
-      break;
-
-      /* bad suffix for float */ 
-    case TK_FLOAT_FRACTION: case TK_FLOAT_EXPONENT:
-      tknzr_error_set(TERR_BAD_FLOAT_SUFFIX);
-      break;
-
-      /* unfinished string */
-    case TK_STRING_LITERAL_BEGIN:
-    case TK_STRING_LITERAL_ESCAPED:  
-      tknzr_error_set(TERR_STRING_UNTERMINATED);
-      break;
-
-    case TK_CHAR_LITERAL_PART:
-    case TK_CHAR_LITERAL_ESCAPED:
-    case TK_CHAR_LITERAL_BEGIN:
-        tknzr_error_set(TERR_CHAR_UNTERMINATED);
-        break;
-    case TK_IDENTIFIER_BEGIN:
-        tknzr_error_set(TERR_INVALID_IDENTIFIER);
-        break;
-    default:
-        tknzr_error_set(TERR_UNKNOWN);
-  }
-}
-

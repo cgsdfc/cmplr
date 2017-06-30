@@ -11,10 +11,20 @@
 #include "token.h"
 #include "token_type.h"
 
-// this should be an interface
-// file to parser, so never
-// expose too much token**
-// or tknzr** stuffs here.
+enum
+{
+  TKA_COLLECT_CHAR=1,
+  TKA_ALLOC_BUF,
+  TKA_ACC_IDFR,
+  TKA_ACC_PUNC,
+  TKA_ACC_OPER,
+  TKA_ACC_CHAR,
+  TKA_ACC_INT,
+  TKA_ACC_FLOAT,
+  TKA_ACC_STRING,
+  TKA_PUTBACK,
+};
+
 
 
 #endif
