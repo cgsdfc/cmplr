@@ -2,6 +2,7 @@
 #include "token_buffer.h"
 #include "char_buffer.h"
 #include "token.h"
+#include "tokenizer.h"
 
 char_buffer cbuffer;
 token_buffer buf;
@@ -21,6 +22,7 @@ int print_token_stream (void)
       case EOF:
         return 0;
       case 1:
+        tknzr_error_handle();
         return 1;
     }
   }

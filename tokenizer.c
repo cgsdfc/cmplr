@@ -225,19 +225,22 @@ void init_string_literal(void)
     config_from(0);
       config_condition(doubleq);
         add_to(str_begin);
-  config_from(str_begin);
-    config_action(TKA_COLLECT_CHAR);
+  config_action(TKA_COLLECT_CHAR);
+    config_from(str_begin);
       config_condition(bs);
         add_to(str_escape);
-        config_usrd(true);
       config_condition(dq_nl_bs);
-        add_to(str_begin);
+        config_usrd(true);
+          add_to(str_begin);
+        config_usrd(false);
     config_action(TKA_ACC_STRING);
       config_condition(doubleq);
         add_to(fini);
   config_from(str_escape);
     config_action(TKA_COLLECT_CHAR);
-      add_to(str_begin);
+      config_usrd(true);
+        config_condition(newline);
+          add_to(str_begin);
   config_end();
 
 }
