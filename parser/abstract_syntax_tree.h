@@ -1,0 +1,4 @@
+#ifndef ABSTRACT_SYNTAX_TREE 
+#define ABSTRACT_SYNTAX_TREE 1
+
+#endif
