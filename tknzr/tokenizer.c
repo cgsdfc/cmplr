@@ -35,11 +35,10 @@ void init_identifier(void)
       config_condition(word);
         add_to(init);
   config_action(TKA_COLLECT_CHAR);
-    config_from(init);
       config_condition(Word);
-        add_to(init);
+        add_loop(init);
   config_action(TKA_ACC_IDFR);
-    config_usrd(true);
+    config_usrd(CC_REV);
       config_condition(Word);
         add_to(fini);
   config_end();
@@ -62,7 +61,7 @@ void init_muli_comment(void)
         add_to(char_loop);
     config_from(char_loop);
       config_condition(star);
-        config_usrd(true);
+        config_usrd(CC_REV);
           add_to(char_loop);
         config_usrd(false);
           add_to(star_loop);
@@ -72,7 +71,7 @@ void init_muli_comment(void)
       config_condition(slash);
         add_to(0);
       config_condition(star_slash);
-        config_usrd(true);
+        config_usrd(CC_REV);
           add_to(char_loop);
   config_end();
 }
@@ -95,7 +94,7 @@ void init_punctuation(void)
         add_to(TK_DOT);
   config_action(TKA_ACC_PUNC);
     config_to(fini);
-      config_usrd(true);
+      config_usrd(CC_REV);
         config_condition(Dec);
             add_from(TK_DOT);
         config_condition(empty);
@@ -114,7 +113,7 @@ void init_single_comment(void)
       config_condition(slash);
         add_to(single);
     config_from(single);
-      config_usrd(true);
+      config_usrd(CC_REV);
         config_condition(newline);
           add_to(single);
       config_usrd(false);
@@ -143,7 +142,7 @@ void init_char_literal(void)
         add_to(char_begin);
   config_action(TKA_COLLECT_CHAR);
     config_to(char_part);
-      config_usrd(true);
+      config_usrd(CC_REV);
         config_condition(sq_newline_bs);
           add_from(char_part);
         config_condition(newline);
@@ -218,7 +217,7 @@ void init_float_literal(void)
           add_from(float_suffix);
     config_action(TKA_ACC_FLOAT);
       config_to(fini);
-        config_usrd(true);
+        config_usrd(CC_REV);
           config_condition(Dec_suffix);
             add_from(float_suffix);
             add_from(exponent);
@@ -247,7 +246,7 @@ void init_string_literal(void)
       config_condition(bs);
         add_to(str_escape);
       config_condition(dq_nl_bs);
-        config_usrd(true);
+        config_usrd(CC_REV);
           add_to(str_begin);
         config_usrd(false);
     config_action(TKA_ACC_STRING);
@@ -255,7 +254,7 @@ void init_string_literal(void)
         add_to(fini);
   config_from(str_escape);
     config_action(TKA_COLLECT_CHAR);
-      config_usrd(true);
+      config_usrd(CC_REV);
         config_condition(newline);
           add_to(str_begin);
   config_end();
@@ -318,7 +317,7 @@ void init_integer_literal(void)
         add_from(int_suffix);
   config_action(TKA_ACC_INT);
     config_to(fini);
-      config_usrd(true);
+      config_usrd(CC_REV);
         config_condition(suffix);
           add_from(int_suffix);
         config_condition(dec_suffix_dot_e);

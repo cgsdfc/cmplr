@@ -129,7 +129,12 @@ dfa_state *resize_row(dfa_state *ds, int len, int *newlen)
 
 int add_config(void)
 {
-  add_state(cur_config.from, cur_config.to);
+  return add_state(cur_config.from, cur_config.to);
+}
+
+int add_loop(int loop)
+{
+  return add_state(loop,loop);
 }
 
 static int
