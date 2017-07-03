@@ -78,7 +78,7 @@ void config_to(int to)
   cur_config.to=to;
 }
 
-void config_condition(int cond)
+void config_cond(int cond)
 {
   cur_config.cond=cond;
 }

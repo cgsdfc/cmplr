@@ -1,2 +1,8 @@
 #!/bin/sh
-ctags *.c *.h 
+mysrc="parser tknzr"
+for x in $mysrc;do
+  ctags $x/*
+  cd $x
+  ctags ./*
+  cd ..
+done

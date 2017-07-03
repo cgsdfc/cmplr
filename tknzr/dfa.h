@@ -44,7 +44,7 @@ typedef struct dfa_config
 dfa_table *alloc_dfa(int nrows, transfer_func func);
 void config_from(int from);
 void config_to(int to);
-void config_condition(int cond);
+void config_cond(int cond);
 void config_action(int action);
 void config_usrd(int usrd);
 int config_handler(int state, int handler);

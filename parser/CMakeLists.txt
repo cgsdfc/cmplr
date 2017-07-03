@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.5)
 include_directories(${CMAKE_SOURCE_DIR})
 set(parser_src
-  expression.c
+# expression.c
   statement.c
-  hash_table.c
-  declaration.c
-  abstract_syntax_tree.c
+# hash_table.c
+# declaration.c
+# abstract_syntax_tree.c
+# LR.c
   )
 add_library(parser_lib ${parser_src})
 target_link_libraries(parser_lib tokenizer_lib)

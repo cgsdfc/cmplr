@@ -47,7 +47,7 @@ typedef struct block_buffer
 } block_buffer;
 
 block_buffer *alloc_block_buffer(int blksz, int init_nblk,int elesz);
-char *block_buffer_alloc(block_buffer *buf);
+void *block_buffer_alloc(block_buffer *buf);
 void block_buffer_dealloc(block_buffer *buf);
 int block_buffer_prev(block_buffer *buf, block_pos *, block_pos *pblk);
 int block_buffer_next(block_buffer *buf, block_pos *, block_pos *pblk);
