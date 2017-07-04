@@ -8,8 +8,10 @@
 static stack_buffer *entry_allocator;
 
   stack_buffer_entry *
-hash_table_alloc_entry(void)
+alloc_hash_entry(void)
 {
+  hash_entry *entry;
+
   if (!entry_allocator)
   {
     entry_allocator = alloc_stack_buffer(sizeof (hash_table_entry));
@@ -19,7 +21,9 @@ hash_table_alloc_entry(void)
     }
   }
 
-  return stack_buffer_alloc(entry_allocator);
+  if (stack_buffer_alloc(entry_allocator, &entry)<0)
+    return NULL;
+  return entry;
 }
 
 int init_hash_table(hash_table *tb)

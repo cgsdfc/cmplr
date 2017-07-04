@@ -1,469 +1,239 @@
-#include "expression.h"
-#include "tknzr/dfa.h"
-#include "tknzr/token_type.h"
-#include "tknzr/token_buffer.h"
+#include "grammar.h"
 
-#define N_PRECEDENCE 10
-#define PCD_MAX_COL 14
-enum
+int expr, assign_expr,
+    cond_expr, const_expr,
+    lor_expr, land_expr,
+    bor_expr, bxor_expr, 
+    band_expr, equal_expr,
+    cmp_expr, shift_expr,
+    add_expr, mul_expr,
+    cast_expr, unary_expr,
+    postfix_expr, primary_expr,
+    arglist, unary_oper;
+
+int mul_assign, div_assign,
+    mod_assign, add_assign,
+    sub_assign, left_shift_assign,
+    right_shift_assign, and_assign,
+    xor_assign, or_assign;
+
+int identifier, int_const,
+    float_const, char_const,
+    string_const, 
+    left_pare, right_pare,
+    left_bck, right_bck,
+    star, ampersand,
+    minus, minus_minus,
+    plus, plus_plus,
+
+
+int add_oper, sub_oper,
+    mul_oper, mod_oper,
+    and_oper, or_oper,
+    div_oper;
+
+void def_primary(void)
 {
-  PCD_10=0,
-  PCD_9,
-  PCD_8,
-  PCD_7,
-  PCD_6,
-  PCD_5,
-  PCD_4,
-  PCD_3,
-  PCD_2,
-  PCD_1,
-};
-
-enum 
-{
-  RTN_SUCCESS,
-  RTN_UNSUCCESS,
-  RTN_LETGO,
-  RTN_ERROR,
-};
-
-
-
-const static int precedence[][PCD_MAX_COL]=
-{
-  [PCD_1]= { TKT_STAR, TKT_BINARY_OP_MOD, TKT_BINARY_OP_DIV, -1},
-  [PCD_2]= { TKT_PLUS, TKT_MINUS, -1 },
-  [PCD_3]= { TKT_BINARY_OP_BIT_LEFT_SHIFT, TKT_BINARY_OP_BIT_RIGHT_SHIFT, -1 },
-  [PCD_4]= { TKT_BINARY_OP_BIT_AND, -1 },
-  [PCD_5]= {TKT_BINARY_OP_BIT_XOR, -1},
-  [PCD_6]= { TKT_BINARY_OP_BIT_OR, -1},
-  [PCD_7]= 
-  { 
-    TKT_BINARY_OP_CMP_GREATER,
-    TKT_BINARY_OP_CMP_LESS,
-    TKT_BINARY_OP_CMP_GREATER_EQUAL,
-    TKT_BINARY_OP_CMP_LESS_EQUAL,
-    TKT_BINARY_OP_CMP_EQUAL,
-    TKT_BINARY_OP_CMP_NOT_EQUAL,
-    -1
-  },
-  [PCD_8]= { TKT_BINARY_OP_LOGICAL_AND, -1},
-  [PCD_9]= { TKT_BINARY_OP_LOGICAL_OR, -1},
-  [PCD_10]=
-  {
-    TKT_BINARY_OP_MOD_ASSIGN,
-    TKT_BINARY_OP_ADD_ASSIGN,
-    TKT_BINARY_OP_SUB_ASSIGN,
-    TKT_BINARY_OP_DIV_ASSIGN,
-    TKT_BINARY_OP_MUL_ASSIGN,
-    TKT_BINARY_OP_ASSIGN,
-    TKT_BINARY_OP_BIT_AND_ASSIGN,
-    TKT_BINARY_OP_BIT_OR_ASSIGN,
-    TKT_BINARY_OP_BIT_XOR_ASSIGN,
-    TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN,
-    TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN,
-    -1
-  }
-};
-
-/** if input is a valid operator
- * token, then search for it in 
- * the precedence row given by cond.
- * or input is a parser return value,
- * if it indicates error, return -1,
- * else match it against cond.
- * the diff of 2 cases is told by
- * entry->usrd.
- */
-int cond_expr(dfa_state *entry, int input)
-{
-  int cond=entry->cond;
-  if (entry->usrd) 
-  {
-    // this is an operator
-    for (int i=0;; ++i)
-    {
-      int op=precedence[cond][i];
-      if (op == -1)
-      {
-        return 0;
-      }
-      if (op == input)
-      {
-        return 1;
-      }
-    }
-  }
-  if (input == RTN_ERROR)
-    return -1;
-  return input == cond;
+  def_nonterm(primary_expr);
+    def_one_of(0,
+        identifier,
+        int_const,
+        float_const,
+        string_const,
+        char_const,
+        RULE_END);
+    def_rule(0,
+        left_pare,
+        expr,
+        right_pare,
+        RULE_END);
 }
 
-
-
-int init_expr(void)
+void def_postfix(void)
 {
-  int term=alloc_state(true);
-  int expr=alloc_state(true);
-  int exprs[15];
+  def_nonterm(postfix_expr);
+    def_rule(0,primary_expr,RULE_END);
+    def_rule(0,postfix_expr,left_bck,expr,right_bck,RULE_END);
+    def_opt(0,postfix_expr,left_pare,arglist, RULE_OPT,right_pare,RULE_END);
+    def_rule(0,postfix_expr,dot,identifier,RULE_END);
+    def_rule(0,postfix_expr,arrow,identifier,RULE_END);
+    def_rule(0,postfix_expr,plus_plus,RULE_END);
+    def_rule(0,postfix_expr,minus_minus,RULE_END);
+}
 
-  for (int i=1;i<=10;i++)
-  {
-    exprs[i]=alloc_state(true);
-  }
-
+void def_unary(void)
+{
+  def_nonterm(unary_expr);
+    def_rule(0,plus_plus,unary_expr,RULE_END);
+    def_rule(0,minus_minus,unary_expr,RULE_END);
+    def_rule(0,unary_oper,cast_expr, RULE_END);
+    def_rule(0,sizeof_oper,unary_expr, RULE_END);
+    def_rule(0,sizeof_oper,left_pare,type_name,right_pare,RULE_END);
+  def_nonterm(unary_oper);
+    def_oneof(0,
+        ampersand,
+        star,
+        plus,
+        minus,
+        tilde,
+        exclaim,
+        RULE_END);
 
 }
 
-enum 
+void def_cast(void)
 {
-  PRA_GET_TOKEN,
-  PRA_PUT_TOKEN,
-  PRA_DO_RECR,
-  PRA_DO_RETN,
-  PRA_DO_NOTHING,
-};
-
-void init_expression(void)
-{
-  config_from(EXPRESSION);
-    config_usrd(RETN_CLASS);
-      config_condition(RTN_LETGO);
-        config_action(PRA_DO_RECR);
-          add_to(ASSIGN_OPER);
-  config_from(EXP_END);
-    config_usrd(TOKEN_CLASS);
-      config_condition(TKT_COMMA);
-        add_to(EXPRESSION);
-    config_usrd(TOKEN_CLASS_REV);
-        add_to(EXP_END);
+  def_nonterm(cast_expr);
+    def_rule(0,unary_expr,RULE_END);
+    def_rule(0,left_pare, type_name, right_pare, cast_expr, RULE_END);
 }
 
-
-void init_primary(void)
+void def_mul(void)
 {
-  config_state_action(PRIMARY, PRA_LOOKAHEAD);
-  config_from(PRIMARY);
-    config_usrd();
-    config_condion(TKT_IDENTIFIER);
-      config_action(PRA_CONSUME);
-        add_to(EXP_END);
-      config_condion(TKT_LEFT_PARENTHESIS);
-        add_to(EXPRESSION);
+  def_nonterm(mul_expr);
+    def_rule(0,cast_expr, RULE_END);
+    def_rule(0,mul_expr,mul,cast_expr,RULE_END);
+    def_rule(0,mul_expr,div,cast_expr,RULE_END);
+    def_rule(0,mul_expr,mod,cast_expr,RULE_END);
 }
 
-void init_postfix(void)
+void def_add(void)
 {
-  config_from(POSTFIX);
-    config_action(PRA_GET_TOKEN);
-      config_condition(TKT_LEFT_BRACKET);
-        add_to(EXPRESSION);
-      config_condition(TKT_DOT);
-        add_to(POSTFIX_IDFR);
-      config_condition(TKT_BINARY_OP_MEMBER_ARROW);
-        add_to(POSTFIX_IDFR);
-      config_condition(TKT_UNARY_OP_PLUS_PLUS);
-        add_to(POSTFIX);
-      config_condition(TKT_UNARY_OP_MINUS_MINUS);
-        add_to(POSTFIX);
-      config_condition(TKT_LEFT_PARENTHESIS);
-        add_to(ARGLIST);
-
-      config_from(POSTFIX_IDFR);
-        config_condition(TKT_IDENTIFIER);
-          add_to(POSTFIX);
-    config_action(PRA_PUT_TOKEN);
-      config_default();
-        add_to(PRIMARY);
+  def_nonterm(add_expr);
+    def_rule(0,mul_expr, RULE_END);
+    def_rule(0,add_expr,add,mul_expr,RULE_END);
+    def_rule(0,add_expr,sub,mul_expr,RULE_END);
 }
-      
-void init_arglist(void)
-{
-  config_from(ARG_LIST);
-    config_action(PRA_DO_RECR);
-      config_usrd(RETN_CLASS);
-        config_condition(RTN_LETGO); // always return true, 
-          add_to(ASSIGN_OPER);
-
-  config_from(EXP_END);
-    config_action(PRA_GET_TOKEN);
-      config_usrd(TOKEN_CLASS);
-        config_condition(TKT_COMMA);
-          add_to(ARG_LIST);
-        config_default();
-          add_to(ARG_LIST_END);
-
-  config_from(ARG_LIST_END);
-    config_action(PRA_GET_TOKEN);
-      config_condition(TKT_RIGHT_PARENTHESIS);
-        add_to(EXP_END);
     
-}
-
-void init_unary(void)
+void def_shift(void)
 {
-  config_from(UNARY);
-    config_action(PRA_GET_TOKEN);
-      config_usrd(TOKEN_CLASS);
-        config_condion(TKT_UNARY_OP_PLUS_PLUS);
-          add_to(UNARY);
-        config_condition(TKT_UNARY_OP_MINUS_MINUS);
-          add_to(UNARY);
-        config_condition(TKT_KW_SIZEOF);
-          add_to(UNARY_SIZEOF);
-        config_usrd(OPER_CLASS);
-          config_condition(UNARY_OPERATORS);
-            add_to(CAST);
-        config_default();
-          config_action(PRA_PUT_TOKEN);
-            add_to(POSTFIX);
-  config_from(UNARY_SIZEOF);
-    config_usrd(TOKEN_CLASS);
-      config_action(PRA_GET_TOKEN);
-        config_condition(TKT_LEFT_PARENTHESIS);
-          add_to(TYPE_NAME);
-        config_default();
-          add_to(UNARY);
-
+  def_nonterm(shift_expr);
+    def_rule(0,add_expr, RULE_END);
+    def_rule(0,shift_expr,left_shift,add_expr,RULE_END);
+    def_rule(0,shift_expr,right_shift,add_expr,RULE_END);
 }
 
-void init_type_name(void)
+void def_cmp (void)
 {
-  config_from(TYPE_NAME);
-    config_action(PRA_GET_TOKEN);
-      config_condition(TKT_RIGHT_PARENTHESIS);
-        add_to(EXP_END);
+  def_nonterm(cmp_expr);
+    def_rule(0,shift_expr, RULE_END);
+    def_rule(0,cmp_expr,cmp_oper,shift_expr);
+  def_nonterm(cmp_oper);
+    def_oneof(0, less, greater, less_equal, greater_equal, RULE_END);
+
 }
 
-
-void init_cast(void)
+void def_equal(void)
 {
-  config_from(CAST);
-    config_action(PRA_GET_TOKEN);
-        config_usrd(TOKEN_CLASS);
-          config_condition(TKT_LEFT_PARENTHESIS);
-            add_to(TYPE_NAME);
-        config_from(EXP_END);
-          config_condition(TKT_RIGHT_PARENTHESIS);
-            add_to(CAST);
+  def_nonterm(equal_expr);
+    def_rule(0,cmp_expr, RULE_END);
+    def_rule(0,equal_expr,equal,cmp_expr,RULE_END);
+    def_rule(0, equal_expr,not_equal, cmp_expr,RULE_END);
 }
 
-void init_mul_operator(void)
+void def_bitwise_and(void)
 {
-  config_from(MUL);
-    config_condition(RTN_LETGO);
-      config_action(PRA_DO_RECR);
-        add_to(CAST);
-  config_from(EXP_END);
-    config_action(PRA_GET_TOKEN);
-      config_usrd(OPER_CLASS);
-        config_condition(MUL_OPERATIORS);
-          add_to(MUL);
-      config_usrd(OPER_CLASS_REV);
-        config_action(PRA_PUT_TOKEN);
-          add_to(EXP_END);
+  def_nonterm(band_expr);
+    def_rule(0, equal_expr, RULE_END);
+    def_rule(0, band_expr, bitwise_and, equal_expr);
 }
 
-void init_add_operator(void)
+void def_bitwise_xor(void)
 {
-  config_from(ADD);
-    config_condition(RTN_LETGO);
-      config_action(PRA_DO_RECR);
-        add_to(MUL);
-  config_from(EXP_END);
-    config_action(PRA_GET_TOKEN);
-      config_usrd(OPER_CLASS);
-        config_condition(ADD_OPERATORS);
-          add_to(ADD);
-      config_usrd(OPER_CLASS_REV);
-        config_action(PRA_PUT_TOKEN);
-          add_to(EXP_END);
+  def_nonterm(bxor_expr);
+    def_rule(0, band_expr, RULE_END);
+    def_rule(0, bxor_expr, bitwise_xor, band_expr);
+}
+
+void def_bitwise_or(void)
+{
+  def_nonterm(bor_expr);
+    def_rule(0, bxor_expr, RULE_END);
+    def_rule(0, bor_expr, bitwise_or, bxor_expr);
+}
+
+void def_logic_and(void)
+{
+  def_nonterm(land_expr); 
+    def_rule(0,bor_expr,RULE_END);
+    def_rule(0,land_expr,and_oper,bor_expr,RULE_END);
+}
+
+void def_logic_or(void)
+{
+  def_nonterm(lor_expr);
+    def_isalsoa(land_expr);
+    def_binary(lor_expr, or_oper, land_expr);
 }
 
 
+
+
+} 
+static 
+void init_terms(void)
+{
+  mul_assign = alloc_terminal("*=");
+  div_assign = alloc_terminal("/=");
+  mod_assign = alloc_terminal("%=");
+  add_assign = alloc_terminal("&=");
+  sub_assign = alloc_terminal("-=");
+  left_shift_assign = alloc_terminal(">>=");
+  right_shift_assign = alloc_terminal("<<=");
+  and_assign = alloc_terminal("&=");
+  xor_assign = alloc_terminal("^=");
+  or_assign = alloc_terminal("|=");
+
+}
+
+static 
+void init_nonterms(void)
+{
+
+
+
+}
+
+
+void def_expr(void)
+{
+  expression = alloc_nonterm();
+  assignment_expression = alloc_nonterm();
+
+  def_nonterm(expression);
+  def_rule(0,assignment_expression, RULE_END);
+  def_rule(0,expression, comma, assignment_expression, RULE_END);
+}
+
+void def_assign(void)
+{
+  condition_expression = alloc_nonterm();
+  unary_expression = alloc_nonterm();
+  assign_oper = alloc_nonterm();
+
+  
+  def_nonterm(assignment_expression);
+    def_rule(0, condition_expression, RULE_END);
+    def_rule(0, unary_expression, 
+        assign_oper,
+        assignment_expression,
+        RULE_END);
+
+  def_nonterm(assign_oper);
+    def_one_of(0, assign,
+        mul_assign,
+        div_assign,
+        mod_assign,
+        add_assign,
+        sub_assign,
+        left_shift_assign,
+        right_shift_assign,
+        and_assign,
+        xor_assign,
+        or_assign,
+        RULE_END);
+
+
+}
     
-
-
-
-int parse_postfix(int state, token_buffer *buf)
-{
-  int cond=RTN_LETGO;
-  dfa_state *entry;
-
-  while (true)
-  {
-    r=transfer(table, state, cond, &entry);
-    switch (entry->action)
-    {
-      case PRA_DO_RECR:
-        cond=parse_postfix(entry->state, buf);
-        break;
-
-      case PRA_GET_TOKEN:
-        get_token(buf, &tk);
-        cond=tk->type;
-        break;
-
-      case PRA_PUT_TOKEN:
-        put_token(buf);
-        break;
-
-      case PRA_DO_RETN:
-        return cond;
-    }
-  }
-}
-
-
-#ifndef TOKEN_TYPE_H 
-#define TOKEN_TYPE_H 1
-
-#define N_KEYWORDS ( 32 )
-#define FIRST_KW TKT_KW_FOR 
-#define LAST_KW  TKT_KW_SIZEOF
-#define FIRST_PUNC TKT_LEFT_PARENTHESIS
-#define LAST_PUNC TKT_QUESTION
-#define FIRST_OPER  TKT_BINARY_OP_DIV
-#define LAST_OPER TKT_MINUS
-
-
-
-int lookup_special(int from, int to, char *string);
-typedef enum token_type 
-{
-
-  TKT_KW_FOR=0,
-  TKT_KW_WHILE,
-  TKT_KW_CASE,
-  TKT_KW_RETURN,
-  TKT_KW_SWITCH,
-  TKT_KW_IF,
-  TKT_KW_DEFAULT,
-  TKT_KW_CONTINUE,
-  TKT_KW_ELSE,
-  TKT_KW_DO,
-  TKT_KW_GOTO,
-  TKT_KW_BREAK,
-
-  /* qualifiers */
-  TKT_KW_CONST,
-  TKT_KW_VOLATILE,
-  
-
-  /* specifier */
-  TKT_KW_DOUBLE,
-  TKT_KW_SIGNED,
-  TKT_KW_INT,
-  TKT_KW_LONG,
-  TKT_KW_CHAR,
-  TKT_KW_FLOAT,
-  TKT_KW_SHORT,
-  TKT_KW_UNSIGNED,
-  TKT_KW_VOID,
-  /* compose type */
-  TKT_KW_STRUCT,
-  TKT_KW_ENUM,
-  TKT_KW_UNION,
-
-  /* storage */ 
-  // can has at most one
-  TKT_KW_TYPEDEF,
-  TKT_KW_EXTERN,
-  TKT_KW_STATIC,
-  TKT_KW_AUTO,
-  TKT_KW_REGISTER,
-
-  /* sizeof operator */
-  TKT_KW_SIZEOF,
-
-
-  TKT_BINARY_OP_DIV,
-  TKT_BINARY_OP_MOD,
-
-  /* binary arithmetic assignment operator */
-  TKT_BINARY_OP_MOD_ASSIGN,
-  TKT_BINARY_OP_ADD_ASSIGN,
-  TKT_BINARY_OP_SUB_ASSIGN,
-  TKT_BINARY_OP_DIV_ASSIGN,
-  TKT_BINARY_OP_MUL_ASSIGN,
-  TKT_BINARY_OP_ASSIGN,
-
-  /* binary bitwise assignment operator */
-  TKT_BINARY_OP_BIT_AND_ASSIGN,
-  TKT_BINARY_OP_BIT_OR_ASSIGN,
-  TKT_BINARY_OP_BIT_XOR_ASSIGN,
-  TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN,
-  TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN,
-
-  /* binary bitwise operator */
-  TKT_BINARY_OP_BIT_OR,
-  TKT_BINARY_OP_BIT_XOR,
-  TKT_BINARY_OP_BIT_LEFT_SHIFT,
-  TKT_BINARY_OP_BIT_RIGHT_SHIFT,
-
-  /* binary logical operator */
-  TKT_BINARY_OP_LOGICAL_AND,
-  TKT_BINARY_OP_LOGICAL_OR,
-
-  /* binary comparation operator */
-  TKT_BINARY_OP_CMP_LESS,
-  TKT_BINARY_OP_CMP_LESS_EQUAL,
-  TKT_BINARY_OP_CMP_GREATER,
-  TKT_BINARY_OP_CMP_GREATER_EQUAL,
-
-  /* binary comparation operator */
-  TKT_BINARY_OP_CMP_EQUAL,
-  TKT_BINARY_OP_CMP_NOT_EQUAL,
-  TKT_BINARY_OP_MEMBER_ARROW,
-
-
-  /* UNARY OPERATORS */
-  TKT_UNARY_OP_LOGICAL_NOT,
-  TKT_UNARY_OP_BIT_NOT,
-  TKT_UNARY_OP_PLUS_PLUS,
-  TKT_UNARY_OP_MINUS_MINUS,
-  
-  TKT_AMPERSAND,
-  TKT_STAR,
-  TKT_PLUS,
-  TKT_MINUS,
-
-  /* PUNCTUATIONS */
-  TKT_LEFT_PARENTHESIS,
-  TKT_RIGHT_PARENTHESIS,
-  TKT_LEFT_BRACKET,
-  TKT_RIGHT_BRACKET,
-  TKT_LEFT_BRACE,
-  TKT_RIGHT_BRACE,
-  TKT_COLON,
-  TKT_SEMICOLON,
-  TKT_COMMA,
-  TKT_DOT,
-  TKT_QUESTION,
-  _TKT_END,
-
-} token_type;
-
-
-enum
-{
-  TKT_INT_CONST=_TKT_END,
-  TKT_BINARY_OP_MUL,
-  TKT_FLOAT_CONST,
-  TKT_CHAR_CONST,
-  TKT_STRING_CONST,
-  TKT_IDENTIFIER,
-  TKT_BINARY_OP_MEMBER_DOT,
-  TKT_BINARY_OP_ADD,
-  TKT_BINARY_OP_SUB,
-
-  TKT_UNARY_OP_NEGATIVE,
-  TKT_UNARY_OP_ADDRESS,
-  TKT_UNARY_OP_DEREFERENCE,
-  TKT_BINARY_OP_BIT_AND,
-  TKT_UNKNOWN,
-
-};
-
-#endif
 
