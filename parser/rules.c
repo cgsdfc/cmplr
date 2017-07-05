@@ -46,6 +46,13 @@ int def_terminal(grammar *gr, char *rep)
   return gr->terminal_id++;
 }
 
+int def_punc(grammar *gr, char *rep)
+{
+  int next=gr->punctuation_id;
+  gr->symbol[next]=rep;
+  return gr->punctuation_id++;
+}
+
 bool is_terminal(grammar *gr, int symbol)
 {
   return gr->terminal_id <= symbol && symbol < gr->keyword_id;
@@ -134,8 +141,8 @@ void def_rule(grammar *gr, int lhs, ...)
 void def_oneof(grammar *gr, int lhs, ...)
 {
   va_list ap;
-  int symbols[10];
-  int expanded_sym[10];
+  int symbols[30];
+  int expanded_sym[30];
   int ruleid;
 
   va_start(ap, lhs);
@@ -148,6 +155,17 @@ void def_oneof(grammar *gr, int lhs, ...)
 
   va_end(ap);
 }
+
+void def_onemore(grammar *gr, int lhs, int rhs)
+{
+  int symbol[3];
+  symbol[0]=rhs;
+  add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,1));
+  symbol[0]=lhs;
+  symbol[1]=rhs;
+  add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,2));
+}
+
 
 void show_rules(grammar *gr)
 {

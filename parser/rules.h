@@ -4,15 +4,27 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+
+// global 
 #define RULE_OPT (-2)
 #define CLANG_LG (&lang_clang)
 #define CLANG_GR (&grammar_clang)
+
+// variant of rule definitions
 #define DEF_RULE(...) def_rule(CLANG_GR,__VA_ARGS__, -1)
 #define DEF_ONEOF(...) def_oneof(CLANG_GR,__VA_ARGS__,-1)
+#define DEF_ONEMORE(L,R) def_onemore(CLANG_GR, (L), (R))
+
+// variant of symbol definitions
 #define DEF_NONTERM(REP) def_nonterm(CLANG_GR,REP)
 #define DEF_TERMINAL(REP) def_terminal(CLANG_GR,REP)
 #define DEF_KEYWORD(REP) def_keyword(CLANG_GR, REP)
+#define DEF_PUNC(REP) def_punc(CLANG_GR, REP)
+
+// initial entry
 #define DEF_GRAMMAR() init_grammar(CLANG_GR, CLANG_LG);
+
+// textual rep
 #define SHOW_RULES() show_rules(CLANG_GR)
 
 
@@ -84,15 +96,16 @@ int init_grammar(grammar *gr, language *lang);
 int def_nonterm(grammar *gr, char *rep);
 int def_terminal(grammar *gr, char *rep);
 int def_keyword(grammar *gr, char *rep);
-bool is_terminal(grammar *gr, int symbol);
-bool is_nonterm(grammar *gr, int symbol);
+int def_punc(grammar *gr, char *rep);
 void def_rule(grammar *gr, int lhs,...);
 void def_oneof(grammar *gr, int lhs,...);
-void show_rules(grammar*);
-
+void def_onemore(grammar *gr, int lhs, int rhs);
 extern grammar grammar_clang;
 extern language lang_clang;
 
+bool is_terminal(grammar *gr, int symbol);
+bool is_nonterm(grammar *gr, int symbol);
+void show_rules(grammar*);
 
 #endif
 

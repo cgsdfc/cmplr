@@ -53,27 +53,33 @@ void init_clang(void)
   int stcl_spfr=DEF_NONTERM( "storage-class-specifier");
   int type_spfr=DEF_NONTERM("type-specifier");
   int type_qlfr=DEF_NONTERM("type-qualifier");
+  int struct_union_spfr=DEF_NONTERM("struct-or-union-specifier");
+  int enum_spfr=DEF_NONTERM("enum-specifier");
+  int struct_or_union=DEF_NONTERM("struct-or-union");
+  int struct_dclist=DEF_NONTERM("struct-declaration-list");
+  int struct_dclr=DEF_NONTERM("struct-declaration");
 
+
+  int id=DEF_TERMINAL("identifier");
   int eof=DEF_TERMINAL("eof");
+  int left_brace=DEF_PUNC("{");
+  int right_brace=DEF_PUNC("}");
 
   /* def_rule(&gr, program, tran_unit, eof,-1); */
   DEF_RULE(program, tran_unit, eof);
-  DEF_RULE(tran_unit, ext_dclr);
-  DEF_RULE(tran_unit,tran_unit,ext_dclr);
-  DEF_RULE(ext_dclr, func_def);
-  DEF_RULE(ext_dclr, dclr);
+  DEF_ONEMORE(tran_unit, ext_dclr);
+  DEF_ONEOF(ext_dclr, func_def, dclr);
   DEF_RULE(func_def,RULE_OPT,dclr_spfr,dcltor,RULE_OPT,dclist,block);
 
 
   DEF_RULE(dclr, dclr_spfr, RULE_OPT, init_dcltor_list); 
-  DEF_RULE(dclist, dclr);
-  DEF_RULE(dclist, dclist, dclr);
+  DEF_ONEMORE(dclist, dclr);
 
   DEF_RULE(dclr_spfr, stcl_spfr, RULE_OPT, dclr_spfr);
   DEF_RULE(dclr_spfr, type_spfr, RULE_OPT, dclr_spfr);
   DEF_RULE(dclr_spfr, type_qlfr, RULE_OPT, dclr_spfr);
 
-  DEF_ONEOF(type_spfr, 
+  DEF_ONEOF(stcl_spfr, 
       DEF_KEYWORD("auto"),
       DEF_KEYWORD("register"),
       DEF_KEYWORD("static"),
@@ -81,7 +87,35 @@ void init_clang(void)
       DEF_KEYWORD("typedef")
       );
 
-  
+  DEF_ONEOF(type_spfr,
+      DEF_KEYWORD("void"),
+      DEF_KEYWORD("char"),
+      DEF_KEYWORD("short"),
+      DEF_KEYWORD("int"),
+      DEF_KEYWORD("long"),
+      DEF_KEYWORD("float"),
+      DEF_KEYWORD("double"),
+      DEF_KEYWORD("signed"),
+      DEF_KEYWORD("unsigned"),
+      struct_union_spfr,
+      enum_spfr,
+      id);
+
+ DEF_ONEOF(type_qlfr,
+    DEF_KEYWORD("const"),
+    DEF_KEYWORD("volatile"));
+ DEF_ONEOF(struct_or_union,
+     DEF_KEYWORD("struct"),
+     DEF_KEYWORD("union"));
+
+ DEF_RULE(struct_union_spfr,
+     struct_or_union,
+     RULE_OPT, id,
+     left_brace, struct_dclist, right_brace); 
+ DEF_RULE(struct_union_spfr, struct_or_union, id);
+
+ DEF_ONEMORE(struct_dclist,struct_dclr);
+ 
 
   SHOW_RULES();
 
