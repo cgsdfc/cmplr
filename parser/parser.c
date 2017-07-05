@@ -48,13 +48,13 @@ void init_clang(void)
 
   int eof=def_terminal(&gr,"eof");
 
-  def_rule(&gr, program, tran_unit, eof,-1);
-  def_rule(&gr, tran_unit, ext_dclr, -1);
-  def_rule(&gr, tran_unit, tran_unit, ext_dclr,-1);
-  def_rule(&gr, ext_dclr, func_def, -1);
-  def_rule(&gr, ext_dclr, dclr,-1);
-
-  def_rule(&gr, func_def, -2, dclr_spfr, dcltor, -2, dclist, block,-1);
+  /* def_rule(&gr, program, tran_unit, eof,-1); */
+  DEF_RULE(program, tran_unit, eof);
+  DEF_RULE(tran_unit, ext_dclr);
+  DEF_RULE(tran_unit,tran_unit,ext_dclr);
+  DEF_RULE(ext_dclr, func_def);
+  DEF_RULE(ext_dclr, dclr);
+  DEF_RULE(func_def,-2,dclr_spfr,dcltor,-2,dclist,block);
 
   show_rules(&gr);
 

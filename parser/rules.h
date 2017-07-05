@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-
+#define DEF_RULE(...) def_rule(&gr, __VA_ARGS__, -1)
 
 typedef struct item
 {
