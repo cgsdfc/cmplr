@@ -34,19 +34,22 @@ void init_simple(void)
 
 void init_clang(void)
 {
-  grammar gr;
-  init_grammar(&gr,"C programing language", 100);
-  int program=def_nonterm(&gr,"program");
-  int tran_unit=def_nonterm(&gr, "translation-unit");
-  int ext_dclr=def_nonterm(&gr, "external-declaration");
-  int func_def=def_nonterm(&gr,"function-definition");
-  int dclr=def_nonterm(&gr,"declaration");
-  int dclr_spfr=def_nonterm(&gr,"declaration-specifier");
-  int dcltor=def_nonterm(&gr,"declarator");
-  int dclist=def_nonterm(&gr,"declaration-list");
-  int block=def_nonterm(&gr, "composite-statement");
+  DEF_GRAMMAR();
+  int program=DEF_NONTERM("program");
+  int tran_unit=DEF_NONTERM( "translation-unit");
+  int ext_dclr=DEF_NONTERM( "external-declaration");
+  int func_def=DEF_NONTERM("function-definition");
+  int dclr=DEF_NONTERM("declaration");
+  int dclr_spfr=DEF_NONTERM("declaration-specifier");
+  int dcltor=DEF_NONTERM("declarator");
+  int dclist=DEF_NONTERM("declaration-list");
+  int block=DEF_NONTERM( "composite-statement");
+  int init_dcltor_list=DEF_NONTERM( "init-declarator-list");
+  int stcl_spfr=DEF_NONTERM( "storage-class-specifier");
+  int type_spfr=DEF_NONTERM("type-specifier");
+  int type_qlfr=DEF_NONTERM("type-qualifier");
 
-  int eof=def_terminal(&gr,"eof");
+  int eof=DEF_TERMINAL("eof");
 
   /* def_rule(&gr, program, tran_unit, eof,-1); */
   DEF_RULE(program, tran_unit, eof);
@@ -56,7 +59,17 @@ void init_clang(void)
   DEF_RULE(ext_dclr, dclr);
   DEF_RULE(func_def,-2,dclr_spfr,dcltor,-2,dclist,block);
 
-  show_rules(&gr);
+
+  DEF_RULE(dclr, dclr_spfr, -2, init_dcltor_list); 
+  DEF_RULE(dclist, dclr);
+  DEF_RULE(dclist, dclist, dclr);
+
+  DEF_RULE(dclr_spfr, stcl_spfr, -2, dclr_spfr);
+  DEF_RULE(dclr_spfr, type_spfr, -2, dclr_spfr);
+  DEF_RULE(dclr_spfr, type_qlfr, -2, dclr_spfr);
+  
+
+  SHOW_RULES();
 
 }
 

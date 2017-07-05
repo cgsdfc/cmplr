@@ -1,5 +1,7 @@
 #include "rules.h"
 
+grammar grammar_clang;
+
 int init_grammar(grammar *gr, char *lang, int nnont)
 {
   memset (gr, 0, sizeof (grammar));
@@ -35,68 +37,97 @@ bool is_nonterm(grammar *gr, int symbol)
 // input is an int array of
 // [ lhs, rhs,...] with all the opt prefix 
 // expanded
-void add_rule(grammar *gr, int *input, int len)
+void add_rule(grammar *gr, int lhs, int ruleid)
 {
-  // the rule is about to add
-  int ruleid;
   int rulelen;
-  rule *r;
-  int lhs;
 
-  // get the lhs of the rule
-  lhs=input[0];
-  input++;
-  len--;
-  // get the current rule id
-  ruleid=gr->nrule;
-  r = &gr->rules[ruleid];
   rulelen=gr->nnont_rule[lhs];
-
-  // initialize the new rule
-  r->lhs=lhs;
-  memcpy (r->rhs, input, len * sizeof(int));
-  r->len=len;
-  // put the rule under lhs's rules row
   gr->nonterm[lhs][rulelen]=ruleid;
-  gr->nrule++;
   gr->nnont_rule[lhs]++;
 }
 
-void expand_opt(grammar *gr, int *src, int *dst, int len)
+int alloc_rule(grammar *gr, int lhs, int *rhs, int len)
 {
+  int ruleid;
+  rule *r;
+
+  ruleid=gr->nrule;
+  r = &gr->rules[ruleid];
+  r->lhs=lhs;
+  memcpy (r->rhs, rhs, len * sizeof(int));
+  r->len=len;
+  gr->nrule++;
+  return ruleid;
+
+}
+
+
+
+void add_optional(grammar *gr, int lhs, int *src, int *rhs, int len)
+{
+  int ruleid;
+
   for (; *src != -1;++src)
   {
     switch (*src)
     {
       case -2:
-        expand_opt(gr, src+1, dst, len);
-        expand_opt(gr, src+2,dst,len);
+        add_optional(gr,lhs, src+1, rhs, len);
+        add_optional(gr,lhs, src+2,rhs,len);
         return;
       default:
-        dst[len++]=*src;
+        rhs[len++]=*src;
         break;
     }
   }
-  add_rule(gr, dst, len);
+  ruleid=alloc_rule(gr, lhs, rhs, len);
+  add_rule(gr, lhs, ruleid);
 
 }
 
-void def_rule(grammar *gr, int lhs,...)
+void collect_symbol(va_list ap, int *symbols)
 {
-  int rhs;
-  va_list ap;
   int len=0;
-  int array[10];
-  int dst[10];
+  int rhs;
 
-  va_start(ap,lhs);
-  array[len++]=lhs;
   for (rhs=va_arg(ap, int);rhs!=-1;rhs=va_arg(ap,int))
   {
-    array[len++]=rhs;
+    symbols[len++]=rhs;
   }
-  array[len]=-1;
-  expand_opt(gr, array, dst, 0);
+  symbols[len]=-1;
+
+}
+
+
+void def_rule(grammar *gr, int lhs, ...)
+{
+  va_list ap;
+  int symbols[10];
+  int expanded_sym[10];
+
+  va_start(ap, lhs);
+  collect_symbol(ap,symbols);
+  add_optional(gr,lhs, symbols, expanded_sym,0);
+  va_end(ap);
+
+}
+
+void def_oneof(grammar *gr, int lhs, ...)
+{
+  va_list ap;
+  int symbols[10];
+  int expanded_sym[10];
+  int ruleid;
+
+  va_start(ap, lhs);
+  collect_symbol(ap,symbols);
+  for (int *sym=symbols; *sym!=-1;++sym)
+  {
+    ruleid=alloc_rule(gr,lhs,sym,1);
+    add_rule(gr, lhs, ruleid);
+  }
+
+  va_end(ap);
 }
 
 void show_rules(grammar *gr)
@@ -132,3 +163,6 @@ void show_rules(grammar *gr)
       }
     }
 }
+
+
+

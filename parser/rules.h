@@ -4,7 +4,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#define DEF_RULE(...) def_rule(&gr, __VA_ARGS__, -1)
+#define CLANG_GR (&grammar_clang)
+#define DEF_RULE(...) def_rule(CLANG_GR,__VA_ARGS__, -1)
+#define DEF_ONEOF(...) def_oneof(CLANG_GR,__VA_ARGS__,-1)
+#define DEF_NONTERM(REP) def_nonterm(CLANG_GR,REP)
+#define DEF_TERMINAL(REP) def_terminal(CLANG_GR,REP)
+#define DEF_GRAMMAR() init_grammar(CLANG_GR,"C programming language", 100)
+#define SHOW_RULES() show_rules(CLANG_GR)
+
 
 typedef struct item
 {
@@ -49,14 +56,18 @@ typedef struct grammar
 } grammar;
 
 
+int init_grammar(grammar *gr,char *lang, int nnont);
 int def_nonterm(grammar *gr, char *rep);
 int def_terminal(grammar *gr, char *rep);
 bool is_terminal(grammar *gr, int symbol);
 bool is_nonterm(grammar *gr, int symbol);
 void def_rule(grammar *gr, int lhs,...);
-int init_grammar(grammar *gr,char *lang, int nnont);
-
+void def_oneof(grammar *gr, int lhs,...);
 void show_rules(grammar*);
+
+extern grammar grammar_clang;
+
+
 
 #endif
 
