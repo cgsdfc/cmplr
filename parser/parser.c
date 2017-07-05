@@ -38,9 +38,13 @@ void init_clang(void)
   init_grammar(&gr,"C programing language", 100);
   int program=def_nonterm(&gr,"program");
   int tran_unit=def_nonterm(&gr, "translation-unit");
-  int ext_dclr=def_nonterm(&gr, "external declaration");
-  int func_def=def_nonterm(&gr,"function definition");
+  int ext_dclr=def_nonterm(&gr, "external-declaration");
+  int func_def=def_nonterm(&gr,"function-definition");
   int dclr=def_nonterm(&gr,"declaration");
+  int dclr_spfr=def_nonterm(&gr,"declaration-specifier");
+  int dcltor=def_nonterm(&gr,"declarator");
+  int dclist=def_nonterm(&gr,"declaration-list");
+  int block=def_nonterm(&gr, "composite-statement");
 
   int eof=def_terminal(&gr,"eof");
 
@@ -49,6 +53,9 @@ void init_clang(void)
   def_rule(&gr, tran_unit, tran_unit, ext_dclr,-1);
   def_rule(&gr, ext_dclr, func_def, -1);
   def_rule(&gr, ext_dclr, dclr,-1);
+
+  def_rule(&gr, func_def, -2, dclr_spfr, dcltor, -2, dclist, block,-1);
+
   show_rules(&gr);
 
 }

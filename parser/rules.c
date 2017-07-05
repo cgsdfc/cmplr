@@ -71,7 +71,7 @@ void expand_opt(grammar *gr, int *src, int *dst, int len)
       case -2:
         expand_opt(gr, src+1, dst, len);
         expand_opt(gr, src+2,dst,len);
-        break;
+        return;
       default:
         dst[len++]=*src;
         break;
