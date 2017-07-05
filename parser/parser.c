@@ -1,29 +1,34 @@
-#define MAX_SYMBOLS_LEN 10
+#include "rules.h"
 
-typedef struct item 
+int main(int argc, char **argv)
 {
-  int dot;
-  int rule;
-} item;
+  grammar gr;
+  init_grammar(&gr, 10);
+  int Goal=def_nonterm(&gr,"Goal");
+  int Sum=def_nonterm(&gr,"Sum");
+  int Product=def_nonterm(&gr, "Product");
+  int Value=def_nonterm(&gr,"Value");
+  int Int=def_terminal(&gr,"Int");
+  int Id=def_terminal(&gr,"Id");
+  int eof=def_terminal(&gr,"eof");
+  int plus=def_terminal(&gr,"+");
+  int mult=def_terminal(&gr, "*");
 
-typedef struct rule
-{
-  int lhs;
-  int rhs[MAX_LHS_LEN];
-  int len;
-} rule;
+  // r0 Goal := Sum eof
+  def_rule(&gr, Goal, Sum, eof, -1);
+  // r1 Sum := Product
+  def_rule(&gr, Sum, Product, -1);
+  // r2 Sum := Sum + Product
+  def_rule(&gr, Sum, Sum, plus, Product , -1);
+  // r3 Product := Value
+  def_rule(&gr, Product, Value, -1);
+  // r4 Product := Product * Value
+  def_rule(&gr, Product, Product, mult, Value, -1);
+  // r5 Value := Int
+  def_rule(&gr, Value, Int,-1);
+  // r5 Value := Id
+  def_rule(&gr, Value, Id, -1);
 
-char *symbols[MAX_SYMBOLS_LEN];
-rule rules[MAX_SYMBOLS_LEN];
-int nonterms[MAX_NONTERMS_LEN][MAX_SYMBOLS_LEN];
-int noncount[MAX_NONTERMS_LEN];
-int nonterm_count;
-int terminal_count;
-
-int def_terminal(char *rep)
-{
-  int id=terminal_count;
-  symbols[id]=rep;
-  terminal_count++;
-
+  show_rules(&gr);
+}
 
