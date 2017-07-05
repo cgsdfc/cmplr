@@ -14,6 +14,7 @@
 #define DEF_RULE(...) def_rule(CLANG_GR,__VA_ARGS__, -1)
 #define DEF_ONEOF(...) def_oneof(CLANG_GR,__VA_ARGS__,-1)
 #define DEF_ONEMORE(L,R) def_onemore(CLANG_GR, (L), (R))
+#define DEF_SEPMORE(L,S,R) def_sepmore(CLANG_GR, (L),(S),(R))
 
 // variant of symbol definitions
 #define DEF_NONTERM(REP) def_nonterm(CLANG_GR,REP)
@@ -100,6 +101,7 @@ int def_punc(grammar *gr, char *rep);
 void def_rule(grammar *gr, int lhs,...);
 void def_oneof(grammar *gr, int lhs,...);
 void def_onemore(grammar *gr, int lhs, int rhs);
+void def_sepmore(grammar *gr, int lhs, int sep, int rhs);
 extern grammar grammar_clang;
 extern language lang_clang;
 

@@ -166,6 +166,16 @@ void def_onemore(grammar *gr, int lhs, int rhs)
   add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,2));
 }
 
+void def_sepmore(grammar *gr, int lhs, int sep, int rhs)
+{
+  int symbol[3];
+  symbol[0]=rhs;
+  add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,1));
+  symbol[0]=lhs;
+  symbol[1]=sep;
+  symbol[2]=rhs;
+  add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,3));
+}
 
 void show_rules(grammar *gr)
 {
