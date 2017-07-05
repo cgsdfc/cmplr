@@ -72,6 +72,15 @@ void init_clang(void)
   DEF_RULE(dclr_spfr, stcl_spfr, RULE_OPT, dclr_spfr);
   DEF_RULE(dclr_spfr, type_spfr, RULE_OPT, dclr_spfr);
   DEF_RULE(dclr_spfr, type_qlfr, RULE_OPT, dclr_spfr);
+
+  DEF_ONEOF(type_spfr, 
+      DEF_KEYWORD("auto"),
+      DEF_KEYWORD("register"),
+      DEF_KEYWORD("static"),
+      DEF_KEYWORD("extern"),
+      DEF_KEYWORD("typedef")
+      );
+
   
 
   SHOW_RULES();

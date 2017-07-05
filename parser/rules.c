@@ -24,6 +24,14 @@ int init_grammar(grammar *gr, language *lang)
   return 0;
 }
 
+int def_keyword(grammar *gr, char *rep)
+{
+  int next=gr->keyword_id;
+  gr->symbol[next]=rep;
+  return gr->keyword_id++;
+}
+
+
 int def_nonterm(grammar *gr, char *rep)
 {
   int next=gr->nonterm_id;

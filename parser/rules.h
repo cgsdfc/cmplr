@@ -11,6 +11,7 @@
 #define DEF_ONEOF(...) def_oneof(CLANG_GR,__VA_ARGS__,-1)
 #define DEF_NONTERM(REP) def_nonterm(CLANG_GR,REP)
 #define DEF_TERMINAL(REP) def_terminal(CLANG_GR,REP)
+#define DEF_KEYWORD(REP) def_keyword(CLANG_GR, REP)
 #define DEF_GRAMMAR() init_grammar(CLANG_GR, CLANG_LG);
 #define SHOW_RULES() show_rules(CLANG_GR)
 
@@ -82,6 +83,7 @@ typedef struct grammar
 int init_grammar(grammar *gr, language *lang);
 int def_nonterm(grammar *gr, char *rep);
 int def_terminal(grammar *gr, char *rep);
+int def_keyword(grammar *gr, char *rep);
 bool is_terminal(grammar *gr, int symbol);
 bool is_nonterm(grammar *gr, int symbol);
 void def_rule(grammar *gr, int lhs,...);
