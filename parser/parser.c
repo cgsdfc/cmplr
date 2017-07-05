@@ -10,7 +10,7 @@ void init_clang(void)
   int dclr=DEF_NONTERM("declaration");
   int dclr_spfr=DEF_NONTERM("declaration-specifier");
   int dcltor=DEF_NONTERM("declarator");
-  int dclist=DEF_NONTERM("declaration-list");
+  int dclr_list=DEF_NONTERM("declaration-list");
   int block=DEF_NONTERM( "composite-statement");
   int init_dcltor_list=DEF_NONTERM( "init-declarator-list");
   int stcl_spfr=DEF_NONTERM( "storage-class-specifier");
@@ -19,7 +19,7 @@ void init_clang(void)
   int struct_union_spfr=DEF_NONTERM("struct-or-union-specifier");
   int enum_spfr=DEF_NONTERM("enum-specifier");
   int struct_or_union=DEF_NONTERM("struct-or-union");
-  int struct_dclist=DEF_NONTERM("struct-declaration-list");
+  int struct_dclr_list=DEF_NONTERM("struct-declaration-list");
   int struct_dclr=DEF_NONTERM("struct-declaration");
   int init=DEF_NONTERM("initializer");
   int init_dclr=DEF_NONTERM("init-declarator");
@@ -40,6 +40,14 @@ void init_clang(void)
   int dir_abs_dcltor=DEF_NONTERM("direct-abstract-declarator");
   int init_list=DEF_NONTERM("initializer-list");
   int type_name=DEF_NONTERM("type-name");
+  int stmt=DEF_NONTERM("statement");
+  int labeled_stmt=DEF_NONTERM("labeled-statement");
+  int expr_stmt=DEF_NONTERM("expression-statement");
+  int expr=DEF_NONTERM("expression");
+  int selec_stmt=DEF_NONTERM("seletion-statement");
+  int iter_stmt=DEF_NONTERM("iteration-statement");
+  int jmp_stmt=DEF_NONTERM("jump-statement");
+  int stmt_list=DEF_NONTERM("statement-list");
 
   int assign_expr=DEF_NONTERM("assignment expression");
 
@@ -59,16 +67,19 @@ void init_clang(void)
   int star=DEF_PUNC("*");
   int comma=DEF_PUNC(",");
   int dot=DEF_PUNC(".");
+  int colon=DEF_PUNC(":");
+  int semi=DEF_PUNC(";");
 
+  int _while=DEF_KEYWORD("while");
   /* def_rule(&gr, program, tran_unit, eof,-1); */
   DEF_RULE(program, tran_unit, eof);
   DEF_ONEMORE(tran_unit, ext_dclr);
   DEF_ONEOF(ext_dclr, func_def, dclr);
-  DEF_RULE(func_def,RULE_OPT,dclr_spfr,dcltor,RULE_OPT,dclist,block);
+  DEF_RULE(func_def,RULE_OPT,dclr_spfr,dcltor,RULE_OPT,dclr_list,block);
 
 
   DEF_RULE(dclr, dclr_spfr, RULE_OPT, init_dcltor_list); 
-  DEF_ONEMORE(dclist, dclr);
+  DEF_ONEMORE(dclr_list, dclr);
 
   DEF_RULE(dclr_spfr, stcl_spfr, RULE_OPT, dclr_spfr);
   DEF_RULE(dclr_spfr, type_spfr, RULE_OPT, dclr_spfr);
@@ -106,10 +117,10 @@ void init_clang(void)
  DEF_RULE(struct_union_spfr,
      struct_or_union,
      RULE_OPT, id,
-     left_brace, struct_dclist, right_brace); 
+     left_brace, struct_dclr_list, right_brace); 
  DEF_RULE(struct_union_spfr, struct_or_union, id);
 
- DEF_ONEMORE(struct_dclist,struct_dclr);
+ DEF_ONEMORE(struct_dclr_list,struct_dclr);
  DEF_ONEMORE(init_dcltor_list, init_dclr);
 
  DEF_RULE(init_dclr, dcltor);
@@ -186,6 +197,98 @@ void init_clang(void)
      RULE_OPT, param_type_list,
      right_pare);
  
+ DEF_ONEOF(stmt,
+     labeled_stmt,
+     expr_stmt,
+     block,
+     selec_stmt,
+     iter_stmt,
+     jmp_stmt);
+
+ DEF_RULE(labeled_stmt, id, colon, stmt);
+ DEF_RULE(labeled_stmt, 
+     DEF_KEYWORD("case"),
+     const_expr,
+     colon,
+     stmt);
+DEF_RULE(labeled_stmt,
+    DEF_KEYWORD("default"),
+    colon,
+    stmt);
+
+DEF_RULE(expr_stmt, RULE_OPT, expr, semi);
+
+DEF_RULE(block,
+    left_brace,
+   RULE_OPT, dclr_list, 
+   RULE_OPT, stmt_list,
+   right_brace);
+
+DEF_ONEMORE(stmt_list, stmt);
+
+DEF_RULE(selec_stmt,
+    DEF_KEYWORD("if"),
+    left_pare,
+    expr,
+    right_pare,
+    stmt);
+
+DEF_RULE(selec_stmt,
+    DEF_KEYWORD("if"),
+    left_pare,
+    expr,
+    right_pare,
+    stmt,
+    DEF_KEYWORD("else"),
+    stmt);
+
+DEF_RULE(selec_stmt,
+    DEF_KEYWORD("switch"),
+    left_pare,
+    expr,
+    right_pare,
+    stmt);
+
+DEF_RULE(iter_stmt,
+    _while,
+    left_pare,
+    expr,
+    right_pare,
+    stmt);
+
+DEF_RULE(iter_stmt,
+    DEF_KEYWORD("do"),
+    stmt,
+    _while,
+    left_pare,
+    expr,
+    right_pare,
+    semi);
+
+DEF_RULE(iter_stmt,
+    DEF_KEYWORD("for"), left_pare,
+    RULE_OPT, expr, semi,
+    RULE_OPT, expr, semi,
+    RULE_OPT, expr, right_pare,
+    stmt);
+
+DEF_RULE(jmp_stmt,
+    DEF_KEYWORD("goto"),
+    id,
+    semi);
+
+DEF_RULE(jmp_stmt,
+    DEF_KEYWORD("return"),
+    RULE_OPT, expr,
+    semi);
+
+DEF_RULE(jmp_stmt,
+    DEF_KEYWORD("continue"),
+    semi);
+
+DEF_RULE(jmp_stmt,
+    DEF_KEYWORD("break"),
+    semi);
 
 
 

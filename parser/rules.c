@@ -128,8 +128,8 @@ void collect_symbol(va_list ap, int *symbols)
 void def_rule(grammar *gr, int lhs, ...)
 {
   va_list ap;
-  int symbols[10];
-  int expanded_sym[10];
+  int symbols[30];
+  int expanded_sym[30];
 
   va_start(ap, lhs);
   collect_symbol(ap,symbols);
