@@ -3,7 +3,12 @@
 void init_simple(void)
 {
   grammar gr;
-  init_grammar(&gr,"Simple", 10);
+  language lang={
+    .name="Simple",
+    .num_nonterm=10,
+  };
+
+  init_grammar(&gr,&lang);
   int Goal=def_nonterm(&gr,"Goal");
   int Sum=def_nonterm(&gr,"Sum");
   int Product=def_nonterm(&gr, "Product");
@@ -57,16 +62,16 @@ void init_clang(void)
   DEF_RULE(tran_unit,tran_unit,ext_dclr);
   DEF_RULE(ext_dclr, func_def);
   DEF_RULE(ext_dclr, dclr);
-  DEF_RULE(func_def,-2,dclr_spfr,dcltor,-2,dclist,block);
+  DEF_RULE(func_def,RULE_OPT,dclr_spfr,dcltor,RULE_OPT,dclist,block);
 
 
-  DEF_RULE(dclr, dclr_spfr, -2, init_dcltor_list); 
+  DEF_RULE(dclr, dclr_spfr, RULE_OPT, init_dcltor_list); 
   DEF_RULE(dclist, dclr);
   DEF_RULE(dclist, dclist, dclr);
 
-  DEF_RULE(dclr_spfr, stcl_spfr, -2, dclr_spfr);
-  DEF_RULE(dclr_spfr, type_spfr, -2, dclr_spfr);
-  DEF_RULE(dclr_spfr, type_qlfr, -2, dclr_spfr);
+  DEF_RULE(dclr_spfr, stcl_spfr, RULE_OPT, dclr_spfr);
+  DEF_RULE(dclr_spfr, type_spfr, RULE_OPT, dclr_spfr);
+  DEF_RULE(dclr_spfr, type_qlfr, RULE_OPT, dclr_spfr);
   
 
   SHOW_RULES();
