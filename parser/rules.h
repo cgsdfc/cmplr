@@ -36,6 +36,7 @@ typedef struct grammar
 
   // all the rules stored here
   rule rules[1024];
+  char *lang;
   int nrule;
 
   // for each non-terminal, their rules
@@ -53,7 +54,8 @@ int def_terminal(grammar *gr, char *rep);
 bool is_terminal(grammar *gr, int symbol);
 bool is_nonterm(grammar *gr, int symbol);
 void def_rule(grammar *gr, int lhs,...);
-int init_grammar(grammar *gr, int nnont);
+int init_grammar(grammar *gr,char *lang, int nnont);
+
 void show_rules(grammar*);
 
 #endif
