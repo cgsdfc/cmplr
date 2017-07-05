@@ -1,42 +1,5 @@
 #include "rules.h"
 
-void init_simple(void)
-{
-  grammar gr;
-  language lang={
-    .name="Simple",
-    .num_nonterm=10,
-  };
-
-  init_grammar(&gr,&lang);
-  int Goal=def_nonterm(&gr,"Goal");
-  int Sum=def_nonterm(&gr,"Sum");
-  int Product=def_nonterm(&gr, "Product");
-  int Value=def_nonterm(&gr,"Value");
-  int Int=def_terminal(&gr,"Int");
-  int Id=def_terminal(&gr,"Id");
-  int eof=def_terminal(&gr,"eof");
-  int plus=def_terminal(&gr,"+");
-  int mult=def_terminal(&gr, "*");
-
-  // r0 Goal := Sum eof
-  def_rule(&gr, Goal, Sum, eof, -1);
-  // r1 Sum := Product
-  def_rule(&gr, Sum, Product, -1);
-  // r2 Sum := Sum + Product
-  def_rule(&gr, Sum, Sum, plus, Product , -1);
-  // r3 Product := Value
-  def_rule(&gr, Product, Value, -1);
-  // r4 Product := Product * Value
-  def_rule(&gr, Product, Product, mult, Value, -1);
-  // r5 Value := Int
-  def_rule(&gr, Value, Int,-1);
-  // r5 Value := Id
-  def_rule(&gr, Value, Id, -1);
-
-  show_rules(&gr);
-}
-
 void init_clang(void)
 {
   DEF_GRAMMAR();
@@ -58,12 +21,24 @@ void init_clang(void)
   int struct_or_union=DEF_NONTERM("struct-or-union");
   int struct_dclist=DEF_NONTERM("struct-declaration-list");
   int struct_dclr=DEF_NONTERM("struct-declaration");
+  int init=DEF_NONTERM("initializer");
+  int init_dclr=DEF_NONTERM("init-declarator");
+  int spfr_qlfr_list=DEF_NONTERM("specifier-qualifier-list");
+  int struct_dcltor_list=DEF_NONTERM("struct-declarator-list");
+  int struct_dcltor=DEF_NONTERM("struct-declarator");
+  int const_expr=DEF_NONTERM("constant-expression");
+  int enumtor_list=DEF_NONTERM("enumerator-list");
+  int enumtor=DEF_NONTERM("enumerator");
+
+
 
 
   int id=DEF_TERMINAL("identifier");
   int eof=DEF_TERMINAL("eof");
   int left_brace=DEF_PUNC("{");
   int right_brace=DEF_PUNC("}");
+  int equal=DEF_PUNC("=");
+  int _enum=DEF_KEYWORD("enum");
 
   /* def_rule(&gr, program, tran_unit, eof,-1); */
   DEF_RULE(program, tran_unit, eof);
@@ -115,6 +90,36 @@ void init_clang(void)
  DEF_RULE(struct_union_spfr, struct_or_union, id);
 
  DEF_ONEMORE(struct_dclist,struct_dclr);
+ DEF_ONEMORE(init_dcltor_list, init_dclr);
+
+ DEF_RULE(init_dclr, dcltor);
+ DEF_RULE(init_dclr,
+     dcltor, 
+     equal,
+     init);
+
+ DEF_RULE(struct_dclr,spfr_qlfr_list,struct_dcltor_list);
+ DEF_RULE(spfr_qlfr_list,type_qlfr, RULE_OPT, spfr_qlfr_list);
+ DEF_RULE(spfr_qlfr_list,type_spfr, RULE_OPT, spfr_qlfr_list);
+
+ DEF_ONEMORE(struct_dcltor_list, struct_dcltor);
+
+ DEF_RULE(struct_dcltor, dcltor);
+ DEF_RULE(struct_dcltor,
+     RULE_OPT, dcltor, 
+     DEF_PUNC(":"),
+     const_expr);
+
+ DEF_RULE(enum_spfr,
+     RULE_OPT, id,
+     left_brace,
+     enumtor_list,
+     right_brace);
+
+ DEF_RULE(enum_spfr,_enum, id);
+ DEF_ONEMORE(enumtor_list,enumtor);
+ DEF_RULE(enumtor, id);
+ DEF_RULE(enumtor, id, equal, const_expr);
  
 
   SHOW_RULES();

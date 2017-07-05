@@ -199,6 +199,14 @@ void show_rules(grammar *gr)
         puts("\n");
       }
     }
+
+  printf("summary: nonterm=%d, terminal=%d, keyword=%d, operator=%d, punctuation=%d\n",
+      gr->nonterm_id,
+      gr->terminal_id,
+      gr->keyword_id,
+      gr->operator_id,
+      gr->punctuation_id);
+
 }
 
 
