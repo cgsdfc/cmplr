@@ -21,6 +21,7 @@
 #define DEF_TERMINAL(REP) def_terminal(CLANG_GR,REP)
 #define DEF_KEYWORD(REP) def_keyword(CLANG_GR, REP)
 #define DEF_PUNC(REP) def_punc(CLANG_GR, REP)
+#define DEF_OPER(REP) def_oper(CLANG_GR, REP)
 
 // initial entry
 #define DEF_GRAMMAR() init_grammar(CLANG_GR, CLANG_LG);
@@ -74,10 +75,10 @@ typedef struct grammar
   // the grammar rules
 
   // all the rules stored here
-  rule rules[1024];
+  rule rules[350];
   int nrule;
-  int nonterm[1024][1024];
-  int nnont_rule[1024];
+  int nonterm[100][100];
+  int nnont_rule[100];
 
   // the id alloc for each kind of
   // symbol
@@ -88,7 +89,7 @@ typedef struct grammar
   int punctuation_id;
 
   // symbol name
-  char *symbol[1024];
+  char *symbol[200];
 
 } grammar;
 
@@ -98,10 +99,16 @@ int def_nonterm(grammar *gr, char *rep);
 int def_terminal(grammar *gr, char *rep);
 int def_keyword(grammar *gr, char *rep);
 int def_punc(grammar *gr, char *rep);
+int def_oper(grammar *gr, char *rep);
+
+
+
 void def_rule(grammar *gr, int lhs,...);
 void def_oneof(grammar *gr, int lhs,...);
 void def_onemore(grammar *gr, int lhs, int rhs);
 void def_sepmore(grammar *gr, int lhs, int sep, int rhs);
+
+
 extern grammar grammar_clang;
 extern language lang_clang;
 

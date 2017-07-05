@@ -4,10 +4,10 @@ grammar grammar_clang;
 language lang_clang= 
 {
   .name="C programming language",
-  .num_nonterm=100,
+  .num_nonterm=80,
   .num_terminal=10,
-  .num_keyword=32,
-  .num_operator=20
+  .num_keyword=40,
+  .num_operator=50
 };
 
 
@@ -51,6 +51,13 @@ int def_punc(grammar *gr, char *rep)
   int next=gr->punctuation_id;
   gr->symbol[next]=rep;
   return gr->punctuation_id++;
+}
+
+int def_oper(grammar *gr, char *rep)
+{
+  int next=gr->operator_id;
+  gr->symbol[next]=rep;
+  return gr->operator_id++;
 }
 
 bool is_terminal(grammar *gr, int symbol)
@@ -183,6 +190,8 @@ void show_rules(grammar *gr)
   char *symbol;
   rule *r;
   int nrules;
+  int unresolved=0;
+  int unrev[10];
 
   printf(">>>>>>>>> grammar rules for %s <<<<<<<<<<<\n\n",gr->name);
 
@@ -192,7 +201,7 @@ void show_rules(grammar *gr)
     nrules=gr->nnont_rule[i];
     if (!nrules)
     {
-      printf("[INFO] rules set for %s is empty\n", symbol);
+      unrev[unresolved++]=i;
       continue;
     }
 
@@ -210,13 +219,20 @@ void show_rules(grammar *gr)
       }
     }
 
-  printf("summary: nonterm=%d, terminal=%d, keyword=%d, operator=%d, punctuation=%d\n",
+  printf("summary: nrules=%d, nonterm=%d, terminal=%d, keyword=%d, operator=%d, punctuation=%d\n",
+      gr->nrule,
       gr->nonterm_id,
       gr->terminal_id,
       gr->keyword_id,
       gr->operator_id,
       gr->punctuation_id);
 
+  printf("unresolved=%d\n", unresolved);
+  for (int i=0;i<unresolved;++i)
+  {
+    symbol=gr->symbol[unrev[i]];
+    printf("[INFO] rules set for %s is empty\n", symbol);
+  }
 }
 
 

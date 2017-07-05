@@ -4,16 +4,16 @@ void init_clang(void)
 {
   DEF_GRAMMAR();
   int program=DEF_NONTERM("program");
-  int tran_unit=DEF_NONTERM( "translation-unit");
-  int ext_dclr=DEF_NONTERM( "external-declaration");
+  int tran_unit=DEF_NONTERM("translation-unit");
+  int ext_dclr=DEF_NONTERM("external-declaration");
   int func_def=DEF_NONTERM("function-definition");
   int dclr=DEF_NONTERM("declaration");
   int dclr_spfr=DEF_NONTERM("declaration-specifier");
   int dcltor=DEF_NONTERM("declarator");
   int dclr_list=DEF_NONTERM("declaration-list");
-  int block=DEF_NONTERM( "composite-statement");
-  int init_dcltor_list=DEF_NONTERM( "init-declarator-list");
-  int stcl_spfr=DEF_NONTERM( "storage-class-specifier");
+  int block=DEF_NONTERM("composite-statement");
+  int init_dcltor_list=DEF_NONTERM("init-declarator-list");
+  int stcl_spfr=DEF_NONTERM("storage-class-specifier");
   int type_spfr=DEF_NONTERM("type-specifier");
   int type_qlfr=DEF_NONTERM("type-qualifier");
   int struct_union_spfr=DEF_NONTERM("struct-or-union-specifier");
@@ -48,13 +48,40 @@ void init_clang(void)
   int iter_stmt=DEF_NONTERM("iteration-statement");
   int jmp_stmt=DEF_NONTERM("jump-statement");
   int stmt_list=DEF_NONTERM("statement-list");
+  int assign_oper=DEF_NONTERM("assignment-operator");
+  int assign_expr=DEF_NONTERM("assignment-expression");
+  int cond_expr=DEF_NONTERM("condition-expression");
+  int lg_or_expr=DEF_NONTERM("logical-OR-expression");
+  int lg_and_expr=DEF_NONTERM("logical-AND-expression");
+  int incl_or_expr=DEF_NONTERM("inclusive-OR-expression");
+  int excl_or_expr=DEF_NONTERM("exclusive-OR-expression");
+  int unary_expr=DEF_NONTERM("unary-expression");
+  int and_expr=DEF_NONTERM("AND-expression");
+  int eq_expr=DEF_NONTERM("equality-expression");
+  int rel_expr=DEF_NONTERM("relational-expression");
+  int shift_expr=DEF_NONTERM("shift-expression");
+  int add_expr=DEF_NONTERM("additive-expression");
+  int mul_expr=DEF_NONTERM("multiplicative-expression");
+  int cast_expr=DEF_NONTERM("cast-expression");
+  int unary_oper=DEF_NONTERM("unary-operator");
+  int postfix=DEF_NONTERM("postfix-expression");
+  int primary=DEF_NONTERM("primary-expression");
+  int arglist=DEF_NONTERM("argument-expression-list");
+  int rel_oper=DEF_NONTERM("relational-operator");
+  int mul_oper=DEF_NONTERM("multiplicative-operator");
+  int add_oper=DEF_NONTERM("additive-operator");
+  int eq_oper=DEF_NONTERM("equality-operator");
+  int shift_oper=DEF_NONTERM("shift-operator");
 
-  int assign_expr=DEF_NONTERM("assignment expression");
 
 
 
 
   int id=DEF_TERMINAL("identifier");
+  int float_const=DEF_TERMINAL("float-const");
+  int int_const=DEF_TERMINAL("int-const");
+  int string_const=DEF_TERMINAL("string-const");
+  int char_const=DEF_TERMINAL("char-const");
   int eof=DEF_TERMINAL("eof");
   int left_brace=DEF_PUNC("{");
   int right_brace=DEF_PUNC("}");
@@ -62,14 +89,17 @@ void init_clang(void)
   int right_bkt=DEF_PUNC("]");
   int left_pare=DEF_PUNC("(");
   int right_pare=DEF_PUNC(")");
-  int equal=DEF_PUNC("=");
+  int equal=DEF_OPER("=");
   int _enum=DEF_KEYWORD("enum");
   int star=DEF_PUNC("*");
   int comma=DEF_PUNC(",");
   int dot=DEF_PUNC(".");
   int colon=DEF_PUNC(":");
   int semi=DEF_PUNC(";");
-
+  int _sizeof=DEF_KEYWORD("sizeof");
+  int question=DEF_PUNC("?");
+  int plus_plus=DEF_OPER("++");
+  int minus_minus=DEF_OPER("--");
   int _while=DEF_KEYWORD("while");
   /* def_rule(&gr, program, tran_unit, eof,-1); */
   DEF_RULE(program, tran_unit, eof);
@@ -290,8 +320,117 @@ DEF_RULE(jmp_stmt,
     DEF_KEYWORD("break"),
     semi);
 
+DEF_RULE(expr, assign_expr);
+DEF_SEPMORE(expr, comma, assign_expr);
+DEF_RULE(assign_expr,cond_expr);
+DEF_RULE(assign_expr, unary_expr, assign_oper, assign_expr);
+DEF_ONEOF(assign_oper,
+    equal,
+    DEF_OPER("*="),
+    DEF_OPER("/="),
+    DEF_OPER("%="),
+    DEF_OPER("+="),
+    DEF_OPER("-="),
+    DEF_OPER("<<="),
+    DEF_OPER(">>="),
+    DEF_OPER("&="),
+    DEF_OPER("^="),
+    DEF_OPER("|="));
 
+DEF_RULE(cond_expr,lg_or_expr);
+DEF_RULE(cond_expr,
+    lg_or_expr,
+    question,
+    expr,
+    colon,
+    cond_expr);
 
+DEF_RULE(const_expr, cond_expr);
+
+DEF_SEPMORE(lg_or_expr, DEF_OPER("||"), lg_and_expr);
+
+DEF_SEPMORE(lg_and_expr, DEF_OPER("&&"), incl_or_expr);
+
+DEF_SEPMORE(incl_or_expr, DEF_OPER("|"), excl_or_expr);
+
+DEF_SEPMORE(excl_or_expr, DEF_OPER("^"), and_expr);
+
+DEF_SEPMORE(and_expr, DEF_OPER("&"), eq_expr);
+
+DEF_SEPMORE(eq_expr, eq_oper, rel_expr);
+
+DEF_ONEOF(eq_oper,
+    DEF_OPER("=="),
+    DEF_OPER("!="));
+
+DEF_SEPMORE(rel_expr, rel_oper, shift_expr);
+
+DEF_ONEOF(rel_oper,
+    DEF_OPER("<"),
+    DEF_OPER(">"),
+    DEF_OPER("<="),
+    DEF_OPER(">="));
+
+DEF_SEPMORE(shift_expr, shift_oper, add_expr);
+
+DEF_ONEOF(shift_oper, 
+    DEF_OPER("<<"),
+    DEF_OPER(">>"));
+
+DEF_SEPMORE(add_expr,add_oper, mul_expr);
+
+DEF_ONEOF(add_oper,
+    DEF_OPER("+"),
+    DEF_OPER("-"));
+
+DEF_SEPMORE(add_expr,  add_oper, mul_expr);
+
+DEF_SEPMORE(mul_expr, mul_oper, cast_expr);
+
+DEF_ONEOF(mul_oper,
+    DEF_OPER("*"),
+    DEF_OPER("%"),
+    DEF_OPER("/"));
+
+DEF_RULE(cast_expr, unary_expr);
+DEF_RULE(cast_expr,
+    left_pare,
+    type_name,
+    right_pare,
+    cast_expr);
+
+DEF_RULE(unary_expr, postfix);
+DEF_RULE(unary_expr, plus_plus, unary_expr);
+DEF_RULE(unary_expr, minus_minus, unary_expr);
+DEF_RULE(unary_expr, unary_oper, cast_expr);
+DEF_RULE(unary_expr, _sizeof, unary_expr);
+DEF_RULE(unary_expr, _sizeof, left_pare, type_name, right_pare);
+
+DEF_ONEOF(unary_oper,
+    DEF_OPER("&"),
+    DEF_OPER("*"),
+    DEF_OPER("+"),
+    DEF_OPER("-"),
+    DEF_OPER("~"),
+    DEF_OPER("!"));
+
+DEF_RULE(postfix, primary);
+DEF_RULE(postfix, postfix, left_bkt, expr, right_bkt);
+DEF_RULE(postfix, postfix, left_pare, RULE_OPT, arglist, right_pare);
+DEF_RULE(postfix, postfix, dot, id);
+DEF_RULE(postfix, postfix, DEF_OPER("->"), id);
+DEF_RULE(postfix, postfix, plus_plus);
+DEF_RULE(postfix, postfix, minus_minus);
+
+DEF_ONEOF(primary,
+    id,
+    char_const,
+    float_const,
+    string_const,
+    int_const);
+DEF_RULE(primary, left_pare, expr, right_pare);
+
+DEF_SEPMORE(arglist, comma, assign_expr);
 
   SHOW_RULES();
 
