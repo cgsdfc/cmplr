@@ -172,6 +172,7 @@ void init_clang(void)
      const_expr);
 
  DEF_RULE(enum_spfr,
+     _enum,
      RULE_OPT, id,
      left_brace,
      enumtor_list,
@@ -195,12 +196,10 @@ void init_clang(void)
  DEF_RULE(param_type_list, para_list, comma, dot,dot,dot);
  // TODO let tknzr recogize ...
 
- DEF_RULE(para_list, para_dclr);
  DEF_SEPMORE(para_list,comma, para_dclr);
 
  DEF_RULE(para_dclr, dclr_spfr, dcltor);
  DEF_RULE(para_dclr, dclr_spfr, RULE_OPT, abs_dcltor);
- DEF_RULE(id_list, id);
  DEF_SEPMORE(id_list, comma, id);
 
  DEF_RULE(init, assign_expr);
@@ -320,7 +319,6 @@ DEF_RULE(jmp_stmt,
     DEF_KEYWORD("break"),
     semi);
 
-DEF_RULE(expr, assign_expr);
 DEF_SEPMORE(expr, comma, assign_expr);
 DEF_RULE(assign_expr,cond_expr);
 DEF_RULE(assign_expr, unary_expr, assign_oper, assign_expr);
@@ -382,8 +380,6 @@ DEF_SEPMORE(add_expr,add_oper, mul_expr);
 DEF_ONEOF(add_oper,
     DEF_OPER("+"),
     DEF_OPER("-"));
-
-DEF_SEPMORE(add_expr,  add_oper, mul_expr);
 
 DEF_SEPMORE(mul_expr, mul_oper, cast_expr);
 
