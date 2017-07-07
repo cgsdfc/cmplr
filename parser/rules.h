@@ -31,6 +31,7 @@
 
 typedef struct item
 {
+  int creator;
   int ruleid;
   int dot;
 } item;
@@ -39,6 +40,8 @@ typedef struct item_set
 {
   int items[30];
   int len;
+  int nonterms[30];
+  int non_len;
 } item_set;
 
 
@@ -53,6 +56,8 @@ typedef struct rule
 typedef struct language
 {
   char *name;
+  int num_symbol;
+
   int num_terminal;
   /* [0, nnont) is for nonterms */
   int num_nonterm;
@@ -85,6 +90,7 @@ typedef struct grammar
   int keyword_id;
   int operator_id;
   int punctuation_id;
+  int symbol_id;
 
   // symbol name
   char *symbol[200];
@@ -92,8 +98,8 @@ typedef struct grammar
   // for constructing item sets
   item items[1024];
   int item_id;
-  item_set sets[1024];
-  int set_id;
+  item_set item_sets[1024];
+  int item_set_id;
   int set2symbols[1024][1024];
 
 } grammar;

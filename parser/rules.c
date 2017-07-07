@@ -14,6 +14,7 @@ language lang_clang=
 int init_grammar(grammar *gr, language *lang)
 {
   memset (gr, 0, sizeof (grammar));
+  gr->symbol_id=lang->num_symbol;
   gr->name=lang->name;
   gr->nonterm_id=0;
   gr->terminal_id=gr->nonterm_id + lang->num_nonterm;
