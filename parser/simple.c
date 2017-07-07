@@ -1,4 +1,6 @@
-#include "rule.h"
+#include "item.h"
+
+
 void init_simple(void)
 {
   grammar gr;
@@ -34,5 +36,12 @@ void init_simple(void)
   def_rule(&gr, Value, Id, -1);
 
   show_rules(&gr);
+
+  int it=alloc_item(&gr, 0, 0);
+  item_set I0;
+  item_set_append(&I0, it);
+  do_closure(&gr, &I0);
+  print_item_set(&gr, &I0);
+
 }
 

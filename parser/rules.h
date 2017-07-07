@@ -29,13 +29,18 @@
 // textual rep
 #define SHOW_RULES() show_rules(CLANG_GR)
 
-
 typedef struct item
 {
+  int ruleid;
   int dot;
-  int rule;
-  int lookahead;
 } item;
+
+typedef struct item_set
+{
+  int items[30];
+  int len;
+} item_set;
+
 
 typedef struct rule 
 {
@@ -44,13 +49,6 @@ typedef struct rule
   int len;
 } rule;
 
-typedef struct item_set
-{
-  int *items;
-  int len;
-  int max;
-  int id;
-} item_set;
 
 typedef struct language
 {
@@ -90,6 +88,13 @@ typedef struct grammar
 
   // symbol name
   char *symbol[200];
+
+  // for constructing item sets
+  item items[1024];
+  int item_id;
+  item_set sets[1024];
+  int set_id;
+  int set2symbols[1024][1024];
 
 } grammar;
 

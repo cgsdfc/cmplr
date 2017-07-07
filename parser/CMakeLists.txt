@@ -3,6 +3,8 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(parser_src
   rules.c
+  simple.c
+  item.c
   )
 add_library(parser_lib ${parser_src})
 add_executable(parser parser.c)
