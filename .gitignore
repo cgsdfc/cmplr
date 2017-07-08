@@ -2,8 +2,12 @@ a.out
 bin/
 errlog
 exptest/
-old-tokenizer/
-preprocessor/
-tags
 tknzr/tags
 tags
+_*
+*.o
+bin/
+errdir/
+zerror/
+old-tokenizer/
+preprocessor/

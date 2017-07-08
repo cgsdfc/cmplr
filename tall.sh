@@ -14,7 +14,6 @@ if [ $? -ne 0 ];then
 fi
 cd ..
 
-
 for x in $TESTFILE;do
   echo testing $x
   $testbin $testdir/$x.txt > /dev/null
