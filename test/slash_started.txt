@@ -1,0 +1,21 @@
+ /
+
+  /=
+
+/* this is a normal multi line comment but just in one line */
+
+  // this is a normal single line coment
+
+/ /
+
+/* this is a multi line coment that spans many lines
+ * line 1
+ * line 2
+ * line 3
+ */
+
+/* /* bad 
+
+/* /**/ */ 
+
+
