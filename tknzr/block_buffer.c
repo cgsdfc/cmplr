@@ -146,7 +146,7 @@ int block_buffer_alloc_blk(block_buffer *buf)
 
 // reserve a chrunk of mem in the buf for
 // elesz 
-void *
+char *
 block_buffer_alloc (block_buffer *buf)
 {
   if (block_buffer_is_full(buf)

@@ -9,7 +9,6 @@
 #include <string.h>
 #include <ctype.h>
 #include "token.h"
-#define CC_REV (1)
 
 enum
 {

@@ -78,7 +78,7 @@ void config_to(int to)
   cur_config.to=to;
 }
 
-void config_cond(int cond)
+void config_condition(int cond)
 {
   cur_config.cond=cond;
 }
@@ -129,12 +129,7 @@ dfa_state *resize_row(dfa_state *ds, int len, int *newlen)
 
 int add_config(void)
 {
-  return add_state(cur_config.from, cur_config.to);
-}
-
-int add_loop(int loop)
-{
-  return add_state(loop,loop);
+  add_state(cur_config.from, cur_config.to);
 }
 
 static int

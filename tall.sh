@@ -28,7 +28,6 @@ if [ $nerr -ne 0 ];then
   echo "errors $nerr"
 else
   echo "pass all!"
-  rm $testdir/*\$
 fi
 
 

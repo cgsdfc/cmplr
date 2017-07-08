@@ -44,14 +44,13 @@ typedef struct dfa_config
 dfa_table *alloc_dfa(int nrows, transfer_func func);
 void config_from(int from);
 void config_to(int to);
-void config_cond(int cond);
+void config_condition(int cond);
 void config_action(int action);
 void config_usrd(int usrd);
 int config_handler(int state, int handler);
 void config_end(void);
 int add_from(int from);
 int add_to(int to);
-int add_loop(int loop);
 int add_config(void);
 int alloc_state(bool is_non_terminal);
 int transfer(dfa_table *dfa,int from, int cond, dfa_state **to);
