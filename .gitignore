@@ -1,0 +1,8 @@
+a.out
+bin/
+errlog
+exptest/
+old-tokenizer/
+preprocessor/
+tags
+tknzr/tags

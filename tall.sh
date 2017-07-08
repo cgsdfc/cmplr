@@ -3,11 +3,11 @@
 TESTFILE="string_literal char_literal comment id keywords float_literal integer_literal operators "
 
 testdir="test"
-testbin="./bin/tokenizer/tokenizer"
+testbin="./bin/tknzr/tokenizer"
 nerr=0
 
 echo build the tokenizer 
-cd bin;cmake .. -Ddebug=0 && make
+cd bin;make
 if [ $? -ne 0 ];then
   echo make failed!
   exit 1
@@ -17,7 +17,7 @@ cd ..
 
 for x in $TESTFILE;do
   echo testing $x
-  $testbin $testdir/$x.txt > $testdir/$x\$
+  $testbin $testdir/$x.txt > /dev/null
   if [ $? -ne 0 ];then
     echo "$x run wrong!"
     nerr=$((nerr+1))
