@@ -3,82 +3,62 @@
 #include "color.h"
 
 
-static tknzr_error tknzr_errno;
+static int cmplr_errno;
 static
-const char *tokenizer_err_tab [] =
+const err_entry error_tab [] =
 {
-  [TERR_SUCCESS]="no error, success",
-  [TERR_NOMEM]="no free memory available",
-  [TERR_COMMENT_UNTERMINATED]="unterminated comment",
-  [TERR_DIGIT_NOT_OCTONARY]= "invalid digit %s in octal constant",
-  [TERR_DIGIT_NOT_HEXADECIMAL]="invalid digit %s in hexadicemal constant",
-  [TERR_BAD_INTEGER_SUFFIX]="invalid suffix %s on integer constant",
-  [TERR_FLOAT_EXP_NO_DIGIT]="exponent has no digits",
-  [TERR_BAD_FLOAT_SUFFIX]="invalid suffix %s on floating point constant",
-  [TERR_STRING_UNTERMINATED]="missing terminating \" character",
-  [TERR_CHAR_UNTERMINATED]="missing terminating \' character",
-  [TERR_EMPTY_CHAR_LITERAL]="empty character constant",
-  [TERR_INVALID_IDENTIFIER]="invalid identifier", 
-  [TERR_UNKNOWN]="check your code, there should not be TERR_UNKNOWN",
+  [ER_NO_INPUT]={"no input file specified, compilation stops", LV_FATAL},
+  [ER_NOMEM]={"no free memory available", LV_FATAL },
+  [ER_COMMENT_UNTERMINATED]={"unterminated comment", LV_ERROR},
+  [ER_DIGIT_NOT_OCTONARY]={"invalid digit in octal constant", LV_ERROR},
+  [ER_DIGIT_NOT_HEXADECIMAL]={"invalid digit in hexadicemal constant", LV_ERROR},
+  [ER_BAD_INTEGER_SUFFIX]={"invalid suffix on integer constant", LV_ERROR},
+  [ER_FLOAT_EXP_NO_DIGIT]={"exponent has no digits", LV_ERROR},
+  [ER_BAD_FLOAT_SUFFIX]={"invalid suffix on floating point constant", LV_ERROR},
+  [ER_STRING_UNTERMINATED]={"missing terminating \" character", LV_ERROR},
+  [ER_CHAR_UNTERMINATED]={"missing terminating \' character", LV_ERROR},
+  [ER_EMPTY_CHAR_LITERAL]={"empty character constant", LV_ERROR},
+  [ER_INVALID_CHAR]={"invalid character in source", LV_ERROR},
 };
 
+static const
+char *indicator[]=
+{
+  [LV_FATAL]=RED_FATAL,
+  [LV_ERROR]=RED_ERROR,
+  [LV_NOTE]=CYAN_NOTE,
+  [LV_WARNING]=PURPLE_WARNING
+} ;
+
+static
 char *tknzr_error_string(void)
 {
   static char buf[BUFSIZ];
-  snprintf(buf,BUFSIZ,COLOR_FORMAT,WHITE,
-      tokenizer_err_tab[tknzr_errno]);
+  const err_entry *ent=&error_tab[cmplr_errno];
+  const char *idctr=indicator[ent->lv];
+
+  snprintf(buf,BUFSIZ,COLOR_FORMAT,idctr, WHITE,
+      ent->errmsg);
   return buf;
 }
 
-tknzr_error  tknzr_error_get(void)
+
+void tknzr_error_set(int err)
 {
-  return tknzr_errno;
-}
-
-void tknzr_error_set(tknzr_error err)
-{
-  assert (0<= err && err < _TERR_NULL);
-  tknzr_errno = err;
-}
-
-void tknzr_error_clear(void)
-{
-  tknzr_errno = TERR_SUCCESS;
-}
-
-
-char *tknzr_level_string(void)
-{
-  if (1< tknzr_errno && tknzr_errno < _TERR_FATAL)
-  {
-    return RED_FATAL;
-  }
-
-  if (_TERR_FATAL < tknzr_errno && tknzr_errno < _TERR_ERROR)
-  {
-    return RED_ERROR;
-  }
-
-  if (_TERR_ERROR < tknzr_errno && tknzr_errno < _TERR_WARNING)
-  {
-    return PURPLE_WARNING;
-  }
-
-  return CYAN_NOTE;
+  cmplr_errno = err;
 }
 
 int  tknzr_error_handle (void)
 {
   extern char_buffer cbuffer;
+  put_char(&cbuffer);
   char *errline = peek_line (&cbuffer, get_lineno(&cbuffer));
   char *errmsg=tknzr_error_string();
-  char *level=tknzr_level_string();
 
-  fprintf(stderr, "%s:%d:%d:%s %s\n",
+  fprintf(stderr, "%s:%d:%d:%s\n",
       cbuffer.filename,
       cbuffer.pos.lineno,
       cbuffer.pos.column,
-      level,
       errmsg);
 
   fprintf(stderr, "\t%s", errline);

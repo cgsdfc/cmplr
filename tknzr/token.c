@@ -6,8 +6,13 @@
 int alloc_buffer (token *tk, position *begin)
 {
   tk->string=malloc(sizeof (char)*( TOKEN_VARLEN_INIT_LEN + 1));
+  tk->len=0;
   tk->max=TOKEN_VARLEN_INIT_LEN;
-  if (!tk->string) { return -1; }
+  if (!tk->string)
+  {
+    tknzr_error_set(ER_NOMEM);
+    return -1;
+  }
   memcpy(&tk->begin, begin, sizeof (position));
   return 0;
 }
@@ -22,7 +27,7 @@ int collect_char (token *tk, char ch)
     newspace=malloc(sizeof(char) * tk->max);
     if (!newspace)
     {
-      tknzr_error_set(TERR_NOMEM);
+      tknzr_error_set(ER_NOMEM);
       return -1;
     }
 

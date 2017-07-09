@@ -216,6 +216,9 @@ int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
   for (int i=0;i<len;++i)
   {
     *to=(ds+i);
+    if (i==len-1)
+      return 1;
+
     switch (dfa->func(ds + i, cond))
     {
       case 1:
@@ -226,7 +229,6 @@ int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
         continue;
     }
   }
-  return 1;
 }
 
 // the function set error handler for state

@@ -7,6 +7,26 @@
 char_buffer cbuffer;
 token_buffer buf;
 
+int unbuffer_print_token_stream(void)
+{
+  token tk;
+  while (true)
+  {
+    memset(&tk,0,sizeof(token));
+    switch (get_next_token(&cbuffer, &tk))
+    {
+      case 0:
+        puts(format_token(&tk));
+        continue;
+      case EOF:
+        return 0;
+      default:
+        tknzr_error_handle();
+        return 1;
+    }
+  }
+}
+
 int print_token_stream (void)
 {
   /* token *tk; */
@@ -51,10 +71,9 @@ int main(int ac,char**av){
     perror(filename);
     exit(1);
   }
-  print_buffer();
 
-  init_token_buffer(&buf,&cbuffer);
-  exit(print_token_stream());
+  init_tokenizer();
+  exit(unbuffer_print_token_stream());
 
 }
 
