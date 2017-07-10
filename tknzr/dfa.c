@@ -199,15 +199,11 @@ int alloc_state(bool is_non_terminal)
 // this function look up the diagram inside 
 // `dfa`, to find a suitabl state to go to
 // the return value depends on the usr `func`
-// `func` returns 1 if can go, 0 if can not,
-// -1 if error happened.
+// `func` returns 1 if can go, 0 if can not
+// (even if error happened).
 // this function does a little diff than the
 // usr func does: if success, it returns 0,
-// if fail, it return 1, error is -1, which
-// is the same as the usr
-// the last entry of each row is the error 
-// handler's state, every one should install 
-// this.
+// if fail, it return 1, 
 int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
 {
   int len=dfa->len[from];
@@ -216,93 +212,13 @@ int transfer(dfa_table *dfa,int from, int cond, dfa_state **to)
   for (int i=0;i<len;++i)
   {
     *to=(ds+i);
-    if (i==len-1)
-      return 1;
-
-    switch (dfa->func(ds + i, cond))
+    switch (dfa->func(*to, cond))
     {
       case 1:
         return 0;
-      case -1:
-        return -1;
       case 0:
         continue;
     }
   }
+  return 1;
 }
-
-// the function set error handler for state
-// which takes effect when a call to transfer
-// search through the row but reach the end.
-// in other words, the **end** of each row 
-// must not be a valid state. call to config_table()
-// graruantees that, as it walks through all the 
-// rows and set for you a default handler.
-// 
-// the last entry in a row is a handler.
-// the state field of it is used to mark whether usr 
-// has given specific value to it, if it is 0,
-// this means usr never touched it, so default
-// handler provided by usr will be set;
-// otherwise, the the handler is left untouched.
-int config_handler(int state, int handler)
-{
-  if (0<=state && state < cur_dfa->nrows)
-  {
-    cur_config.action=handler;
-    add_state(state, DFA_USR_HANDLER);
-    return 0;
-  }
-
-  return -1;
-}
-
-int dfa_get_handler(dfa_table *tb, int state, dfa_state **entry)
-{
-  if (!tb)
-    return -1;
-  if (!entry)
-    return -1;
-
-  if (0<=state && state < tb->nrows)
-  {
-    int last=tb->len[state]-1;
-    *entry = tb->diagram[state] + last;
-    return 0;
-  }
-
-  return -1;
-}
-
-int config_table(int def_handler)
-{
-  // walk through the table
-  dfa_state **table;
-  int last;
-  int actual_rows=cur_config.idcnt;
-
-  table=cur_dfa->diagram;
-  for (int i=0;i<actual_rows;++i)
-  {
-    last = cur_dfa->len[i];
-    if (last == 0)
-    {
-      printf("error! empty row discovered %d\n", i);
-      continue;
-    }
-
-    if (table[i][last].state == DFA_USR_HANDLER)
-    {
-      continue;
-    }
-    cur_config.action=def_handler;
-    add_state(i, DFA_DEF_HANDLER);
-  }
-  cur_dfa->nrows=actual_rows;
-
-  return 0;
-}
-
-
-
-

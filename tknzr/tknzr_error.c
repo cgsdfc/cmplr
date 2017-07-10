@@ -8,6 +8,7 @@ static
 const err_entry error_tab [] =
 {
   [ER_NO_INPUT]={"no input file specified, compilation stops", LV_FATAL},
+  [ER_BAD_TOKEN]={"bad token", LV_ERROR},
   [ER_NOMEM]={"no free memory available", LV_FATAL },
   [ER_COMMENT_UNTERMINATED]={"unterminated comment", LV_ERROR},
   [ER_DIGIT_NOT_OCTONARY]={"invalid digit in octal constant", LV_ERROR},

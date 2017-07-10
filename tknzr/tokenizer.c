@@ -224,11 +224,6 @@ void init_float_literal(void)
             add_from(exponent);
           config_condition(Dec_suffix_e);
             add_from(fraction);
-
-    config_handler(exp_begin, ER_FLOAT_EXP_NO_DIGIT);
-    config_handler(exponent, ER_FLOAT_EXP_NO_DIGIT);
-    config_handler(float_sign, ER_FLOAT_EXP_NO_DIGIT);
-    config_handler(float_suffix, ER_BAD_FLOAT_SUFFIX);
     config_end();
 }
 
@@ -263,8 +258,6 @@ void init_string_literal(void)
       config_usrd(true);
         config_condition(newline);
           add_to(str_begin);
-  config_handler(str_begin, ER_STRING_UNTERMINATED);
-  config_handler(str_escape, ER_STRING_UNTERMINATED); 
   config_end();
 
 }
@@ -372,10 +365,6 @@ int get_next_token (char_buffer *buf, token *tk)
     {
       return EOF;
     }
-    // let it fill through, the 
-    // cond_char_class makes sure
-    // -1 return -1 as an error
-    // so handler can catch it 
     r = transfer(table,state,ch,&entry);
     switch (r)
     {
@@ -384,12 +373,10 @@ int get_next_token (char_buffer *buf, token *tk)
         switch (entry->action)
         {
           case TKA_SKIP:
-            /* if (tk->string) */
-            /* { */
-            /*   free(tk->string); */
-            /*   tk->string=0; */
-            /* } */
             break;
+            // TODO; change this, let 
+            // compilation of regex manage
+            // the buffer itself
 
           case TKA_ALLOC_BUF:
             alloc_buffer(tk,&buf->pos);
@@ -427,26 +414,10 @@ int get_next_token (char_buffer *buf, token *tk)
 
         }
         break;
-      case 1: // not found
-        // exception handler
-        tknzr_error_set(entry->action);
-        return 1;
-      case -1: // premature end of input
-        dfa_get_handler(table, state, &entry);
-        tknzr_error_set(entry->action);
+      case 1: 
+        tknzr_error_set(ER_BAD_TOKEN);
         return 1;
     }
   }
 }
-
-
-// TODO install handlers, especailly for 
-// the init(0) state -- stray char.
-// TODO error lv tab, assign each errno
-// a lv, changeable.
-// TODO the token_buffer catch the error 
-// by get_next_token, it hands it to handler
-// function, which should output errmsg and tell
-// if should go on or die.
-
 

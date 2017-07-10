@@ -10,6 +10,7 @@
 typedef enum cmplr_error
 {
   ER_NO_INPUT=1,
+  ER_BAD_TOKEN,
   ER_NOMEM,
   ER_COMMENT_UNTERMINATED,
   ER_DIGIT_NOT_OCTONARY,
