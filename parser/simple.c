@@ -115,6 +115,7 @@ void init_quick(void)
   build_item_set(&gr);
   puts("");
   print_item_set_all(&gr);
+  print_core(&gr);
 }
 
 
