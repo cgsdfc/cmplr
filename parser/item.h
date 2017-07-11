@@ -2,12 +2,13 @@
 #define ITEM_H 1
 #define ITEM_SET_INIT_LEN 20
 #include "rules.h"
+#include <stdlib.h>
 
 void print_core(grammar*);
 void print_item_set_all (grammar*);
 char *format_rule(grammar *, int);
 char *format_item(grammar*,int);
-void print_item_set(grammar*,int);
+void print_item_set(grammar*,item_set*);
 
 int alloc_item(grammar*,item*);
 bool item_is_same(item*,item*);
