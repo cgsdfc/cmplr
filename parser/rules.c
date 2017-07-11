@@ -219,21 +219,6 @@ void show_rules(grammar *gr)
         puts("\n");
       }
     }
-
-  printf("summary: nrules=%d, nonterm=%d, terminal=%d, keyword=%d, operator=%d, punctuation=%d\n",
-      gr->nrule,
-      gr->nonterm_id,
-      gr->terminal_id,
-      gr->keyword_id,
-      gr->operator_id,
-      gr->punctuation_id);
-
-  printf("unresolved=%d\n", unresolved);
-  for (int i=0;i<unresolved;++i)
-  {
-    symbol=gr->symbol[unrev[i]];
-    printf("[INFO] rules set for %s is empty\n", symbol);
-  }
 }
 
 

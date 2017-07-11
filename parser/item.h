@@ -4,18 +4,26 @@
 #include "rules.h"
 
 void print_core(grammar*);
+void print_item_set_all (grammar*);
 char *format_rule(grammar *, int);
 char *format_item(grammar*,int);
-int alloc_item(grammar*,item*);
-void init_simple(void);
-int do_closure(grammar*,int); 
-bool item_is_same(item*,item*);
-int lookup_item(grammar*, item*,int*,int*);
 void print_item_set(grammar*,int);
-void item_set_append(grammar *,int,int);
+
+int alloc_item(grammar*,item*);
+bool item_is_same(item*,item*);
+int lookup_item(grammar*, item*,int*);
+int lookup_item_set(grammar*, item_set*,int*);
+int alloc_item_set(grammar *, item_set*);
+void item_set_append(item_set *, int);
+void item_set_init(item_set*);
+int item_set2id(grammar *, item_set*);
+int item2id(grammar *, item*);
+
 int build_item_set(grammar *); 
-void print_item_set_all (grammar*);
+int do_closure(grammar*,item_set*); 
+
 void init_easy(void);
+void init_simple(void);
 void init_quick(void);
 
 #endif

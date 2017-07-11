@@ -31,7 +31,6 @@
 
 typedef struct item
 {
-  int creator;
   int ruleid;
   int dot;
 } item;
@@ -40,9 +39,8 @@ typedef struct item_set
 {
   int items[30];
   int len;
-  int nonterms[30];
-  int non_len;
 } item_set;
+
 
 
 typedef struct rule 
