@@ -43,6 +43,7 @@ void init_simple(void)
 
   build_item_set(&gr);
   print_item_set_all(&gr);
+  print_core(&gr);
 
 }
 
@@ -83,6 +84,7 @@ void init_easy(void)
 
   build_item_set(&gr);
   print_item_set_all(&gr);
+  print_core(&gr);
 
 }
 
