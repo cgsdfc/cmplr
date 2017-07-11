@@ -3,6 +3,9 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(parser_src
   rules.c
+  enum.c
+  expr.c
+  stmt.c
   simple.c
   item.c
   )

@@ -133,7 +133,7 @@ void collect_symbol(va_list ap, int *symbols)
 }
 
 
-void def_rule(grammar *gr, int lhs, ...)
+void _def_rule(grammar *gr, int lhs, ...)
 {
   va_list ap;
   int symbols[30];
@@ -146,7 +146,7 @@ void def_rule(grammar *gr, int lhs, ...)
 
 }
 
-void def_oneof(grammar *gr, int lhs, ...)
+void _def_oneof(grammar *gr, int lhs, ...)
 {
   va_list ap;
   int symbols[30];
