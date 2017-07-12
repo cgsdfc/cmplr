@@ -20,6 +20,5 @@ void init_struct(grammar *gr)
      RULE_OPT, dcltor, 
      def_punc(gr, ":"),
      const_expr);
-
 }
 

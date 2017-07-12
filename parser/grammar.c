@@ -181,4 +181,5 @@ void init_all(grammar *gr)
   _enum=def_keyword(gr, "enum");
   enum_spfr=def_nonterm(gr, "enum-specifier");
 
+
 }
