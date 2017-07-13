@@ -1,14 +1,10 @@
 #include "rules.h"
 
-int init_grammar(grammar *gr, const int *symol_blk, int len)
+void init_grammar(grammar *gr, const grammar_info symbol_blk)
 {
-  if (!gr || !symol_blk || len <= 0)
-    return -1;
-
+ 
   memset (gr, 0, sizeof (grammar));
-  memcpy (gr->symbol_blk, symbol_blk, sizeof(int) * len);
-
-  return 0;
+  memcpy (gr->symbol_blk, symbol_blk, sizeof(grammar_info));
 }
 
 void add_rule(grammar *gr, int lhs, int ruleid)
@@ -126,23 +122,19 @@ void def_sepmore(grammar *gr, int lhs, int sep, int rhs)
 }
 
 
-int _def_symbol(grammar *gr, const char *sym, int id)
+void _def_symbol(grammar *gr, const char *sym, int id)
 {
-  if (id < 0 || id > GR_MAX_SYMBOL)
-    return -1;
-
-  if (gr->symbol[sym]) 
+  if (gr->symbol[id]) 
   {
     fprintf(stderr, "def_symbol: %s, %d was defined\n", sym, id);
-    return -1;
+    return ;
   }
   gr->symbol[id]=sym;
-  return 0;
 }
 
 void show_symbols(grammar *gr)
 {
-  int nsym=gr->symbol_blk[RULE_N_SYMBOLS];
+  int nsym=gr->symbol_blk[N_SYMBOLS_IDX];
   for (int i=0;i<nsym;++i)
   {
     printf ("%s, %d\n", gr->symbol[i], i);
@@ -152,8 +144,8 @@ void show_symbols(grammar *gr)
 
 void show_rules(grammar *gr)
 {
-  int nnont=gr->nonterm_id;
-  char *symbol;
+  int nnont=gr->symbol_blk[N_NONTERM_IDX];
+  const char *symbol;
   rule *r;
   int nrules;
   int unresolved=0;

@@ -1,9 +1,4 @@
-#ifndef GRAMMAR_H
-#define GRAMMAR_H 1
-#include "rules.h"
-#include "item.h"
-
-typedef enum C_symbol
+enum 
 {
  PROGRAM,
  INIT_DCLTOR_LIST,
@@ -20,17 +15,6 @@ typedef enum C_symbol
  SPFR_QLFR_LIST,
  STRUCT_DCLTOR_LIST,
  STRUCT_DCLTOR,
- STMT,
- ENUMTOR_LIST,
- ENUMTOR,
- CONST_EXPR,
- LABELED_STMT,
- EXPR_STMT,
- SELEC_STMT,
- ITER_STMT,
- JMP_STMT,
- STMT_LIST,
- BLOCK,
 
 
  TRAN_UNIT,
@@ -65,7 +49,23 @@ typedef enum C_symbol
  PLUS_PLUS,
  MINUS_MINUS,
  _WHILE,
+ STMT,
+ LABELED_STMT,
+ EXPR_STMT,
+ SELEC_STMT,
+ ITER_STMT,
+ JMP_STMT,
+ STMT_LIST,
+ _WHILE,
+ BLOCK,
 
+ _SIZEOF,
+ COMMA,
+ DOT,
+ COLON,
+ FLOAT_CONST,
+ STRING_CONST,
+ CHAR_CONST,
 
  ASSIGN_OPER,
  ASSIGN_EXPR,
@@ -91,10 +91,15 @@ typedef enum C_symbol
  ADD_OPER,
  EQ_OPER,
  SHIFT_OPER,
- 
+ PLUS_PLUS,
+ MINUS_MINUS,
+ QUESTION,
+ CONST_EXPR,
+ EXPR,
+ ENUMTOR_LIST,
+ ENUMTOR,
+ _ENUM,
+ ENUM_SPFR,
  TYPE_NAME,
-} C_symbol;
+};
 
-void init_enum(grammar *);
-
-#endif

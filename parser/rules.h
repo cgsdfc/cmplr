@@ -10,15 +10,23 @@
 #define def_oneof(gr,...) _def_oneof(gr,__VA_ARGS__, RULE_END)
 #define def_symbol(gr,SYM) _def_symbol(gr, #SYM, SYM)
 
-enum
+typedef enum symbol_index
 {
-  RULE_OPT=-2,
-  RULE_END=-1,
-
   N_SYMBOLS_IDX=0,
   N_NONTERM_IDX,
   N_TERMINAL_IDX,
 
+} symbol_index;
+
+typedef enum rule_flag
+{
+  RULE_OPT=-2,
+  RULE_END=-1,
+} rule_flag;
+
+
+typedef enum grammar_limit
+{
   IS_MAX_ITEM=30,
   RL_MAX_RHS=20,
   GR_MAX_ITEM=1024,
@@ -27,10 +35,10 @@ enum
   GR_MAX_SYMBOL=200,
   GR_MAX_PER_RULE=20,
   GR_MAX_IS=1024,
+  GR_MAX_SYMBLK=10,
+} grammar_limit;
 
-};
-
-
+typedef int grammar_info[GR_MAX_SYMBLK];
 
 typedef struct item
 {
@@ -63,7 +71,7 @@ typedef struct grammar
   int nnont_rule[GR_MAX_NONTERM];
 
   // symbol name
-  char *symbol[GR_MAX_SYMBOL];
+  const char *symbol[GR_MAX_SYMBOL];
 
   // for constructing item sets
   item items[GR_MAX_ITEM];
@@ -73,13 +81,13 @@ typedef struct grammar
   int set2symbols[GR_MAX_IS][GR_MAX_SYMBOL];
 
   // telling symbol's types
-  int symbol_blk[10];
+  grammar_info symbol_blk;
 
 } grammar;
 
 
-
-void _def_symbol(grammar *gr, char *sym, int id);
+void init_grammar(grammar *gr, const int *symbol_blk);
+void _def_symbol(grammar *gr,const char *sym, int id);
 void _def_rule(grammar *gr, int lhs,...);
 void _def_oneof(grammar *gr, int lhs,...);
 void def_onemore(grammar *gr, int lhs, int rhs);
