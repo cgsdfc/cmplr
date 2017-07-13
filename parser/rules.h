@@ -5,12 +5,32 @@
 #include <stdio.h>
 #include <string.h>
 
-// global 
-#define RULE_OPT (-2)
 
-// variant of rule definitions
-#define def_rule(gr,...) _def_rule(gr,__VA_ARGS__, -1)
-#define def_oneof(gr,...) _def_oneof(gr,__VA_ARGS__,-1)
+#define def_rule(gr,...) _def_rule(gr,__VA_ARGS__, RULE_END)
+#define def_oneof(gr,...) _def_oneof(gr,__VA_ARGS__, RULE_END)
+#define def_symbol(gr,SYM) _def_symbol(gr, #SYM, SYM)
+
+enum
+{
+  RULE_OPT=-2,
+  RULE_END=-1,
+
+  N_SYMBOLS_IDX=0,
+  N_NONTERM_IDX,
+  N_TERMINAL_IDX,
+
+  IS_MAX_ITEM=30,
+  RL_MAX_RHS=20,
+  GR_MAX_ITEM=1024,
+  GR_MAX_RULE=350,
+  GR_MAX_NONTERM=100,
+  GR_MAX_SYMBOL=200,
+  GR_MAX_PER_RULE=20,
+  GR_MAX_IS=1024,
+
+};
+
+
 
 typedef struct item
 {
@@ -20,7 +40,7 @@ typedef struct item
 
 typedef struct item_set
 {
-  int items[30];
+  int items[IS_MAX_ITEM];
   int len;
 } item_set;
 
@@ -29,81 +49,42 @@ typedef struct item_set
 typedef struct rule 
 {
   int lhs;
-  int rhs[20];
+  int rhs[RL_MAX_RHS];
   int len;
 } rule;
 
 
-typedef struct language
-{
-  char *name;
-  int num_symbol;
-
-  int num_terminal;
-  /* [0, nnont) is for nonterms */
-  int num_nonterm;
-  /* [nnont, nkws) is for terminals */ 
-  /*   excluding keywords */
-  int num_keyword;
-  /* [nkws, nopers) is for keywords excluding */
-  /*   operators */
-  int num_operator;
-} language;
-
-
 typedef struct grammar
 {
-  char *name;
-  // this struct helps to
-  // increamentally build up
-  // the grammar rules
-
   // all the rules stored here
-  rule rules[350];
+  rule rules[GR_MAX_RULE];
   int nrule;
-  int nonterm[100][100];
-  int nnont_rule[100];
-
-  // the id alloc for each kind of
-  // symbol
-  int nonterm_id;
-  int terminal_id;
-  int keyword_id;
-  int operator_id;
-  int punctuation_id;
-  int symbol_id;
+  int nonterm[GR_MAX_NONTERM][GR_MAX_PER_RULE];
+  int nnont_rule[GR_MAX_NONTERM];
 
   // symbol name
-  char *symbol[200];
+  char *symbol[GR_MAX_SYMBOL];
 
   // for constructing item sets
-  item items[1024];
+  item items[GR_MAX_ITEM];
   int item_id;
-  item_set item_sets[1024];
+  item_set item_sets[GR_MAX_IS];
   int item_set_id;
-  int set2symbols[1024][1024];
+  int set2symbols[GR_MAX_IS][GR_MAX_SYMBOL];
+
+  // telling symbol's types
+  int symbol_blk[10];
 
 } grammar;
 
 
-int init_grammar(grammar *gr, language *lang);
-int def_nonterm(grammar *gr, char *rep);
-int def_terminal(grammar *gr, char *rep);
-int def_keyword(grammar *gr, char *rep);
-int def_punc(grammar *gr, char *rep);
-int def_oper(grammar *gr, char *rep);
 
+void _def_symbol(grammar *gr, char *sym, int id);
 void _def_rule(grammar *gr, int lhs,...);
 void _def_oneof(grammar *gr, int lhs,...);
 void def_onemore(grammar *gr, int lhs, int rhs);
 void def_sepmore(grammar *gr, int lhs, int sep, int rhs);
 
-
-extern grammar grammar_clang;
-extern language lang_clang;
-
-bool is_terminal(grammar *gr, int symbol);
-bool is_nonterm(grammar *gr, int symbol);
 void show_rules(grammar*);
 
 #endif

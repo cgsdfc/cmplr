@@ -1,74 +1,14 @@
 #include "rules.h"
 
-grammar grammar_clang;
-language lang_clang= 
+int init_grammar(grammar *gr, const int *symol_blk, int len)
 {
-  .name="C programming language",
-  .num_nonterm=80,
-  .num_terminal=10,
-  .num_keyword=40,
-  .num_operator=50
-};
+  if (!gr || !symol_blk || len <= 0)
+    return -1;
 
-
-int init_grammar(grammar *gr, language *lang)
-{
   memset (gr, 0, sizeof (grammar));
-  gr->symbol_id=lang->num_symbol;
-  gr->name=lang->name;
-  gr->nonterm_id=0;
-  gr->terminal_id=gr->nonterm_id + lang->num_nonterm;
-  gr->keyword_id=gr->terminal_id + lang->num_terminal;
-  gr->operator_id=gr->keyword_id + lang->num_keyword;
-  gr->punctuation_id=gr->operator_id + lang->num_operator;
+  memcpy (gr->symbol_blk, symbol_blk, sizeof(int) * len);
 
   return 0;
-}
-
-int def_keyword(grammar *gr, char *rep)
-{
-  int next=gr->keyword_id;
-  gr->symbol[next]=rep;
-  return gr->keyword_id++;
-}
-
-
-int def_nonterm(grammar *gr, char *rep)
-{
-  int next=gr->nonterm_id;
-  gr->symbol[next]=rep;
-  return gr->nonterm_id++;
-}
-
-int def_terminal(grammar *gr, char *rep)
-{
-  int next=gr->terminal_id;
-  gr->symbol[next]=rep;
-  return gr->terminal_id++;
-}
-
-int def_punc(grammar *gr, char *rep)
-{
-  int next=gr->punctuation_id;
-  gr->symbol[next]=rep;
-  return gr->punctuation_id++;
-}
-
-int def_oper(grammar *gr, char *rep)
-{
-  int next=gr->operator_id;
-  gr->symbol[next]=rep;
-  return gr->operator_id++;
-}
-
-bool is_terminal(grammar *gr, int symbol)
-{
-  return gr->terminal_id <= symbol && symbol < gr->keyword_id;
-}
-
-bool is_nonterm(grammar *gr, int symbol)
-{
-  return 0 <= symbol && symbol < gr->nonterm_id;
 }
 
 void add_rule(grammar *gr, int lhs, int ruleid)
@@ -101,7 +41,7 @@ void add_optional(grammar *gr, int lhs, int *src, int *rhs, int len)
 {
   int ruleid;
 
-  for (; *src != -1;++src)
+  for (; *src != RULE_END;++src)
   {
     switch (*src)
     {
@@ -185,6 +125,31 @@ void def_sepmore(grammar *gr, int lhs, int sep, int rhs)
   add_rule(gr,lhs,alloc_rule(gr,lhs,symbol,3));
 }
 
+
+int _def_symbol(grammar *gr, const char *sym, int id)
+{
+  if (id < 0 || id > GR_MAX_SYMBOL)
+    return -1;
+
+  if (gr->symbol[sym]) 
+  {
+    fprintf(stderr, "def_symbol: %s, %d was defined\n", sym, id);
+    return -1;
+  }
+  gr->symbol[id]=sym;
+  return 0;
+}
+
+void show_symbols(grammar *gr)
+{
+  int nsym=gr->symbol_blk[RULE_N_SYMBOLS];
+  for (int i=0;i<nsym;++i)
+  {
+    printf ("%s, %d\n", gr->symbol[i], i);
+  }
+}
+
+
 void show_rules(grammar *gr)
 {
   int nnont=gr->nonterm_id;
@@ -194,7 +159,6 @@ void show_rules(grammar *gr)
   int unresolved=0;
   int unrev[10];
 
-  printf(">>>>>>>>> grammar rules for %s <<<<<<<<<<<\n\n",gr->name);
 
   for (int i=0;i<nnont;++i)
   {
