@@ -21,7 +21,7 @@ void init_enum(grammar *gr)
   def_rule(gr, ENUMTOR, ID);
   def_rule(gr, ENUMTOR, ID, EQUAL, CONST_EXPR);
 
-  build_item_set(gr);
+  parser_builder_build_item_set(gr);
 }
 
 
