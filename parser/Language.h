@@ -3,40 +3,47 @@
 
 #include <vector>
 #include <unordered_set>
-
-class Rule;
-class Symbol
+namespace parser
 {
-  private:
-    int id_;
-    std::string name_;
-  public:
-    Symbol(std::string name):name_(name),id_(0) {}
-    int getID() const 
-    { 
-      return id_;
-    }
-    const std::string& getName() const 
-    { 
-      return name_;
-    }
-    void setID(int id){ id_=id; }
+  class Rule;
+  class Symbol
+  {
+    private:
+      int id_;
+      std::string name_;
+    public:
+      Symbol(){}
 
-    bool operator== (const Symbol& other) const
-    {
-      return name_ == other .name_;
-    }
+      Symbol(const std::string& name):
+        name_(name),id_(0) {}
 
-    Symbol(Symbol&& other)
-    {
-      id_=other.id_;
-name_=other.name_;
+      Symbol(const char *name):
+        name_(name),id_(0) {}
+
+      Symbol(int id, const std::string name):
+        name_(name), 
+        id_(id) {}
+
+      int getID() const 
+      { 
+        return id_;
+      }
+      const std::string& getName() const 
+      { 
+        return name_;
+      }
+      void setID(int id){ id_=id; }
+
+      bool operator== (const Symbol& other) const
+      {
+        return name_ == other .name_;
+      }
+
+  };
 }
-
-};
-
 namespace std
 {
+  using parser::Symbol;
   template<>
     struct hash<Symbol>
     {
@@ -47,44 +54,122 @@ namespace std
     };
 }
 
-class Alternative
+namespace parser
 {
-  private:
-    std::vector<Rule> alters_;
+  class Alternative
+  {
+    private:
+      std::vector<Rule> alters_;
+      Symbol lhs;
 
-  public:
-    void addRule(Rule& rule);
-};
+    public:
+      Alternative() {}
+
+      Alternative(const Symbol& symbol):
+        lhs(symbol) {}
+
+      void addRule(const Rule& rule)
+      {
+        alters_.push_back(rule);
+      }
+  };
 
 
-class Rule
-{
-  public:
-    void addSymbol(Symbol& symbol);
-Rule(Rule&& other)
-{
-rihtHandSides_=std::move(other.rightHandSides_);
+  class Rule
+  {
+    public:
+      void addSymbol(const char *symbol)
+      {
+        addSymbol(Symbol(symbol));
+      }
 
-  private:
-    std::vector<Symbol> rightHandSides_;
-};
+      void addSymbol(const Symbol& symbol)
+      {
+        rightHandSides_.emplace_back(symbol);
+      }
 
-class Language
-{
-  private:
-    std::unordered_set<Symbol>
-      symbols_;
-    std::vector<Alternative> alters_;
+    private:
+      std::vector<Symbol> rightHandSides_;
+  };
 
-  public:
-    Alternative& define(Symbol &&leftHandSide);
+  struct Rhs
+    {
+      Rule rule_;
+      std::vector<Rule> rules_;
 
-};
+      std::vector<Rule>& getRules()
+      {
+        return rules_;
+      }
 
-Alternative& operator | (Alternative& alter, Rule rule);
-Alternative& operator |= (Alternative& alter, Rule rule);
-Rule operator << (Rule rule, Symbol symbol);
+      template<typename T, typename... Args>
+        std::vector<Rule>& operator() (const T& t, const Args... args);
 
+      std::vector<Rule>& operator() ();
+
+    };
+
+
+  class Language
+  {
+    private:
+      std::unordered_set<Symbol> symbols_;
+      std::vector<Alternative> alters_;
+
+    public:
+      Alternative& lhs(const char *symbol)
+      {
+        auto iter=symbols_.find(symbol);
+        if (iter==symbols_.end())
+        {
+          Symbol sym(symbols_.size(), symbol);
+          symbols_.emplace(sym);
+          alters_.emplace_back(Alternative(sym));
+          return alters_.back();
+        }
+
+        return alters_[iter->getID()];
+
+      }
+
+      template<typename... Args>
+        std::vector<Rule>& rhs(const Args&... args)
+        {
+          Rhs  rhs_;
+          rhs_(args...);
+          return rhs_.getRules();
+        }
+
+      const std::string& opt(const std::string& str)
+      {
+        return str;
+      }
+
+
+
+  };
+
+  std::vector<Rule>& Rhs::operator() ()
+  {
+    return rules_;
+  }
+
+  template<typename T, typename... Args>
+    std::vector<Rule>& Rhs::operator() (const T& t, const Args... args)
+    {
+      rule_.addSymbol(t);
+      return operator() (args...);
+    }
+
+  Alternative& operator | (Alternative& alter, std::vector<Rule>& rules)
+  {
+    for (auto& rule:rules)
+    {
+      alter.addRule(rule);
+    }
+  }
+
+}
 #endif
 
 
