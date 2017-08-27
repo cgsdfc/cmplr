@@ -12,3 +12,7 @@ zerror/
 old-tokenizer/
 preprocessor/
 bad/
+release
+debug
+c-source
+*.pdf

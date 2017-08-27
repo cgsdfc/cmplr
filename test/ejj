@@ -1,4 +1,0 @@
-
-/* syscall: "getsysinfo" ret: "int" args: "unsigned" "char *" "unsigned" "int *" "char *" */
-
-/* syscall: "setsysinfo" ret: "int" args: "unsigned" "char *" "unsigned" "unsigned" "unsigned" */
