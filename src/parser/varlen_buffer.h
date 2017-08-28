@@ -14,21 +14,24 @@
 // 2. varbuffer (elemsz, max)
 // 3. something like a linked list of blocks of diff bytes
 // 4. varblock (size, void*mem, next)
-//
+// 
 // the usr does the things:
-// 1. call alloc_varbuffer (elemsz) to
+// 1. call alloc_varbuffer (elemsz) to 
 #define VARLEN_BUFFER_BLKSZ 16
-#define VARLEN_BUFFER_SZ (sizeof(int) * 16)
+#define VARLEN_BUFFER_SZ  (sizeof(int) * 16)
 
-typedef struct varlen_block {
+typedef struct varlen_block
+{
   int size;
   void *mem;
   struct varlen_block *next;
 } varlen_block;
 
-typedef struct varlen_buffer {
+typedef struct varlen_buffer
+{
   varlen_block *curblk;
   int nblk;
 } varlen_buffer;
 
 #endif
+

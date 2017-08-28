@@ -1,0 +1,15 @@
+#include "rules.h"
+#include "item.h"
+#include "grammar.h"
+
+int main(int argc, char **argv)
+{
+  /* init_simple(); */
+  /* init_easy(); */
+  /* init_quick(&grammar_clang); */
+  init_clang();
+  build_item_set(&grammar_clang);
+  print_item_set_all(&grammar_clang);
+  /* print_core(&grammar_clang); */
+
+}

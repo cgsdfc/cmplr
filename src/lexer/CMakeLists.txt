@@ -15,6 +15,6 @@ set(tokenizer_src
   operator.c
   tokenizer.c
   )
-add_library(tokenizer_lib ${tokenizer_src})
-add_executable(tokenizer tknzr_driver.c)
-target_link_libraries(tokenizer tokenizer_lib)
+add_library(lexer_lib ${tokenizer_src})
+add_executable(lexer tknzr_driver.c)
+target_link_libraries(lexer lexer_lib)
