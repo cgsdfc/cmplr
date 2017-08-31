@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 include_directories(${CMAKE_SOURCE_DIR})
+add_definitions(-DDEBUG_DIGRAPH)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(parser_src
+  lookahead_set.c
+  bitset.c
+  digraph.c
   grammar.c
   rules.c
   simple.c

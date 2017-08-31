@@ -99,6 +99,7 @@ typedef struct grammar
   item_set item_sets[1024];
   int item_set_id;
   int set2symbols[1024][1024];
+  int is_nullable[1024];
 
 } grammar;
 

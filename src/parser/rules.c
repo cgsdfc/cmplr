@@ -12,6 +12,7 @@ int init_grammar(grammar *gr, language *lang)
   gr->keyword_id=gr->terminal_id + lang->num_terminal;
   gr->operator_id=gr->keyword_id + lang->num_keyword;
   gr->punctuation_id=gr->operator_id + lang->num_operator;
+  memset (gr->is_nullable, -1, sizeof gr->is_nullable);
 
   return 0;
 }
@@ -85,7 +86,6 @@ int alloc_rule(grammar *gr, int lhs, int *rhs, int len)
   return ruleid;
 
 }
-
 
 
 void add_optional(grammar *gr, int lhs, int *src, int *rhs, int len)
@@ -211,6 +211,5 @@ void show_rules(grammar *gr)
       }
     }
 }
-
 
 

@@ -37,7 +37,7 @@ char *format_rule(grammar *gr, int ruleid)
 
 void add_edge(grammar *gr, int from, int to, int symbol)
 {
-  gr->set2symbols[from][symbol]=to;
+  gr->set2symbols[from][to]=symbol;
 }
 
 int item_get_symbol (grammar *gr, int item_id)
@@ -159,18 +159,21 @@ void print_core(grammar *gr)
   int symbol;
   char *rep;
 
-  for (int i=0;i<gr->symbol_id;++i)
+  for (int i=0;i<gr->item_set_id;++i)
   {
-    printf("\t%s", gr->symbol[i]);
+    printf("\tI[%d]", i); 
   }
   puts("");
   for (int j=0;j<gr->item_set_id;++j)
   {
     printf("I[%d]", j);
-    for (int i=0;i<gr->symbol_id;++i)
+    for (int i=0;i<gr->item_set_id;++i)
     {
       symbol = gr->set2symbols[j][i];
-      printf("\t%3d", symbol);
+      if (symbol == -1) 
+        printf("\tnull");
+      else 
+        printf("\t%s", gr->symbol[symbol]);
     }
     puts("");
   }
@@ -263,6 +266,9 @@ int item_try_move(grammar *gr,  int symbol, int item_id, item *temp)
   return 1; 
 }
 
+static bool nullable_nonterminal(grammar * gr, int nterm);
+static void directly_nullable(grammar * gr);
+
 int build_item_set(grammar *gr)
 {
   int queue[1024];
@@ -327,6 +333,87 @@ int build_item_set(grammar *gr)
       visited[next_set]=true;
     }
   }
+  directly_nullable(gr);
+  // tail == 375 
   return 0;
+}
+
+
+static bool
+nullable_rule(grammar * gr, int ruleid)
+{
+  rule * r = gr->rules + ruleid;
+  int len = r->len;
+  if (!len)
+    return true;
+  for (int i=0;i<len;++i)
+  {
+    if (is_terminal(gr, r->rhs[i]))
+      return false;
+    if (gr->is_nullable[r->rhs[i]]!=1)
+      return false;
+  }
+  return true;
+}
+
+static void
+directly_nullable(grammar * gr)
+{
+  int nnont = gr->nonterm_id;
+  for (int i=0;i<nnont;++i) 
+  {
+    if (!gr->nnont_rule[i])
+    {
+      gr->is_nullable[i]=1;
+      return;
+    }
+    for (int j=0;j<gr->nnont_rule[i];++j)
+    {
+      rule *r=gr->rules + gr->nonterm[i][j];
+      if (!r->len)
+      {
+        gr->is_nullable[i]=1;
+        return;
+      }
+    }
+  }
+}
+
+/* A nullable nonterminal is a nonterminal directly yielding empty,
+ *  e.g., A ::= , or having a body containing of nullable nonterminals,
+ *   e.g., A ::= B C D, where all B C and D yield empty. */
+static bool 
+nullable_nonterminal(grammar * gr, int nterm)
+{
+  int *result=&gr->is_nullable[nterm];
+  int nrule;
+  int ruleid;
+  if (*result == 1 || *result == 0)
+    return result;
+
+  nrule=gr->nnont_rule[nterm];
+  if (!nrule)
+    return *result=1; // A ::=
+
+  for (int i=0;i<nrule;++i) 
+  {
+    ruleid=gr->nonterm[nterm][i];
+    if (nullable_rule(gr, ruleid))
+      return *result=1;
+  }
+  return *result=0;
+}
+
+
+bool is_nullable(grammar *gr, int symbol)
+{
+  if (is_terminal(gr, symbol))
+      return false;
+  return nullable_nonterminal(gr, symbol);
+}
+
+int get_num_terminal(grammar * gr)
+{
+  return gr->symbol_id - gr->nonterm_id-1;
 }
 

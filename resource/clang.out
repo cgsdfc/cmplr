@@ -114,12 +114,15 @@ struct-or-union :=  ^ struct
 struct-or-union :=  ^ union
 program :=  translation-unit ^ eof
 translation-unit :=  translation-unit ^ external-declaration
+// 0 [translation-unit] 1
 
 I[2]
 translation-unit :=  external-declaration ^
+// 0 [external-declaration] 2
 
 I[3]
 external-declaration :=  function-definition ^
+
 
 I[4]
 external-declaration :=  declaration ^
