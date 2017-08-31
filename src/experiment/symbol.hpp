@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <iostream>
+#include <boost/serialization/access.hpp>
 
 namespace experiment {
   enum class symbol_property {
@@ -16,6 +17,12 @@ namespace experiment {
 
   class symbol {
     private:
+      friend class boost::serialization::access;
+      template<class Archive>
+        void serialize(Archive& ar, const unsigned version) {
+          ar & m_prop;
+          ar & m_str;
+        }
       symbol_property m_prop;
       std::string m_str;
     public:
@@ -54,7 +61,7 @@ namespace experiment {
       friend std::ostream& operator<< (std::ostream& os, symbol const& s) {
         return os << s.m_str;
       }
-      
+
   };
 
   inline symbol terminal(const char *str) {

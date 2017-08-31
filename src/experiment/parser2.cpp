@@ -1,24 +1,24 @@
 #include "language.hpp"
+#include "clang.hpp"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <iostream>
+#include <fstream>
 
+using std::cout;
+using std::ofstream;
 using namespace experiment;
+using boost::archive::text_iarchive;
+using boost::archive::text_oarchive;
 
 int main(int,char**) {
-  language lang("C Programming Language");
+  experiment::language lang;
+  cout << experiment::lang_traits<clang>::definition(lang);
 
-  lang[start("program")]
-    (optional("translation-unit"), eof("eof"))
-    ;
+  ofstream ofs("./clang.txt");
+  text_oarchive toa(ofs);
+  toa << lang;
 
-  std::cout << lang;
-
-  /* lang["translation-unit"] */
-  /*   (listof("external-declaration")) */
-  /*   ; */
-
-  /* lang["external-declaration"] */
-  /*   ("function-definition") */
-  /*   ("declaration") */
-  /*   ; */
 
 }
 
