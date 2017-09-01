@@ -21,6 +21,4 @@ namespace experiment {
   typedef indent<2> indent2;
   typedef indent<4> indent4;
 } // namespace experiment
-
-#endif
-
+#endif // EXPERIMENT_INDENT_HPP

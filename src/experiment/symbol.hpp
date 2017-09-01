@@ -1,5 +1,5 @@
-#ifndef EXPERIMENT_SYMBOL_H
-#define EXPERIMENT_SYMBOL_H 1
+#ifndef EXPERIMENT_SYMBOL_HPP
+#define EXPERIMENT_SYMBOL_HPP 1
 #include <string>
 #include <functional>
 #include <iostream>
@@ -7,13 +7,13 @@
 
 namespace experiment {
   enum class symbol_property {
-    start,
-    eof,
-    terminal,
-    nontermial,
-    optional,
-    reserved,
-    unknown,
+    terminal, // general terminal.
+    nontermial, // general nontermial.
+    optional, // nontermial that has a nullable body.
+    start, // nontermial that serves as the head of first rule.
+    eof, // terminal that serves as end of file.
+    reserved, // terminal that is a reserved word.
+    unknown, // illegal value.
   };
 
   class symbol {
@@ -41,22 +41,33 @@ namespace experiment {
         return m_str;
       }
 
+    public:
       void set(symbol_property prop) {
         m_prop=prop;
       }
-
       bool unknown() const {
         return m_prop == symbol_property::unknown;
       }
-
       bool terminal() const {
-        return m_prop == symbol_property::terminal;
+        return m_prop == symbol_property::terminal
+          || m_prop == symbol_property::reserved
+          || m_prop == symbol_property::eof
+          ;
       }
-
       bool nontermial() const {
-        return m_prop == symbol_property::nontermial;
+        return m_prop == symbol_property::nontermial
+          || m_prop == symbol_property::optional
+          || m_prop == symbol_property::start
+          ;
+      }
+      bool start() const {
+        return m_prop == symbol_property::start;
+      }
+      bool eof() const {
+        return m_prop == symbol_property::eof;
       }
 
+    public:
       struct hash: public std::hash<std::string> {};
       struct equal_to: public std::equal_to<std::string> {};
       friend std::ostream& operator<< (std::ostream& os, symbol const& s) {
@@ -84,4 +95,4 @@ namespace experiment {
     return symbol(str, symbol_property::eof);
   }
 }
-#endif
+#endif // EXPERIMENT_SYMBOL_HPP

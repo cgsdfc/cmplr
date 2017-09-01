@@ -209,6 +209,7 @@ int do_closure(grammar *gr, item_set *set)
         nrule=gr->nnont_rule[symbol];
         rules=gr->nonterm[symbol];
 
+        // ERROR: should only ask for nonterminal;
         for (int j=0;j<nrule;++j)
         {
           make_item(&temp, 0, rules[j]);

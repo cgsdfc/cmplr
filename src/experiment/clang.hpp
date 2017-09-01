@@ -9,7 +9,6 @@ struct clang {
   static const unsigned num_nonterminals = 168;
   static language& definition(language& lang);
 };  
-};
-
-#endif
+}// namespace experiment
+#endif // EXPERIMENT_CLANG_H
 

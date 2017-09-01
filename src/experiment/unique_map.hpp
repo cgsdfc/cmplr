@@ -41,12 +41,16 @@ namespace experiment {
         size_type size() const {
           return m_count;
         }
+        void reserve(size_type size) {
+          m_vector.reserve(size);
+        }
 
       private:
         typedef std::vector<T> vector;
         typedef typename Traits::map_type map;
 
       public:
+        static constexpr const unique_id npos = unique_id(-1);
         typedef typename vector::const_iterator value_iterator;
         typedef typename map::const_iterator item_iterator;
 
@@ -62,6 +66,10 @@ namespace experiment {
         item_iterator iend() const {
           return m_map.end();
         }
+        void swap(unique_map& other) {
+          std::swap(m_vector, other.m_vector);
+          std::swap(m_map, other.m_map);
+        }
 
       private:
         vector m_vector;
@@ -69,6 +77,9 @@ namespace experiment {
         unique_id m_count;
 
     };
+  template<class T>
+  inline void swap(unique_map<T> lhs, unique_map<T> rhs) {
+    lhs.swap(rhs);
+  }
 } // namespace experiment
-#endif
-
+#endif // EXPERIMENT_UNIQUE_MAP_HPP 

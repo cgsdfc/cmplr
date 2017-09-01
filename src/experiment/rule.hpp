@@ -1,5 +1,5 @@
-#ifndef EXPERIMENT_RULS_H
-#define EXPERIMENT_RULS_H 1
+#ifndef EXPERIMENT_RULS_HPP
+#define EXPERIMENT_RULS_HPP 1
 
 #include <boost/serialization/access.hpp>
 #include <vector>
@@ -8,6 +8,7 @@ namespace experiment {
 
 struct rule_group {
   typedef std::vector<std::vector<symbol>> container_type;
+  typedef typename container_type::size_type  size_type;
   friend class boost::serialization::access;
    container_type m_bodies;
    template<class Archive>
@@ -22,6 +23,9 @@ struct rule_group {
    }
    const_iterator end() const {
      return m_bodies.end();
+   }
+   size_type size() const {
+     return m_bodies.size();
    }
 };
 
@@ -49,5 +53,4 @@ struct rule_adder {
 
 };
 } // namespace experiment
-#endif
-
+#endif // EXPERIMENT_RULS_HPP
