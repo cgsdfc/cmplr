@@ -5,6 +5,16 @@
 
 namespace experiment {
 
+  void grammar::resolve_symbols(const language& lang) {
+
+  }
+  void grammar::resolve_rules(const language& lang) {
+
+  }
+  void grammar::accept(const language& lang) {
+
+  }
+
 void grammar::build_itemset() {
   std::queue<itemset_unique_id> queue;
   std::unordered_set<itemset_unique_id> visited;
@@ -63,8 +73,4 @@ grammar::do_closure(itemset_type& itemset) {
 }
 
 } // namespace experiment
-
-int main(int ac,char**av){ 
-
-}
 

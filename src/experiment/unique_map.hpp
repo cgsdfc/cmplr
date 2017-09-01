@@ -46,6 +46,23 @@ namespace experiment {
         typedef std::vector<T> vector;
         typedef typename Traits::map_type map;
 
+      public:
+        typedef typename vector::const_iterator value_iterator;
+        typedef typename map::const_iterator item_iterator;
+
+        value_iterator vbegin() const {
+          return m_vector.begin();
+        }
+        value_iterator vend() const {
+          return m_vector.end();
+        }
+        item_iterator ibegin() const {
+          return m_map.begin();
+        }
+        item_iterator iend() const {
+          return m_map.end();
+        }
+
       private:
         vector m_vector;
         map m_map;

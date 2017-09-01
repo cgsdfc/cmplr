@@ -1,5 +1,6 @@
 #ifndef EXPERIMENT_GRAMMAR_HPP
 #define EXPERIMENT_GRAMMAR_HPP 1
+#include "language.hpp"
 #include "unique_map.hpp"
 #include "symbol.hpp"
 #include <boost/iterator.hpp>
@@ -16,6 +17,7 @@ namespace experiment {
     };
 
 class grammar {
+
   private:
     typedef std::size_t size_type;
     // symbol is the atom of this system
@@ -81,6 +83,30 @@ class grammar {
     item_type make_item(size_type dot, rule_unique_id rule) {
       return std::make_pair(dot, rule);
     }
+
+  private:
+    void resolve_symbols(const language& lang);
+    void resolve_rules(const language& lang);
+  public:
+    // populate the grammar
+    void accept(const language& lang);
+  public:
+    typedef typename symbol_unique_map::item_iterator symbol_iterator;
+    typedef typename rule_unique_map::item_iterator rule_iterator;
+    std::pair<symbol_iterator, symbol_iterator>
+      symbols() const {
+        return std::make_pair(
+            m_symbol_map.ibegin(),
+            m_symbol_map.iend()
+        );
+      }
+    std::pair<rule_iterator, rule_iterator>
+      rules() const {
+        return std::make_pair(
+            m_rule_map.ibegin(),
+            m_rule_map.iend()
+        );
+      }
 
 };
 } // namespace experiment

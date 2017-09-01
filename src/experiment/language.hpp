@@ -41,6 +41,8 @@ namespace experiment {
       rule_adder operator[] (const char *str) {
         return operator[] (symbol(str));
       }
+
+    public:
       friend std::ostream& operator<< (std::ostream& os, const language& lang) {
         unsigned level=0;
         os << boost::format("language \"%1%\"\n\n") % lang.m_name;
@@ -58,11 +60,14 @@ namespace experiment {
       }
 
     public:
-      typedef rule_map_type::iterator rule_iterator;
-      std::pair<rule_iterator, rule_iterator>
-        rules() {
-          return std::make_pair(m_rule_map.begin(), m_rule_map.end());
-        }
+      typedef rule_map_type::const_iterator const_iterator;
+      const_iterator begin() const {
+        return m_rule_map.begin();
+      }
+      const_iterator end() const {
+        return m_rule_map.end();
+      }
+
   };
 
   template<class Lang>
