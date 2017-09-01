@@ -10,3 +10,7 @@ target_link_libraries(cpp_parser
   $ENV{HOME}/download/local/lib/libboost_serialization.a
 )
 
+add_executable(unique_map
+  unique_map.cpp)
+
+add_executable(grammar grammar.cpp)

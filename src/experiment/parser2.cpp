@@ -7,6 +7,7 @@
 
 using std::cout;
 using std::ofstream;
+using std::ifstream;
 using namespace experiment;
 using boost::archive::text_iarchive;
 using boost::archive::text_oarchive;
@@ -14,11 +15,5 @@ using boost::archive::text_oarchive;
 int main(int,char**) {
   experiment::language lang;
   cout << experiment::lang_traits<clang>::definition(lang);
-
-  ofstream ofs("./clang.txt");
-  text_oarchive toa(ofs);
-  toa << lang;
-
-
 }
 

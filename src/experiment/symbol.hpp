@@ -12,6 +12,7 @@ namespace experiment {
     terminal,
     nontermial,
     optional,
+    reserved,
     unknown,
   };
 
@@ -63,6 +64,9 @@ namespace experiment {
       }
 
   };
+  inline symbol reserved(const char *str) {
+    return symbol(str, symbol_property::reserved);
+  }
 
   inline symbol terminal(const char *str) {
     return symbol(str, symbol_property::terminal);

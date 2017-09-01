@@ -6,18 +6,9 @@
 #include <unordered_map>
 #include <boost/format.hpp>
 #include "rule.hpp"
+#include "indent.hpp"
 
 namespace experiment {
-
-  struct indent {
-    unsigned & m_level;
-
-    indent(std::ostream& os, unsigned & level)
-      : m_level(++level) {
-        for (int i=m_level; i--; os << ' ');
-      }
-    ~indent() { --m_level; }
-  };
 
   class language {
     private:
@@ -52,20 +43,26 @@ namespace experiment {
       }
       friend std::ostream& operator<< (std::ostream& os, const language& lang) {
         unsigned level=0;
-        os << boost::format("language<%1%>\n") % lang.m_name;
-        indent i_(os, level);
+        os << boost::format("language \"%1%\"\n\n") % lang.m_name;
         for (auto& item: lang.m_rule_map) {
-          os << boost::format("%1% ::=\n") % item.first;
+          indent4 i_(os, level);
+          os << boost::format("\"%1%\"\n") % item.first;
           for (auto& rules: item.second) {
-            indent i__(os, level); 
+            indent4 i__(os, level); 
             for (auto& symbol: rules) {
-              os << symbol << ' ';
+              os << boost::format("\"%1%\"") % symbol << ' ';
             }
-            os << '\n';
           }
         }
         return os;
       }
+
+    public:
+      typedef rule_map_type::iterator rule_iterator;
+      std::pair<rule_iterator, rule_iterator>
+        rules() {
+          return std::make_pair(m_rule_map.begin(), m_rule_map.end());
+        }
   };
 
   template<class Lang>
