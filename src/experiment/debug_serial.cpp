@@ -1,12 +1,12 @@
-#include "grammar.hpp"
-#include "unique_map.hpp"
-#include "language.hpp"
-#include "clang.hpp"
-#include "small_lang.hpp"
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include "clang.hpp"
+#include "grammar.hpp"
+#include "language.hpp"
+#include "small_lang.hpp"
+#include "unique_map.hpp"
 
 using std::cout;
 using std::string;
@@ -42,5 +42,5 @@ void debug_unique_map() {
   auto s1 = string_map[id2];
 }
 
-} // namespace debug
-} // namespac experiment
+}  // namespace debug
+}  // namespac experiment
