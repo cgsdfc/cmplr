@@ -366,8 +366,6 @@ equality-expression := relational-expression
 
 	| equality-expression == relational-expression 
 
-	| relational-expression 
-
 	| equality-expression != relational-expression 
 
 relational-expression := shift-expression 
@@ -378,9 +376,7 @@ shift-expression := additive-expression
 
 	| shift-expression << additive-expression 
 
-	| additive-expression 
-
-	| shift-expression << additive-expression 
+	| shift-expression >> additive-expression 
 
 additive-expression := multiplicative-expression 
 

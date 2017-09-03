@@ -42,5 +42,19 @@ class language {
   size_type num_nonterminals() const { return m_rule_map.size(); }
   size_type num_rules() const;
 };
+
+// helper for rule construction
+inline symbol reserved(const char *str) {
+  return symbol(str, symbol_property::reserved);
+}
+
+inline symbol terminal(const char *str) {
+  return symbol(str, symbol_property::terminal);
+}
+
+inline symbol optional(const char *str) {
+  return symbol(str, symbol_property::optional);
+}
+
 }  // namespace experiment
 #endif

@@ -87,7 +87,7 @@ void init_clang(void)
 
 
 
-
+  int triple_dots=DEF_TERMINAL("...");
   int id=DEF_TERMINAL("identifier");
   int float_const=DEF_TERMINAL("float-const");
   int int_const=DEF_TERMINAL("int-const");
@@ -204,7 +204,7 @@ void init_clang(void)
   DEF_RULE(ptr, star, RULE_OPT,type_qlfr_list, RULE_OPT, ptr);
   DEF_ONEMORE(type_qlfr_list, type_qlfr);
   DEF_RULE(param_type_list, para_list);
-  DEF_RULE(param_type_list, para_list, comma, dot,dot,dot);
+  DEF_RULE(param_type_list, para_list, comma, triple_dots);
   // TODO let tknzr recogize ...
 
   DEF_SEPMORE(para_list,comma, para_dclr);

@@ -57,17 +57,6 @@ class symbol {
     return os << s.m_str;
   }
 };
-inline symbol reserved(const char *str) {
-  return symbol(str, symbol_property::reserved);
-}
-
-inline symbol terminal(const char *str) {
-  return symbol(str, symbol_property::terminal);
-}
-
-inline symbol optional(const char *str) {
-  return symbol(str, symbol_property::optional);
-}
 
 struct is_terminal {
   bool operator()(symbol const &s) const { return s.terminal(); }
