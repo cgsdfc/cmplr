@@ -4,8 +4,12 @@
 #include "language.hpp"
 // impl complex print logic
 namespace experiment {
+class printer;
+extern printer print;
+
 class printer {
  private:
+   typedef std::vector<std::string> string_vector_type;
   typedef std::ostream ostream_type;
   typedef ostream_type& ostream_reference;
   typedef grammar::symbol_unique_id symbol_unique_id;
@@ -24,7 +28,12 @@ class printer {
   typedef grammar::rule_iterator rule_iterator;
   typedef grammar::item_iterator item_iterator;
   typedef grammar::itemset_iterator itemset_iterator;
-
+ private:
+  void flush_to_stream(string_vector_type const&, const char *sep=" ") ;
+  template<class InputIter, class UnaryFunc>
+    void make_string_vector(InputIter first, InputIter last, string_vector_type& toprint, UnaryFunc tostring) {
+      std::transform(first, last, std::back_inserter(toprint), tostring);
+    }
  public:
   printer(ostream_reference os) : m_os(os) {}
 

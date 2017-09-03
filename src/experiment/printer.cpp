@@ -1,16 +1,38 @@
 #include "printer.hpp"
 #include <algorithm>
 #include <boost/format.hpp>
-
+#include <iterator>
+#define PRINTER_GET_SYMBOL(g) [&](symbol_unique_id id){ return g.get_symbol(id); }
 namespace experiment {
-
+printer print(std::cout);
 void printer::operator()(const_language lang) { m_os << lang; }
-
+void printer::flush_to_stream(string_vector_type const& toprint, const char *sep) {
+  std::copy(toprint.begin(), toprint.end(),
+      std::ostream_iterator<std::string> (m_os, sep));
+  m_os << '\n';
+}
 ////////////////// grammar + subject /////////////////////////
 void printer::operator()(const_grammar g, const_item item) {
-  
+  auto rule = g.rule(item);
+  auto head = g.get_symbol(rule.head());
+  auto body = rule.body();
+  m_os << boost::format("%1% := ") % head;
+  std::vector<std::string> toprint;
+  make_string_vector(body.begin(), body.end(), toprint,
+      PRINTER_GET_SYMBOL(g));
+  toprint.insert(toprint.begin() + item.dot(), "^");
+  flush_to_stream(toprint);
 }
-void printer::operator()(const_grammar g, const_rule rule) {}
+void printer::operator()(const_grammar g, const_rule rule) {
+  string_vector_type toprint;
+  auto body = rule.body();
+  toprint.reserve(body.size()+2);
+  toprint.emplace_back(g.get_symbol(rule.head()));
+  toprint.emplace_back(":=");
+  make_string_vector(body.begin(), body.end(), toprint,
+      PRINTER_GET_SYMBOL(g));
+  flush_to_stream(toprint);
+}
 void printer::operator()(const_grammar g, const_itemset itemset) {}
 ///////////////// grammar + iterator ////////////////////////
 void printer::operator()(const_grammar g, rule_iterator it) {

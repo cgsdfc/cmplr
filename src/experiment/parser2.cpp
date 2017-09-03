@@ -15,7 +15,24 @@ namespace debug {
   }
 }
 }
-namespace ns = experiment::debug;
+using namespace experiment;
+using namespace experiment::debug;
+
 int main(int, char**) { 
-  ns::print_lang(ns::which_lang::clang);
+  language lang;
+  simple::definition(lang);
+  grammar g(lang);
+  auto iter = g.items();
+  std::for_each(iter.first /* begin */,
+      iter.second /* end */,
+      [&](printer::const_item item) {
+      print(g, item);
+      });
+  cout << endl;
+  auto rules=g.rules();
+  std::for_each(rules.first,
+      rules.second,
+      [&](printer::const_rule rule) {
+      print(g, rule);
+      });
 }
