@@ -12,5 +12,8 @@ struct quick {
 struct easy {
   static language& definition(language& lang);
 };
+struct loop {
+  static language& definition(language& lang);
+};
 }  // namespace experiment
 #endif  // EXPERIMENT_SMALL_LANG_HPP

@@ -4,7 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
-
+// make it a ipp ?
 namespace experiment {
 // consider boost::bimap?
 // less powerful
@@ -27,7 +27,7 @@ class unique_map {
   unique_map() : m_count(0), m_vector(), m_map() {}
   // content should be const
   const_reference operator[](unique_id id) const {
-    return m_vector[id];  // may throws
+    return m_vector[id];  // may throws std::out_of_range
   }
   unique_id operator[](const_reference ref) {
     auto result = m_map.emplace(ref, m_count);
@@ -36,6 +36,10 @@ class unique_map {
       return m_count++;
     }
     return result.first->second;
+  }
+  unique_id find(const_reference ref) const {
+    auto result = m_map.find(ref);
+    return result == m_map.end() ? npos : result->second /* unique_id */;
   }
   size_type size() const { return m_count; }
   void reserve(size_type size) { m_vector.reserve(size); }

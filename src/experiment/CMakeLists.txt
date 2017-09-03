@@ -1,6 +1,9 @@
 add_executable(digraph digraph.c)
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3")
 add_library(parser2
+  ./debug.cpp
+  ./symbol_stream.cpp
+  ./parser.cpp
   ./printer.cpp
   ./language.cpp
   ./small_lang.cpp

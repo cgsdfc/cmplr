@@ -7,13 +7,13 @@
 
 namespace experiment {
 enum class symbol_property {
-  terminal,    // general terminal.
-  nontermial,  // general nontermial.
-  optional,    // nontermial that has a nullable body.
-  start,       // nontermial that serves as the head of first rule.
-  eof,         // terminal that serves as end of file.
-  reserved,    // terminal that is a reserved word.
-  unknown,     // illegal value.
+  terminal,     // general terminal.
+  nonterminal,  // general nonterminal.
+  optional,     // nonterminal that has a nullable body.
+  start,        // nonterminal that serves as the head of first rule.
+  eof,          // terminal that serves as end of file.
+  reserved,     // terminal that is a reserved word.
+  unknown,      // illegal value.
 };
 
 class symbol {
@@ -29,7 +29,7 @@ class symbol {
 
  public:
   symbol(const char *str, symbol_property prop) : m_str(str), m_prop(prop) {}
-
+  symbol(std::string const &str) : m_str(str) {}
   symbol(const char *str) : m_str(str), m_prop(symbol_property::unknown) {}
   symbol() : m_str(), m_prop(symbol_property::unknown) {}
   operator std::string() const { return m_str; }
@@ -42,8 +42,8 @@ class symbol {
            m_prop == symbol_property::reserved ||
            m_prop == symbol_property::eof;
   }
-  bool nontermial() const {
-    return m_prop == symbol_property::nontermial ||
+  bool nonterminal() const {
+    return m_prop == symbol_property::nonterminal ||
            m_prop == symbol_property::optional ||
            m_prop == symbol_property::start;
   }
@@ -69,10 +69,11 @@ inline symbol optional(const char *str) {
   return symbol(str, symbol_property::optional);
 }
 
-inline symbol start(const char *str) {
-  return symbol(str, symbol_property::start);
-}
-
-inline symbol eof(const char *str) { return symbol(str, symbol_property::eof); }
+struct is_terminal {
+  bool operator()(symbol const &s) const { return s.terminal(); }
+};
+struct is_nonterminal {
+  bool operator()(symbol const &s) const { return s.nonterminal(); }
+};
 }
 #endif  // EXPERIMENT_SYMBOL_HPP

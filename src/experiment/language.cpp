@@ -1,4 +1,6 @@
 #include "language.hpp"
+#include "exception.hpp"
+
 // speed up compilation
 namespace experiment {
 std::ostream& operator<<(std::ostream& os, const language& lang) {
@@ -18,7 +20,9 @@ std::ostream& operator<<(std::ostream& os, const language& lang) {
 }
 rule_adder language::operator[](symbol&& sym) {
   if (sym.unknown()) {
-    sym.set(symbol_property::nontermial);
+    sym.set(symbol_property::nonterminal);
+  } else if (sym.terminal()) {
+    throw terminal_as_head();
   }
   return rule_adder(m_rule_map[sym]);
 }

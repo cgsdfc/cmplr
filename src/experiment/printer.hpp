@@ -9,14 +9,17 @@ class printer {
   typedef std::ostream ostream_type;
   typedef ostream_type& ostream_reference;
   typedef grammar::symbol_unique_id symbol_unique_id;
+  typedef grammar::item_unique_id item_unique_id;
+  typedef grammar::rule_unique_id rule_unique_id;
   ostream_reference m_os;
+
  public:
   typedef const grammar& const_grammar;
   typedef const language& const_language;
   // subject
   typedef grammar::rule_type const& const_rule;
-  typedef grammar::item_type  const& const_item;
-  typedef grammar::itemset_type  const& const_itemset;
+  typedef grammar::item_type const& const_item;
+  typedef grammar::itemset_type const& const_itemset;
   // iterator
   typedef grammar::rule_iterator rule_iterator;
   typedef grammar::item_iterator item_iterator;

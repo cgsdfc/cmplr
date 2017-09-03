@@ -231,6 +231,7 @@ struct-or-union :=  ^ struct
 struct-or-union :=  ^ union
 declaration-specifier :=  storage-class-specifier ^ declaration-specifier
 declaration-specifier :=  storage-class-specifier ^
+// example of shift-reduce conflict
 
 I[8]
 declaration-specifier :=  ^ storage-class-specifier declaration-specifier
