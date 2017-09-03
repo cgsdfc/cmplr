@@ -15,6 +15,12 @@ class grammar : public grammar_base {
   struct item_type : public std::pair<size_type, rule_unique_id> {
     typedef std::pair<size_type, rule_unique_id> base_t;
     item_type(size_type dot, rule_unique_id ruleid) : base_t(dot, ruleid) {}
+    size_type dot() const {
+      return first;
+    }
+    rule_unique_id rule() const {
+      return second;
+    }
   };
   typedef unique_map<item_type> item_unique_map;
   typedef typename item_unique_map::unique_id item_unique_id;
@@ -85,11 +91,11 @@ class grammar : public grammar_base {
     return item_unique_id(boost::source(E, m_graph));
   }
   bool item_dot_reach_end(const item_type& item) const {
-    rule_type const& rule = m_rule_map[item.second];
-    return rule.second.size() == item.first;
+    rule_type const& rule = m_rule_map[item.rule()];
+    return rule.body().size() == item.dot();
   }
   symbol_unique_id symbol_at_dot(const item_type& item) const {
-    return m_rule_map[item.second].second[item.first];
+    return m_rule_map.at(item.rule()).body().at(item.dot());
   }
   itemset_type const& itemset_on_vertex(graph_type::vertex_descriptor V) const {
     return m_itemset_map[itemset_unique_id(V)];

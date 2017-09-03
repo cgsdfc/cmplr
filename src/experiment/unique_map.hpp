@@ -43,6 +43,9 @@ class unique_map {
   }
   size_type size() const { return m_count; }
   void reserve(size_type size) { m_vector.reserve(size); }
+  const_reference at(unique_id id) const {
+    return m_vector.at(id);
+  }
 
  private:
   typedef std::vector<T> vector;

@@ -1,5 +1,5 @@
-#ifndef EXPERIMENT_RULS_HPP
-#define EXPERIMENT_RULS_HPP 1
+#ifndef EXPERIMENT_RULE_HPP
+#define EXPERIMENT_RULE_HPP 1
 
 #include <boost/serialization/access.hpp>
 #include <vector>
@@ -45,4 +45,4 @@ struct rule_adder {
   ~rule_adder() {}
 };
 }  // namespace experiment
-#endif  // EXPERIMENT_RULS_HPP
+#endif  // EXPERIMENT_RULE_HPP

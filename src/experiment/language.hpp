@@ -1,5 +1,5 @@
-#ifndef EXPERIMENT_LANGUAGE_H
-#define EXPERIMENT_LANGUAGE_H 1
+#ifndef EXPERIMENT_LANGUAGE_HPP
+#define EXPERIMENT_LANGUAGE_HPP 1
 #include <boost/format.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/unordered_map.hpp>
@@ -57,4 +57,4 @@ inline symbol optional(const char *str) {
 }
 
 }  // namespace experiment
-#endif
+#endif // EXPERIMENT_LANGUAGE_HPP

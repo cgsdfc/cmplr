@@ -30,11 +30,18 @@ class grammar_base {
   struct rule_type
       : public std::pair<symbol_unique_id, std::vector<symbol_unique_id>> {
     typedef std::pair<symbol_unique_id, std::vector<symbol_unique_id>> base_t;
+    typedef second_type body_type;
     /* typedef typename base_t::first_type first_type; */
     rule_type(symbol_unique_id symbol,
               std::initializer_list<symbol_unique_id> list)
         : base_t(symbol, list) {}
     rule_type() : base_t() {}
+    symbol_unique_id head() const {
+      return first;
+    }
+    body_type const& body() const {
+      return second;
+    }
   };
   typedef unique_map<rule_type> rule_unique_map;
   typedef typename rule_unique_map::unique_id rule_unique_id;

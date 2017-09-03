@@ -119,9 +119,11 @@ language& clang::definition(language& lang) {
     ("type_qualifier")
     ("type_qualifier_list", "type_qualifier")
     ;
+  lang["ellipses"]
+    (",", "...")
+    ;
   lang["parameter_type_list"]
-    ("parameter_list")
-    ("parameter_list", ",", "...")
+    ("parameter_list", optional("ellipses"))
     ;
   lang["parameter_list"]
     ("parameter_declarator")

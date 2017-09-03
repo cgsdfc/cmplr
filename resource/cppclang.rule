@@ -1,0 +1,313 @@
+language "C_Programming_Language"
+
+    "unary_expression"
+        "postfix_expression" 
+        "increment_decrement_operator" "unary_expression" 
+        "unary_operator" "cast_expression" 
+        "sizeof" "unary_expression" 
+        "sizeof" "(" "type_name" ")" 
+
+    "unary_operator"
+        "*" 
+        "+" 
+        "-" 
+        "~" 
+        "!" 
+        "&" 
+
+    "cast_expression"
+        "unary_expression" 
+        "(" "cast_expression" ")" 
+
+    "multiplicative_expression"
+        "cast_expression" 
+        "multiplicative_expression" "multiplcative_operator" "cast_expression" 
+
+    "argument_expression_list"
+        "assignment_expression" 
+        "argument_expression_list" "," "assignment_expression" 
+
+    "additive_expression"
+        "multiplicative_expression" 
+        "additive_expression" "additive_operator" "multiplicative_expression" 
+
+    "relational_expression"
+        "shift_expression" 
+        "relational_expression" "relational_operator" "shift_expression" 
+
+    "equality_expression"
+        "relational_expression" 
+        "equality_expression" "equality_operator" "relational_expression" 
+
+    "additive_operator"
+        "+" 
+        "-" 
+
+    "exclusive_or_expression"
+        "and_expression" 
+        "exclusive_or_expression" "^" "and_expression" 
+
+    "logical_and_expression"
+        "inclusive_or_expression" 
+        "logical_and_expression" "&&" "inclusive_or_expression" 
+
+    "shift_expression"
+        "additive_expression" 
+        "shift_expression" "shift_operator" "additive_expression" 
+
+    "condition_expression"
+        "logical_or_expression" 
+        "logical_or_expression" "?" "expression" ":" "condition_expression" 
+
+    "inclusive_or_expression"
+        "exclusive_or_expression" 
+        "inclusive_or_expression" "|" "exclusive_or_expression" 
+
+    "assignment_expression"
+        "condition_expression" 
+        "unary_expression" "assignment_operator" "assignment_expression" 
+
+    "assignment_operator"
+        "*=" 
+        "/=" 
+        "%=" 
+        "+=" 
+        "-=" 
+        "<<=" 
+        ">>=" 
+        "&=" 
+
+    "multiplcative_operator"
+        "*" 
+        "%" 
+        "/" 
+
+    "statement_list"
+        "statement" 
+        "statement_list" "statement" 
+
+    "selection_statement"
+        "if" "(" "expression" ")" "statement" 
+        "if" "(" "expression" ")" "statement" "else" "statement" 
+        "switch" "(" "expression" ")" "statement" 
+
+    "expression"
+        "assignment_expression" 
+        "expression" "," "assignment_expression" 
+
+    "expression_statement"
+        "expression" ";" 
+
+    "labeled_statement"
+        "identifier" ":" "statement" 
+        "case" "const_expression" ":" "statement" 
+        "default" ":" "statement" 
+
+    "translation_unit"
+        "external_declaration" 
+        "translation_unit" "external_declaration" 
+
+    "direct_declarator"
+        "identifier" 
+        "(" "declarator" ")" 
+        "direct_declarator" "[" "const_expression" "]" 
+        "direct_declarator" "(" "parameter_type_list" ")" 
+        "direct_declarator" "(" "identifier_list" ")" 
+
+    "relational_operator"
+        "<" 
+        ">" 
+        "<=" 
+        ">=" 
+
+    "identifier_list"
+        "identifier" 
+        "identifier_list" "," "identifier" 
+
+    "specifier_qualifier_list"
+        "type_qualifier" "specifier_qualifier_list" 
+        "type_specifier" "specifier_qualifier_list" 
+
+    "enumerator_list"
+        "enumerator_list" "enumerator" 
+        "enumerator" 
+
+    "initial_declarator"
+        "declarator" "=" "initializer" 
+        "declarator" 
+        "assignment_expression" 
+        "{" "initial_declarator_list" "," "}" 
+
+    "parameter_declarator"
+        "declaration_specifier" "declarator" 
+        "declaration_specifier" "abstract_declarator" 
+
+    "struct_or_union_specifier"
+        "struct_or_union" "identifier" "{" "struct_declaration_list" "}" 
+        "struct_or_union" "identifier" 
+
+    "type_qualifier_list"
+        "type_qualifier" 
+        "type_qualifier_list" "type_qualifier" 
+
+    "struct_or_union"
+        "struct" 
+        "union" 
+
+    "and_expression"
+        "equality_expression" 
+        "and_expression" "&" "equality_expression" 
+
+    "composite_statement"
+        "{" "declaration_list" "statement_list" "}" 
+
+    "logical_or_expression"
+        "logical_and_expression" 
+        "logical_or_expression" "||" "logical_and_expression" 
+
+    "storage_class_specifier"
+        "auto" 
+        "register" 
+        "static" 
+        "extern" 
+        "typedef" 
+
+    "external_declaration"
+        "function_definition" 
+        "declaration" 
+
+    "direct_abstract_declarator"
+        "(" "abstract_declarator" ")" 
+        "direct_abstract_declarator" "[" "const_expression" "]" 
+        "direct_abstract_declarator" "(" "parameter_type_list" ")" 
+
+    "increment_decrement_operator"
+        "++" 
+        "--" 
+
+    "declaration_specifier"
+        "storage_class_specifier" "declaration_specifier" 
+        "type_specifier" "declaration_specifier" 
+        "type_qualifier" "declaration_specifier" 
+
+    "primary_expression"
+        "identifier" 
+        "character_literal" 
+        "floating_point_literal" 
+        "integeral_literal" 
+        "(" "expression" ")" 
+
+    "struct_declarator_list"
+        "struct_declarator_list" "struct_declarator" 
+        "struct_declarator" 
+
+    "function_definition"
+        "declaration_specifier" "declarator" "declaration_list" "composite_statement" 
+
+    "declaration"
+        "declaration_specifier" "initial_declarator_list" 
+
+    "type_specifier"
+        "void" 
+        "char" 
+        "short" 
+        "int" 
+        "long" 
+        "float" 
+        "double" 
+        "signed" 
+        "unsigned" 
+        "identifier" 
+        "struct_union_specifier" 
+        "enum_specifier" 
+
+    "iteration_statement"
+        "while" "(" "expression" ")" "statement" 
+        "do" "statement" "while" "(" "expression" ")" 
+        "for" "(" "expression" ";" "expression" ";" "expression" ")" "statement" 
+
+    "struct_declarator"
+        "declarator" 
+        "declarator" ":" "const_expression" 
+
+    "parameter_list"
+        "parameter_declarator" 
+        "parameter_list" "," "parameter_declarator" 
+
+    "declarator"
+        "pointer" "direct_declarator" 
+
+    "jump_statement"
+        "goto" "identifier" 
+        "return" "expression" 
+        "continue" ";" 
+        "break" ";" 
+
+    "const_expression"
+        "condition_expression" 
+
+    "shift_operator"
+        ">>" 
+        "<<" 
+
+    "enumerator"
+        "identifier" "=" "const_expression" 
+        "identifier" 
+
+    "pointer"
+        "*" "type_qualifier_list" "pointer" 
+
+    "ellipses"
+        "," "..." 
+
+    "parameter_type_list"
+        "parameter_list" "ellipses" 
+
+    "postfix_expression"
+        "primary_expression" 
+        "postfix_expression" "[" "expression" "]" 
+        "postfix_expression" "(" "argument_expression_list" ")" 
+        "postfix_expression" "member_access_operator" "identifier" 
+        "postfix_expression" "increment_decrement_operator" 
+
+    "struct_declaration"
+        "specifier_qualifier_list" "struct_declaration_list" 
+
+    "type_name"
+        "specifier_qualifier_list" "abstract_declarator" 
+
+    "equality_operator"
+        "==" 
+        "!=" 
+
+    "struct_declaration_list"
+        "struct_declaration_list" "struct_declaration" 
+        "struct_declaration" 
+
+    "abstract_declarator"
+        "pointer" "direct_abstract_declarator" 
+
+    "initializer_list"
+        "initializer" 
+        "initializer_list" "initializer" 
+
+    "initial_declarator_list"
+        "initial_declarator_list" "initial_declarator" 
+        "initial_declarator" 
+
+    "enum_specifier"
+        "enum" "identifier" "{" "enumerator_list" "}" 
+        "enum" "identifier" 
+
+    "type_qualifier"
+        "const" 
+        "volatile" 
+
+    "statement"
+        "labeled_statement" 
+        "expression_statement" 
+        "composite_statement" 
+        "selection_statement" 
+        "iteration_statement" 
+        "jump_statement" 
+

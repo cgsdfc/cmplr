@@ -15,7 +15,7 @@ namespace debug {
   }
 }
 }
-
+namespace ns = experiment::debug;
 int main(int, char**) { 
-  experiment::debug::symbol_stream_debug();
+  ns::print_lang(ns::which_lang::clang);
 }

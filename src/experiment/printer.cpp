@@ -7,7 +7,9 @@ namespace experiment {
 void printer::operator()(const_language lang) { m_os << lang; }
 
 ////////////////// grammar + subject /////////////////////////
-void printer::operator()(const_grammar g, const_item item) {}
+void printer::operator()(const_grammar g, const_item item) {
+  
+}
 void printer::operator()(const_grammar g, const_rule rule) {}
 void printer::operator()(const_grammar g, const_itemset itemset) {}
 ///////////////// grammar + iterator ////////////////////////

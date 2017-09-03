@@ -25,7 +25,7 @@ void grammar::build_itemset() {
       const item_type& item = m_item_map[item_id];
       if (item_dot_reach_end(item)) continue;
       auto symbol = symbol_at_dot(item);
-      auto new_item = make_item(item.first + 1, item.second);
+      auto new_item = make_item(item.dot() + 1, item.rule());
       symbol2itemset[symbol].push_back(m_item_map[new_item]);
     }
     for (auto& bundle : symbol2itemset) {
