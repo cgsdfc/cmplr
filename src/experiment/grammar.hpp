@@ -106,6 +106,7 @@ class grammar : public grammar_base {
   symbol_unique_id start() const { return m_start_symbol_id; }
   rule_type const& rule(item_type const& item)const { return m_rule_map[item.rule()]; }
   rule_type const& rule(rule_unique_id id)const { return m_rule_map[id]; }
+  itemset_type const& itemset(itemset_unique_id id)const{return m_itemset_map[id]; }
   std::pair<item_iterator, item_iterator>
     items() const {
       return std::make_pair(m_item_map.vbegin(), m_item_map.vend());

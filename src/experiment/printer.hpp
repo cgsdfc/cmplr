@@ -55,6 +55,17 @@ class printer {
   void operator()(const_grammar, const_rule);
   void operator()(const_grammar, const_item);
   void operator()(const_grammar, const_itemset);
+  // sugar printer
+  template<class... Args>
+    void operator() (Args const&...);
+  template<class T, class... Args>
+    void operator() (T const& t, Args const&... args) {
+      m_os << t << " ";
+      operator() (std::forward<Args...> (args)...);
+    }
+  void operator() () {
+    m_os << "\n";
+  }
 };
 }  // namespace experiment
 

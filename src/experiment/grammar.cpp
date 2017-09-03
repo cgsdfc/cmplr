@@ -34,7 +34,8 @@ void grammar::build_itemset() {
       auto next_id = m_itemset_map[next_itemset];
       auto symbol = bundle.first;
       add_edge(current_id, next_id, symbol);
-      if (visited.find(next_id) != visited.end()) {
+      if (visited.find(next_id) == visited.end()) {
+        /* itemset is white */
         queue.push(next_id);
       }
     }

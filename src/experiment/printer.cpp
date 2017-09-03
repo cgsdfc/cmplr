@@ -33,7 +33,15 @@ void printer::operator()(const_grammar g, const_rule rule) {
       PRINTER_GET_SYMBOL(g));
   flush_to_stream(toprint);
 }
-void printer::operator()(const_grammar g, const_itemset itemset) {}
+void printer::operator()(const_grammar g, const_itemset itemset) {
+  // itemset is just a list of ids
+  m_os << "itemset\n";
+  std::for_each(itemset.begin(), itemset.end(),
+      [&](item_unique_id id) {
+      operator() (g, g.item(id));
+      });
+  m_os << "\n";
+}
 ///////////////// grammar + iterator ////////////////////////
 void printer::operator()(const_grammar g, rule_iterator it) {
   operator()(g, *it);

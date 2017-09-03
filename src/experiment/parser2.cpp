@@ -13,6 +13,31 @@ namespace debug {
       cout << *sym_begin << endl;
     }
   }
+  void print_info(grammar const& g) {
+    print("grammar.items");
+    auto iter = g.items();
+    std::for_each(iter.first /* begin */,
+        iter.second /* end */,
+        [&](printer::const_item item) {
+        print(g, item);
+        });
+    print();
+    print("grammar.rules");
+    auto rules=g.rules();
+    std::for_each(rules.first,
+        rules.second,
+        [&](printer::const_rule rule) {
+        print(g, rule);
+        });
+    print();
+    print("grammar.itemsets");
+    for (auto iter = g.itemsets();
+        iter.first != iter.second;
+        ++iter.first) {
+      print(g, iter.first);
+    }
+    print();
+  }
 }
 }
 using namespace experiment;
@@ -22,17 +47,5 @@ int main(int, char**) {
   language lang;
   simple::definition(lang);
   grammar g(lang);
-  auto iter = g.items();
-  std::for_each(iter.first /* begin */,
-      iter.second /* end */,
-      [&](printer::const_item item) {
-      print(g, item);
-      });
-  cout << endl;
-  auto rules=g.rules();
-  std::for_each(rules.first,
-      rules.second,
-      [&](printer::const_rule rule) {
-      print(g, rule);
-      });
+  print_info(g);
 }
