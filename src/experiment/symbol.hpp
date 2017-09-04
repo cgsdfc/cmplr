@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <string>
+#include "subject_traits.hpp"
 
 namespace experiment {
 enum class symbol_property {
@@ -20,49 +21,38 @@ class symbol {
  private:
   friend class boost::serialization::access;
   template <class Archive>
-  void serialize(Archive &ar, const unsigned version) {
-    ar &m_prop;
-    ar &m_str;
-  }
+  void serialize(Archive &ar, const unsigned version);
   symbol_property m_prop;
-  std::string m_str;
+  const std::string m_str;
 
  public:
   symbol(const char *str, symbol_property prop) : m_str(str), m_prop(prop) {}
   symbol(std::string const &str) : m_str(str) {}
   symbol(const char *str) : m_str(str), m_prop(symbol_property::unknown) {}
   symbol() : m_str(), m_prop(symbol_property::unknown) {}
-  operator std::string const& () const { return m_str; }
+  operator std::string const &() const { return m_str; }
 
  public:
-  void set(symbol_property prop) { m_prop = prop; }
-  bool unknown() const { return m_prop == symbol_property::unknown; }
-  bool terminal() const {
-    return m_prop == symbol_property::terminal ||
-           m_prop == symbol_property::reserved ||
-           m_prop == symbol_property::eof;
-  }
-  bool nonterminal() const {
-    return m_prop == symbol_property::nonterminal ||
-           m_prop == symbol_property::optional ||
-           m_prop == symbol_property::start;
-  }
-  bool start() const { return m_prop == symbol_property::start; }
-  bool eof() const { return m_prop == symbol_property::eof; }
+  void set(symbol_property prop);
+  bool unknown() const;
+  bool terminal() const;
+  bool nonterminal() const;
+  bool start() const;
+  bool eof() const;
 
  public:
   struct hash : public std::hash<std::string> {};
   struct equal_to : public std::equal_to<std::string> {};
-  friend std::ostream &operator<<(std::ostream &os, symbol const &s) {
-    return os << s.m_str;
-  }
+  struct less : public std::less<std::string> {};
+  friend std::ostream &operator<<(std::ostream &os, symbol const &s);
 };
-
 struct is_terminal {
   bool operator()(symbol const &s) const { return s.terminal(); }
 };
 struct is_nonterminal {
   bool operator()(symbol const &s) const { return s.nonterminal(); }
 };
-}
+typedef subject_traits<symbol> symbol_traits;
+}  // namespace experiment
+#include "impl/symbol.ipp"
 #endif  // EXPERIMENT_SYMBOL_HPP

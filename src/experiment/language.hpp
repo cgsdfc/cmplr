@@ -1,17 +1,16 @@
-#ifndef EXPERIMENT_GRAMMAR_BASE_HPP
-#define EXPERIMENT_GRAMMAR_BASE_HPP 1
+#ifndef EXPERIMENT_LANGUAGE_HPP
+#define EXPERIMENT_LANGUAGE_HPP 1
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 #include "exception.hpp"
-#include "matrix.hpp"
-#include "printer_fwd.hpp"
 #include "symbol.hpp"
 #include "unique_map.hpp"
 #include "rule_tree.hpp"
 #include "detail/language.hpp"  // must come last
 
 namespace experiment {
+class printer;
 class language : public detail::language_base {
  public:
   friend class printer;
@@ -26,10 +25,7 @@ class language : public detail::language_base {
   nonterminal2rule_map m_nonterminal2rule;
   symbol_ref_graph m_symbol_graph;
  public:
-  rule_tree operator[] (const char *str) const {
-    return rule_tree(m_symbol_map[symbol(str)], *this);
-  }
- public:
+  rule_tree operator[] (const char *str);
   rule_unique_id principle_ruleid() const;
   symbol_unique_id eof() const;
   symbol_unique_id start() const;
@@ -64,4 +60,4 @@ class language : public detail::language_base {
 };
 }  // namespace experiment
 #include "impl/language.ipp"
-#endif  // EXPERIMENT_GRAMMAR_BASE_HPP
+#endif  // EXPERIMENT_LANGUAGE_HPP

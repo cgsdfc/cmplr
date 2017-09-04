@@ -62,14 +62,17 @@ inline grammar::itemset_type const& grammar::itemset_on_vertex(
 inline grammar::item_type const& grammar::item(item_unique_id id) const {
   return m_item_map[id];
 }
-inline grammar::size_type grammar::num_itemsets() const { return m_itemset_map.size(); }
+inline grammar::size_type grammar::num_itemsets() const {
+  return m_itemset_map.size();
+}
 inline grammar::rule_type const& grammar::rule(item_type const& item) const {
   return m_lang.rule(item.rule());
 }
 inline grammar::rule_type const& grammar::rule(rule_unique_id id) const {
   return m_lang.rule(id);
 }
-inline grammar::itemset_type const& grammar::itemset(itemset_unique_id id) const {
+inline grammar::itemset_type const& grammar::itemset(
+    itemset_unique_id id) const {
   return m_itemset_map[id];
 }
 inline std::pair<grammar::item_iterator, grammar::item_iterator>

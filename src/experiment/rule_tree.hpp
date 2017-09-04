@@ -2,8 +2,9 @@
 #define EXPERIMENT_RULE_TREE_HPP 1
 #include <memory>
 #include <vector>
-#include "detail/rule_tree.hpp"
+#include <list>
 #include "language.hpp"
+#include "detail/rule_tree.hpp"
 
 namespace experiment {
 template <class... Args>
@@ -15,6 +16,7 @@ class language;
 struct rule_node {
  private:
   language& m_lang;
+  typedef detail::language_base::symbol_unique_id symbol_unique_id;
   typedef std::list<symbol_unique_id> body_id_type;
   // for fast insertion at front
   typedef typename detail::symbol_node::base_type body_str_type;
@@ -25,20 +27,18 @@ struct rule_node {
   template <class... Args>
   void parse(Args&&... args); /* no definition */
   template <class T, class... Args>
-  void parse(T&&... t, Args&&... args);
+    void parse(T&& t, Args&&... args);
   void str2id(body_id_type& ids, body_str_type const& strs) const;
-  void parse(optional_node&& optional);
-  void parse(list_node&& list);
+  void parse(detail::optional_node&& optional);
+  void parse(detail::list_node&& list);
   void parse();
 };
-
 class rule_tree {
  private:
   friend class language;
-  typedef language::symbol_unique_id symbol_unique_id;
-  typedef language::rule_unique_id rule_unique_id;
   const symbol_unique_id m_head;
   language& m_lang;
+  symbol_unique_id register_symbol(const char *);
   std::vector<std::unique_ptr<rule_node>> m_rules;
   rule_tree(symbol_unique_id head, language& lang)
       : m_head(head), m_lang(lang) {}
@@ -51,5 +51,4 @@ class rule_tree {
   ~rule_tree();
 };
 }  // namespace experiment
-#include "impl/rule_tree.ipp"
 #endif  // EXPERIMENT_RULE_TREE_HPP

@@ -1,33 +1,37 @@
 #ifndef EXPERIMENT_UNIQUE_MAP_HPP
 #define EXPERIMENT_UNIQUE_MAP_HPP 1
-#include <functional>  // for hash, less, equal_to
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_integral.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <map>
-#include <unordered_map>
 #include <vector>
+#define UNIQUE_MAP_TEMPLATE_PARAM \
+  class T, class Integer, class Map, class Vector
+#define UNIQUE_MAP_TEMPLATE_ARGS T, Integer, Map, Vector
 namespace experiment {
-template <class T>
-struct unique_traits {
-  typedef std::size_t unique_id;
-  typedef std::map<T, unique_id> map_type;
-};  // default Traits for unique_id
-
-template <class T, class Traits = unique_traits<T> >
+template <class T, class Integer = std::size_t,
+          class Map = std::map<T, Integer>, class Vector = std::vector<T>>
 class unique_map {
  public:
-  typedef typename Traits::unique_id unique_id;
-  typedef T value_type;
-  typedef value_type& reference;
-  typedef value_type const& const_reference;
-  typedef std::size_t size_type;
+  typedef Map map_type;
+  typedef Vector vector_type;
+  typedef Integer unique_id;
+  typedef typename Vector::size_type size_type;
+  typedef typename Vector::value_type value_type;
+  typedef typename Vector::reference reference;
+  typedef typename Vector::const_reference const_reference;
+  BOOST_STATIC_ASSERT(boost::is_same<T, value_type>::value);
+  BOOST_STATIC_ASSERT(boost::is_integral<Integer>::value);
+  BOOST_STATIC_ASSERT(boost::is_same<T, typename map_type::key_type>::value);
 
  public:
   unique_map();
   // content should be const
   const_reference operator[](unique_id id) const;
-  reference operator[] (unique_id id) const;
+  reference operator[](unique_id id);
   // note: the call to this mutable overload
   // should not affect the identity of the returned
-  // object. the result of calling hash, equal_to, less 
+  // object. the result of calling hash, equal_to, less
   // on the object before and after returned should make
   // no difference;
   unique_id operator[](const_reference ref);
@@ -37,14 +41,10 @@ class unique_map {
   const_reference at(unique_id id) const;
   reference at(unique_id id);
 
- private:
-  typedef std::vector<T> vector;
-  typedef typename Traits::map_type map;
-
  public:
   static constexpr const unique_id npos = unique_id(-1);
-  typedef typename vector::const_iterator value_iterator;
-  typedef typename map::const_iterator item_iterator;
+  typedef typename vector_type::const_iterator value_iterator;
+  typedef typename map_type::const_iterator item_iterator;
 
   value_iterator vbegin() const;
   value_iterator vend() const;
@@ -53,8 +53,8 @@ class unique_map {
   void swap(unique_map& other);
 
  private:
-  vector m_vector;
-  map m_map;
+  vector_type m_vector;
+  map_type m_map;
   unique_id m_count;
 };
 template <class T>

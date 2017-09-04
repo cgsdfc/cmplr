@@ -2,22 +2,23 @@
 #define EXPERIMENT_IMPL_UNIQUE_MAP_IPP 1
 
 namespace experiment {
-template <class T, class Traits>
-unique_map<T, Traits>::unique_map() : m_count(0), m_vector(), m_map() {}
-template <class T, class Traits> typename
-unique_map<T, Traits>::reference unique_map<T, Traits>::operator[](
-    unique_id id) {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::unique_map()
+    : m_count(0), m_vector(), m_map() {}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::reference
+    unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::operator[](unique_id id) {
   return m_vector[id];
 }
 
-template <class T, class Traits> typename
-unique_map<T, Traits>::const_reference unique_map<T, Traits>::operator[](
-    unique_id id) const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::const_reference
+    unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::operator[](unique_id id) const {
   return m_vector[id];
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::unique_id unique_map<T, Traits>::operator[](
-    const_reference ref) {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::unique_id
+    unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::operator[](const_reference ref) {
   auto result = m_map.emplace(ref, m_count);
   if (result.second) {  // emplace succeeded
     m_vector.push_back(ref);
@@ -25,48 +26,53 @@ unique_map<T, Traits>::unique_id unique_map<T, Traits>::operator[](
   }
   return result.first->second;
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::unique_id unique_map<T, Traits>::find(
-    const_reference ref) const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::unique_id
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::find(const_reference ref) const {
   auto result = m_map.find(ref);
   return result == m_map.end() ? npos : result->second /* unique_id */;
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::size_type unique_map<T, Traits>::size() const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::size_type
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::size() const {
   return m_count;
 }
-template <class T, class Traits>
-void unique_map<T, Traits>::reserve(size_type size) {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+void unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::reserve(size_type size) {
   m_vector.reserve(size);
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::reference unique_map<T, Traits>::at(
-    unique_id id)  {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::reference
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::at(unique_id id) {
   return m_vector.at(id);
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::const_reference unique_map<T, Traits>::at(
-    unique_id id) const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::const_reference
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::at(unique_id id) const {
   return m_vector.at(id);
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::value_iterator unique_map<T, Traits>::vbegin() const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::value_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vbegin() const {
   return m_vector.begin();
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::value_iterator unique_map<T, Traits>::vend() const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::value_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vend() const {
   return m_vector.end();
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::item_iterator unique_map<T, Traits>::ibegin() const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::item_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::ibegin() const {
   return m_map.begin();
 }
-template <class T, class Traits> typename
-unique_map<T, Traits>::item_iterator unique_map<T, Traits>::iend() const {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::item_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::iend() const {
   return m_map.end();
 }
-template <class T, class Traits>
-void unique_map<T, Traits>::swap(unique_map& other) {
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+void unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::swap(unique_map& other) {
   std::swap(m_vector, other.m_vector);
   std::swap(m_map, other.m_map);
 }

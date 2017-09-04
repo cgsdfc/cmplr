@@ -39,7 +39,6 @@ struct grammar_base : public language_base {
   typedef item_unique_map::item_iterator enum_item_iterator;
   typedef itemset_unique_map::item_iterator enum_itemset_iterator;
 };
-
 }  // namespace detail
 }  // namespace experiment
 

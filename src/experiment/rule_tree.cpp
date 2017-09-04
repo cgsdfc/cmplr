@@ -45,4 +45,8 @@ rule_tree::~rule_tree() {
     m_lang.m_nonterminal2rule[m_head].push_back(id);
   }
 }
+symbol_unique_id
+rule_tree::register_symbol(const char *str) {
+  return m_lang.register_symbol(str);
+}
 }  // namespace experiment
