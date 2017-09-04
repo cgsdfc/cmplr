@@ -24,11 +24,18 @@ class unique_map {
   unique_map();
   // content should be const
   const_reference operator[](unique_id id) const;
+  reference operator[] (unique_id id) const;
+  // note: the call to this mutable overload
+  // should not affect the identity of the returned
+  // object. the result of calling hash, equal_to, less 
+  // on the object before and after returned should make
+  // no difference;
   unique_id operator[](const_reference ref);
   unique_id find(const_reference ref) const;
   size_type size() const;
   void reserve(size_type size);
   const_reference at(unique_id id) const;
+  reference at(unique_id id);
 
  private:
   typedef std::vector<T> vector;

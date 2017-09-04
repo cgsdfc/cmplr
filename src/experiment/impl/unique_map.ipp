@@ -4,6 +4,11 @@
 namespace experiment {
 template <class T, class Traits>
 unique_map<T, Traits>::unique_map() : m_count(0), m_vector(), m_map() {}
+template <class T, class Traits> typename
+unique_map<T, Traits>::reference unique_map<T, Traits>::operator[](
+    unique_id id) {
+  return m_vector[id];
+}
 
 template <class T, class Traits> typename
 unique_map<T, Traits>::const_reference unique_map<T, Traits>::operator[](
@@ -33,6 +38,11 @@ unique_map<T, Traits>::size_type unique_map<T, Traits>::size() const {
 template <class T, class Traits>
 void unique_map<T, Traits>::reserve(size_type size) {
   m_vector.reserve(size);
+}
+template <class T, class Traits> typename
+unique_map<T, Traits>::reference unique_map<T, Traits>::at(
+    unique_id id)  {
+  return m_vector.at(id);
 }
 template <class T, class Traits> typename
 unique_map<T, Traits>::const_reference unique_map<T, Traits>::at(

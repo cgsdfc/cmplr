@@ -6,11 +6,15 @@ inline language::rule_unique_id language::principle_ruleid() const {
 }
 inline language::symbol_unique_id language::eof() const { return m_eof_symbol_id; }
 inline language::symbol_unique_id language::start() const { return m_start_symbol_id; }
+inline language::symbol_unique_id language::epsilon() const { return m_epsilon_symbol_id; }
 
 inline language::size_type language::num_rules() const {
   return m_rule_map.size();
 }
-
+inline void language::register_rule(rule_type&& rule) {
+  auto rule_id = m_lang.m_rule_map[rule];
+  m_nonterminal2rule[rule.head()].push_back(rule_id);
+}
 inline language::size_type language::num_nonterminals() const {
   return m_nonterminal2rule.size();
 }
@@ -42,16 +46,16 @@ inline language::symbol_unique_id language::register_symbol(
 inline std::pair<language::nonterminal_iterator, language::nonterminal_iterator>
 language::nonterminals() const {
   return std::make_pair(boost::make_filter_iterator<is_nonterminal>(
-                            m_symbol_map.vbegin(), m_symbol_map.vend()),
-                        boost::make_filter_iterator<is_nonterminal>(
-                            m_symbol_map.vend(), m_symbol_map.vend()));
+        m_symbol_map.vbegin(), m_symbol_map.vend()),
+      boost::make_filter_iterator<is_nonterminal>(
+        m_symbol_map.vend(), m_symbol_map.vend()));
 }
 inline std::pair<language::terminal_iterator, language::terminal_iterator>
 language::terminals() const {
   return std::make_pair(boost::make_filter_iterator<is_terminal>(
-                            m_symbol_map.vbegin(), m_symbol_map.vend()),
-                        boost::make_filter_iterator<is_terminal>(
-                            m_symbol_map.vend(), m_symbol_map.vend()));
+        m_symbol_map.vbegin(), m_symbol_map.vend()),
+      boost::make_filter_iterator<is_terminal>(
+        m_symbol_map.vend(), m_symbol_map.vend()));
 }
 inline std::pair<language::rule_iterator, language::rule_iterator>
 language::rules() const {

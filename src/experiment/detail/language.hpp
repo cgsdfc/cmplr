@@ -33,11 +33,12 @@ struct language_base {
   };
   typedef unique_map<rule_type> rule_unique_map;
   typedef typename rule_unique_map::unique_id rule_unique_id;
-  struct nonterminal2rule_map : public matrix<rule_unique_id> {
-    typedef matrix<rule_unique_id> base_t;
-    typedef typename base_t::size_type size_type;
-    nonterminal2rule_map(size_type size) : base_t(size) {}
-  };
+  typedef std::map<symbol_unique_id, std::vector<rule_unique_id>> nonterminal2rule_map;
+  /* struct nonterminal2rule_map : public matrix<rule_unique_id> { */
+  /*   typedef matrix<rule_unique_id> base_t; */
+  /*   typedef typename base_t::size_type size_type; */
+  /*   nonterminal2rule_map(size_type size) : base_t(size) {} */
+  /* }; */
   typedef typename symbol_unique_map::value_iterator symbol_iterator;
   typedef typename rule_unique_map::value_iterator rule_iterator;
   typedef boost::filter_iterator<is_terminal, symbol_iterator>
