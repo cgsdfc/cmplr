@@ -13,9 +13,13 @@ add_library(parser2
 )
 
 add_executable(cpp_parser parser2.cpp)
-target_link_libraries(cpp_parser 
+target_link_libraries(
+  cpp_parser 
   parser2
   $ENV{HOME}/download/local/lib/libboost_serialization.a
 )
-
+add_executable(
+  loop_push_back
+  ./loop_push_back.cpp
+)
 

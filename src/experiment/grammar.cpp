@@ -49,8 +49,11 @@ void grammar::do_closure(itemset_type& itemset) {
   // must resize to the max possible items
   // to ensure iterator wont get invalidate
   // during the add-and-traversal loop
-  itemset.reserve(m_rule_map.size());
-  for (auto item_id : itemset) {
+  itemset.reserve(m_rule_map.size()); /* if use size(), reserve is not necessary */
+  /* for (auto item_id : itemset) { */
+  /* cannot use range_loop here */
+  for (int i=0;i<itemset.size();++i) {
+    auto item_id = itemset[i];
     const item_type& item = m_item_map[item_id];
     if (item_dot_reach_end(item)) continue;
     auto symbol = symbol_at_dot(item);
@@ -60,6 +63,7 @@ void grammar::do_closure(itemset_type& itemset) {
       auto new_item = make_item(0, ruleid);
       itemset.push_back(m_item_map[new_item]);
     }
+    accounted[symbol]=true;
   }
   std::sort(itemset.begin(), itemset.end());
   itemset.shrink_to_fit();

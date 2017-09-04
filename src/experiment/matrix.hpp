@@ -8,6 +8,7 @@ struct matrix : public std::vector<std::vector<T>> {
   typedef typename base_t::value_type row_type;
   typedef typename base_t::size_type size_type;
   matrix(size_type nrow, size_type ncol) : base_t(nrow, row_type(ncol)) {}
+  matrix(size_type nrow) : base_t(nrow) {}
 };
 
 

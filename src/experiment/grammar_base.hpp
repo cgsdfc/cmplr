@@ -5,6 +5,7 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 #include <initializer_list>
+#include "matrix.hpp"
 #include "exception.hpp"
 #include "language.hpp"
 #include "printer_fwd.hpp"
@@ -46,7 +47,11 @@ class grammar_base {
   typedef unique_map<rule_type> rule_unique_map;
   typedef typename rule_unique_map::unique_id rule_unique_id;
   // structure for fast accessing the rules of each nonterminals
-  typedef std::vector<std::vector<rule_unique_id>> nonterminal2rule_map;
+  struct nonterminal2rule_map : public matrix<rule_unique_id> {
+    typedef matrix<rule_unique_id> base_t;
+    typedef typename base_t::size_type size_type;
+    nonterminal2rule_map(size_type size):base_t(size) {}
+  };
   // iterator
   typedef typename symbol_unique_map::value_iterator symbol_iterator;
   typedef typename rule_unique_map::value_iterator rule_iterator;

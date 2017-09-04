@@ -41,6 +41,9 @@ class grammar : public grammar_base {
   // iterator
   typedef item_unique_map::value_iterator item_iterator;
   typedef itemset_unique_map::value_iterator itemset_iterator;
+  // iterator with an id binded
+  typedef item_unique_map::item_iterator enum_item_iterator;
+  typedef itemset_unique_map::item_iterator enum_itemset_iterator;
 
  private:
   item_unique_map m_item_map;
@@ -115,6 +118,15 @@ class grammar : public grammar_base {
     itemsets() const {
       return std::make_pair(m_itemset_map.vbegin(), m_itemset_map.vend());
     }
+  std::pair<enum_item_iterator, enum_item_iterator>
+    enum_items() const {
+      return std::make_pair(m_item_map.ibegin(), m_item_map.iend());
+    }
+  std::pair<enum_itemset_iterator, enum_itemset_iterator>
+    enum_itemsets() const {
+      return std::make_pair(m_itemset_map.ibegin(), m_itemset_map.iend());
+    }
+
 };
 }  // namespace experiment
 #endif  // EXPERIMENT_GRAMMAR_HPP

@@ -1,18 +1,20 @@
 #include "printer.hpp"
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 #include <iterator>
 #define PRINTER_GET_SYMBOL(g) [&](symbol_unique_id id){ return g.get_symbol(id); }
 namespace experiment {
 printer print(std::cout);
 void printer::operator()(const_language lang) { m_os << lang; }
-void printer::flush_to_stream(string_vector_type const& toprint, const char *sep) {
+void printer::flush_to_stream(string_vector_type const& toprint,bool newline, const char *sep) {
   std::copy(toprint.begin(), toprint.end(),
       std::ostream_iterator<std::string> (m_os, sep));
-  m_os << '\n';
+  if (newline)
+    m_os << '\n';
 }
 ////////////////// grammar + subject /////////////////////////
-void printer::operator()(const_grammar g, const_item item) {
+void printer::operator()(const_grammar g, const_item item, bool newline) {
   auto rule = g.rule(item);
   auto head = g.get_symbol(rule.head());
   auto body = rule.body();
@@ -21,9 +23,9 @@ void printer::operator()(const_grammar g, const_item item) {
   make_string_vector(body.begin(), body.end(), toprint,
       PRINTER_GET_SYMBOL(g));
   toprint.insert(toprint.begin() + item.dot(), "^");
-  flush_to_stream(toprint);
+  flush_to_stream(toprint, newline);
 }
-void printer::operator()(const_grammar g, const_rule rule) {
+void printer::operator()(const_grammar g, const_rule rule, bool newline) {
   string_vector_type toprint;
   auto body = rule.body();
   toprint.reserve(body.size()+2);
@@ -31,16 +33,38 @@ void printer::operator()(const_grammar g, const_rule rule) {
   toprint.emplace_back(":=");
   make_string_vector(body.begin(), body.end(), toprint,
       PRINTER_GET_SYMBOL(g));
-  flush_to_stream(toprint);
+  flush_to_stream(toprint, newline);
 }
-void printer::operator()(const_grammar g, const_itemset itemset) {
+void printer::operator()(const_grammar g, const_itemset itemset, bool newline) {
   // itemset is just a list of ids
   m_os << "itemset\n";
   std::for_each(itemset.begin(), itemset.end(),
       [&](item_unique_id id) {
       operator() (g, g.item(id));
       });
-  m_os << "\n";
+  if (newline) m_os << "\n";
+}
+void printer::operator() (const_grammar g, nonterminal2rule_map_tag) {
+  boost::counting_iterator<std::size_t>
+    begin(0), end(g.m_nonterminal2rule.size());
+  for (; begin!=end; ++begin) {
+    m_os << g.get_symbol(*begin) << ":\n";
+    for (auto ruleid: g.m_nonterminal2rule[*begin]) {
+      m_os << ' ';
+      operator() (g, g.rule(ruleid));
+    }
+    m_os << '\n';
+  }
+}
+void printer::operator() (const_grammar g, core_item_diagram_tag) {
+  // print the edges of m_graph;
+  auto eit = g.edges();
+  for (;eit.first!=eit.second;++eit.first) {
+    m_os << *(eit.first) << " ";
+    auto id = g.symbol_on_edge(*(eit.first));
+    auto sym = g.get_symbol(id);
+    operator() (id, sym);
+  }
 }
 ///////////////// grammar + iterator ////////////////////////
 void printer::operator()(const_grammar g, rule_iterator it) {
@@ -67,7 +91,7 @@ void printer::operator()(const_itemset itemset) {
   m_os << ")\n";
 }
 void printer::operator()(const_rule rule) {
-  m_os << boost::format("%1% -> ") % rule.first;  // rule.head
+  m_os << boost::format("%1% := ") % rule.first;  // rule.head
   std::for_each(                                  // rule.body
       std::begin(rule.second), std::end(rule.second),
       [&](symbol_unique_id id) { m_os << id << ", "; });
