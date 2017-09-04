@@ -11,5 +11,4 @@ struct matrix : public std::vector<std::vector<T>> {
   matrix(size_type nrow) : base_t(nrow) {}
 };
 
-
-#endif // EXPERIMENT_MATRIX_HPP
+#endif  // EXPERIMENT_MATRIX_HPP

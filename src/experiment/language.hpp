@@ -1,60 +1,62 @@
-#ifndef EXPERIMENT_LANGUAGE_HPP
-#define EXPERIMENT_LANGUAGE_HPP 1
-#include <boost/format.hpp>
+#ifndef EXPERIMENT_GRAMMAR_BASE_HPP
+#define EXPERIMENT_GRAMMAR_BASE_HPP 1
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
-#include <unordered_map>
-#include "indent.hpp"
-#include "rule.hpp"
+#include "exception.hpp"
+#include "matrix.hpp"
+#include "printer_fwd.hpp"
+#include "symbol.hpp"
+#include "unique_map.hpp"
+#include "detail/language.hpp"  // must come last
 
 namespace experiment {
-class language {
+class grammar;
+class language : public detail::language_base {
+ public:
+  friend class printer;
+
+ private:
+  symbol_unique_id m_start_symbol_id;
+  symbol_unique_id m_eof_symbol_id;
+  symbol_unique_id m_epsilon_symbol_id;
+  rule_unique_id m_principle_rule;
+  symbol_unique_map m_symbol_map;
+  rule_unique_map m_rule_map;
+  nonterminal2rule_map m_nonterminal2rule;
+  symbol_ref_graph m_symbol_graph;
+ public:
+
+
+ public:
+  rule_unique_id principle_ruleid() const;
+  symbol_unique_id eof() const;
+  symbol_unique_id start() const;
+  size_type num_rules() const;
+  size_type num_nonterminals() const;
+  size_type num_symbols() const;
+  size_type num_terminals() const;
+  symbol const& get_symbol(symbol_unique_id) const;
+  rule_type const& rule(rule_unique_id) const;
+  language();
+
  private:
   friend class boost::serialization::access;
   template <class Archive>
-  void serialize(Archive& ar, const unsigned version) {
-    ar& m_name;
-    ar& m_rule_map;
-  }
+  void serialize(Archive& ar, const unsigned version);
+  symbol_unique_id register_symbol(const char*, symbol_property);
+  void resolve_symbols(const language& lang);
+  void resolve_rules(const language& lang);
+  void sanity_check() const;
 
- private:
-  typedef std::unordered_map<symbol, rule_group, symbol::hash, symbol::equal_to>
-      rule_map_type;
-  std::string m_name;
-  rule_map_type m_rule_map;
-
+  // iterator
  public:
-  rule_adder operator[](symbol&& sym);
-  language(const char* name) : m_name(name) {}
-  language() {}
-  void name(const char* str) { m_name = std::string(str); }
-  rule_adder operator[](const char* str) { return operator[](symbol(str)); }
-
- public:
-  friend std::ostream& operator<<(std::ostream& os, const language& lang);
-
- public:
-  typedef rule_map_type::const_iterator const_iterator;
-  typedef rule_map_type::size_type size_type;
-  const_iterator begin() const { return m_rule_map.begin(); }
-  const_iterator end() const { return m_rule_map.end(); }
-  size_type num_nonterminals() const { return m_rule_map.size(); }
-  size_type num_rules() const;
+  std::pair<symbol_iterator, symbol_iterator> symbols() const;
+  std::pair<nonterminal_iterator, nonterminal_iterator> nonterminals() const;
+  std::pair<terminal_iterator, terminal_iterator> terminals() const;
+  std::pair<rule_iterator, rule_iterator> rules() const;
+  symbol_unique_id find_symbol(std::string const& str) const;
 };
-
-// helper for rule construction
-inline symbol reserved(const char *str) {
-  return symbol(str, symbol_property::reserved);
-}
-
-inline symbol terminal(const char *str) {
-  return symbol(str, symbol_property::terminal);
-}
-
-inline symbol optional(const char *str) {
-  return symbol(str, symbol_property::optional);
-}
-
 }  // namespace experiment
-#endif // EXPERIMENT_LANGUAGE_HPP
+#include "impl/language.ipp"
+#endif  // EXPERIMENT_GRAMMAR_BASE_HPP

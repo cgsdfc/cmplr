@@ -32,7 +32,7 @@ class symbol {
   symbol(std::string const &str) : m_str(str) {}
   symbol(const char *str) : m_str(str), m_prop(symbol_property::unknown) {}
   symbol() : m_str(), m_prop(symbol_property::unknown) {}
-  operator std::string() const { return m_str; }
+  operator std::string const& () const { return m_str; }
 
  public:
   void set(symbol_property prop) { m_prop = prop; }

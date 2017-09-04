@@ -13,6 +13,15 @@ namespace debug {
       cout << *sym_begin << endl;
     }
   }
+  void print_symbol(grammar const& g) {
+    print("grammar.symbols");
+    for (auto iter = g.symbols();
+        iter.first!=iter.second;
+        ++iter.first) {
+      print(*(iter.first));
+    }
+  }
+
   void print_info(grammar const& g) {
     print("grammar.itemsets");
     for (auto iter = g.enum_itemsets();
@@ -32,7 +41,7 @@ using namespace experiment::debug;
 
 int main(int, char**) { 
   language lang;
-  simple::definition(lang);
+  clang::definition(lang);
   grammar g(lang);
-  print_info(g);
+  print_symbol(g);
 }

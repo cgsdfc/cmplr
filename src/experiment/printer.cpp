@@ -6,7 +6,7 @@
 #define PRINTER_GET_SYMBOL(g) [&](symbol_unique_id id){ return g.get_symbol(id); }
 namespace experiment {
 printer print(std::cout);
-void printer::operator()(const_language lang) { m_os << lang; }
+void printer::operator()(const_language lang) {  }
 void printer::flush_to_stream(string_vector_type const& toprint,bool newline, const char *sep) {
   std::copy(toprint.begin(), toprint.end(),
       std::ostream_iterator<std::string> (m_os, sep));

@@ -1,25 +1,31 @@
 add_executable(digraph digraph.c)
 set(CMAKE_CXX_FLAGS "-std=c++11 -g3")
 add_library(parser2
-  ./debug.cpp
+# ./debug.cpp
   ./symbol_stream.cpp
-  ./parser.cpp
-  ./printer.cpp
+# ./parser.cpp
+# ./printer.cpp
   ./language.cpp
-  ./small_lang.cpp
-  ./clang.cpp
+# ./small_lang.cpp
+# ./clang.cpp
   ./grammar.cpp
-  ./grammar_base.cpp
 )
 
-add_executable(cpp_parser parser2.cpp)
+add_executable(
+  cpp_parser 
+  driver.cpp
+)
 target_link_libraries(
   cpp_parser 
   parser2
   $ENV{HOME}/download/local/lib/libboost_serialization.a
 )
-add_executable(
-  loop_push_back
-  ./loop_push_back.cpp
-)
+#add_executable(
+#  dumper
+#  ./dumper.cpp
+#)
+#target_link_libraries(
+#  dumper
+#  parser2
+#)
 

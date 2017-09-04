@@ -4,10 +4,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
-// make it a ipp ?
 namespace experiment {
-// consider boost::bimap?
-// less powerful
 template <class T>
 struct unique_traits {
   typedef std::size_t unique_id;
@@ -24,28 +21,14 @@ class unique_map {
   typedef std::size_t size_type;
 
  public:
-  unique_map() : m_count(0), m_vector(), m_map() {}
+  unique_map();
   // content should be const
-  const_reference operator[](unique_id id) const {
-    return m_vector[id];  // may throws std::out_of_range
-  }
-  unique_id operator[](const_reference ref) {
-    auto result = m_map.emplace(ref, m_count);
-    if (result.second) {  // emplace succeeded
-      m_vector.push_back(ref);
-      return m_count++;
-    }
-    return result.first->second;
-  }
-  unique_id find(const_reference ref) const {
-    auto result = m_map.find(ref);
-    return result == m_map.end() ? npos : result->second /* unique_id */;
-  }
-  size_type size() const { return m_count; }
-  void reserve(size_type size) { m_vector.reserve(size); }
-  const_reference at(unique_id id) const {
-    return m_vector.at(id);
-  }
+  const_reference operator[](unique_id id) const;
+  unique_id operator[](const_reference ref);
+  unique_id find(const_reference ref) const;
+  size_type size() const;
+  void reserve(size_type size);
+  const_reference at(unique_id id) const;
 
  private:
   typedef std::vector<T> vector;
@@ -56,14 +39,11 @@ class unique_map {
   typedef typename vector::const_iterator value_iterator;
   typedef typename map::const_iterator item_iterator;
 
-  value_iterator vbegin() const { return m_vector.begin(); }
-  value_iterator vend() const { return m_vector.end(); }
-  item_iterator ibegin() const { return m_map.begin(); }
-  item_iterator iend() const { return m_map.end(); }
-  void swap(unique_map& other) {
-    std::swap(m_vector, other.m_vector);
-    std::swap(m_map, other.m_map);
-  }
+  value_iterator vbegin() const;
+  value_iterator vend() const;
+  item_iterator ibegin() const;
+  item_iterator iend() const;
+  void swap(unique_map& other);
 
  private:
   vector m_vector;
@@ -71,8 +51,7 @@ class unique_map {
   unique_id m_count;
 };
 template <class T>
-inline void swap(unique_map<T> lhs, unique_map<T> rhs) {
-  lhs.swap(rhs);
-}
+inline void swap(unique_map<T> lhs, unique_map<T> rhs);
 }  // namespace experiment
+#include "impl/unique_map.ipp"
 #endif  // EXPERIMENT_UNIQUE_MAP_HPP
