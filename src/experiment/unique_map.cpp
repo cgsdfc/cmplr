@@ -11,5 +11,5 @@ typedef experiment::subject_traits<experiment::symbol> symbol_traits;
 
 int main(int ac,char**av){ 
   language lang;
-  rule_tree r(0,lang);
+  lang["fucK"]("11");
 }

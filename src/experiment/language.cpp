@@ -46,8 +46,8 @@ language::make_optional() {
   return register_symbol(fmt.str(), symbol_property::nonterminal);
 }
 
-rule_tree&& language::operator[](const char* str) {
-  return std::move(rule_tree(register_symbol(str, symbol_property::unknown), *this));
+rule_tree language::operator[](const char* str) {
+  return rule_tree(register_symbol(str, symbol_property::unknown), *this);
 }
 // eliminate unknown property
 void language::resolve_symbols() {

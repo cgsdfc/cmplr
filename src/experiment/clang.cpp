@@ -1,7 +1,7 @@
 #include "clang.hpp"
 
 namespace experiment {
-language& clang::definition(language& lang) {
+clang::clang() {
   // this version has a frontend that requires
   // most of the programmer effort. it has no shortcut
   // such as list(), optional(A,B,C) but for optional(A).
@@ -305,6 +305,5 @@ language& clang::definition(language& lang) {
     ("assignment_expression")
     ("argument_expression_list", ",", "assignment_expression")
     ;
-  return lang;
 }
 } // namespace experiment

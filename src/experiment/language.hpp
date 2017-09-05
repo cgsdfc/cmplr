@@ -9,6 +9,7 @@
 #include "exception.hpp"
 #include "rule_type.hpp"
 #include "symbol.hpp"
+#include "rule_tree.hpp"
 
 namespace experiment {
 class rule_tree;
@@ -55,7 +56,7 @@ class language {
 
  public:
   void name(const char *str){ m_name=str; }
-  rule_tree&& operator[](const char* str);
+  rule_tree operator[](const char* str);
   size_type num_rules() const;
   size_type num_nonterminals() const;
   size_type num_symbols() const;

@@ -7,8 +7,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -g3")
 # ./printer.cpp
   ./language.cpp
   ./rule_tree.cpp
-# ./small_lang.cpp
-# ./clang.cpp
+  ./small_lang.cpp
+  ./clang.cpp
 # ./grammar.cpp
   )
 

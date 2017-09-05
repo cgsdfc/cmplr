@@ -7,6 +7,7 @@
 #include <functional>
 #include "symbol.hpp"
 #include "rule_type.hpp"
+#include "language.hpp"
 
 namespace experiment {
 class language;
@@ -110,11 +111,21 @@ class rule_node :public rule_adder {
     rule_node(lang_reference lang) : base_t(lang) {}
     template <class... Args>
       void parse(Args&&... args); /* no definition */
-    template <class T, class... Args>
-      void parse(T&& t, Args&&... args) {
+    template <class... Args>
+      void parse(const char *t, Args&&... args) {
         /* auto id = m_lang.register_symbol(t); */
         auto id = register_symbol(t);
         m_body.push_back(id);
+        parse(args...);
+      }
+    template<class... Args>
+      void parse(list_node&& node, Args&&... args) {
+        parse(node);
+        parse(args...);
+      }
+    template<class... Args>
+      void parse(optional_node&& node, Args&&... args) {
+        parse(node);
         parse(args...);
       }
     template<class InputIter, class OutputIter>
@@ -122,9 +133,6 @@ class rule_node :public rule_adder {
         std::transform(first, last, out,
             std::bind(&rule_adder::register_symbol, *this, std::placeholders::_1)
         );
-            /* [&] (const_reference cref) { */
-            /* return register_symbol(cref); */
-            /* }); */
       }
     body_type const& body() const { return m_body; }
     void parse(optional_node&& optional);
@@ -135,7 +143,7 @@ class rule_tree:public rule_adder{
   private:
     friend class language;
     typedef rule_adder base_t;
-    typedef std::vector<std::unique_ptr<rule_node>>
+    typedef std::vector<std::shared_ptr<rule_node>>
       rule_node_vector;
     typedef symbol_unique_id head_type;
   public:

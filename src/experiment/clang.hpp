@@ -3,11 +3,11 @@
 #include "language.hpp"
 
 namespace experiment {
-struct clang {
-  static const unsigned num_symbols = 375;
-  static const unsigned num_terminals = 68;
-  static const unsigned num_nonterminals = 168;
-  static language& definition(language& lang);
-};
+  class clang {
+    private:
+      language lang;
+    public:
+      clang();
+  };
 }  // namespace experiment
 #endif  // EXPERIMENT_CLANG_H
