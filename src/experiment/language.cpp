@@ -1,105 +1,120 @@
 #include "language.hpp"
-#include "rule_tree.hpp"
+#include <algorithm>
 #include <boost/format.hpp>
 
 namespace experiment {
-const language::symbol_unique_id
-  language::start=0,
-  language::eof=1,
-  language::epsilon=2;
-const language::rule_unique_id
-  language::principle_rule=0;
+const language::symbol_unique_id language::start = 0, language::eof = 1,
+                                 language::epsilon = 2;
 
-language::language():m_optional_count(0),m_list_count(0) {
-  register_symbol("__start__", symbol_property::nonterminal);
-  register_symbol("__eof__", symbol_property::terminal);
-  register_symbol("__epsilon__", symbol_property::terminal);
+language::language() : m_optional_count(0), m_list_count(0) , m_principle_rule(rule_unique_map::npos)
+  {
+  register_symbol("__start__", symbol_property::nonterminal); /* 0 */
+  register_symbol("__eof__", symbol_property::terminal); /* 1 */
+  register_symbol("__epsilon__", symbol_property::terminal); /* 2 */
 }
 
-language::symbol_unique_id
-language::register_symbol(const char *str, symbol_property property) {
+language::symbol_unique_id language::register_symbol(const char* str,
+                                                     symbol_property property) {
   return m_symbol_map[symbol(str, property)];
 }
 
-language::symbol_unique_id
-language::register_symbol(std::string const& str, symbol_property property) {
+language::symbol_unique_id language::register_symbol(std::string const& str,
+                                                     symbol_property property) {
   return m_symbol_map[symbol(str, property)];
 }
 
-language::rule_unique_id
-language::register_rule(rule_type const& rule) {
+language::rule_unique_id language::register_rule(rule_type const& rule) {
   auto ruleid = m_rule_map[rule];
   m_nonterminal2rule[rule.head()].push_back(ruleid);
   return ruleid;
 }
 
-language::symbol_unique_id
-language::make_list() {
+language::symbol_unique_id language::make_list() {
   auto fmt = boost::format("__list__%1%") % m_list_count;
-  m_list_count ++;
+  m_list_count++;
   return register_symbol(fmt.str(), symbol_property::nonterminal);
 }
-language::symbol_unique_id
-language::make_optional() {
+language::symbol_unique_id language::make_optional() {
   auto fmt = boost::format("__optional__%1%") % m_optional_count;
-  ++ m_optional_count;
-  return register_symbol(fmt.str(), symbol_property::nonterminal);
+  ++m_optional_count;
+  return register_symbol(fmt.str(), symbol_property::optional);
 }
 
 rule_tree language::operator[](const char* str) {
-  return rule_tree(register_symbol(str, symbol_property::unknown), *this);
+  return rule_tree(register_symbol(str, symbol_property::nonterminal), *this);
 }
+
+bool language::all_optional(rule_unique_id id) const {
+  auto body = rule(id).body();
+  return std::all_of(body.cbegin(),body.cend(),[this](symbol_unique_id id) {
+      return get_symbol(id).optional();
+  });
+}
+
+bool language::any_optional(rule_vector const& rules) const {
+  return std::any_of(rules.cbegin(), rules.cend(),[this](rule_unique_id id) {
+      return all_optional(id);
+  });
+}
+language::size_type language::resolve_nullable() {
+  int prev_nullable_count = 0;
+  int next_nullable_count = 0;
+  do {
+    prev_nullable_count = next_nullable_count;
+    next_nullable_count = 0;
+    for (auto pack : m_nonterminal2rule) {
+      auto symbolid = pack.first;
+      if (get_symbol(symbolid).optional()) {
+        next_nullable_count++;
+      } else if (any_optional(pack.second)) {
+        m_symbol_map[symbolid].set(symbol_property::optional);
+        next_nullable_count++;
+      }
+    }
+  } while (prev_nullable_count != next_nullable_count);
+  return prev_nullable_count;
+}
+
 // eliminate unknown property
 void language::resolve_symbols() {
-  /* for (auto bundle : lang) { */
-  /*   symbol head = bundle.first; */
-  /*   if (bundle.second.size() == 0) head.set(symbol_property::optional); */
-  /*   m_symbol_map[head]; */
-  /* }  // make nonterminals have the */
-  /* // lower part of ids. */
-  /* m_eof_symbol_id = m_symbol_map[make_eof()]; */
-  /* for (auto bundle : lang) { */
-  /*   for (auto& body : bundle.second) { */
-  /*     for (auto& part : body) { */
-  /*       symbol mutable_part(part); */
-  /*       if (mutable_part.unknown())
-   * mutable_part.set(symbol_property::terminal); */
-  /*       m_symbol_map[mutable_part]; */
-  /*     } */
-  /*   } */
-  /* } */
+  // figure out
+  // 1. unique top symbol like 'translation_unit'
+  // 2. which symbol is optional/nullable
+  // 3. which symbol refers to no one so become terminal
+  resolve_nullable(); 
+  symbol_vector top_symbols;
+  vertex_iterator vbegin, vend;
+  boost::tie(vbegin, vend) = boost::vertices(m_symbol_graph);
+  for (; vbegin != vend; ++vbegin) {
+    if (boost::out_degree(*vbegin, m_symbol_graph) == 0) {
+      // referring no one == terminal
+      m_symbol_map[*vbegin].set(symbol_property::terminal);
+    } else if (boost::in_degree(*vbegin, m_symbol_graph) == 0) {
+        // referred to by no one == top nonterminal
+        top_symbols.push_back(*vbegin);
+    } 
+  }
+  resolve_rules(top_symbols);
+  sanity_check();
 }
-// populate m_nonterminal2rule , m_rule_map
-//
-void language::resolve_rules() {
-  // add the principle_rule
-  /* assert(m_symbol_map.size()); */
-  /* rule_type principle{m_start_symbol_id, /1* __start__ == 0 *1/ */
-  /*                     {symbol_unique_id(1), m_eof_symbol_id}}; */
-  /* m_principle_rule = m_rule_map[principle]; */
-  /* m_nonterminal2rule[m_start_symbol_id].push_back(m_principle_rule); */
-  /* assert(m_principle_rule == 0); */
-  /* for (auto bundle : lang) { */
-  /*   // head = bundle.first; */
-  /*   // body = bundle.second; */
-  /*   auto head_id = m_symbol_map[bundle.first]; */
-  /*   for (const auto& alter : bundle.second) { */
-  /*     rule_type rule; */
-  /*     rule.first = head_id; */
-  /*     for (const auto& part : alter) { */
-  /*       auto part_id = m_symbol_map[part]; */
-  /*       rule.second.push_back(part_id); */
-  /*     } */
-  /*     auto ruleid = m_rule_map[rule]; */
-  /*     m_nonterminal2rule[head_id].push_back(ruleid); */
-  /*   } */
-  /* } */
+void language::resolve_rules(symbol_vector const& top_symbols) {
+  if (top_symbols.size()==1) {
+    // only one top
+    rule_type rule(
+        language::start /* head */,
+        { top_symbols[0], language::eof /* body */ }
+    );
+    m_principle_rule = register_rule(rule);
+  } else {
+    throw "invalid number of top rules";
+  }
 }
 void language::sanity_check() const {
-  /* if (m_start_symbol_id == symbol_unique_map::npos) throw no_start_symbol();
-   */
-  /* if (m_eof_symbol_id == symbol_unique_map::npos) throw no_eof_symbol(); */
-  /* if (m_nonterminal2rule[m_start_symbol_id].size() != 1) */
-  /*   throw invalid_principle_rule(); */
+  if (std::any_of(m_symbol_map.vbegin(),m_symbol_map.vend(),
+        [](symbol const& sym) {
+        return sym.unknown();
+        })) {
+    throw "some symbols remain unknown after resolution";
+  }
 }
 }  // namespace experiment

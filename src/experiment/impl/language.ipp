@@ -4,10 +4,11 @@
 #include <boost/serialization/vector.hpp>
 namespace experiment {
 inline void
-language::add_edge(symbol_unique_id source, symbol_unique_id target) {
+language::add_edge(symbol_unique_id source, symbol_unique_id target,rule_unique_id rule_on_edge) {
   boost::add_edge(
       vertex_descriptor(source),
       vertex_descriptor(target),
+      rule_on_edge,
       m_symbol_graph
     );
 }

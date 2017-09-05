@@ -35,6 +35,7 @@ class symbol {
   bool unknown() const;
   bool terminal() const;
   bool nonterminal() const;
+  bool optional() const;
 
  public:
   template<class T> friend struct std::hash;

@@ -1,24 +1,25 @@
 #include "rule_tree.hpp"
-#include "language.hpp"
 
 namespace experiment {
-rule_adder::symbol_unique_id 
-rule_adder::register_symbol(const char* str) {
+rule_adder::symbol_unique_id rule_adder::register_symbol(const char* str) {
   return m_lang.register_symbol(str);
 }
-rule_adder::symbol_unique_id
-rule_adder::register_rule(rule_type const& rule) {
+rule_adder::symbol_unique_id rule_adder::register_rule(rule_type const& rule) {
   // sololy call m_lang.register_rule;
   return m_lang.register_rule(rule);
 }
 
-rule_adder::symbol_unique_id
-rule_adder::register_rule(symbol_unique_id head, symbol_id_vector const& body) {
+rule_adder::symbol_unique_id rule_adder::register_rule(
+    symbol_unique_id head, symbol_id_vector const& body) {
   rule_type rule;
   rule.head() = head;
   rule.body() = body;
   return register_rule(std::move(rule));
 }
+void rule_node::xparse(const char* str) {
+  m_body.push_back(register_symbol(str));
+}
+
 void rule_node::xparse(optional_node const& optional) {
   auto head = m_lang.make_optional();
   symbol_id_vector body;
@@ -56,11 +57,11 @@ void rule_node::parse() {
   }
 }
 rule_tree::~rule_tree() {
-  for (auto const& node :m_nodes) {
+  for (auto const& node : m_nodes) {
     auto body = node->body();
-    register_rule(m_head, body.begin(), body.end());
-    for (auto symid: body) {
-      m_lang.add_edge(m_head, symid);
+    auto ruleid=register_rule(m_head, body.begin(), body.end());
+    for (auto symid : body) {
+      m_lang.add_edge(m_head, symid,ruleid);
     }
   }
 }

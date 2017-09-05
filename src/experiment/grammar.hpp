@@ -10,7 +10,7 @@
 #include "detail/grammar.hpp"
 
 namespace experiment {
-class grammar : public detail::grammar_base {
+class grammar{
  public:
   friend class printer;
  private:

@@ -1,15 +1,16 @@
 #ifndef EXPERIMENT_LANGUAGE_HPP
 #define EXPERIMENT_LANGUAGE_HPP 1
 #include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/adjacency_matrix.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/iterator/filter_iterator.hpp>  // for filter_iterator
 #include <boost/serialization/access.hpp>
 #include <utility>  // for std::pair
 #include <vector>
 #include "exception.hpp"
+#include "rule_tree.hpp"
 #include "rule_type.hpp"
 #include "symbol.hpp"
-#include "rule_tree.hpp"
 
 namespace experiment {
 class rule_tree;
@@ -36,14 +37,22 @@ class language {
   static const symbol_unique_id start;
   static const symbol_unique_id eof;
   static const symbol_unique_id epsilon;
-  static const rule_unique_id principle_rule;
 
  private:
-  typedef std::map<symbol_unique_id, std::vector<rule_unique_id>>
-      nonterminal2rule_map;
-  typedef boost::adjacency_list<> symbol_ref_graph;
-  typedef typename symbol_ref_graph::vertex_descriptor
-    vertex_descriptor;
+  typedef std::vector<rule_unique_id> rule_vector;
+  typedef std::vector<symbol_unique_id> symbol_vector;
+  typedef std::map<symbol_unique_id, rule_vector> nonterminal2rule_map;
+  typedef boost::adjacency_list<
+      boost::vecS, boost::vecS,
+      boost::bidirectionalS, boost::no_property /*vertex*/,
+      boost::property<boost::edge_name_t, rule_unique_id> /* edge */>
+      symbol_ref_graph;
+  // bidirectiional is not allowed, but with directedS, we have in_edges
+  // and in_degree as well
+  typedef typename boost::graph_traits<symbol_ref_graph>::vertex_descriptor
+      vertex_descriptor;
+  typedef typename boost::graph_traits<symbol_ref_graph>::vertex_iterator
+      vertex_iterator;
 
  private:
   std::string m_name;
@@ -53,9 +62,9 @@ class language {
   symbol_ref_graph m_symbol_graph;
   symbol_unique_id m_list_count;
   symbol_unique_id m_optional_count;
-
+  rule_unique_id m_principle_rule;
  public:
-  void name(const char *str){ m_name=str; }
+  void name(const char* str) { m_name = str; }
   rule_tree operator[](const char* str);
   size_type num_rules() const;
   size_type num_nonterminals() const;
@@ -78,11 +87,14 @@ class language {
       const char*, symbol_property prop = symbol_property::unknown);
   rule_unique_id register_rule(rule_type const&);
   void resolve_symbols();
-  void resolve_rules();
+  void resolve_rules(symbol_vector const&);
   void sanity_check() const;
   symbol_unique_id make_list();
   symbol_unique_id make_optional();
-  void add_edge(symbol_unique_id, symbol_unique_id);
+  void add_edge(symbol_unique_id, symbol_unique_id,rule_unique_id id=0);
+  bool all_optional(rule_unique_id) const;
+  bool any_optional(rule_vector const&) const;
+  size_type resolve_nullable();
 
   // iterator
  public:

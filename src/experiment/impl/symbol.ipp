@@ -15,7 +15,10 @@ void symbol::serialize(Archive &ar, const unsigned version) {
   ar &m_prop;
   ar &m_str;
 }
-
+inline
+bool symbol::optional() const{
+  return m_prop == symbol_property::optional;
+}
 inline void symbol::set(symbol_property prop) { m_prop = prop; }
 inline bool symbol::unknown() const {
   return m_prop == symbol_property::unknown;
