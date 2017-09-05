@@ -1,4 +1,5 @@
 #include "clang.hpp"
+#include "rule_tree.hpp"
 
 namespace experiment {
 clang::clang() {

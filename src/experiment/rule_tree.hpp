@@ -110,22 +110,22 @@ class rule_node :public rule_adder {
   public:
     rule_node(lang_reference lang) : base_t(lang) {}
     template <class... Args>
-      void parse(Args&&... args); /* no definition */
+      void parse(Args... args); /* no definition */
     template <class... Args>
-      void parse(const char *t, Args&&... args) {
+      void parse(const char *t, Args... args) {
         /* auto id = m_lang.register_symbol(t); */
         auto id = register_symbol(t);
         m_body.push_back(id);
         parse(args...);
       }
     template<class... Args>
-      void parse(list_node&& node, Args&&... args) {
-        parse(node);
+      void parse(list_node const& node, Args... args) {
+        xparse(node);
         parse(args...);
       }
     template<class... Args>
-      void parse(optional_node&& node, Args&&... args) {
-        parse(node);
+      void parse(optional_node const& node, Args... args) {
+        xparse(node);
         parse(args...);
       }
     template<class InputIter, class OutputIter>
@@ -135,8 +135,8 @@ class rule_node :public rule_adder {
         );
       }
     body_type const& body() const { return m_body; }
-    void parse(optional_node&& optional);
-    void parse(list_node&& list);
+    void xparse(optional_node const& optional);
+    void xparse(list_node const& list);
     void parse();
 };
 class rule_tree:public rule_adder{
@@ -154,7 +154,7 @@ class rule_tree:public rule_adder{
 
   public:
     template <class... Args>
-      rule_tree& operator()(const Args&... args) {
+      rule_tree& operator()(Args... args) {
         m_nodes.emplace_back(new rule_node(m_lang));
         m_nodes.back()->parse(args...);
         return *this;

@@ -12,5 +12,5 @@ set(parser_src
   item.c
   )
 add_library(parser_lib ${parser_src})
-add_executable(parser parser.c)
-target_link_libraries(parser parser_lib)
+#add_executable(parser parser.c)
+#target_link_libraries(parser parser_lib)

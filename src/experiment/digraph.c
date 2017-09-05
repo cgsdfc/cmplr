@@ -135,3 +135,11 @@ void digraph(digraph_struct *self) {
     }
   }
 }
+
+int main(int argc, char **argv) {
+  digraph_struct d;
+  puts("digraph demo");
+  init_digraph(&d);
+  digraph(&d);
+  return 0;
+}
