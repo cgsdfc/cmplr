@@ -34,3 +34,8 @@ add_executable(
   unique_map
   ./unique_map.cpp
 )
+
+target_link_libraries(
+  unique_map
+  parser2
+)

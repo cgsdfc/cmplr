@@ -32,10 +32,10 @@ class language {
   typedef boost::filter_iterator<is_nonterminal, symbol_iterator>
       nonterminal_iterator;
   // named constants
-  static const symbol_unique_id start = 0;
-  static const symbol_unique_id eof = 1;
-  static const symbol_unique_id epsilon = 2;
-  static const rule_unique_id principle_rule = 0;
+  static const symbol_unique_id start;
+  static const symbol_unique_id eof;
+  static const symbol_unique_id epsilon;
+  static const rule_unique_id principle_rule;
 
  private:
   typedef std::map<symbol_unique_id, std::vector<rule_unique_id>>
@@ -45,6 +45,7 @@ class language {
     vertex_descriptor;
 
  private:
+  std::string m_name;
   symbol_unique_map m_symbol_map;
   rule_unique_map m_rule_map;
   nonterminal2rule_map m_nonterminal2rule;
@@ -53,6 +54,7 @@ class language {
   symbol_unique_id m_optional_count;
 
  public:
+  void name(const char *str){ m_name=str; }
   rule_tree&& operator[](const char* str);
   size_type num_rules() const;
   size_type num_nonterminals() const;

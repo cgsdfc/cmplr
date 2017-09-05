@@ -138,7 +138,7 @@ class rule_tree:public rule_adder{
     typedef std::vector<std::unique_ptr<rule_node>>
       rule_node_vector;
     typedef symbol_unique_id head_type;
-  private:
+  public:
     const head_type m_head;
     rule_node_vector m_nodes;
     rule_tree(head_type const& head, lang_reference lang)
@@ -146,7 +146,7 @@ class rule_tree:public rule_adder{
 
   public:
     template <class... Args>
-      rule_tree& operator()(Args&&... args) {
+      rule_tree& operator()(const Args&... args) {
         m_nodes.emplace_back(new rule_node(m_lang));
         m_nodes.back()->parse(args...);
         return *this;

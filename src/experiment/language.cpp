@@ -3,6 +3,13 @@
 #include <boost/format.hpp>
 
 namespace experiment {
+const language::symbol_unique_id
+  language::start=0,
+  language::eof=1,
+  language::epsilon=2;
+const language::rule_unique_id
+  language::principle_rule=0;
+
 language::language():m_optional_count(0),m_list_count(0) {
   register_symbol("__start__", symbol_property::nonterminal);
   register_symbol("__eof__", symbol_property::terminal);

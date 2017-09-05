@@ -58,7 +58,7 @@ void rule_node::parse() {
 rule_tree::~rule_tree() {
   for (auto const& node :m_nodes) {
     auto body = node->body();
-    register_rule(m_head, body);
+    register_rule(m_head, body.begin(), body.end());
     for (auto symid: body) {
       m_lang.add_edge(m_head, symid);
     }
