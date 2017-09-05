@@ -1,6 +1,4 @@
 #include "small_lang.hpp"
-// compilation of definition code is slow
-// so not put in header
 namespace experiment {
 language& simple::definition(language& lang) {
   lang.name("Simple");

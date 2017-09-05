@@ -1,25 +1,7 @@
 #include "clang.hpp"
-#include "rule_tree.hpp"
 
 namespace experiment {
 clang::clang() {
-  // this version has a frontend that requires
-  // most of the programmer effort. it has no shortcut
-  // such as list(), optional(A,B,C) but for optional(A).
-  // the symbol name has replace space with _ to ensure 
-  // correct coding.
-  // a demo is in need to show that itemset building is
-  // roughly correct and parser loop run fine.
-  // a^n such a simple grammar should be enough to make this
-  // demo.
-  // another issue is to make the rule construction more regular,
-  // adding the shortcut memtioned above and use a tree like structure
-  // to impl such DSL.
-  // this generalization will allow grammar DSL to be more maintainable.
-  // 
-  // the [] and () notation is fine so should be keep;
-  // consider providing nicer and thick user interface as well as
-  // debug and error report;
   lang.name("C_Programming_Language")
     ;
   lang["translation_unit"]

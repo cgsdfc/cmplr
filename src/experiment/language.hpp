@@ -56,6 +56,7 @@ class language {
       vertex_descriptor;
   typedef typename boost::graph_traits<symbol_ref_graph>::vertex_iterator
       vertex_iterator;
+  typedef std::ostream& ostream_reference;
 
  private:
   std::string m_name;
@@ -110,6 +111,10 @@ class language {
   std::pair<rule_iterator, rule_iterator> rules() const;
   symbol_unique_id find_symbol(std::string const& str) const;
   friend std::ostream& operator<<(std::ostream& os, const language& lang);
+  void print(ostream_reference) const;
+  void print(ostream_reference, rule_type const&) const;
+  void print(ostream_reference, symbol const&, bool show_property=false) const;
+
 };
 }  // namespace experiment
 #include "impl/language.ipp"

@@ -31,6 +31,7 @@ class symbol {
   symbol() : m_str(), m_prop(symbol_property::unknown) {}
 
  public:
+  symbol_property property() const;
   void set(symbol_property prop);
   bool unknown() const;
   bool terminal() const;

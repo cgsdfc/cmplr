@@ -2,6 +2,7 @@
 #include "indent.hpp"
 #include <algorithm>
 #include <boost/format.hpp>
+#include <boost/iterator/transform_iterator.hpp>
 
 namespace experiment {
 const language::symbol_unique_id language::start = 0, language::eof = 1,
@@ -18,14 +19,15 @@ language::notify() {
   resolve_symbols();
 }
 
-language::symbol_unique_id language::register_symbol(const char* str,
+language::symbol_unique_id language::register_symbol(const char *str,
                                                      symbol_property property) {
-  return m_symbol_map[symbol(str, property)];
+  return register_symbol(std::string(str), property);
 }
-
 language::symbol_unique_id language::register_symbol(std::string const& str,
                                                      symbol_property property) {
-  return m_symbol_map[symbol(str, property)];
+  auto id = m_symbol_map[symbol(str, property)];
+  m_symbol_map[id].set(property);
+  return id;
 }
 
 language::rule_unique_id language::register_rule(rule_type const& rule) {
@@ -127,20 +129,63 @@ void language::sanity_check() const {
     throw "some symbols remain unknown after resolution";
   }
 }
+void language::print(ostream_reference os, symbol const& sym, bool show_property) const {
+  if (!show_property) {
+    os << sym; // plain string
+    return;
+  }
+  switch(sym.property()) {
+    case symbol_property::optional:
+      os << "opt";
+      break;
+    case symbol_property::terminal:
+      os << "t";
+      break;
+    case symbol_property::nonterminal:
+      os << "n";
+      break;
+    case symbol_property::unknown:
+      os << "u";
+      break;
+  }
+  os << sym ;
+}
 
-std::ostream& operator<<(std::ostream& os, const language& lang) {
+void language::print(ostream_reference os, rule_type const& rule) const {
+  // print in head := N N N format
+  print(os, get_symbol(rule.head()));// not show_property;
+  os << " := ";
+  auto id2symbol = [this](symbol_unique_id id) { return get_symbol(id);};
+  auto begin=boost::make_transform_iterator(rule.body().begin(),id2symbol);
+  auto end=boost::make_transform_iterator(rule.body().end(), id2symbol);
+  std::copy(begin, end, std::ostream_iterator<symbol> (os, " "));
+}
+
+void language::print(ostream_reference os) const {
+  // this print show the lang in a format closest to
+  // original input, that is, 
+  // N 
+  //  A B C
+  //  C E F
   unsigned level = 0;
-  os << boost::format("language \"%1%\"\n\n") % lang.m_name;
-  for (auto iter=lang.rules();
-      iter.first!=iter.second;
-      ++iter.first) {
-    rule_type const& rule=*(iter.first);
-    indent4 i_(os, level);
-    os << boost::format("\"%1%\" := ") % lang.get_symbol(rule.head());
-    for (auto& symbol : rule.body()) {
-      os << boost::format("\"%1%\"") % lang.get_symbol(symbol) << ' ';
+  os << boost::format("\nlanguage \"%1%\"\n\n") % m_name;
+  for (auto pair: m_nonterminal2rule) {
+    indent2 i_(os, level);
+    print(os, get_symbol(pair.first), true);
+    os << "\n";
+    for (auto rules: pair.second) {
+      indent4 i__(os, level);
+      auto body = rule(rules).body();
+      for (auto symbol: body) {
+        print(os, get_symbol(symbol), true);
+        os << " ";
+      }
     }
   }
-return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const language& lang) {
+  lang.print(os);
+  return os;
 }
 }  // namespace experiment

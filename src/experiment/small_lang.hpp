@@ -1,7 +1,6 @@
 #ifndef EXPERIMENT_SMALL_LANG_HPP
 #define EXPERIMENT_SMALL_LANG_HPP 1
 #include "language.hpp"
-#include "rule_tree.hpp"
 
 namespace experiment {
 struct simple {

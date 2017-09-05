@@ -1,8 +1,12 @@
 #ifndef EXPERIMENT_IMPL_SYMBOL_IPP
 #define EXPERIMENT_IMPL_SYMBOL_IPP 1
 namespace experiment {
+inline symbol_property
+symbol::property() const {
+  return m_prop;
+}
 inline std::ostream &operator<<(std::ostream &os, symbol const &s) {
-  return os << s.m_str;
+  return os << "\"" << s.m_str << "\"";
 }
 inline  bool operator< (symbol const& left, symbol const& right){
   return left.m_str < right.m_str;
