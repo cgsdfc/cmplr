@@ -22,8 +22,13 @@ struct rule_type: public rule_type_base {
       std::initializer_list<symbol_unique_id> list)
     : base_t(symbol, list) {}
   rule_type() : base_t() {}
+  rule_type(head_type const& head, body_type const& body)
+    : base_t(head, body) {}
   head_type const& head() const { return first; }
   body_type const& body() const { return second; }
+  // overload
+  head_type & head()  { return first; }
+  body_type & body()  { return second; }
 };
 typedef subject_traits<rule_type> rule_traits;
 } // namespace experiment

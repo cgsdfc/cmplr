@@ -1,17 +1,47 @@
 #include "language.hpp"
+#include "rule_tree.hpp"
+#include <boost/format.hpp>
 
 namespace experiment {
-using std::cout;
-using std::endl;
-language::language() {
-  m_start_symbol_id =
-      register_symbol("__start__", symbol_property::nonterminal);
-  m_eof_symbol_id = register_symbol("__eof__", symbol_property::terminal);
-  m_epsilon_symbol_id =
-      register_symbol("__epsilon__", symbol_property::terminal);
-  m_rule_map.reserve(lang.num_rules() + 1); /* principle_rule */
+language::language():m_optional_count(0),m_list_count(0) {
+  register_symbol("__start__", symbol_property::nonterminal);
+  register_symbol("__eof__", symbol_property::terminal);
+  register_symbol("__epsilon__", symbol_property::terminal);
 }
 
+language::symbol_unique_id
+language::register_symbol(const char *str, symbol_property property) {
+  return m_symbol_map[symbol(str, property)];
+}
+
+language::symbol_unique_id
+language::register_symbol(std::string const& str, symbol_property property) {
+  return m_symbol_map[symbol(str, property)];
+}
+
+language::rule_unique_id
+language::register_rule(rule_type const& rule) {
+  auto ruleid = m_rule_map[rule];
+  m_nonterminal2rule[rule.head()].push_back(ruleid);
+  return ruleid;
+}
+
+language::symbol_unique_id
+language::make_list() {
+  auto fmt = boost::format("__list__%1%") % m_list_count;
+  m_list_count ++;
+  return register_symbol(fmt.str(), symbol_property::nonterminal);
+}
+language::symbol_unique_id
+language::make_optional() {
+  auto fmt = boost::format("__optional__%1%") % m_optional_count;
+  ++ m_optional_count;
+  return register_symbol(fmt.str(), symbol_property::nonterminal);
+}
+
+rule_tree&& language::operator[](const char* str) {
+  return std::move(rule_tree(register_symbol(str, symbol_property::unknown), *this));
+}
 // eliminate unknown property
 void language::resolve_symbols() {
   /* for (auto bundle : lang) { */
@@ -25,7 +55,8 @@ void language::resolve_symbols() {
   /*   for (auto& body : bundle.second) { */
   /*     for (auto& part : body) { */
   /*       symbol mutable_part(part); */
-  /*       if (mutable_part.unknown()) mutable_part.set(symbol_property::terminal); */
+  /*       if (mutable_part.unknown())
+   * mutable_part.set(symbol_property::terminal); */
   /*       m_symbol_map[mutable_part]; */
   /*     } */
   /*   } */
@@ -58,7 +89,8 @@ void language::resolve_rules() {
   /* } */
 }
 void language::sanity_check() const {
-  /* if (m_start_symbol_id == symbol_unique_map::npos) throw no_start_symbol(); */
+  /* if (m_start_symbol_id == symbol_unique_map::npos) throw no_start_symbol();
+   */
   /* if (m_eof_symbol_id == symbol_unique_map::npos) throw no_eof_symbol(); */
   /* if (m_nonterminal2rule[m_start_symbol_id].size() != 1) */
   /*   throw invalid_principle_rule(); */

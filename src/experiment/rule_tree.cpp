@@ -1,52 +1,67 @@
 #include "rule_tree.hpp"
+#include "language.hpp"
+
 namespace experiment {
-void rule_node::str2id(body_id_type& ids, body_str_type const& strs) const {
-  for (int i = 0; i < size; ++i) {
-    ids.push_back(m_lang.m_symbol_map[strs[i]]);
-  }
+rule_adder::symbol_unique_id 
+rule_adder::register_symbol(const char* str) {
+  return m_lang.register_symbol(str);
+}
+rule_adder::symbol_unique_id
+rule_adder::register_rule(rule_type const& rule) {
+  // sololy call m_lang.register_rule;
+  return m_lang.register_rule(rule);
 }
 
-void rule_node::parse(detail::optional_node&& optional) {
+rule_adder::symbol_unique_id
+rule_adder::register_rule(symbol_unique_id head, symbol_id_vector const& body) {
+  rule_type rule;
+  rule.head() = head;
+  rule.body() = body;
+  return register_rule(std::move(rule));
+}
+void rule_node::parse(optional_node&& optional) {
   auto head = m_lang.make_optional();
-  body_id_type body;
-  str2id(body, optional);
+  symbol_id_vector body;
+  string2id(optional.begin(), optional.end(), std::back_inserter(body));
   // register a head -> body;
-  m_lang.register_rule(rule_type(head, body));
+  register_rule(head, body.begin(), body.end());
   // register a head -> __epsilon__
-  m_lang.register_rule(rule_type(head, m_lang.epsilon()));
+  body.clear();
+  body.push_back(language::epsilon);
+  register_rule(head, body.begin(), body.end());
   m_body.push_back(head);
   // part of original rule
 }
-void rule_node::parse(detail::list_node&& list) {
+void rule_node::parse(list_node&& list) {
   auto head = m_lang.make_list();
-  body_id_type body;
-  str2id(body, list);
+  symbol_id_list body;
+  string2id(list.begin(), list.end(), std::back_inserter(body));
   // register a head -> body
-  m_lang.register_rule(rule_type(head, body));
+  register_rule(head, body.begin(), body.end());
   if (list.m_sep) {
     auto sep = register_symbol(list.m_sep);
-    body.push_front(sep)
+    body.push_front(sep);
     // now head -> sep body
   }
   body.push_front(head);
   // now head -> head (sep) body
-  m_lang.register_rule(rule_type(head, body));
+  register_rule(head, body.begin(), body.end());
+  m_body.push_back(head);
+  // part of the original rule
 }
 void rule_node::parse() {
   if (!m_body.size()) {
     // call without arguments
-    m_body.push_back(m_lang.epsilon());
+    m_body.push_back(language::epsilon);
   }
 }
 rule_tree::~rule_tree() {
-  for (auto rule : m_rules) {
-    rule_type rule(m_head, rule->m_body);
-    auto id = m_lang.m_rule_map[rule];
-    m_lang.m_nonterminal2rule[m_head].push_back(id);
+  for (auto const& node :m_nodes) {
+    auto body = node->body();
+    register_rule(m_head, body);
+    for (auto symid: body) {
+      m_lang.add_edge(m_head, symid);
+    }
   }
-}
-symbol_unique_id
-rule_tree::register_symbol(const char *str) {
-  return m_lang.register_symbol(str);
 }
 }  // namespace experiment
