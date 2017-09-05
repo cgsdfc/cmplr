@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11 -g3")
   ./rule_tree.cpp
   ./small_lang.cpp
   ./clang.cpp
-# ./grammar.cpp
+  ./grammar.cpp
   )
 
 # add_executable(

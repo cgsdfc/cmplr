@@ -19,7 +19,7 @@ inline void grammar::add_edge(itemset_unique_id from, itemset_unique_id to,
   typedef typename graph_type::vertex_descriptor Vertex;
   boost::add_edge(Vertex(from), Vertex(to), symbol, m_graph);
 }
-inline grammar::item_type grammar::make_item(size_type dot,
+inline item_type grammar::make_item(size_type dot,
                                              rule_unique_id rule) {
   return item_type(dot, rule);
 }
@@ -55,23 +55,23 @@ inline grammar::symbol_unique_id grammar::symbol_at_dot(
     const item_type& item) const {
   return m_lang.rule((item.rule())).body().at(item.dot());
 }
-inline grammar::itemset_type const& grammar::itemset_on_vertex(
+inline itemset_type const& grammar::itemset_on_vertex(
     graph_type::vertex_descriptor V) const {
   return m_itemset_map[itemset_unique_id(V)];
 }
-inline grammar::item_type const& grammar::item(item_unique_id id) const {
+inline item_type const& grammar::item(item_unique_id id) const {
   return m_item_map[id];
 }
 inline grammar::size_type grammar::num_itemsets() const {
   return m_itemset_map.size();
 }
-inline grammar::rule_type const& grammar::rule(item_type const& item) const {
+inline rule_type const& grammar::rule(item_type const& item) const {
   return m_lang.rule(item.rule());
 }
-inline grammar::rule_type const& grammar::rule(rule_unique_id id) const {
+inline rule_type const& grammar::rule(rule_unique_id id) const {
   return m_lang.rule(id);
 }
-inline grammar::itemset_type const& grammar::itemset(
+inline itemset_type const& grammar::itemset(
     itemset_unique_id id) const {
   return m_itemset_map[id];
 }

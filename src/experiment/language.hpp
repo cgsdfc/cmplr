@@ -20,15 +20,18 @@ class rule_adder;
 class language {
  public:
   friend class printer;
-  typedef symbol_traits::unique_id symbol_unique_id;
-  typedef rule_traits::unique_id rule_unique_id;
-  typedef symbol_traits::map_type symbol_unique_map;
-  typedef rule_traits::map_type rule_unique_map;
   typedef std::size_t size_type;
-  typedef symbol_traits::value_iterator symbol_iterator;
-  typedef symbol_traits::item_iterator enum_symbol_iterator;
+  // rule
+  typedef rule_traits::unique_id rule_unique_id;
+  typedef rule_traits::map_type rule_unique_map;
   typedef rule_traits::value_iterator rule_iterator;
   typedef rule_traits::item_iterator enum_rule_iterator;
+  // symbol
+  typedef symbol_traits::value_iterator symbol_iterator;
+  typedef symbol_traits::unique_id symbol_unique_id;
+  typedef symbol_traits::map_type symbol_unique_map;
+  typedef symbol_traits::item_iterator enum_symbol_iterator;
+  // iterator
   typedef boost::filter_iterator<is_terminal, symbol_iterator>
       terminal_iterator;
   typedef boost::filter_iterator<is_nonterminal, symbol_iterator>
@@ -64,6 +67,7 @@ class language {
   symbol_unique_id m_optional_count;
   rule_unique_id m_principle_rule;
  public:
+  void notify();
   void name(const char* str) { m_name = str; }
   rule_tree operator[](const char* str);
   size_type num_rules() const;
@@ -73,6 +77,8 @@ class language {
   symbol const& get_symbol(symbol_unique_id) const;
   rule_type const& rule(rule_unique_id) const;
   language();
+  rule_unique_id principle_rule() const;
+  rule_vector const& rule_for(symbol_unique_id) const;
 
  private:
   friend class boost::serialization::access;
@@ -103,6 +109,7 @@ class language {
   std::pair<terminal_iterator, terminal_iterator> terminals() const;
   std::pair<rule_iterator, rule_iterator> rules() const;
   symbol_unique_id find_symbol(std::string const& str) const;
+  friend std::ostream& operator<<(std::ostream& os, const language& lang);
 };
 }  // namespace experiment
 #include "impl/language.ipp"

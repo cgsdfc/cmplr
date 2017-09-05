@@ -3,10 +3,8 @@
 #include "language.hpp"
 
 namespace experiment {
-  class clang {
-    private:
+  struct clang {
       language lang;
-    public:
       clang();
   };
 }  // namespace experiment

@@ -4,14 +4,11 @@
 #include <queue>
 
 namespace experiment {
-using std::cout;
-using std::endl;
-
 void grammar::build_itemset() {
   std::queue<itemset_unique_id> queue;
   std::unordered_set<itemset_unique_id> visited;
   itemset_type initial;
-  item_type first_item = make_item(0, principle_ruleid());
+  item_type first_item = make_item(0, m_lang.principle_rule());
   initial.push_back(m_item_map[first_item]);
   do_closure(initial);
   queue.push(m_itemset_map[initial]);
@@ -45,11 +42,11 @@ void grammar::build_itemset() {
 
 void grammar::do_closure(itemset_type& itemset) {
   // close the itemset by adding item
-  std::vector<bool> accounted(m_symbol_map.size(), false);
+  std::vector<bool> accounted(m_lang.num_symbols(), false);
   // must resize to the max possible items
   // to ensure iterator wont get invalidate
   // during the add-and-traversal loop
-  itemset.reserve(m_rule_map.size()); /* if use size(), reserve is not necessary */
+  itemset.reserve(m_lang.num_rules()); /* if use size(), reserve is not necessary */
   /* for (auto item_id : itemset) { */
   /* cannot use range_loop here */
   for (int i=0;i<itemset.size();++i) {
@@ -57,9 +54,9 @@ void grammar::do_closure(itemset_type& itemset) {
     const item_type& item = m_item_map[item_id];
     if (item_dot_reach_end(item)) continue;
     auto symbol = symbol_at_dot(item);
-    if (m_symbol_map[symbol].terminal()) continue;
+    if (m_lang.get_symbol(symbol).terminal()) continue;
     if (accounted[symbol]) continue;
-    for (auto ruleid : m_nonterminal2rule[symbol]) {
+    for (auto ruleid : m_lang.rule_for(symbol)) {
       auto new_item = make_item(0, ruleid);
       itemset.push_back(m_item_map[new_item]);
     }

@@ -12,6 +12,10 @@ language::add_edge(symbol_unique_id source, symbol_unique_id target,rule_unique_
       m_symbol_graph
     );
 }
+inline language::rule_unique_id
+language::principle_rule() const {
+  return m_principle_rule;
+}
 inline language::size_type language::num_rules() const {
   return m_rule_map.size();
 }

@@ -3,16 +3,47 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/iterator.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/strong_typedef.hpp>
 #include <vector>
+#include "itemset.hpp"
 #include "language.hpp"
-#include "detail/grammar.hpp"
 
 namespace experiment {
 class grammar{
  public:
   friend class printer;
+  typedef std::size_t size_type;
+  // item
+  typedef typename item_traits::map_type item_unique_map;
+  typedef typename item_traits::unique_id item_unique_id;
+  typedef typename item_traits::value_iterator item_iterator;
+  typedef typename item_traits::item_iterator enum_item_iterator; /* same name */
+  // itemset
+  typedef typename itemset_traits::map_type itemset_unique_map;
+  typedef typename itemset_traits::unique_id itemset_unique_id;
+  typedef typename itemset_traits::value_iterator itemset_iterator;
+  typedef typename itemset_traits::item_iterator enum_itemset_iterator;
+  // rule
+  typedef rule_traits::unique_id rule_unique_id;
+  typedef rule_traits::map_type rule_unique_map;
+  typedef rule_traits::value_iterator rule_iterator;
+  typedef rule_traits::item_iterator enum_rule_iterator;
+  // symbol
+  typedef symbol_traits::value_iterator symbol_iterator;
+  typedef symbol_traits::unique_id symbol_unique_id;
+  typedef symbol_traits::map_type symbol_unique_map;
+  typedef symbol_traits::item_iterator enum_symbol_iterator;
+ private:
+  typedef std::map<symbol_unique_id, itemset_type> symbol2itemset_map;
+  typedef boost::adjacency_list<
+      boost::vecS, boost::vecS, boost::directedS, boost::no_property,
+      boost::property<boost::edge_name_t, symbol_unique_id>>
+      graph_type;
+  typedef boost::graph_traits<graph_type>::edge_iterator edge_iterator;
+  typedef boost::graph_traits<graph_type>::edge_descriptor edge_descriptor;
+  typedef boost::graph_traits<graph_type>::vertex_iterator vertex_iterator;
+  typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor;
+
+
  private:
   const language& m_lang;
   item_unique_map m_item_map;

@@ -1,4 +1,5 @@
 #include "language.hpp"
+#include "indent.hpp"
 #include <algorithm>
 #include <boost/format.hpp>
 
@@ -11,6 +12,10 @@ language::language() : m_optional_count(0), m_list_count(0) , m_principle_rule(r
   register_symbol("__start__", symbol_property::nonterminal); /* 0 */
   register_symbol("__eof__", symbol_property::terminal); /* 1 */
   register_symbol("__epsilon__", symbol_property::terminal); /* 2 */
+}
+void
+language::notify() {
+  resolve_symbols();
 }
 
 language::symbol_unique_id language::register_symbol(const char* str,
@@ -27,6 +32,11 @@ language::rule_unique_id language::register_rule(rule_type const& rule) {
   auto ruleid = m_rule_map[rule];
   m_nonterminal2rule[rule.head()].push_back(ruleid);
   return ruleid;
+}
+
+language::rule_vector const&
+language::rule_for(symbol_unique_id id) const {
+  return m_nonterminal2rule.at(id);
 }
 
 language::symbol_unique_id language::make_list() {
@@ -116,5 +126,21 @@ void language::sanity_check() const {
         })) {
     throw "some symbols remain unknown after resolution";
   }
+}
+
+std::ostream& operator<<(std::ostream& os, const language& lang) {
+  unsigned level = 0;
+  os << boost::format("language \"%1%\"\n\n") % lang.m_name;
+  for (auto iter=lang.rules();
+      iter.first!=iter.second;
+      ++iter.first) {
+    rule_type const& rule=*(iter.first);
+    indent4 i_(os, level);
+    os << boost::format("\"%1%\" := ") % lang.get_symbol(rule.head());
+    for (auto& symbol : rule.body()) {
+      os << boost::format("\"%1%\"") % lang.get_symbol(symbol) << ' ';
+    }
+  }
+return os;
 }
 }  // namespace experiment
