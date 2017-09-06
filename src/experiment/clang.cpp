@@ -4,7 +4,7 @@ namespace experiment {
 clang::clang() {
   lang.name("C_Programming_Language")
     ;
-  lang["translation_unit"]
+  lang[toplevel("translation_unit")]
     ("external_declaration")
     ("translation_unit", "external_declaration")
     ;
@@ -57,8 +57,7 @@ clang::clang() {
     ("initial_declarator")
     ;
   lang["initial_declarator"]
-    ("declarator", "=", "initializer")
-    ("declarator")
+    ("declarator", optional( "=", "initializer"))
     ;
   lang["struct_declaration"]
     ("specifier_qualifier_list","struct_declaration_list")

@@ -52,6 +52,26 @@ unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::at(unique_id id) const {
   return m_vector.at(id);
 }
 template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::mutable_value_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vbegin() {
+  return m_vector.begin();
+}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::mutable_value_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vend() {
+  return m_vector.end();
+}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::map_type&
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::items() {
+  return m_map;
+}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vector_type&
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::values() {
+  return m_vector;
+}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
 typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::value_iterator
 unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vbegin() const {
   return m_vector.begin();
@@ -61,6 +81,17 @@ typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::value_iterator
 unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vend() const {
   return m_vector.end();
 }
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::mutable_item_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::ibegin(){
+  return m_map.begin();
+}
+template <UNIQUE_MAP_TEMPLATE_PARAM>
+typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::mutable_item_iterator
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::iend() {
+  return m_map.end();
+}
+
 template <UNIQUE_MAP_TEMPLATE_PARAM>
 typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::item_iterator
 unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::ibegin() const {

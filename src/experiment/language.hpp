@@ -71,6 +71,7 @@ class language {
   void notify();
   void name(const char* str) { m_name = str; }
   rule_tree operator[](const char* str);
+  rule_tree operator[](symbol const&);
   size_type num_rules() const;
   size_type num_nonterminals() const;
   size_type num_symbols() const;
@@ -88,14 +89,12 @@ class language {
   friend class rule_adder;
   template <class Archive>
   void serialize(Archive& ar, const unsigned version);
+  symbol_unique_id register_symbol(symbol const& sym);
   symbol_unique_id register_symbol(
       std::string const&, symbol_property prop = symbol_property::unknown);
   symbol_unique_id register_symbol(
       const char*, symbol_property prop = symbol_property::unknown);
   rule_unique_id register_rule(rule_type const&);
-  void resolve_symbols();
-  void resolve_rules(symbol_vector const&);
-  void sanity_check() const;
   symbol_unique_id make_list();
   symbol_unique_id make_optional();
   void add_edge(symbol_unique_id, symbol_unique_id,rule_unique_id id=0);

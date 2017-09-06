@@ -16,7 +16,7 @@ class grammar{
   typedef typename item_traits::map_type item_unique_map;
   typedef typename item_traits::unique_id item_unique_id;
   typedef typename item_traits::value_iterator item_iterator;
-  typedef typename item_traits::item_iterator enum_item_iterator; /* same name */
+  typedef typename item_traits::item_iterator enum_item_iterator;
   // itemset
   typedef typename itemset_traits::map_type itemset_unique_map;
   typedef typename itemset_traits::unique_id itemset_unique_id;
@@ -24,14 +24,8 @@ class grammar{
   typedef typename itemset_traits::item_iterator enum_itemset_iterator;
   // rule
   typedef rule_traits::unique_id rule_unique_id;
-  typedef rule_traits::map_type rule_unique_map;
-  typedef rule_traits::value_iterator rule_iterator;
-  typedef rule_traits::item_iterator enum_rule_iterator;
   // symbol
-  typedef symbol_traits::value_iterator symbol_iterator;
   typedef symbol_traits::unique_id symbol_unique_id;
-  typedef symbol_traits::map_type symbol_unique_map;
-  typedef symbol_traits::item_iterator enum_symbol_iterator;
  private:
   typedef std::map<symbol_unique_id, itemset_type> symbol2itemset_map;
   typedef boost::adjacency_list<
@@ -43,9 +37,9 @@ class grammar{
   typedef boost::graph_traits<graph_type>::vertex_iterator vertex_iterator;
   typedef boost::graph_traits<graph_type>::vertex_descriptor vertex_descriptor;
 
-
  private:
   const language& m_lang;
+  typedef std::ostream& ostream_reference;
   item_unique_map m_item_map;
   itemset_unique_map m_itemset_map;
   graph_type m_graph;
@@ -62,29 +56,33 @@ class grammar{
 
  public:
   grammar(const language& lang):m_lang(lang) { build_itemset(); }
-  std::pair<graph_type::vertex_iterator, graph_type::vertex_iterator>
+  std::pair<vertex_iterator, vertex_iterator>
     vertices() const;
-  std::pair<graph_type::edge_iterator, graph_type::edge_iterator> edges()
+  std::pair<edge_iterator, edge_iterator> edges()
     const;
-  symbol_unique_id symbol_on_edge(graph_type::edge_descriptor E) const;
-  itemset_unique_id target(graph_type::edge_descriptor E) const;
-  itemset_unique_id source(graph_type::edge_descriptor E) const;
+  symbol_unique_id symbol_on_edge(edge_descriptor E) const;
+  itemset_unique_id target(edge_descriptor E) const;
+  itemset_unique_id source(edge_descriptor E) const;
+ public:
   bool item_dot_reach_end(const item_type& item) const;
   symbol_unique_id symbol_at_dot(const item_type& item) const;
-  itemset_type const& itemset_on_vertex(graph_type::vertex_descriptor V)
+  itemset_type const& itemset_on_vertex(vertex_descriptor V)
     const;
+ public:
   item_type const& item(item_unique_id id) const;
   size_type num_itemsets() const;
-  symbol_unique_id eof() const;
-  symbol_unique_id start() const;
   rule_type const& rule(item_type const& item) const;
   rule_type const& rule(rule_unique_id id) const;
   itemset_type const& itemset(itemset_unique_id id) const;
+ public:
   std::pair<item_iterator, item_iterator> items() const;
   std::pair<itemset_iterator, itemset_iterator> itemsets() const;
   std::pair<enum_item_iterator, enum_item_iterator> enum_items() const;
   std::pair<enum_itemset_iterator, enum_itemset_iterator> enum_itemsets()
     const;
+ public:
+  void print(ostream_reference, item_type const&)const;
+  void print(ostream_reference, itemset_type const&)const;
 };
 }  // namespace experiment
 #include "impl/grammar.ipp"

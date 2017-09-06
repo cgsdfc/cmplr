@@ -77,6 +77,11 @@ optional_node list(Args&&... args) {
   node.parse(args...);
   return node;
 }
+
+inline symbol toplevel(const char *str) {
+  return symbol(str, symbol_property::toplevel);
+}
+
 inline separator sep(const char* str) { return separator(str); }
 class rule_adder {
  public:

@@ -1,4 +1,5 @@
 #include "grammar.hpp"
+#include <boost/format.hpp>
 #include <algorithm>
 #include <bitset>
 #include <queue>
@@ -8,8 +9,10 @@ void grammar::build_itemset() {
   std::queue<itemset_unique_id> queue;
   std::unordered_set<itemset_unique_id> visited;
   itemset_type initial;
-  item_type first_item = make_item(0, m_lang.principle_rule());
-  initial.push_back(m_item_map[first_item]);
+  for (auto rule :m_lang.rule_for(language::start)) {
+    item_type first_item = make_item(0, rule);
+    initial.push_back(m_item_map[first_item]);
+  }
   do_closure(initial);
   queue.push(m_itemset_map[initial]);
 
@@ -41,14 +44,8 @@ void grammar::build_itemset() {
 }
 
 void grammar::do_closure(itemset_type& itemset) {
-  // close the itemset by adding item
   std::vector<bool> accounted(m_lang.num_symbols(), false);
-  // must resize to the max possible items
-  // to ensure iterator wont get invalidate
-  // during the add-and-traversal loop
-  itemset.reserve(m_lang.num_rules()); /* if use size(), reserve is not necessary */
-  /* for (auto item_id : itemset) { */
-  /* cannot use range_loop here */
+  itemset.reserve(m_lang.num_rules());
   for (int i=0;i<itemset.size();++i) {
     auto item_id = itemset[i];
     const item_type& item = m_item_map[item_id];
@@ -64,5 +61,29 @@ void grammar::do_closure(itemset_type& itemset) {
   }
   std::sort(itemset.begin(), itemset.end());
   itemset.shrink_to_fit();
+}
+
+void grammar::print(ostream_reference os, item_type const& item) const {
+  // item is just a rule plus a dot indicating position
+  auto rule=m_lang.rule(item.rule());
+  auto dot=item.dot();
+  m_lang.print(os, m_lang.get_symbol(rule.head()));
+  os << " := ";
+  auto body = rule.body();
+  for (int i=0;i<body.size();++i) {
+    if (i == dot) {
+      os << "^";
+    }
+    m_lang.print(os, m_lang.get_symbol(body[i]));
+    os << " ";
+  }
+}
+
+void grammar::print(ostream_reference os, itemset_type const& itemset) const{
+  os << "itemset:\n";
+  for (auto id: itemset) {
+    print(os, item(id));
+    os << "\n";
+  }
 }
 }  // namespace experiment

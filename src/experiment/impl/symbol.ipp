@@ -23,16 +23,20 @@ inline
 bool symbol::optional() const{
   return m_prop == symbol_property::optional;
 }
-inline void symbol::set(symbol_property prop) { m_prop = prop; }
+inline void symbol::set(symbol_property prop)const { m_prop = prop; }
 inline bool symbol::unknown() const {
   return m_prop == symbol_property::unknown;
 }
 inline bool symbol::terminal() const {
   return m_prop == symbol_property::terminal;
 }
+inline bool symbol::toplevel()const{
+  return m_prop == symbol_property::toplevel;
+}
 inline bool symbol::nonterminal() const {
   return m_prop == symbol_property::nonterminal ||
-         m_prop == symbol_property::optional;
+         m_prop == symbol_property::optional || 
+         m_prop == symbol_property::toplevel;
 }
 }  // namespace experiment
 namespace std {

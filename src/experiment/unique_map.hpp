@@ -5,6 +5,8 @@
 #include <boost/type_traits/is_same.hpp>
 #include <map>
 #include <vector>
+#include <memory> // for shared_ptr
+
 #define UNIQUE_MAP_TEMPLATE_PARAM \
   class T, class Integer, class Map, class Vector
 #define UNIQUE_MAP_TEMPLATE_ARGS T, Integer, Map, Vector
@@ -44,12 +46,20 @@ class unique_map {
  public:
   static constexpr const unique_id npos = unique_id(-1);
   typedef typename vector_type::const_iterator value_iterator;
+  typedef typename vector_type::iterator mutable_value_iterator;
   typedef typename map_type::const_iterator item_iterator;
+  typedef typename map_type::iterator mutable_item_iterator;
 
+  mutable_value_iterator vbegin();
+  mutable_value_iterator vend() ;
   value_iterator vbegin() const;
   value_iterator vend() const;
   item_iterator ibegin() const;
   item_iterator iend() const;
+  mutable_item_iterator ibegin();
+  mutable_item_iterator iend();
+  map_type& items();
+  vector_type& values();
   void swap(unique_map& other);
 
  private:

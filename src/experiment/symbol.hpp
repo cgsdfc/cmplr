@@ -12,6 +12,7 @@ enum class symbol_property {
   terminal,     // general terminal.
   nonterminal,  // general nonterminal.
   optional,     // nonterminal that has a nullable body.
+  toplevel,
   unknown,      // illegal value.
 };
 
@@ -20,7 +21,7 @@ class symbol {
   friend class boost::serialization::access;
   template <class Archive>
   void serialize(Archive &ar, const unsigned version);
-  symbol_property m_prop;
+  mutable symbol_property m_prop;
   const std::string m_str;
 
  public:
@@ -32,11 +33,12 @@ class symbol {
 
  public:
   symbol_property property() const;
-  void set(symbol_property prop);
+  void set(symbol_property prop)const;
   bool unknown() const;
   bool terminal() const;
   bool nonterminal() const;
   bool optional() const;
+  bool toplevel() const;
 
  public:
   template<class T> friend struct std::hash;

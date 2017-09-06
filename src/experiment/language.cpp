@@ -14,11 +14,10 @@ language::language() : m_optional_count(0), m_list_count(0) , m_principle_rule(r
   register_symbol("__eof__", symbol_property::terminal); /* 1 */
   register_symbol("__epsilon__", symbol_property::terminal); /* 2 */
 }
-void
-language::notify() {
-  resolve_symbols();
-}
 
+language::symbol_unique_id language::register_symbol(symbol const& sym){
+  return m_symbol_map[sym];
+}
 language::symbol_unique_id language::register_symbol(const char *str,
                                                      symbol_property property) {
   return register_symbol(std::string(str), property);
@@ -56,6 +55,10 @@ rule_tree language::operator[](const char* str) {
   return rule_tree(register_symbol(str, symbol_property::nonterminal), *this);
 }
 
+rule_tree language::operator[](symbol const& modified) {
+  return rule_tree(register_symbol(modified), *this);
+}
+
 bool language::all_optional(rule_unique_id id) const {
   auto body = rule(id).body();
   return std::all_of(body.cbegin(),body.cend(),[this](symbol_unique_id id) {
@@ -88,45 +91,23 @@ language::size_type language::resolve_nullable() {
 }
 
 // eliminate unknown property
-void language::resolve_symbols() {
-  // figure out
-  // 1. unique top symbol like 'translation_unit'
-  // 2. which symbol is optional/nullable
-  // 3. which symbol refers to no one so become terminal
+void language::notify() {
   resolve_nullable(); 
   symbol_vector top_symbols;
-  vertex_iterator vbegin, vend;
-  boost::tie(vbegin, vend) = boost::vertices(m_symbol_graph);
-  for (; vbegin != vend; ++vbegin) {
-    if (boost::out_degree(*vbegin, m_symbol_graph) == 0) {
-      // referring no one == terminal
-      m_symbol_map[*vbegin].set(symbol_property::terminal);
-    } else if (boost::in_degree(*vbegin, m_symbol_graph) == 0) {
-        // referred to by no one == top nonterminal
-        top_symbols.push_back(*vbegin);
-    } 
+  rule_type principle_rule;
+  principle_rule.head() = language::start;
+  for (auto symbol:m_symbol_map.items()) {
+    if (symbol.first.toplevel()) {
+      top_symbols.push_back(symbol.second);
+    } else if (symbol.first.unknown()) {
+      symbol.first.set(symbol_property::terminal);
+    }
   }
-  resolve_rules(top_symbols);
-  sanity_check();
-}
-void language::resolve_rules(symbol_vector const& top_symbols) {
-  if (top_symbols.size()==1) {
-    // only one top
-    rule_type rule(
-        language::start /* head */,
-        { top_symbols[0], language::eof /* body */ }
-    );
-    m_principle_rule = register_rule(rule);
-  } else {
-    throw "invalid number of top rules";
-  }
-}
-void language::sanity_check() const {
-  if (std::any_of(m_symbol_map.vbegin(),m_symbol_map.vend(),
-        [](symbol const& sym) {
-        return sym.unknown();
-        })) {
-    throw "some symbols remain unknown after resolution";
+  for (auto top:top_symbols) {
+    principle_rule.body().push_back(top);
+    principle_rule.body().push_back(language::eof);
+    register_rule(principle_rule);
+    principle_rule.body().clear();
   }
 }
 void language::print(ostream_reference os, symbol const& sym, bool show_property) const {

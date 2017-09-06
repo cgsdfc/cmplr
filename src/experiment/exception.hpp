@@ -1,6 +1,6 @@
 #ifndef EXPERIMENT_EXCEPTION_HPP
 #define EXPERIMENT_EXCEPTION_HPP 1
-
+#include <boost/exception/all.hpp>
 #include <exception>
 #include <stdexcept>
 #define EXPERIMENT_EXCEPTION(class_, base_, what_arg_)                 \
@@ -9,7 +9,7 @@
   }
 
 namespace experiment {
-class grammar_exception : public std::exception {};
+class grammar_exception : public virtual std::exception {};
 
 EXPERIMENT_EXCEPTION(
     terminal_as_head, grammar_exception,

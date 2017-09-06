@@ -14,7 +14,10 @@ rule_adder::symbol_unique_id rule_adder::register_rule(
   rule_type rule;
   rule.head() = head;
   rule.body() = body;
-  return register_rule(std::move(rule));
+  auto ruleid = register_rule(std::move(rule));
+  for (auto id:body) {
+    m_lang.add_edge(head, id, ruleid);
+  }
 }
 void rule_node::xparse(const char* str) {
   m_body.push_back(register_symbol(str));
