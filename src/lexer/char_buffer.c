@@ -27,7 +27,7 @@ clear_buffer (char_buffer * buffer)
 }
 
 static int
-count_chars (char *file)
+count_chars (const char *file)
 {
   struct stat statbuf;
   if (stat (file, &statbuf) != 0)
@@ -61,7 +61,7 @@ count_lines (FILE * f)
 }
 
 int
-init_char_buffer_from_string (char_buffer * buffer, char *string)
+init_char_buffer_from_string (char_buffer * buffer,char *string)
 {
   if (string == NULL)
     return -1;
@@ -89,7 +89,7 @@ init_char_buffer_from_string (char_buffer * buffer, char *string)
 }
 
 int
-init_char_buffer_from_file (char_buffer * buffer, char *file)
+init_char_buffer_from_file (char_buffer * buffer,const  char *file)
 {
   FILE *f;
   int lines = 0;
@@ -110,7 +110,7 @@ init_char_buffer_from_file (char_buffer * buffer, char *file)
 	{
 	  break;
 	}
-      buffer->filename = file;
+      buffer->filename = strdup(file);
       return init_char_buffer (buffer, f, chars, lines);
     }
   while (0);

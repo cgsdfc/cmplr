@@ -54,7 +54,7 @@ fill_token_buffer (token_buffer * buf, int nfill)
 	{
 	case 1:
 	  block_buffer_dealloc (buf->bb);
-	  r = tknzr_error_handle ();
+	  r = tknzr_error_handle (buf->cb);
 	  if (r == 0)
 	    continue;
 	  exit (r);

@@ -48,19 +48,18 @@ tknzr_error_set (int err)
 }
 
 int
-tknzr_error_handle (void)
+tknzr_error_handle (char_buffer *cb)
 {
-  extern char_buffer cbuffer;
-  put_char (&cbuffer);
-  char *errline = peek_line (&cbuffer, get_lineno (&cbuffer));
+  put_char (cb);
+  char *errline = peek_line (cb, get_lineno (cb));
   char *errmsg = tknzr_error_string ();
 
   fprintf (stderr, "%s:%d:%d:%s\n",
-	   cbuffer.filename, cbuffer.pos.lineno, cbuffer.pos.column, errmsg);
+	   cb->filename, cb->pos.lineno, cb->pos.column, errmsg);
 
   fprintf (stderr, "\t%s", errline);
   fputs ("\t", stderr);
-  for (int i = 1; i < cbuffer.pos.column; ++i)
+  for (int i = 1; i < cb->pos.column; ++i)
     {
       fputs (" ", stderr);
     }

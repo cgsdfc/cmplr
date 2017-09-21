@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+struct char_buffer ;
 typedef enum cmplr_error
 {
   ER_NO_INPUT = 1,
@@ -40,6 +41,6 @@ typedef struct err_entry
 } err_entry;
 
 void tknzr_error_set (int err);
-int tknzr_error_handle (void);
+int tknzr_error_handle (struct char_buffer*);
 
 #endif

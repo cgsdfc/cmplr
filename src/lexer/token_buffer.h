@@ -27,6 +27,7 @@ typedef struct token_buffer
 } token_buffer;
 
 int init_token_buffer (token_buffer * buf, char_buffer * cb);
+int peek_token (token_buffer * buf, token ** tk);
 int next_token (token_buffer * buf, token ** tk);
 int prev_token (token_buffer * buf, token ** tk);
 int put_token (token_buffer * buf);

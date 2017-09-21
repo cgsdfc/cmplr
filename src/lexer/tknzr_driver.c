@@ -22,7 +22,7 @@ unbuffer_print_token_stream (void)
 	case EOF:
 	  return 0;
 	default:
-	  tknzr_error_handle ();
+	  tknzr_error_handle (&cbuffer);
 	  return 1;
 	}
     }
@@ -43,7 +43,7 @@ print_token_stream (void)
 	case EOF:
 	  return 0;
 	case 1:
-	  tknzr_error_handle ();
+	  tknzr_error_handle (&cbuffer);
 	  return 1;
 	}
     }
