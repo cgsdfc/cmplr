@@ -8,6 +8,6 @@ main (int ac, char **av)
       printf ("Usage: lexer <file>\n");
       exit (0);
     }
-  Lexer *lexer = CreateLexerFromFile(av[1]);
-  exit (LexerPrintToken(lexer));
+  Lexer *lexer = CreateLexerFromFile (av[1]);
+  exit (LexerPrintToken (lexer));
 }

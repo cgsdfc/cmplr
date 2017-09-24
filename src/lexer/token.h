@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lexer/position.h" // for position
+#include "lexer/position.h"	// for position
 #define TOKEN_TYPE(t)    (((token*) t)->type)
 #define TOKEN_STRING(t) (((token*) t)->string != NULL ? (t)->string : "")
 #define TOKEN_VARLEN_INIT_LEN  10

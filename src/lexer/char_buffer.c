@@ -62,7 +62,7 @@ count_lines (FILE * f)
 }
 
 int
-init_char_buffer_from_string (char_buffer * buffer,const char *string)
+init_char_buffer_from_string (char_buffer * buffer, const char *string)
 {
   if (string == NULL)
     return -1;
@@ -90,7 +90,7 @@ init_char_buffer_from_string (char_buffer * buffer,const char *string)
 }
 
 int
-init_char_buffer_from_file (char_buffer * buffer,const  char *file)
+init_char_buffer_from_file (char_buffer * buffer, const char *file)
 {
   FILE *f;
   int lines = 0;
@@ -111,7 +111,7 @@ init_char_buffer_from_file (char_buffer * buffer,const  char *file)
 	{
 	  break;
 	}
-      buffer->filename = strdup(file);
+      buffer->filename = strdup (file);
       return init_char_buffer (buffer, f, chars, lines);
     }
   while (0);
@@ -343,7 +343,7 @@ show_buffer (char_buffer * buffer)
 }
 
 void
-print_buffer (char_buffer *cb)
+print_buffer (char_buffer * cb)
 {
   for (int i = 0; i < cb->end; ++i)
     {

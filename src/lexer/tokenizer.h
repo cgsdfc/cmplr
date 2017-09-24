@@ -19,7 +19,7 @@ enum
 
 struct char_buffer;
 struct token;
-int get_next_token (struct char_buffer *,struct  token *);
+int get_next_token (struct char_buffer *, struct token *);
 int init_tokenizer (void);
 int unbuffer_print_token_stream (struct char_buffer *);
 

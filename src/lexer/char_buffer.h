@@ -25,5 +25,5 @@ int prev_char (char_buffer *);
 int next_char (char_buffer *);
 char *peek_line (char_buffer *, int);
 int get_lineno (char_buffer *);
-void print_buffer(char_buffer*);
+void print_buffer (char_buffer *);
 #endif

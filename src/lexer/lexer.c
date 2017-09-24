@@ -7,98 +7,115 @@ typedef enum char_source
 } char_source;
 
 static Lexer *
-after_create_char_buffer(char_buffer * cb)
+after_create_char_buffer (char_buffer * cb)
 {
-  if (!cb) return NULL;
-  Lexer *tb = malloc(sizeof *tb);
-  if (!tb) {
-    free(cb);
+  if (!cb)
     return NULL;
-  }
-  if (0!=init_token_buffer(tb, cb)) {
-    free(cb);
-    free(tb);
-    return NULL;
-  }
+  Lexer *tb = malloc (sizeof *tb);
+  if (!tb)
+    {
+      free (cb);
+      return NULL;
+    }
+  if (0 != init_token_buffer (tb, cb))
+    {
+      free (cb);
+      free (tb);
+      return NULL;
+    }
   return tb;
 }
 
 static char_buffer *
-before_create_char_buffer(const char * data, char_source src)
+before_create_char_buffer (const char *data, char_source src)
 {
-  char_buffer * cb = malloc(sizeof *cb);
-  if (!cb) {
-    return NULL;
-  }
+  char_buffer *cb = malloc (sizeof *cb);
+  if (!cb)
+    {
+      return NULL;
+    }
   int r;
-  switch(src) {
+  switch (src)
+    {
     case CHAR_SOURCE_FILE:
-      r=init_char_buffer_from_file(cb, data);
+      r = init_char_buffer_from_file (cb, data);
       break;
     case CHAR_SOURCE_STRING:
-      r=init_char_buffer_from_string(cb, data);
+      r = init_char_buffer_from_string (cb, data);
       break;
     default:
       return NULL;
-  }
-  return r==0?cb:free(cb),NULL;
-}
-static Lexer *
-create_lexer_from_file(const char * file)
-{
-  char_buffer *cb = before_create_char_buffer(file, CHAR_SOURCE_FILE);
-  return after_create_char_buffer(cb);
-
-}
-static Lexer *
-create_lexer_from_string(const char * str)
-{
-  char_buffer *cb = before_create_char_buffer(str, CHAR_SOURCE_FILE);
-  return after_create_char_buffer(cb);
+    }
+  if (r == 0)
+    {
+      return cb;
+    }
+  free (cb);
+  return NULL;
 }
 
-inline Lexer * 
-CreateLexerFromFile(const char * file)
+static Lexer *
+create_lexer_from_file (const char *file)
 {
-  return create_lexer_from_file(file);
+  char_buffer *cb = before_create_char_buffer (file, CHAR_SOURCE_FILE);
+  return after_create_char_buffer (cb);
+
+}
+
+static Lexer *
+create_lexer_from_string (const char *str)
+{
+  char_buffer *cb = before_create_char_buffer (str, CHAR_SOURCE_STRING);
+  return after_create_char_buffer (cb);
 }
 
 inline Lexer *
-CreateLexerFromString(const char * str)
+CreateLexerFromFile (const char *file)
 {
-  return create_lexer_from_string(str);
+  return create_lexer_from_file (file);
 }
 
-void LexerError(Lexer * lexer)
+inline Lexer *
+CreateLexerFromString (const char *str)
 {
-  tknzr_error_handle(lexer->cb);
+  return create_lexer_from_string (str);
 }
 
-Token * LexerGetToken(Lexer * lexer)
+void
+LexerError (Lexer * lexer)
 {
-  Token * tk;
-  switch (peek_token(lexer, &tk)) {
+  tknzr_error_handle (lexer->cb);
+}
+
+Token *
+LexerGetToken (Lexer * lexer)
+{
+  Token *tk;
+  switch (peek_token (lexer, &tk))
+    {
     case 0:
       return tk;
       break;
     default:
       return NULL;
-  }
+    }
 }
 
-void LexerConsume(Lexer * lexer)
+void
+LexerConsume (Lexer * lexer)
 {
   Token *tk;
-  get_token(lexer, &tk);
+  get_token (lexer, &tk);
 }
 
-void DestroyLexer(Lexer * lexer)
+void
+DestroyLexer (Lexer * lexer)
 {
 
 }
 
 int
-LexerPrintToken(Lexer * lexer)
+LexerPrintToken (Lexer * lexer)
 {
   /* token *tk; */
   token *tk;
@@ -112,10 +129,9 @@ LexerPrintToken(Lexer * lexer)
 	case EOF:
 	  return 0;
 	case 1:
-          LexerError(lexer);
+	  LexerError (lexer);
 	  return 1;
 	}
     }
   return 0;
 }
-

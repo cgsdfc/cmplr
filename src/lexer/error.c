@@ -54,7 +54,7 @@ tknzr_error_set (int err)
 }
 
 int
-tknzr_error_handle (char_buffer *cb)
+tknzr_error_handle (char_buffer * cb)
 {
   put_char (cb);
   char *errline = peek_line (cb, get_lineno (cb));

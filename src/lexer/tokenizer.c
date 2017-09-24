@@ -441,8 +441,9 @@ get_next_token (char_buffer * buf, token * tk)
 	}
     }
 }
+
 int
-unbuffer_print_token_stream (char_buffer *cb)
+unbuffer_print_token_stream (char_buffer * cb)
 {
   token tk;
   while (true)
@@ -461,4 +462,3 @@ unbuffer_print_token_stream (char_buffer *cb)
 	}
     }
 }
-
