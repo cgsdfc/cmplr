@@ -9,8 +9,6 @@
 #define FIRST_OPER  TKT_BINARY_OP_DIV
 #define LAST_OPER TKT_MINUS
 
-
-
 int lookup_special (int from, int to, char *string);
 typedef enum token_type
 {

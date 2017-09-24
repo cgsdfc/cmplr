@@ -20,6 +20,10 @@ typedef enum node_tag
   NODE_TAG_FLOAT,
 } node_tag;
 
+typedef struct basic_node {
+  node_tag tag;
+};
+
 typedef struct unary_node {
   node_tag tag;
   void *node;
@@ -161,19 +165,21 @@ void parse_term(token_buffer * tokens, parse_info * info)
     // error
     return;
   }
-  void * lhs = info->node;
+  unary_node * lhs = info->node;
+  node_tag tag=NODE_TAG_NUMBER;
   // oper number *
   set_failed(info), parse_term_oper(tokens, info);
   while (success(info)) {
     binary_node * op = info->node;
     op->lhs.node=lhs;
-    op->lhs.tag=NODE_TAG_TERM;
+    op->lhs.tag=tag;
     lhs=op;
+    tag=NODE_TAG_TERM;
     set_failed(info), parse_number(tokens, info);
     if (failed(info)) {
       // error
     }
-    void * rhs = info->node;
+    unary_node * rhs = info->node;
     op->rhs.node=rhs; 
     op->rhs.tag=NODE_TAG_NUMBER;
     set_failed(info), parse_term_oper(tokens, info);
@@ -249,6 +255,6 @@ int main(int argc, char **argv)
   /*   puts(format_token(tk)); */
   /* } */
   parse_info info = parse(tokens);
-  /* print_node(info.node); */
+  print_node(info.node);
   return 0;
 }

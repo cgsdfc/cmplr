@@ -1,4 +1,6 @@
-#include "chcl.h"
+#include <stdio.h>
+#include "lexer/chcl.h"
+#include "lexer/dfa.h"
 #define CHAR_CLASS_MAX_TAB_LEN 100
 const static char *dec = "123456789";
 const static char *Dec = "0123456789";

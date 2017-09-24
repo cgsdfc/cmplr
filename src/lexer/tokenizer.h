@@ -1,14 +1,6 @@
 /* tokenizer.h */
 #ifndef TOKENIZER_H
 #define TOKENIZER_H 1
-#include <sys/types.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include "token.h"
 
 enum
 {
@@ -25,8 +17,11 @@ enum
   TKA_PUTBACK,
 };
 
-int get_next_token (char_buffer *, token *);
+struct char_buffer;
+struct token;
+int get_next_token (struct char_buffer *,struct  token *);
 int init_tokenizer (void);
+int unbuffer_print_token_stream (struct char_buffer *);
 
 
 #endif

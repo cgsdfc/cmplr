@@ -1,6 +1,7 @@
-#include "token_buffer.h"
-#include "block_buffer.h"
-#include "tokenizer.h"
+#include "lexer/token_buffer.h"
+#include "lexer/error.h"
+#include "lexer/block_buffer.h"
+#include "lexer/tokenizer.h"
 #define N_TOKEN_FILL  1
 
 static int fill_token_buffer (token_buffer * buf, int nfill);

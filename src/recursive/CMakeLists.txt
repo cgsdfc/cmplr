@@ -1,4 +1,12 @@
 project(recursive C)
-add_executable(simple_expr simple_expr.c)
-target_link_libraries(simple_expr lexer_lib)
+include_directories(${CMAKE_SOURCE_DIR})
 
+
+
+add_library(recursive
+  ./repeated.c
+  ./expr.c
+)
+target_link_libraries(recursive
+  lexer_lib
+)

@@ -1,6 +1,12 @@
-#include "tknzr_error.h"
-#include "char_buffer.h"
-#include "color.h"
+#include "lexer/error.h"
+#include "lexer/char_buffer.h"
+#include "lexer/color.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 
 static int cmplr_errno;

@@ -1,4 +1,14 @@
-#include "block_buffer.h"
+#include <stdio.h>
+#include <stdbool.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include "lexer/block_buffer.h"
 #define BLOCK_BUFFER_MAX_N 10
 /** note: index points to the **Nth** element,
  * not the **Nth** char!

@@ -1,13 +1,6 @@
 #ifndef TKNZR_ERROR_H
 #define TKNZR_ERROR_H 1
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-struct char_buffer ;
 typedef enum cmplr_error
 {
   ER_NO_INPUT = 1,
@@ -40,6 +33,7 @@ typedef struct err_entry
   int lv;
 } err_entry;
 
+struct char_buffer;
 void tknzr_error_set (int err);
 int tknzr_error_handle (struct char_buffer*);
 

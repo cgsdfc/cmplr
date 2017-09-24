@@ -1,3 +1,9 @@
+#include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "dfa.h"
 #define DFA_TAB_MAX_LEN 10
 static int add_state (int from, int to);

@@ -1,6 +1,6 @@
-#include "dfa.h"
-#include "chcl.h"
-#include "tokenizer.h"
+#include "lexer/dfa.h"
+#include "lexer/chcl.h"
+#include "lexer/tokenizer.h"
 
 #define N_AMPERSAND  (sizeof b / sizeof b[0])
 #define N_LESS (sizeof c / sizeof c[0])

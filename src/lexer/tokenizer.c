@@ -1,7 +1,17 @@
 /* tokenizer.c */
-#include "dfa.h"
-#include "chcl.h"
-#include "tokenizer.h"
+#include "lexer/dfa.h"
+#include "lexer/chcl.h"
+#include "lexer/tokenizer.h"
+#include "lexer/char_buffer.h"
+#include "lexer/token.h"
+#include "lexer/error.h"
+#include <sys/types.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #define N_TOKENIZER_ROWS 50
 
 int TK_SLASH;
@@ -431,3 +441,24 @@ get_next_token (char_buffer * buf, token * tk)
 	}
     }
 }
+int
+unbuffer_print_token_stream (char_buffer *cb)
+{
+  token tk;
+  while (true)
+    {
+      memset (&tk, 0, sizeof (token));
+      switch (get_next_token (cb, &tk))
+	{
+	case 0:
+	  puts (format_token (&tk));
+	  continue;
+	case EOF:
+	  return 0;
+	default:
+	  tknzr_error_handle (cb);
+	  return 1;
+	}
+    }
+}
+

@@ -1,5 +1,8 @@
-#include "token.h"
-#include "token_type.h"
+#include "lexer/token.h"
+#include "lexer/token_type.h"
+#include <stdlib.h>
+#include <string.h>
+#include "lexer/error.h"
 #define TERMINATE_STRING(tk) ((tk)->string[(tk)->len]=0)
 #define MARK_NO_STRING(tk) ((tk)->string=0)
 

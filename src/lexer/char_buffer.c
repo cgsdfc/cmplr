@@ -1,11 +1,12 @@
 #include <string.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "char_buffer.h"
+#include "lexer/char_buffer.h"
 // this file is out of date
 // it should be consistent with
 // token_buffer:
@@ -61,7 +62,7 @@ count_lines (FILE * f)
 }
 
 int
-init_char_buffer_from_string (char_buffer * buffer,char *string)
+init_char_buffer_from_string (char_buffer * buffer,const char *string)
 {
   if (string == NULL)
     return -1;
@@ -71,7 +72,7 @@ init_char_buffer_from_string (char_buffer * buffer,char *string)
   do
     {
       chars = strlen (string);
-      if ((ss = fmemopen (string, chars, "r")) < 0)
+      if ((ss = fmemopen ((void *) string, chars, "r")) < 0)
 	{
 	  break;
 	}
@@ -339,4 +340,13 @@ show_buffer (char_buffer * buffer)
   printf ("lineno = %d, column = %d\n", buffer->pos.lineno,
 	  buffer->pos.column);
 
+}
+
+void
+print_buffer (char_buffer *cb)
+{
+  for (int i = 0; i < cb->end; ++i)
+    {
+      putchar (cb->buf[i]);
+    }
 }

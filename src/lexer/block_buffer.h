@@ -1,16 +1,6 @@
 #ifndef BLOCK_BUFFER_H
 #define BLOCK_BUFFER_H
 
-#include <stdio.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <stdio.h>
 // block alloc memory 
 
 typedef struct block_mem

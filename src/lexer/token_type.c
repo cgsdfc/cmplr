@@ -1,6 +1,6 @@
-#include "token_type.h"
+#include "lexer/token_type.h"
 
-// TODO remove it after parser is 
+// TODO relexer/move it after parser is 
 // done
 /** this tab is for debug purpose */
 const char *token_tab[] = {

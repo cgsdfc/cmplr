@@ -9,13 +9,10 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include "char_buffer.h"
-#include "token_type.h"
-#include "tknzr_error.h"
-#define TYPE_DESCRIPTOR_MAX_LEN 6
+#include "lexer/position.h" // for position
 #define TOKEN_TYPE(t)    (((token*) t)->type)
 #define TOKEN_STRING(t) (((token*) t)->string != NULL ? (t)->string : "")
-#define TOKEN_VARLEN_INIT_LEN 50
+#define TOKEN_VARLEN_INIT_LEN  10
 
 typedef struct token
 {
