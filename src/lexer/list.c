@@ -33,6 +33,13 @@ make_node (token * t)
 }
 
 static void
+destroy_node(token_list_node * node)
+{
+  destroy_token(node->t);
+  free(node->t);
+}
+
+static void
 append_node (token_list * list, token_list_node * node)
 {
   // push_back
@@ -116,7 +123,7 @@ destroy_token_list (token_list * list)
     {
       tail = list->tail;
       list->tail = tail->prev;
-      destroy_token (tail->t);
+      destroy_node(tail);
       free (tail);
     }
 }

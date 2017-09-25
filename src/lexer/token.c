@@ -1,7 +1,8 @@
-#include "lexer/token.h"
-#include "lexer/token_type.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "lexer/token.h"
+#include "lexer/token_type.h"
 #include "lexer/error.h"
 
 int
@@ -161,4 +162,5 @@ void
 destroy_token (token * tk)
 {
   free (tk->string);
+  TERMINATE_STRING(tk);
 }

@@ -1,13 +1,24 @@
+#include <stdio.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "dfa.h"
-#define DFA_TAB_MAX_LEN 10
+#include "lexer/dfa.h"
 static int add_state (int from, int to);
 
+typedef struct dfa_config
+{
+  int from;
+  int to;
+  int action;
+  int cond;
+  int usrd;
+  int idcnt;
+  int nrows;
+
+} dfa_config;
 enum
 {
   DFA_USR_HANDLER = 1,
@@ -124,7 +135,7 @@ config_end (void)
 static dfa_state *
 resize_row (dfa_state * ds, int len, int *newlen)
 {
-  dfa_state *newspace;
+  dfa_state *newspace=NULL;
   *newlen = (len & 1) ? len << 1 : len * 3 + 5;
   // newlen = len*2 if len is odd else 3len+5
   newspace = calloc (*newlen, sizeof (dfa_state));
@@ -148,11 +159,9 @@ add_config (void)
 static int
 add_state (int from, int to)
 {
-  dfa_state *ds;
-  int len, newlen;
-
-  len = cur_dfa->len[from];
-  ds = cur_dfa->diagram[from];
+  int newlen=0;
+  int len = cur_dfa->len[from];
+  dfa_state *ds = cur_dfa->diagram[from];
   if (len == cur_dfa->max[from])
     {
       ds = resize_row (ds, len, &newlen);
@@ -239,4 +248,22 @@ transfer (dfa_table * dfa, int from, int cond, dfa_state ** to)
 	}
     }
   return 1;
+}
+
+static
+void destroy_dfa(struct dfa_table * dfa)
+{
+  for (int i=0;i<dfa->nrows;++i) {
+    free(dfa->diagram[i]);
+  }
+  free(dfa->diagram);
+  free(dfa->max);
+  free(dfa->len);
+}
+
+void destroy_all_dfa(void)
+{
+  for (int i=0;i<dfa_count;++i) {
+    destroy_dfa(&all_dfas[i]);
+  }
 }

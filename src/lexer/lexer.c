@@ -1,5 +1,8 @@
 #include "lexer/lexer.h"
 #include "lexer/char_buffer.h"
+#include "lexer/chcl.h"
+#include "lexer/dfa.h"
+
 typedef enum char_source
 {
   CHAR_SOURCE_FILE,
@@ -9,8 +12,6 @@ typedef enum char_source
 static Lexer *
 after_create_char_buffer (char_buffer * cb)
 {
-  if (!cb)
-    return NULL;
   Lexer *tb = malloc (sizeof *tb);
   if (!tb)
     {
@@ -43,8 +44,6 @@ before_create_char_buffer (const char *data, char_source src)
     case CHAR_SOURCE_STRING:
       r = init_char_buffer_from_string (cb, data);
       break;
-    default:
-      return NULL;
     }
   if (r == 0)
     {
@@ -58,6 +57,7 @@ static Lexer *
 create_lexer_from_file (const char *file)
 {
   char_buffer *cb = before_create_char_buffer (file, CHAR_SOURCE_FILE);
+  if (!cb) return NULL;
   return after_create_char_buffer (cb);
 
 }
@@ -66,6 +66,7 @@ static Lexer *
 create_lexer_from_string (const char *str)
 {
   char_buffer *cb = before_create_char_buffer (str, CHAR_SOURCE_STRING);
+  if (!cb) return NULL;
   return after_create_char_buffer (cb);
 }
 
@@ -117,7 +118,12 @@ LexerConsume (Lexer * lexer)
 void
 DestroyLexer (Lexer * lexer)
 {
-
+  destroy_char_class();
+  destroy_token_list(lexer);
+  destroy_all_dfa();
+  destroy_char_buffer(lexer->cb);
+  free(lexer->cb);
+  free(lexer);
 }
 
 int

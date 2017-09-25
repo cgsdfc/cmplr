@@ -146,7 +146,7 @@ init_char_buffer (char_buffer * buffer, FILE * f, int chars, int lines)
 	  break;
 	}
 
-      if ((limits = malloc (sizeof (int) * (1 + lines))) == NULL)
+      if ((limits = malloc (sizeof (int) * (5 + lines))) == NULL)
 	{
 	  break;
 	}
@@ -349,4 +349,11 @@ print_buffer (char_buffer * cb)
     {
       putchar (cb->buf[i]);
     }
+}
+
+void destroy_char_buffer(char_buffer *cb)
+{
+  free(cb->buf);
+  free(cb->limits);
+  free(cb->filename);
 }

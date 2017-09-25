@@ -1,14 +1,8 @@
 #ifndef DEFININESS_FINITE_AUTO_H
 #define DEFININESS_FINITE_AUTO_H 1
-
-#include <stdio.h>
+#define DFA_TAB_MAX_LEN 10
 #include <stdbool.h>
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
+
 typedef struct dfa_state
 {
   int state;
@@ -29,18 +23,7 @@ typedef struct dfa_table
 
 } dfa_table;
 
-typedef struct dfa_config
-{
-  int from;
-  int to;
-  int action;
-  int cond;
-  int usrd;
-  int idcnt;
-  int nrows;
-
-} dfa_config;
-
+void destroy_all_dfa(void);
 dfa_table *alloc_dfa (int nrows, transfer_func func);
 void config_from (int from);
 void config_to (int to);
@@ -52,6 +35,6 @@ int add_from (int from);
 int add_to (int to);
 int add_config (void);
 int alloc_state (bool is_non_terminal);
-int transfer (dfa_table * dfa, int from, int cond, dfa_state ** to);
+int transfer (struct dfa_table * dfa, int from, int cond, dfa_state ** to);
 
 #endif

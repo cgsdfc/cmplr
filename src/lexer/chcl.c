@@ -1,4 +1,11 @@
+#include <assert.h>
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <assert.h>
+
 #include "lexer/chcl.h"
 #include "lexer/dfa.h"
 #define CHAR_CLASS_MAX_TAB_LEN 100
@@ -169,4 +176,12 @@ cond_char_class (dfa_state * st, int ch)
   bool rev = st->usrd;
   bool incl = strchr (cc, ch);
   return (!rev && incl || rev && !incl);
+}
+
+void destroy_char_class(void)
+{
+  for (int i = 0; i < all_count; ++i)
+  {
+    free(all_cc[i]);
+  }
 }
