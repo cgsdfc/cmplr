@@ -1,5 +1,5 @@
 #include "lexer/lexer.h"
-
+#include "lexer/char_buffer.h"
 typedef enum char_source
 {
   CHAR_SOURCE_FILE,
@@ -17,7 +17,7 @@ after_create_char_buffer (char_buffer * cb)
       free (cb);
       return NULL;
     }
-  if (0 != init_token_buffer (tb, cb))
+  if (0 != init_token_list (tb, cb))
     {
       free (cb);
       free (tb);
@@ -90,22 +90,28 @@ LexerError (Lexer * lexer)
 Token *
 LexerGetToken (Lexer * lexer)
 {
+  static Token eof = {.type = TKT_EOF,.string = 0 };
+  static Token unknown = {.type = TKT_UNKNOWN,.string = 0 };
   Token *tk;
-  switch (peek_token (lexer, &tk))
+  switch (get_token (lexer, &tk))
     {
     case 0:
       return tk;
       break;
+    case EOF:
+      return &eof;
+      break;
+    case 1:
     default:
-      return NULL;
+      return &unknown;
+      break;
     }
 }
 
 void
 LexerConsume (Lexer * lexer)
 {
-  Token *tk;
-  get_token (lexer, &tk);
+  consume_token (lexer);
 }
 
 void
@@ -125,6 +131,7 @@ LexerPrintToken (Lexer * lexer)
 	{
 	case 0:
 	  puts (format_token (tk));
+	  consume_token (lexer);
 	  continue;
 	case EOF:
 	  return 0;

@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lexer/error.h"
-#define TERMINATE_STRING(tk) ((tk)->string[(tk)->len]=0)
-#define MARK_NO_STRING(tk) ((tk)->string=0)
 
 int
 alloc_buffer (token * tk, position * begin)
@@ -157,4 +155,10 @@ fini_token (token * tk)
       free (tk->string);
     }
   free (tk);
+}
+
+void
+destroy_token (token * tk)
+{
+  free (tk->string);
 }

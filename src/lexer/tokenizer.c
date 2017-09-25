@@ -367,7 +367,7 @@ init_tokenizer (void)
   init_string_literal ();
   void init_operator (void);
   init_operator ();
-
+  return 0;
 }
 
 int

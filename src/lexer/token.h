@@ -13,7 +13,10 @@
 #define TOKEN_TYPE(t)    (((token*) t)->type)
 #define TOKEN_STRING(t) (((token*) t)->string != NULL ? (t)->string : "")
 #define TOKEN_VARLEN_INIT_LEN  10
-
+#define TERMINATE_STRING(tk) ((tk)->string[(tk)->len]=0)
+#define MARK_NO_STRING(tk) ((tk)->string=0)
+// TODO: remove man and len fields
+// use char *
 typedef struct token
 {
   int type;
@@ -35,6 +38,7 @@ int accept_integer (token * tk, char ch);
 int accept_punctuation (token * tk, char ch);
 int accept_string (token * tk, char ch);
 char *format_token (token *);
+void destroy_token (token *);
 
 
 #endif
