@@ -5,11 +5,11 @@ int
 main ()
 {
   const char *code = 
-    "identifier   \"hello\"    111111    2.3444 ()"
+    "id--"
     ;
   Lexer *lexer = CreateLexerFromString (code);
   int i=0;
-  while (expr_is_primary(lexer)) {
+  while (expr_is_postfix(lexer)) {
     printf("case %d\n", i);
     i++;
   }

@@ -3,6 +3,13 @@
 
 #include "recursive/node_base.h"
 #include "lexer/lexer.h"
+#include <stdbool.h>
+
+#define TERMINAL_DECLARE_PRED(FUNC) \
+bool terminal_is_ ## FUNC (Token * t)
+
+#define TERMINAL_DEFINE_PRED(FUNC, TYPE) \
+bool terminal_is_ ## FUNC(Token * t) { return TOKEN_TYPE(t) == ( TYPE ); }
 
 typedef struct terminal_node
 {
@@ -10,12 +17,25 @@ typedef struct terminal_node
   Token *token;
 } terminal_node;
 
-bool terminal_is_type_qualifier (Token *);
-bool terminal_is_primary (Token *);
-bool terminal_is_storage_specifier (Token *);
-bool terminal_is_parenthesisL (Token *);
-bool terminal_is_parenthesisR (Token *);
-bool terminal_is_additive_op (Token *);
-
-
+TERMINAL_DECLARE_PRED(type_qualifier);
+TERMINAL_DECLARE_PRED(primary);
+TERMINAL_DECLARE_PRED(storage_specifier);
+TERMINAL_DECLARE_PRED(parenthesisR);
+TERMINAL_DECLARE_PRED(parenthesisL);
+TERMINAL_DECLARE_PRED(additive_op);
+TERMINAL_DECLARE_PRED(unary_op);
+TERMINAL_DECLARE_PRED(timing_op);
+TERMINAL_DECLARE_PRED(shift_op);
+TERMINAL_DECLARE_PRED(relation_op);
+TERMINAL_DECLARE_PRED(equality_op);
+TERMINAL_DECLARE_PRED(bit_and_op);
+TERMINAL_DECLARE_PRED(bit_xor_op);
+TERMINAL_DECLARE_PRED(bit_or_op);
+TERMINAL_DECLARE_PRED(log_and_op);
+TERMINAL_DECLARE_PRED(log_or_op);
+TERMINAL_DECLARE_PRED(colon);
+TERMINAL_DECLARE_PRED(comma);
+TERMINAL_DECLARE_PRED(semicolon);
+TERMINAL_DECLARE_PRED(assign_op);
+TERMINAL_DECLARE_PRED(question);
 #endif // RECURSIVE_TERMINAL_H

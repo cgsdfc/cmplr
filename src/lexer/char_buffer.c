@@ -168,16 +168,9 @@ init_char_buffer (char_buffer * buffer, FILE * f, int chars, int lines)
 	  strncat (buffer->buf, line, BUFSIZ);
 	}
 
-      /* assert (strlen(buffer->buf) == chars); */
-      /* check the last line, whether it has a newline as terminator */
-      /* if not, add a newline to it, for tokenize purposes */
-      if (buffer->buf[chars - 1] != '\n')
-	{
-	  puts ("warning: no newline at the end of input");
-	  buffer->buf[chars] = '\n';
-	  buffer->buf[chars + 1] = 0;
-	  chars++;
-	}
+      buffer->buf[chars] = '\n';
+      buffer->buf[chars + 1] = 0;
+      chars++;
 
       buffer->end = chars;
       buffer->index = 0;
@@ -193,7 +186,7 @@ init_char_buffer (char_buffer * buffer, FILE * f, int chars, int lines)
 }
 
 
-int
+  int
 prev_char (char_buffer * buffer)
 {
   if (buffer->index == 0)
@@ -201,7 +194,7 @@ prev_char (char_buffer * buffer)
   return buffer->buf[buffer->index - 1];
 }
 
-int
+  int
 next_char (char_buffer * buffer)
 {
   if (buffer->index == buffer->end - 1)
@@ -217,7 +210,7 @@ next_char (char_buffer * buffer)
  * increased.
  * on EOF it returns EOF.
  */
-int
+  int
 get_char (char_buffer * buffer)
 {
   int _char = peek_char (buffer);
@@ -227,10 +220,10 @@ get_char (char_buffer * buffer)
   ++buffer->index;
   ++buffer->pos.column;
   if (prev_char (buffer) == '\n')
-    {
-      buffer->pos.lineno++;
-      buffer->pos.column = 1;
-    }
+  {
+    buffer->pos.lineno++;
+    buffer->pos.column = 1;
+  }
 
   return _char;
 }
@@ -241,7 +234,7 @@ get_char (char_buffer * buffer)
  * otherwise it will fill the buffer
  * and returns the char at `index`
  */
-int
+  int
 peek_char (char_buffer * buffer)
 {
   return buffer->index == buffer->end ? EOF : buffer->buf[buffer->index];
@@ -253,55 +246,55 @@ peek_char (char_buffer * buffer)
  * on failure when `index` is 0 so no char can
  * be put back, it returns -1;
  */
-int
+  int
 put_char (char_buffer * buffer)
 {
   if (buffer->index == 0)
-    {
-      return EOF;
-    }
+  {
+    return EOF;
+  }
 
   buffer->index--;
   buffer->pos.column--;
   int _char = peek_char (buffer);
 
   if (_char == '\n')
-    {
-      buffer->pos.lineno--;
-      buffer->pos.column = buffer->limits[buffer->pos.lineno];
-    }
+  {
+    buffer->pos.lineno--;
+    buffer->pos.column = buffer->limits[buffer->pos.lineno];
+  }
 
   return _char;
 }
 
-int
+  int
 get_line_offset (char_buffer * buffer, int lineno)
 {
   if (lineno < 1)
-    {
-      return -1;
-    }
+  {
+    return -1;
+  }
   if (lineno == 1)
-    {
-      return 0;
-    }
+  {
+    return 0;
+  }
   int offset = 0;
   for (int i = 1; i < lineno; ++i)
-    {
-      offset += buffer->limits[i];
-    }
+  {
+    offset += buffer->limits[i];
+  }
   return offset;
 
 }
 
-int
+  int
 get_lineno (char_buffer * buffer)
 {
   return buffer->pos.lineno;
 }
 
 
-char *
+  char *
 peek_line (char_buffer * buffer, int lineno)
 {
   static char buf[BUFSIZ];
@@ -316,39 +309,39 @@ peek_line (char_buffer * buffer, int lineno)
 
 
   for (i = 0; i < limit; ++i)
-    {
-      buf[i] = buffer->buf[i + offset];
-    }
+  {
+    buf[i] = buffer->buf[i + offset];
+  }
 
   buf[i] = 0;
   return buf;
 
 }
 
-int
+  int
 get_line_limit (char_buffer * buffer, int lineno)
 {
   return buffer->limits[lineno];
 }
 
-void
+  void
 show_buffer (char_buffer * buffer)
 {
   printf ("\"%s\"\n", buffer->buf);
   printf ("index = %d\n", buffer->index);
   printf ("char [index] = \'%c\'\n", buffer->buf[buffer->index]);
   printf ("lineno = %d, column = %d\n", buffer->pos.lineno,
-	  buffer->pos.column);
+      buffer->pos.column);
 
 }
 
-void
+  void
 print_buffer (char_buffer * cb)
 {
   for (int i = 0; i < cb->end; ++i)
-    {
-      putchar (cb->buf[i]);
-    }
+  {
+    putchar (cb->buf[i]);
+  }
 }
 
 void destroy_char_buffer(char_buffer *cb)
