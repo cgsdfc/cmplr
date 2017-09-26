@@ -215,3 +215,7 @@ EXPR_IS_FUNC_DECLARE(assign)
   return false;
 }
 EXPR_IS_FUNC_DEFINE(expression, comma, assign, "expression", "assign");
+EXPR_IS_FUNC_DECLARE(constant)
+{
+  return expr_is_condition(lexer);
+}

@@ -4,6 +4,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 
 add_library(recursive
+  ./stmt.c
   ./error.c
   ./terminal.c
   ./expr.c

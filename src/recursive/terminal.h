@@ -17,6 +17,11 @@ typedef struct terminal_node
   Token *token;
 } terminal_node;
 
+TERMINAL_DECLARE_PRED(braceL);
+TERMINAL_DECLARE_PRED(braceR);
+TERMINAL_DECLARE_PRED(identifier);
+TERMINAL_DECLARE_PRED(while);
+TERMINAL_DECLARE_PRED(else);
 TERMINAL_DECLARE_PRED(type_qualifier);
 TERMINAL_DECLARE_PRED(primary);
 TERMINAL_DECLARE_PRED(storage_specifier);

@@ -40,5 +40,6 @@ EXPR_IS_FUNC_DECLARE(log_and);
 EXPR_IS_FUNC_DECLARE(assign);
 EXPR_IS_FUNC_DECLARE(argument);
 EXPR_IS_FUNC_DECLARE(condition);
+EXPR_IS_FUNC_DECLARE(constant);
 
 #endif // RECUSIVE_EXPR_H
