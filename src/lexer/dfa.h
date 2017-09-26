@@ -23,7 +23,7 @@ typedef struct dfa_table
 
 } dfa_table;
 
-void destroy_all_dfa(void);
+void destroy_all_dfa (void);
 dfa_table *alloc_dfa (int nrows, transfer_func func);
 void config_from (int from);
 void config_to (int to);
@@ -35,6 +35,6 @@ int add_from (int from);
 int add_to (int to);
 int add_config (void);
 int alloc_state (bool is_non_terminal);
-int transfer (struct dfa_table * dfa, int from, int cond, dfa_state ** to);
+int transfer (struct dfa_table *dfa, int from, int cond, dfa_state ** to);
 
 #endif

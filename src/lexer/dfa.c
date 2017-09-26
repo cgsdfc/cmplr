@@ -135,7 +135,7 @@ config_end (void)
 static dfa_state *
 resize_row (dfa_state * ds, int len, int *newlen)
 {
-  dfa_state *newspace=NULL;
+  dfa_state *newspace = NULL;
   *newlen = (len & 1) ? len << 1 : len * 3 + 5;
   // newlen = len*2 if len is odd else 3len+5
   newspace = calloc (*newlen, sizeof (dfa_state));
@@ -159,7 +159,7 @@ add_config (void)
 static int
 add_state (int from, int to)
 {
-  int newlen=0;
+  int newlen = 0;
   int len = cur_dfa->len[from];
   dfa_state *ds = cur_dfa->diagram[from];
   if (len == cur_dfa->max[from])
@@ -250,20 +250,23 @@ transfer (dfa_table * dfa, int from, int cond, dfa_state ** to)
   return 1;
 }
 
-static
-void destroy_dfa(struct dfa_table * dfa)
+static void
+destroy_dfa (struct dfa_table *dfa)
 {
-  for (int i=0;i<dfa->nrows;++i) {
-    free(dfa->diagram[i]);
-  }
-  free(dfa->diagram);
-  free(dfa->max);
-  free(dfa->len);
+  for (int i = 0; i < dfa->nrows; ++i)
+    {
+      free (dfa->diagram[i]);
+    }
+  free (dfa->diagram);
+  free (dfa->max);
+  free (dfa->len);
 }
 
-void destroy_all_dfa(void)
+void
+destroy_all_dfa (void)
 {
-  for (int i=0;i<dfa_count;++i) {
-    destroy_dfa(&all_dfas[i]);
-  }
+  for (int i = 0; i < dfa_count; ++i)
+    {
+      destroy_dfa (&all_dfas[i]);
+    }
 }

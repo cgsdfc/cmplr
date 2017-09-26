@@ -178,10 +178,11 @@ cond_char_class (dfa_state * st, int ch)
   return (!rev && incl || rev && !incl);
 }
 
-void destroy_char_class(void)
+void
+destroy_char_class (void)
 {
   for (int i = 0; i < all_count; ++i)
-  {
-    free(all_cc[i]);
-  }
+    {
+      free (all_cc[i]);
+    }
 }

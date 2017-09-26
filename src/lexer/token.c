@@ -162,5 +162,5 @@ void
 destroy_token (token * tk)
 {
   free (tk->string);
-  TERMINATE_STRING(tk);
+  TERMINATE_STRING (tk);
 }

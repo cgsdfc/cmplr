@@ -9,10 +9,9 @@
 #define FIRST_OPER  TKT_BINARY_OP_DIV
 #define LAST_OPER TKT_MINUS
 
-int lookup_special (int from, int to, char *string);
 typedef enum token_type
 {
-
+/* this enum should not be modified */
   TKT_KW_FOR = 0,
   TKT_KW_WHILE,
   TKT_KW_CASE,
@@ -104,6 +103,7 @@ typedef enum token_type
   TKT_UNARY_OP_PLUS_PLUS,
   TKT_UNARY_OP_MINUS_MINUS,
 
+  /* special operators, for parse time to determine */
   TKT_AMPERSAND,
   TKT_STAR,
   TKT_PLUS,
@@ -136,15 +136,22 @@ enum
   TKT_IDENTIFIER,
   TKT_BINARY_OP_MEMBER_DOT,
   TKT_BINARY_OP_ADD,
+  TKT_UNARY_OP_CAST,
   TKT_BINARY_OP_SUB,
-
+  TKT_BINARY_OP_INVOKE,
+  TKT_BINARY_OP_SUBSCRIPT,
   TKT_UNARY_OP_NEGATIVE,
+  TKT_UNARY_OP_POSITIVE,
   TKT_UNARY_OP_ADDRESS,
   TKT_UNARY_OP_DEREFERENCE,
   TKT_BINARY_OP_BIT_AND,
+  TKT_UNARY_OP_SIZOF_EXPR,
+  TKT_UNARY_OP_SIZOF_TYPENAME,
   TKT_EOF,
   TKT_UNKNOWN,
 
 };
 
+int lookup_special (int from, int to, char *string);
+extern const char *token_tab[];
 #endif

@@ -1,16 +1,24 @@
-#include "recursive/terminal.h"
-#include "recursive/expr.h"
+#include "recursive/parser.h"
 
 int
-main ()
+main (int argc, char **argv)
 {
-  const char *code = 
-    "id--"
-    ;
-  Lexer *lexer = CreateLexerFromString (code);
-  int i=0;
-  while (expr_is_postfix(lexer)) {
-    printf("case %d\n", i);
-    i++;
-  }
+  if (argc != 2)
+    {
+      die ("Usage rp <FILE>");
+    }
+  Parser *parser = CreateParserFromFile (argv[1]);
+  if (!parser)
+    {
+      die ("rp: cannot open file");
+    }
+  int i = 0;
+  if (ParserDoParsing (parser))
+    {
+      printf ("rp: input was accepted!\n");
+    }
+  else
+    {
+      printf ("rp: input was rejected!\n");
+    }
 }

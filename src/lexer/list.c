@@ -5,63 +5,47 @@
 
 typedef struct token_list_node
 {
-  struct token_list_node *prev;
   struct token_list_node *next;
-  struct token *t;
+  struct token *token;
 } token_list_node;
 
 // O <- O <- O <- tail
-int
+void
 init_token_list (token_list * list, char_buffer * cb)
 {
-  list->bad = false;
-  list->eof = false;
+  memset (list, 0, sizeof *list);
   list->cb = cb;
-  list->tail = list->cur = NULL;
-  return init_tokenizer ();
+  init_tokenizer ();
 }
 
 static token_list_node *
 make_node (token * t)
 {
-  token_list_node *node = malloc (sizeof *node);
+  token_list_node *node = calloc (sizeof *node, 1);
   if (node)
     {
-      node->t = t;
+      node->token = t;
     }
   return node;
 }
 
 static void
-destroy_node(token_list_node * node)
+destroy_node (token_list_node * node)
 {
-  destroy_token(node->t);
-  free(node->t);
+  destroy_token (node->token);
+  free (node->token);
 }
 
 static void
-append_node (token_list * list, token_list_node * node)
+push_back_node (token_list * list, token_list_node * node)
 {
-  // push_back
-  if (list->tail)
-    {
-      // non empty case
-      node->next = NULL;
-      node->prev = list->tail;
-      list->tail->next = node;
-      list->tail = node;
-    }
-  else
-    {
-      // empty case
-      list->tail = node;
-      node->prev = node->next = NULL;
-    }
-  list->cur = list->tail;
+  token_list_node **tail = (&list->tail);
+  node->next = (*tail);
+  *tail = node;
 }
 
 static int
-add_node (token_list * list)
+push_back_token (token_list * list)
 {
   token *t = malloc (sizeof *t);
   token_list_node *node;
@@ -69,7 +53,11 @@ add_node (token_list * list)
     {
     case 0:
       node = make_node (t);
-      append_node (list, node);
+      if (!node)
+	{
+	  return 1;
+	}
+      push_back_node (list, node);
       return 0;
     case 1:
       free (t);
@@ -93,27 +81,15 @@ get_token (token_list * list, token ** tk)
     {
       return 1;
     }
-  if (list->cur == NULL)
+  int r = push_back_token (list);
+  if (r)
     {
-      int r = add_node (list);
-      if (r)
-	{
-	  return r;
-	}
+      return r;
     }
-  *tk = list->cur->t;
+  *tk = list->tail->token;
   return 0;
 }
 
-void
-consume_token (token_list * list)
-{
-  token_list_node *cur = list->cur;
-  if (cur)
-    {
-      list->cur = cur->next;
-    }
-}
 
 void
 destroy_token_list (token_list * list)
@@ -122,8 +98,8 @@ destroy_token_list (token_list * list)
   while (list->tail)
     {
       tail = list->tail;
-      list->tail = tail->prev;
-      destroy_node(tail);
+      list->tail = tail->next;
+      destroy_node (tail);
       free (tail);
     }
 }

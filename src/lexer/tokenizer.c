@@ -351,7 +351,7 @@ init_integer_literal (void)
   config_end ();
 }
 
-int
+void
 init_tokenizer (void)
 {
   table = alloc_dfa (N_TOKENIZER_ROWS, cond_char_class);
@@ -367,7 +367,6 @@ init_tokenizer (void)
   init_string_literal ();
   void init_operator (void);
   init_operator ();
-  return 0;
 }
 
 int

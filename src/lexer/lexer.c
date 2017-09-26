@@ -2,6 +2,7 @@
 #include "lexer/char_buffer.h"
 #include "lexer/chcl.h"
 #include "lexer/dfa.h"
+#include "lexer/token_type.h"
 
 typedef enum char_source
 {
@@ -18,17 +19,12 @@ after_create_char_buffer (char_buffer * cb)
       free (cb);
       return NULL;
     }
-  if (0 != init_token_list (tb, cb))
-    {
-      free (cb);
-      free (tb);
-      return NULL;
-    }
+  init_token_list (tb, cb);
   return tb;
 }
 
 static char_buffer *
-before_create_char_buffer (const char *data, char_source src)
+before_create_char_buffer (char *data, char_source src)
 {
   char_buffer *cb = malloc (sizeof *cb);
   if (!cb)
@@ -53,33 +49,23 @@ before_create_char_buffer (const char *data, char_source src)
   return NULL;
 }
 
-static Lexer *
-create_lexer_from_file (const char *file)
+Lexer *
+CreateLexerFromFile (char *file)
 {
   char_buffer *cb = before_create_char_buffer (file, CHAR_SOURCE_FILE);
-  if (!cb) return NULL;
+  if (!cb)
+    return NULL;
   return after_create_char_buffer (cb);
 
 }
 
-static Lexer *
-create_lexer_from_string (const char *str)
+Lexer *
+CreateLexerFromString (char *str)
 {
   char_buffer *cb = before_create_char_buffer (str, CHAR_SOURCE_STRING);
-  if (!cb) return NULL;
+  if (!cb)
+    return NULL;
   return after_create_char_buffer (cb);
-}
-
-inline Lexer *
-CreateLexerFromFile (const char *file)
-{
-  return create_lexer_from_file (file);
-}
-
-inline Lexer *
-CreateLexerFromString (const char *str)
-{
-  return create_lexer_from_string (str);
 }
 
 void
@@ -110,20 +96,14 @@ LexerGetToken (Lexer * lexer)
 }
 
 void
-LexerConsume (Lexer * lexer)
-{
-  consume_token (lexer);
-}
-
-void
 DestroyLexer (Lexer * lexer)
 {
-  destroy_char_class();
-  destroy_token_list(lexer);
-  destroy_all_dfa();
-  destroy_char_buffer(lexer->cb);
-  free(lexer->cb);
-  free(lexer);
+  destroy_char_class ();
+  destroy_token_list (lexer);
+  destroy_all_dfa ();
+  destroy_char_buffer (lexer->cb);
+  free (lexer->cb);
+  free (lexer);
 }
 
 int
@@ -137,7 +117,6 @@ LexerPrintToken (Lexer * lexer)
 	{
 	case 0:
 	  puts (format_token (tk));
-	  consume_token (lexer);
 	  continue;
 	case EOF:
 	  return 0;
@@ -147,4 +126,10 @@ LexerPrintToken (Lexer * lexer)
 	}
     }
   return 0;
+}
+
+const char *
+LexerTerminalString (Token * t)
+{
+  return token_tab[TOKEN_TYPE (t)];
 }
