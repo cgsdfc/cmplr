@@ -19,4 +19,5 @@ Token *pcontext_read_token (struct pcontext *, unsigned);
 void pcontext_shift_token (struct pcontext *, unsigned);
 void pcontext_push_node (struct pcontext *, struct node_base *);
 struct node_base *pcontext_pop_node (struct pcontext *);
+struct node_base *pcontext_top_node (struct pcontext *);
 #endif // RECURSIVE_CONTEXT_H

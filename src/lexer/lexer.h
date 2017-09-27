@@ -16,4 +16,5 @@ void LexerError (Lexer *);
 void DestroyLexer (Lexer *);
 int LexerPrintToken (Lexer *);
 const char *LexerTerminalString (Token *);
+const char **LexerTerminalTab (void);
 #endif // LEXER_LEXER_H

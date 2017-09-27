@@ -128,6 +128,12 @@ LexerPrintToken (Lexer * lexer)
   return 0;
 }
 
+const char **
+LexerTerminalTab (void)
+{
+  return token_tab;
+}
+
 const char *
 LexerTerminalString (Token * t)
 {

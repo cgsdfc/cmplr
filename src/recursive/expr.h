@@ -19,7 +19,7 @@ bool expr_is_ ## FUNC (pcontext *context) {\
       Token *t=pcontext_read_token (context,0);\
       if (terminal_is_ ## OP_FUNC (t)) {\
         pcontext_shift_token (context,1);\
-        pcontext_push_node(context, make_binary_node(TOKEN_TYPE(t),NULL));\
+        pcontext_push_node(context, make_binary_node(TOKEN_TYPE(t)));\
         if (expr_is_ ## RHS_FUNC (context)) {\
           reduce_binary(context);\
           continue;\

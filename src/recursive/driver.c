@@ -1,4 +1,5 @@
 #include "recursive/parser.h"
+#include "recursive/print_xml.h"
 
 int
 main (int argc, char **argv)
@@ -15,7 +16,11 @@ main (int argc, char **argv)
   int i = 0;
   if (ParserDoParsing (parser))
     {
+      AstNode *root = ParserGetRoot (parser);
+      xml_printer xmlp;
+      init_xml_printer (&xmlp, root, stdout, LexerTerminalTab ());
       printf ("rp: input was accepted!\n");
+      print_xml (&xmlp, argv[1]);
     }
   else
     {

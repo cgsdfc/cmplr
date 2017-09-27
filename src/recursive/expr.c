@@ -61,7 +61,7 @@ static void
 reduce_ternary (pcontext * context)
 {
   // ternary = log_or ? expr : cond;
-  ternary_node *tri = pcontext_pop_node (context);
+  ternary_node *tri = (ternary_node *) pcontext_pop_node (context);
   node_base *cond = pcontext_pop_node (context);
   node_base *expr = pcontext_pop_node (context);
   node_base *log_or = pcontext_pop_node (context);
@@ -75,7 +75,7 @@ static void
 reduce_unary (pcontext * context)
 {
   // op=0, operand=1
-  unary_node *op = pcontext_pop_node (context);
+  unary_node *op = (unary_node *) pcontext_pop_node (context);
   node_base *operand = pcontext_pop_node (context);
   op->operand = operand;
   reduce_operator (&(op->op), op->base.tag);
@@ -87,7 +87,7 @@ reduce_binary (pcontext * context)
 {
   // 0==rhs, 1==op, 2==lhs
   node_base *rhs = pcontext_pop_node (context);
-  binary_node *op = pcontext_pop_node (context);
+  binary_node *op = (binary_node *) pcontext_pop_node (context);
   TokenType *op_type = &(op->op);
   node_base *lhs = pcontext_pop_node (context);
   op->lhs = lhs;
@@ -111,7 +111,7 @@ EXPR_IS_FUNC_DECLARE (primary)	// context
     case TKT_FLOAT_CONST:
     case TKT_IDENTIFIER:
       pcontext_shift_token (context, 1);
-      pcontext_push_node (context, TO_NODE_BASE (make_terminal_node (t)));
+      pcontext_push_node (context, make_terminal_node (t));
       return true;
     default:
       if (expr_is_in_parenthesis (context))
@@ -147,9 +147,7 @@ expr_postfix_list (pcontext * context)	// context
     {
     case TKT_LEFT_BRACKET:
       pcontext_push_node (context,
-			  TO_NODE_BASE (make_binary_node
-					(TKT_BINARY_OP_SUBSCRIPT,
-					 "operator[]")));
+			  make_binary_node (TKT_BINARY_OP_SUBSCRIPT));
       if (expr_is_in_bracket (context))
 	{
 	  reduce_binary (context);	// 0==primary, 1==op[], 2==expr
@@ -157,10 +155,7 @@ expr_postfix_list (pcontext * context)	// context
 	}
       die ("postfix: expected expression after '['");
     case TKT_LEFT_PARENTHESIS:
-      pcontext_push_node (context,
-			  TO_NODE_BASE (make_binary_node
-					(TKT_BINARY_OP_INVOKE,
-					 "operator()")));
+      pcontext_push_node (context, make_binary_node (TKT_BINARY_OP_INVOKE));
       if (expr_is_optional_argument_in_parenthesis (context))
 	{
 	  reduce_binary (context);	// 0==primary, 1==op(), 2==expr opl
@@ -169,15 +164,12 @@ expr_postfix_list (pcontext * context)	// context
       die ("postfix: expected expression after '('");
     case TKT_DOT:
     case TKT_BINARY_OP_MEMBER_ARROW:
-      pcontext_push_node (context,
-			  TO_NODE_BASE (make_binary_node
-					(TOKEN_TYPE (t),
-					 "operator* | operator->")));
+      pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
       t = pcontext_read_token (context, 1);
       if (terminal_is_identifier (t))
 	{
 	  pcontext_shift_token (context, 2);	// (->|.)id
-	  pcontext_push_node (context, TO_NODE_BASE (make_terminal_node (t)));
+	  pcontext_push_node (context, make_terminal_node (t));
 	  reduce_binary (context);	// lazy reduce;
 	  return true;
 	}
@@ -185,10 +177,7 @@ expr_postfix_list (pcontext * context)	// context
     case TKT_UNARY_OP_PLUS_PLUS:	// '++'
     case TKT_UNARY_OP_MINUS_MINUS:	// '--'
       pcontext_shift_token (context, 1);
-      pcontext_push_node (context,
-			  TO_NODE_BASE (make_unary_node
-					(TOKEN_TYPE (t),
-					 "operator--(int) | operator++(int)")));
+      pcontext_push_node (context, make_unary_node (TOKEN_TYPE (t)));
       reduce_unary (context);
       return true;
     default:
@@ -220,10 +209,7 @@ EXPR_IS_FUNC_DECLARE (unary)
       pcontext_shift_token (context, 1);
       if (expr_is_cast (context))
 	{
-	  pcontext_push_node (context,
-			      TO_NODE_BASE (make_unary_node
-					    (TOKEN_TYPE (t),
-					     "operator cast")));
+	  pcontext_push_node (context, make_unary_node (TOKEN_TYPE (t)));
 	  reduce_unary (context);
 	  return true;
 	}
@@ -236,10 +222,7 @@ EXPR_IS_FUNC_DECLARE (unary)
       pcontext_shift_token (context, 1);
       if (expr_is_unary (context))
 	{
-	  pcontext_push_node (context,
-			      TO_NODE_BASE (make_unary_node
-					    (TOKEN_TYPE (t),
-					     "operator++ | operator--")));
+	  pcontext_push_node (context, make_unary_node (TOKEN_TYPE (t)));
 	  reduce_unary (context);
 	  return true;
 	}
@@ -252,9 +235,9 @@ EXPR_IS_FUNC_DECLARE (unary)
 	  if (decl_is_typename_in_parenthesis (context))
 	    {
 	      pcontext_push_node (context,
-				  TO_NODE_BASE (make_unary_node
-						(TKT_UNARY_OP_SIZOF_TYPENAME,
-						 "sizeof")));
+				  make_unary_node
+				  (TKT_UNARY_OP_SIZOF_TYPENAME));
+
 	      reduce_unary (context);	// typename, sizeof
 	      return true;
 	    }
@@ -263,9 +246,7 @@ EXPR_IS_FUNC_DECLARE (unary)
       else if (expr_is_unary (context))
 	{
 	  pcontext_push_node (context,
-			      TO_NODE_BASE (make_unary_node
-					    (TKT_UNARY_OP_SIZOF_EXPR,
-					     "sizeof")));
+			      make_unary_node (TKT_UNARY_OP_SIZOF_EXPR));
 	  reduce_unary (context);	// typename, sizeof
 	  return true;
 	}			// fail through
@@ -283,10 +264,7 @@ EXPR_IS_FUNC_DECLARE (cast)
   if (decl_is_typename_in_parenthesis (context))
     {
       // rhs in stack
-      pcontext_push_node (context,
-			  TO_NODE_BASE (make_binary_node
-					(TKT_UNARY_OP_CAST,
-					 "operator cast")));
+      pcontext_push_node (context, make_binary_node (TKT_UNARY_OP_CAST));
       // note that the cast-node is a binary node since it has rhs the typename, lhs the expr
       // and op the cast, but its op is a unary op
       if (expr_is_cast (context))
@@ -345,10 +323,7 @@ EXPR_IS_FUNC_DECLARE (assign)
       if (terminal_is_assign_op (t))
 	{
 	  pcontext_shift_token (context, 1);
-	  pcontext_push_node (context,
-			      TO_NODE_BASE (make_binary_node
-					    (TOKEN_TYPE (t),
-					     "operator assign")));
+	  pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
 	  if (expr_is_assign (context))
 	    {
 	      reduce_binary (context);
@@ -383,7 +358,7 @@ EXPR_IS_FUNC_DECLARE (argument)
 {
   if (expr_is_assign (context))
     {
-      vector_node *node = (vector_node *) make_vector_node ("argument");
+      vector_node *node = (vector_node *) make_vector_node ();
       vector_node_push_back (node, pcontext_pop_node (context));
       while (true)
 	{

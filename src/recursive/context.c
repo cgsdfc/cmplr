@@ -55,3 +55,11 @@ pcontext_pop_node (pcontext * context)
   // TODO: use vector instead
   return context->subtrees[--context->subtree_top];
 }
+
+node_base *
+pcontext_top_node (pcontext * context)
+{
+  node_base *root = context->subtrees[0];
+  assert (root != NULL);
+  return root;
+}

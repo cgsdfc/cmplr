@@ -4,6 +4,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 
 add_library(recursive
+  ./print_xml.c
   ./vector.c
   ./decl.c
   ./util.c

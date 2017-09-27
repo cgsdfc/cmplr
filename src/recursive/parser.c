@@ -34,3 +34,9 @@ ParserDoParsing (Parser * parser)
   Token *t = pcontext_read_token (parser, 0);
   return TOKEN_TYPE (t) == TKT_EOF;
 }
+
+AstNode *
+ParserGetRoot (Parser * parser)
+{
+  return pcontext_top_node (parser);
+}
