@@ -3,6 +3,7 @@
 #include "recursive/terminal.h"
 #include "recursive/util.h"
 #include "recursive/decl.h"
+
 static void
 reduce_operator (TokenType * op_type, node_tag tag)
 {
@@ -57,6 +58,8 @@ reduce_operator (TokenType * op_type, node_tag tag)
     }
 }
 
+
+
 static void
 reduce_ternary (pcontext * context)
 {
@@ -65,9 +68,9 @@ reduce_ternary (pcontext * context)
   node_base *cond = pcontext_pop_node (context);
   node_base *expr = pcontext_pop_node (context);
   node_base *log_or = pcontext_pop_node (context);
-  tri->cond = log_or;
-  tri->first = expr;
-  tri->second = cond;
+  tri->first = log_or;
+  tri->second = expr;
+  tri->third = cond;
   pcontext_push_node (context, TO_NODE_BASE (tri));
 }
 
@@ -98,7 +101,7 @@ reduce_binary (pcontext * context)
 
 EXPR_IS_FUNC_DECLARE (in_parenthesis)	// context
 {
-  return util_is_in_parentheses (expr_is_expression, context);
+  return util_is_in_parentheses (context, expr_is_expression);
 }
 
 EXPR_IS_FUNC_DECLARE (primary)	// context
@@ -125,21 +128,20 @@ EXPR_IS_FUNC_DECLARE (primary)	// context
 
 EXPR_IS_FUNC_DECLARE (in_bracket)	// context
 {
-  return util_is_in_brackets (expr_is_expression, context);
+  return util_is_in_brackets (context, expr_is_expression);
 }
 
 EXPR_IS_FUNC_DECLARE (optional_argument)	// context
 {
-  return util_is_optional (expr_is_argument, context);
+  return util_is_optional (context, expr_is_argument);
 }
 
 EXPR_IS_FUNC_DECLARE (optional_argument_in_parenthesis)	// context
 {
-  return util_is_in_parentheses (expr_is_optional_argument, context);
+  return util_is_in_parentheses (context, expr_is_optional_argument);
 }
 
-static bool
-expr_postfix_list (pcontext * context)	// context
+EXPR_IS_FUNC_DECLARE (postfix_list)
 {
   Token *t = pcontext_read_token (context, 0);
   TokenType expected;
@@ -189,7 +191,7 @@ EXPR_IS_FUNC_DECLARE (postfix)
 {
   if (expr_is_primary (context))
     {
-      util_is_list (expr_postfix_list, context);
+      util_is_list (context, expr_is_postfix_list);
       return true;
     }
   return false;
@@ -279,7 +281,8 @@ EXPR_IS_FUNC_DECLARE (cast)
 
 EXPR_IS_FUNC_DECLARE (colon)	// adaptor
 {
-  return util_is_terminal (context, TKT_COLON);
+  // discard the colon
+  return util_is_terminal (context, TKT_COLON, false /* pushing */ );
 }
 
 EXPR_IS_FUNC_DECLARE (ternary_sequence)
@@ -363,10 +366,9 @@ EXPR_IS_FUNC_DECLARE (argument)
       while (true)
 	{
 	  Token *t = pcontext_read_token (context, 0);
-	  if (!terminal_is_assign_op (t))
+	  if (!terminal_is_comma (t))
 	    {
 	      pcontext_push_node (context, TO_NODE_BASE (node));
-	      reduce_binary (context);	// 0==argument, 1==oper(), 2==unary
 	      return true;
 	    }
 	  pcontext_shift_token (context, 1);

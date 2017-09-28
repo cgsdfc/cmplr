@@ -1,36 +1,22 @@
 #include "recursive/util.h"
 #include "recursive/context.h"
-
+#include "terminal.h"		// make_terminal_node
 #include <stdarg.h>
 #define UTIL_DEFINE_SURROUND(NAME, LEFT, RIGHT)\
   static const util_surround NAME = {.left=LEFT, .right=RIGHT }
+
+typedef struct util_surround
+{
+  TokenType left, right;
+} util_surround;
 
 UTIL_DEFINE_SURROUND (PAIR_OF_PAREN, TKT_LEFT_PARENTHESIS,
 		      TKT_RIGHT_PARENTHESIS);
 UTIL_DEFINE_SURROUND (PAIR_OF_BRACE, TKT_LEFT_BRACE, TKT_RIGHT_BRACE);
 UTIL_DEFINE_SURROUND (PAIR_OF_BRACKET, TKT_LEFT_BRACKET, TKT_RIGHT_BRACKET);
 
-bool
-util_is_optional (pfunction * parse, pcontext * context)
-{
-  if (!parse (context))
-    {
-      pcontext_push_node (context, NULL);
-      // place holder;
-    }
-  return true;
-}
-
-bool
-util_is_list (pfunction * parse, pcontext * context)
-{
-  while (parse (context))
-    ;
-  return true;
-}
-
 static bool
-util_is_surrounded (pfunction * parse, pcontext * context,
+util_is_surrounded (pcontext * context, pfunction * parse,
 		    const util_surround * sur)
 {
   Token *t = pcontext_read_token (context, 0);
@@ -50,22 +36,51 @@ util_is_surrounded (pfunction * parse, pcontext * context,
   return false;
 }
 
-bool
-util_is_in_parentheses (pfunction * parse, struct pcontext * context)
+static void
+util_push_node_null (pcontext * context)
 {
-  return util_is_surrounded (parse, context, &PAIR_OF_PAREN);
+  // place holder;
+  pcontext_push_node (context, NULL);
 }
 
 bool
-util_is_in_braces (pfunction * parse, struct pcontext * context)
+util_is_optional (pcontext * context, pfunction * parse)
 {
-  return util_is_surrounded (parse, context, &PAIR_OF_BRACE);
+  if (parse (context))
+    {
+      return true;
+    }
+  util_push_node_null (context);
+  return true;
+}
+
+size_t
+util_is_list (pcontext * context, pfunction * parse)
+{
+  size_t i = 0;
+  while (parse (context))
+    {
+      i++;
+    }
+  return i;
 }
 
 bool
-util_is_in_brackets (pfunction * parse, struct pcontext * context)
+util_is_in_parentheses (pcontext * context, pfunction * parse)
 {
-  return util_is_surrounded (parse, context, &PAIR_OF_BRACKET);
+  return util_is_surrounded (context, parse, &PAIR_OF_PAREN);
+}
+
+bool
+util_is_in_braces (pcontext * context, pfunction * parse)
+{
+  return util_is_surrounded (context, parse, &PAIR_OF_BRACE);
+}
+
+bool
+util_is_in_brackets (pcontext * context, pfunction * parse)
+{
+  return util_is_surrounded (context, parse, &PAIR_OF_BRACKET);
 }
 
 bool
@@ -76,7 +91,7 @@ util_is_sequence (pcontext * context, ...)
   while (true)
     {
       pfunction *parse = va_arg (ap, pfunction *);
-      if (!parse)
+      if (NULL == parse)	// end of parser
 	{
 	  return true;
 	}
@@ -95,7 +110,7 @@ util_is_one_of (pcontext * context, ...)
   while (true)
     {
       pfunction *parse = va_arg (ap, pfunction *);
-      if (!parse)
+      if (NULL == parse)	// end of parser
 	{
 	  return false;
 	}
@@ -106,13 +121,98 @@ util_is_one_of (pcontext * context, ...)
     }
 }
 
-bool
-util_is_terminal (pcontext * context, TokenType tt)
+static bool
+util_is_terminal_success (pcontext * context, Token * t, bool pushing)
 {
-  if (tt == TOKEN_TYPE (pcontext_read_token (context, 0)))
+  pcontext_shift_token (context, 1);
+  if (pushing)
     {
-      pcontext_shift_token (context, 1);
-      return true;
+      pcontext_push_node (context, make_terminal_node (t));
+    }
+  return true;
+}
+
+Token *
+util_read_first_token (pcontext * context)
+{
+  return pcontext_read_token (context, 0);
+}
+
+void
+util_shift_one_token (pcontext * context)
+{
+  return pcontext_shift_token (context, 1);
+}
+
+bool				/* NOTICE: simple predicate can use this */
+util_is_terminal (pcontext * context, TokenType expected, bool pushing)
+{
+  Token *t = util_read_first_token (context);
+  if (expected == TOKEN_TYPE (t))
+    {
+      return util_is_terminal_success (context, t, pushing);
     }
   return false;
+}
+
+bool
+util_is_terminal_pred (struct pcontext * context, tfunction *
+		       pred, bool pushing)
+{
+  Token *t = util_read_first_token (context);
+  if (pred (t))
+    {
+      return util_is_terminal_success (context, t, pushing);
+    }
+  return false;
+}
+
+bool
+util_is_identifier (pcontext * context)
+{
+  return util_is_terminal (context, TKT_IDENTIFIER, true);
+}
+
+bool
+util_is_semicolon (pcontext * context)
+{
+  return util_is_terminal (context, TKT_SEMICOLON, false);
+}
+
+bool
+util_is_nonshortcut_or (pcontext * context, pfunction * first,
+			pfunction * second)
+{
+  // this is a non-shortcut OR operation
+  if (first (context))
+    {
+      if (second (context))
+	{
+	  // first, second;
+	  return true;
+	}
+      else
+	{
+	  // first, NULL;
+	  util_push_node_null (context);
+	  return true;
+	}
+    }
+  else
+    {
+      // NULL;
+      util_push_node_null (context);
+      if (second (context))
+	{
+	  // NULL, second;
+	  return true;
+	}
+      else
+	{
+	  // the stack is unchanged
+	  pcontext_pop_node (context);
+	  /* pop null */
+	  return false;
+	}
+    }
 }

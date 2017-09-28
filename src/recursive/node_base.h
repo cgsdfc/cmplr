@@ -11,6 +11,9 @@ typedef enum node_tag
   NODE_TAG_BINARY,
   NODE_TAG_TERNARY,
   NODE_TAG_VECTOR,
+  NODE_TAG_EXPR,
+  NODE_TAG_STMT,
+  NODE_TAG_DECL,
 } node_tag;
 
 typedef struct node_base
@@ -46,8 +49,16 @@ typedef struct vector_node
 typedef struct ternary_node
 {
   node_base base;
-  node_base *cond, *first, *second;
+  node_base *first, *second, *third;
 } ternary_node;
+
+typedef struct nullary_node
+{
+  // this node is purely used to carry
+  // syntax component info, expr, stmt, decl.
+  node_base base;
+  node_base *what;
+} nullary_node;
 
 void init_node_base (struct node_base *, node_tag);
 
@@ -59,4 +70,5 @@ node_base *make_vector_node (void);
 int vector_node_push_back (struct vector_node *, struct node_base *);
 node_base *vector_node_at (struct vector_node *, size_t);
 size_t vector_node_size (struct vector_node *);
+node_base *make_nullary_node (node_tag, node_base *);
 #endif // RECURSIVE_NODE_BASE_H

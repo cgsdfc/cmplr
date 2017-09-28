@@ -76,3 +76,15 @@ vector_node_size (struct vector_node * node)
 {
   return vector_size (&(node->vec));
 }
+
+node_base *
+make_nullary_node (node_tag tag, node_base * what)
+{
+  CREATE_NODE (nullary_node, tag);
+  if (node)
+    {
+      node->what = what;
+    }
+  return TO_NODE_BASE (node);
+}
+

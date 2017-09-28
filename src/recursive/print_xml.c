@@ -56,14 +56,14 @@ print_xml_access_tag (xml_printer * p, size_t index)
 
 static void
 print_xml_open_tag_impl (xml_printer * p, const char *tag, va_list ap,
-			       bool strict)
+			 bool strict)
 {
   const char *key, *value;
   print_xml_indent (p);
   fprintf (p->file, "<%s", tag);
   for (key = va_arg (ap, const char *),
        value = va_arg (ap, const char *);
-       key != NULL && value != NULL;
+       key != NULL || value != NULL;
        key = va_arg (ap, const char *), value = va_arg (ap, const char *))
     {
       fprintf (p->file, " %s=\"%s\"", key, value);
@@ -93,14 +93,16 @@ print_xml_open_tag (xml_printer * p, const char *tag)
 static void
 print_xml_close_tag_impl (xml_printer * p, const char *tag, bool strict)
 {
-  if (strict) {
-    print_xml_unindent (p);
-    fprintf (p->file, "</%s>", tag);
-  }
-  else {
-    fputs ("/>", p->file);
-    print_xml_unindent (p);
-  }
+  if (strict)
+    {
+      print_xml_unindent (p);
+      fprintf (p->file, "</%s>", tag);
+    }
+  else
+    {
+      fputs ("/>", p->file);
+      print_xml_unindent (p);
+    }
   print_xml_newline (p);
 }
 
@@ -196,9 +198,9 @@ print_xml_ternary (xml_printer * p)
 {
   ternary_node *ternary = (ternary_node *) XML_GET_NODE (p);
   print_xml_open_tag (p, "ternary");
-  print_xml_pair_of_tag (p, "cond", ternary->cond);
-  print_xml_pair_of_tag (p, "first", ternary->first);
-  print_xml_pair_of_tag (p, "second", ternary->second);
+  print_xml_pair_of_tag (p, "cond", ternary->first);
+  print_xml_pair_of_tag (p, "first", ternary->second);
+  print_xml_pair_of_tag (p, "second", ternary->third);
   print_xml_close_tag (p, "ternary");
 }
 
@@ -226,13 +228,14 @@ print_xml_impl (xml_printer * p)
 }
 
 static void
-print_xml_comment(xml_printer *p, const char *filename)
+print_xml_comment (xml_printer * p, const char *filename)
 {
-  fprintf(p->file, "<!-- source code %s -->" XML_NEWLINE_STR, filename);
+  fprintf (p->file, "<!-- source code %s -->" XML_NEWLINE_STR, filename);
 }
+
 void
 print_xml (struct xml_printer *p, const char *filename)
 {
-  print_xml_comment(p, filename);
+  print_xml_comment (p, filename);
   print_xml_impl (p);
 }

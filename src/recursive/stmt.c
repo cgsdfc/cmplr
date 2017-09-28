@@ -2,183 +2,228 @@
 #include "recursive/stmt.h"
 #include "recursive/expr.h"
 #include "recursive/terminal.h"
-static void
-optional_expression (Lexer * lexer)
+#include "recursive/node_base.h"
+#include "recursive/util.h"
+#include "recursive/decl.h"
+
+STMT_IS_FUNC_DECLARE (optional_expr)
 {
-  expr_is_expression (lexer);
+  // [expr]
+  return util_is_optional (context, expr_is_expression);
 }
 
 static void
-stmt_declaraton_list (Lexer * lexer)
+reduce_jump_stmt (pcontext * context, TokenType tt)
 {
-
-}
-
-static void
-stmt_statement_list (Lexer * lexer)
-{
-
+  // goto identifier
+  // return expr
+  unary_node *jump_stmt = (unary_node *) make_unary_node (tt);
+  node_base *operand = pcontext_pop_node (context);
+  jump_stmt->operand = operand;
+  pcontext_push_node (context, TO_NODE_BASE (jump_stmt));
 }
 
 STMT_IS_FUNC_DECLARE (jump)
 {
-  Token *t = LexerGetToken (lexer);
+  Token *t = pcontext_read_token (context, 0);
   switch (TOKEN_TYPE (t))
     {
-    case TKT_KW_GOTO:
-      LexerConsume (lexer);
-      t = LexerGetToken (lexer);
-      if (terminal_is_identifier (t))
+    case TKT_KW_GOTO:		// goto identifier ;
+      pcontext_shift_token (context, 0);	// goto
+      if (util_is_identifier (context))
 	{
-	  LexerConsume (lexer);
+	  reduce_jump_stmt (context, TOKEN_TYPE (t));
 	  break;
 	}
       die ("jump: expected identifier after goto token");
     case TKT_KW_CONTINUE:
     case TKT_KW_BREAK:
-      LexerConsume (lexer);
+      pcontext_shift_token (context, 1);
+      pcontext_push_node (context, make_terminal_node (t));
       break;
-    case TKT_KW_RETURN:
-      LexerConsume (lexer);
-      optional_expression (lexer);
+    case TKT_KW_RETURN:	// return [expr] ;
+      pcontext_shift_token (context, 1);
+      if (expr_is_expression (context))
+	{
+	  reduce_jump_stmt (context, TOKEN_TYPE (t));
+	}
+      else
+	{
+	  pcontext_push_node (context, make_terminal_node (t));
+	}
       break;
     default:
       die ("jump: expected goto, continue, break or return token");
     }
-  t = LexerGetToken (lexer);
-  if (terminal_is_semicolon (t))
+  if (util_is_semicolon (context))
     {
-      LexerConsume (lexer);
       return true;
     }
-  die ("jump: expected ';' at the end of statement");
+  die ("jump: expected ';' at the end of a statement");
 }
 
-static bool
-stmt_is_expr_in_parenthesis (Lexer * lexer)
+STMT_IS_FUNC_DECLARE (expr_for)
 {
-  Token *t = LexerGetToken (lexer);
-  if (terminal_is_parenthesisL (t))
-    {
-      LexerConsume (lexer);
-      if (expr_is_expression (lexer))
-	{
-	  t = LexerGetToken (lexer);
-	  if (terminal_is_parenthesisR (t))
-	    {
-	      LexerConsume (lexer);
-	      return true;
-	    }
-	}
-    }
-  return false;
+  // for ([expr];[expr];[expr]) statement 
+  return util_is_sequence (context,
+			   stmt_is_optional_expr, util_is_semicolon,
+			   stmt_is_optional_expr, util_is_semicolon,
+			   stmt_is_optional_expr, util_is_semicolon NULL);
 }
 
-static bool
-stmt_is_expr_for (Lexer * lexer)
+static void
+reduce_for_expr (pcontext * context)
 {
-  Token *t = LexerGetToken (lexer);
-  if (terminal_is_parenthesisL (t))
-    {
-      LexerConsume (lexer);
-      optional_expression (lexer);	// for (expr
-      for (int i = 0; i < 2; ++i)
-	{
-	  t = LexerGetToken (lexer);
-	  if (terminal_is_semicolon (t))
-	    {
-	      LexerConsume (lexer);
-	      optional_expression (lexer);
-	      continue;
-	    }
-	  die ("for: expected semicolon");
-	}
-      t = LexerGetToken (lexer);
-      if (terminal_is_parenthesisR (t))
-	{
-	  LexerConsume (lexer);
-	  return true;
-	}
-    }
-  return false;
+  ternary_node *tri = (ternary_node *) make_ternary_node ();
+  node_base *init = pcontext_pop_node (context);
+  node_base *cond = pcontext_pop_node (context);
+  node_base *step = pcontext_pop_node (context);
+  tri->first = init;
+  tri->second = cond;
+  tri->third = step;
+  pcontext_push_node (context, TO_NODE_BASE (tri));
 }
 
-static bool
-stmt_is_expr_do (Lexer * lexer)
+
+static void
+reduce_for_stmt (pcontext * context)
 {
-  Token *t = LexerGetToken (lexer);
-  if (terminal_is_while (t))
-    {
-      LexerConsume (lexer);
-      return stmt_is_expr_in_parenthesis (lexer);
-    }
-  return false;
+  binary_node *for_node = (binary_node *) make_binary_node (TKT_KW_FOR);
+  node_base *for_body = pcontext_pop_node (context);
+  node_base *for_expr = pcontext_pop_node (context);
+  for_node->lhs = for_expr;
+  for_node->rhs = for_body;
+  pcontext_push_node (context, TO_NODE_BASE (for_node));
+}
+
+static void
+reduce_do_while_stmt (pcontext * context)
+{
+  binary_node *do_while = (binary_node *) make_binary_node (TKT_KW_DO);
+  node_base *do_stmt = pcontext_pop_node (context);
+  node_base *while_expr = pcontext_pop_node (context);
+  do_while->lhs = do_stmt;
+  do_while->rhs = while_expr;
+  pcontext_push_node (context, TO_NODE_BASE (do_while));
+}
+
+static void
+reduce_switch_or_while (pcontext * context, TokenType tt)
+{
+  binary_node *switch_or_while = (binary_node *) make_binary_node (tt);
+  node_base *expr = pcontext_pop_node (context);
+  node_base *stmt = pcontext_pop_node (context);
+  switch_or_while->lhs = expr;
+  switch_or_while->rhs = stmt;
+  pcontext_push_node (context, TO_NODE_BASE (switch_or_while));
+}
+
+static void
+reduce_if_stmt (pcontext * context)
+{
+  unary_node *if_stmt = (unary_node *) make_unary_node (TKT_KW_IF);
+  ternary_node *if_body = (ternary_node *) make_ternary_node ();
+  node_base *else_stmt = pcontext_pop_node (context);
+  node_base *then = pcontext_pop_node (context);
+  node_base *expr = pcontext_pop_node (context);
+  if_stmt->operand = TO_NODE_BASE (if_body);
+  if_body->first = expr;
+  if_body->second = then;
+  if_body->third = else_stmt;
+  pcontext_push_node (context, TO_NODE_BASE (if_stmt));
+}
+
+STMT_IS_FUNC_DECLARE (expr_stmt_sequence)
+{
+  // '(' expr ')' statement
+  return
+    util_is_sequence (context,
+		      expr_is_in_parenthesis, stmt_is_statement, NULL);
+}
+
+STMT_IS_FUNC_DECLARE (while)
+  {
+    return util_is_terminal (context, TKT_KW_WHILE, false);
+  }
+
+STMT_IS_FUNC_DECLARE (do_while_stmt)
+{
+  // statement 'while' '(' expr ')' ';'
+  return
+    util_is_sequence (context,
+		      stmt_is_statement, stmt_is_while,
+		      expr_is_in_parenthesis, util_is_semicolon, NULL);
 }
 
 STMT_IS_FUNC_DECLARE (iterate)
 {
-  Token *t = LexerGetToken (lexer);
+  Token *t = pcontext_read_token (context, 0);
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_WHILE:
-      if (stmt_is_expr_in_parenthesis (lexer))
+      if (stmt_is_expr_stmt_sequence (context))
 	{
-	  return stmt_is_statement (lexer);
+	  reduce_switch_or_while (context, TOKEN_TYPE (t));
+	  return true;
 	}
-      die ("while: expected '(' expr ')' after 'while' token");
+      die ("while: expected '(expr) statement' after 'while' token");
     case TKT_KW_FOR:
-      if (stmt_is_expr_for (lexer))
+      if (stmt_is_expr_for (context))
 	{
-	  return stmt_is_statement (lexer);
+	  reduce_for_expr (context);
+	  if (stmt_is_statement (context))
+	    {
+	      reduce_for_stmt (context);
+	      return true;
+	    }
+	  die ("for: expected statement after 'for...'");
 	}
       die ("for: expected '(' [expr];[expr];[expr] ')' after 'for' token");
     case TKT_KW_DO:
-      if (stmt_is_statement (lexer))
+      if (stmt_is_do_while_stmt (context))
 	{
-	  if (stmt_is_expr_do (lexer))
-	    {
-	      t = LexerGetToken (lexer);
-	      if (terminal_is_semicolon (t))
-		{
-		  LexerConsume (lexer);
-		  return true;
-		}
-	      die ("do-while: expected ';' after while(expr)");
-	    }
-	  die
-	    ("do-while: expected 'while(expr);' after do '{' statement '}'");
+	  reduce_do_while_stmt (context);
+	  return true;
 	}
-      die ("do-while: expected statement after 'do'");
+      die ("do-while: expected 'while(expr);' after do '{' statement '}'");
     default:
       return false;
     }
 }
 
+STMT_IS_FUNC_DECLARE (
+		       else
+)
+{
+  return util_is_terminal (context, TKT_KW_ELSE, false /* pushing */ );
+}
+
+STMT_IS_FUNC_DECLARE (else_stmt)
+{
+  return util_is_sequence (context, stmt_is_else, stmt_is_statement);
+}
+
 STMT_IS_FUNC_DECLARE (select)
 {
-  Token *t = LexerGetToken (lexer);
+  Token *t = pcontext_read_token (context, 0);
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_IF:
-      if (stmt_is_expr_in_parenthesis (lexer))
+      if (stmt_is_expr_stmt_sequence (context))
 	{
-	  if (stmt_is_statement (lexer))
+	  if (!stmt_is_else_stmt (context))
 	    {
-	      t = LexerGetToken (lexer);
-	      if (terminal_is_else (t))
-		{
-		  LexerConsume (lexer);
-		  return stmt_is_statement (lexer);
-		}
-	      return true;
+	      pcontext_push_node (context, NULL);	// optional else
 	    }
-	  die ("if: expected statement after 'if (expr)'");
+	  reduce_if_stmt (context);
+	  return true;
 	}
-      die ("if: expected '(' expr ')' after 'if' token");
+      die ("if: expected statement after 'if (expr)'");
     case TKT_KW_SWITCH:
-      if (stmt_is_expr_in_parenthesis (lexer))
+      if (stmt_is_expr_stmt_sequence (context))
 	{
-	  return stmt_is_statement (lexer);
+	  reduce_switch_or_while (context, TOKEN_TYPE (t));
+	  return true;
 	}
       die ("switch: expected '(' expr ')' after 'switch' token");
     default:
@@ -186,51 +231,100 @@ STMT_IS_FUNC_DECLARE (select)
     }
 }
 
+static void
+reduce_label_stmt (pcontext * context, TokenType tt)
+{
+  binary_node *label_stmt = (binary_node *) make_binary_node (tt);
+  node_base *stmt = pcontext_pop_node (context);
+  node_base *label = pcontext_pop_node (context);
+  label_stmt->lhs = label;
+  label_stmt->rhs = stmt;
+  pcontext_push_node (context, TO_NODE_BASE (label_stmt));
+}
+
+STMT_IS_FUNC_DECLARE (label_stmt)
+{
+  // ':' statement
+  return util_is_sequence (context, expr_is_colon, stmt_is_statement, NULL);
+}
+
+STMT_IS_FUNC_DECLARE (case_stmt)
+{
+  return util_is_sequence (context, expr_is_constant, expr_is_colon,
+			   stmt_is_statement, NULL);
+}
+
 STMT_IS_FUNC_DECLARE (label)
 {
-  Token *t = LexerGetToken (lexer);
+  Token *t = pcontext_read_token (context, 0);
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_CASE:
-      LexerConsume (lexer);
-      if (expr_is_constant (lexer))
+      pcontext_shift_token (context, 1);
+      if (stmt_is_case_stmt (context))
 	{
-	  break;
+	  reduce_label_stmt (context, TOKEN_TYPE (t));
+	  return true;
 	}
       die ("case: expected constant expression after 'case' token");
-    case TKT_KW_DEFAULT:
-      LexerConsume (lexer);
-      break;
-    case TKT_IDENTIFIER:
-      LexerConsume (lexer);
-      break;
+    case TKT_KW_DEFAULT:	// 'default' ':'
+    case TKT_IDENTIFIER:	// identifier ':'
+      pcontext_shift_token (context, 1);
+      pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
+      if (stmt_is_label_stmt (context))
+	{
+	  reduce_label_stmt (context, TOKEN_TYPE (t));
+	  return true;
+	}
+      die ("label: expected ':' statement after 'default' token");
     default:
       return false;
     }
-  t = LexerGetToken (lexer);
-  if (terminal_is_colon (t))
-    {
-      LexerConsume (lexer);
-      return stmt_is_statement (lexer);
-    }
-  die ("label: expected ':' after default, case expr or identifier");
 }
 
 STMT_IS_FUNC_DECLARE (exprstmt)
 {
-  optional_expression (lexer);
-  Token *t = LexerGetToken (lexer);
-  if (terminal_is_semicolon (t))
+  stmt_is_optional_expr (context);
+  return util_is_semicolon (context);
+}
+
+static void
+reduce_compound (pcontext * context)
+{
+  binary_node *compound =
+    (binary_node *) make_binary_node (TKT_STMT_COMPOUND);
+  node_base *stmt_list = pcontext_pop_node (context);
+  node_base *decl_list = pcontext_pop_node (context);
+  compound->lhs = decl_list;
+  compound->rhs = stmt_list;
+  pcontext_push_node (context, TO_NODE_BASE (compound));
+}
+
+static void
+reduce_vector (pcontext * context, size_t size)
+{
+  vector_node *v = (vector_node *) make_vector_node ();
+  for (int i = 0; i < size; ++i)
     {
-      LexerConsume (lexer);
-      return true;
+      node_base *x = pcontext_pop_node (context);
+      vector_node_push_back (v, x);
     }
-  die ("exprstmt: expected ';' after expression");
+  pcontext_push_node (context, TO_NODE_BASE (v));
+}
+
+STMT_IS_FUNC_DECLARE (braceL)
+{
+  return util_is_terminal (context, TKT_LEFT_BRACE, false);
+}
+
+STMT_IS_FUNC_DECLARE (braceR)
+{
+  return util_is_terminal (context, TKT_RIGHT_BRACE, false);
 }
 
 STMT_IS_FUNC_DECLARE (statement_list)
 {
-  return util_is_list (context, statement);
+  return util_is_list (context, stmt_is_statement);
 }
 
 STMT_IS_FUNC_DECLARE (declare_list)
@@ -238,41 +332,55 @@ STMT_IS_FUNC_DECLARE (declare_list)
   return util_is_list (context, decl_is_declare);
 }
 
-STMT_IS_FUNC_DECLARE (compound_sequence)
-{
-  return util_is_sequence (context,
-			   stmt_is_declare_list,
-			   stmt_is_statement_list, NULL);
-}
-
 STMT_IS_FUNC_DECLARE (compound)
 {
-  return util_is_in_braces (context, stmt_is_compound_sequence NULL);
-}
-
-Token *t = LexerGetToken (lexer);
-if (terminal_is_braceL (t))
-  {
-    LexerConsume (lexer);
-    stmt_declaraton_list (lexer);
-    stmt_statement_list (lexer);
-    t = LexerGetToken (lexer);
-    if (terminal_is_braceR (t))
-      {
-	LexerConsume (lexer);
-	return true;
-      }
-    die ("compound: expected '}' after statement list");
-  }
-return false;
+  if (stmt_is_braceL (context))
+    {
+      size_t size = 0;
+      if (size = stmt_is_declare_list (context))
+	{
+	  reduce_vector (context, size);
+	}
+      else
+	{			// optional 
+	  pcontext_push_node (context, NULL);
+	}
+      if (size = stmt_is_statement_list (context))
+	{
+	  reduce_vector (context, size);
+	}
+      else
+	{			// optional 
+	  pcontext_push_node (context, NULL);
+	}
+      if (stmt_is_braceR (context))
+	{
+	  reduce_compound (context);
+	  return true;
+	}
+    }
+  return false;
 }
 
 STMT_IS_FUNC_DECLARE (statement)
 {
-  return util_is_one_of (context,
-			 stmt_is_iterate,
-			 stmt_is_select,
-			 stmt_is_jump,
-			 stmt_is_label,
-			 stmt_is_compound, stmt_is_exprstmt, NULL);
+  return
+    util_is_one_of (context,
+		    stmt_is_iterate,
+		    stmt_is_select,
+		    stmt_is_jump,
+		    stmt_is_label, stmt_is_compound, stmt_is_exprstmt, NULL);
+}
+
+STMT_IS_FUNC_DECLARE (statement_expt)
+{
+  if (stmt_is_statement (context))
+    {
+      // mark this guy is a statement.
+      nullary_node *stmt = (nullary_node *)
+	make_nullary_node (NODE_TAG_STMT, pcontext_pop_node (context));
+      pcontext_push_node (context, TO_NODE_BASE (stmt));
+      return true;
+    }
+  return false;
 }

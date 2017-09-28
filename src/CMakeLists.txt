@@ -5,4 +5,4 @@ add_subdirectory(lexer)
 add_subdirectory(parser)
 add_subdirectory(experiment)
 add_subdirectory(recursive)
-
+add_subdirectory(utillib)

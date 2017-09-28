@@ -1,4 +1,7 @@
 #include "recursive/parser.h"
+#include "recursive/expr.h"
+#include "recursive/stmt.h"
+#include "recursive/error.h"
 #include <stdlib.h>		// malloc
 
 Parser *

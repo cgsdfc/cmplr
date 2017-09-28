@@ -10,7 +10,7 @@ add_library(recursive
   ./util.c
   ./context.c
   ./parser.c
-# ./stmt.c
+  ./stmt.c
   ./error.c
   ./terminal.c
   ./expr.c
