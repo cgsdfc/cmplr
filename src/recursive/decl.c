@@ -22,7 +22,7 @@ DECL_IS_FUNC_DECLARE(struct_declare)
 
 DECL_IS_FUNC_DECLARE (struct_declare_list)
 {
-  return util_is_list (context, decl_is_struct_declare);
+  return util_is_list (context, decl_is_struct_declare, false /* allow_empty */);
 }
 
 
@@ -80,17 +80,17 @@ DECL_IS_FUNC_DECLARE(declarator_in_parenthesis)
 }
 DECL_IS_FUNC_DECLARE(parameter_list)
 {
-  return util_is_list(context, parameter_declare);
+
 }
 
 DECL_IS_FUNC_DECLARE(parameter_list_in_parenthesis)
 {
-  return util_is_in_parentheses(context, parameter_list);
+  return util_is_in_parentheses(context, decl_is_parameter_list);
 }
 
 DECL_IS_FUNC_DECLARE (declare)
 {
-
+  return false;
 }
 
 DECL_IS_FUNC_DECLARE(direct_declarator)
@@ -101,9 +101,23 @@ DECL_IS_FUNC_DECLARE(direct_declarator)
   if (decl_is_declarator_in_parenthesis(context)) {
     return true;
   }
-  if 
+}
 
 DECL_IS_FUNC_DECLARE (declarator)
 {
 
 }
+
+DECL_IS_FUNC_DECLARE(parameter_declare)
+{
+
+}
+DECL_IS_FUNC_DECLARE(type_qualifier_list)
+{
+
+}
+DECL_IS_FUNC_DECLARE(pointer)
+{
+
+}
+

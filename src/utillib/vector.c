@@ -1,4 +1,4 @@
-#include "recursive/vector.h"
+#include "utillib/vector.h"
 #include <stdlib.h>		// calloc free
 #include <string.h>		// memset
 #include <assert.h>
@@ -10,7 +10,7 @@ utillib_vector_empty (utillib_vector * v)
 }
 
 void
-utillib_init_vector (utillib_vector * v)
+init_vector (utillib_vector * v)
 {
   memset (v, 0, sizeof *v);
 }
@@ -29,7 +29,7 @@ utillib_vector_at (utillib_vector * v, size_t pos)
 }
 
 static int
-utillib_push_back_aux (utillib_vector * v, void *x)
+push_back_aux (utillib_vector * v, void *x)
 {
   size_t size = utillib_vector_size (v);
   size_t new_size = (size + 1 << 1);
@@ -52,7 +52,7 @@ utillib_vector_push_back (utillib_vector * v, void *x)
 {
   if (v->end == v->stor_end)
     {
-      return utillib_push_back_aux (v, x);
+      return push_back_aux (v, x);
     }
   *(v->end)++ = x;
   return 0;

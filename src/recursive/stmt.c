@@ -29,7 +29,7 @@ STMT_IS_FUNC_DECLARE (jump)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_GOTO:		// goto identifier ;
-      pcontext_shift_token (context, 0);	// goto
+      util_shift_one_token(context); // shift off the goto
       if (util_is_identifier (context))
 	{
 	  reduce_jump_stmt (context, TOKEN_TYPE (t));
@@ -53,7 +53,7 @@ STMT_IS_FUNC_DECLARE (jump)
 	}
       break;
     default:
-      die ("jump: expected goto, continue, break or return token");
+      return false;
     }
   if (util_is_semicolon (context))
     {
@@ -62,13 +62,18 @@ STMT_IS_FUNC_DECLARE (jump)
   die ("jump: expected ';' at the end of a statement");
 }
 
-STMT_IS_FUNC_DECLARE (expr_for)
+STMT_IS_FUNC_DECLARE (expr_for_seq)
 {
   // for ([expr];[expr];[expr]) statement 
   return util_is_sequence (context,
 			   stmt_is_optional_expr, util_is_semicolon,
 			   stmt_is_optional_expr, util_is_semicolon,
-			   stmt_is_optional_expr, util_is_semicolon NULL);
+			   stmt_is_optional_expr, NULL);
+}
+
+STMT_IS_FUNC_DECLARE(expr_for)
+{
+  return util_is_in_parentheses(context,stmt_is_expr_for_seq);
 }
 
 static void
@@ -111,8 +116,8 @@ static void
 reduce_switch_or_while (pcontext * context, TokenType tt)
 {
   binary_node *switch_or_while = (binary_node *) make_binary_node (tt);
-  node_base *expr = pcontext_pop_node (context);
   node_base *stmt = pcontext_pop_node (context);
+  node_base *expr = pcontext_pop_node (context);
   switch_or_while->lhs = expr;
   switch_or_while->rhs = stmt;
   pcontext_push_node (context, TO_NODE_BASE (switch_or_while));
@@ -133,7 +138,7 @@ reduce_if_stmt (pcontext * context)
   pcontext_push_node (context, TO_NODE_BASE (if_stmt));
 }
 
-STMT_IS_FUNC_DECLARE (expr_stmt_sequence)
+STMT_IS_FUNC_DECLARE (expr_stmt_seq)
 {
   // '(' expr ')' statement
   return
@@ -161,13 +166,15 @@ STMT_IS_FUNC_DECLARE (iterate)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_WHILE:
-      if (stmt_is_expr_stmt_sequence (context))
+      util_shift_one_token(context);
+      if (stmt_is_expr_stmt_seq(context))
 	{
 	  reduce_switch_or_while (context, TOKEN_TYPE (t));
 	  return true;
 	}
       die ("while: expected '(expr) statement' after 'while' token");
     case TKT_KW_FOR:
+      util_shift_one_token(context);
       if (stmt_is_expr_for (context))
 	{
 	  reduce_for_expr (context);
@@ -180,6 +187,7 @@ STMT_IS_FUNC_DECLARE (iterate)
 	}
       die ("for: expected '(' [expr];[expr];[expr] ')' after 'for' token");
     case TKT_KW_DO:
+      util_shift_one_token(context);
       if (stmt_is_do_while_stmt (context))
 	{
 	  reduce_do_while_stmt (context);
@@ -209,23 +217,25 @@ STMT_IS_FUNC_DECLARE (select)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_IF:
-      if (stmt_is_expr_stmt_sequence (context))
+      util_shift_one_token(context);
+      if (stmt_is_expr_stmt_seq(context))
 	{
 	  if (!stmt_is_else_stmt (context))
 	    {
-	      pcontext_push_node (context, NULL);	// optional else
+              util_push_node_null(context);
 	    }
 	  reduce_if_stmt (context);
 	  return true;
 	}
-      die ("if: expected statement after 'if (expr)'");
+      die ("select: if: expected '(expr) statement' after 'if' token");
     case TKT_KW_SWITCH:
-      if (stmt_is_expr_stmt_sequence (context))
+      util_shift_one_token(context);
+      if (stmt_is_expr_stmt_seq(context))
 	{
 	  reduce_switch_or_while (context, TOKEN_TYPE (t));
 	  return true;
 	}
-      die ("switch: expected '(' expr ')' after 'switch' token");
+      die ("select: switch: expected '(' expr ')' statemnet after 'switch' token");
     default:
       return false;
     }
@@ -242,21 +252,22 @@ reduce_label_stmt (pcontext * context, TokenType tt)
   pcontext_push_node (context, TO_NODE_BASE (label_stmt));
 }
 
-STMT_IS_FUNC_DECLARE (label_stmt)
+STMT_IS_FUNC_DECLARE (colon_stmt_seq)
 {
   // ':' statement
-  return util_is_sequence (context, expr_is_colon, stmt_is_statement, NULL);
+  return util_is_sequence (context, util_is_colon, stmt_is_statement, NULL);
 }
 
 STMT_IS_FUNC_DECLARE (case_stmt)
 {
-  return util_is_sequence (context, expr_is_constant, expr_is_colon,
+  return util_is_sequence (context, expr_is_constant, util_is_colon,
 			   stmt_is_statement, NULL);
 }
 
 STMT_IS_FUNC_DECLARE (label)
 {
   Token *t = pcontext_read_token (context, 0);
+  Token *lookahead;
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_CASE:
@@ -266,17 +277,27 @@ STMT_IS_FUNC_DECLARE (label)
 	  reduce_label_stmt (context, TOKEN_TYPE (t));
 	  return true;
 	}
-      die ("case: expected constant expression after 'case' token");
+      die ("case: expected constant expression ':' statement after 'case' token");
     case TKT_KW_DEFAULT:	// 'default' ':'
+      util_shift_one_token(context);
+      if (stmt_is_colon_stmt_seq(context))
+      {
+        unary_node * default_stmt = (unary_node*) make_unary_node(TOKEN_TYPE(t));
+        default_stmt->operand = pcontext_pop_node(context);
+        pcontext_push_node(context, TO_NODE_BASE(default_stmt));
+        return true;
+      } die ("lable: expected ':' statement after 'default' token");
     case TKT_IDENTIFIER:	// identifier ':'
-      pcontext_shift_token (context, 1);
-      pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
-      if (stmt_is_label_stmt (context))
-	{
-	  reduce_label_stmt (context, TOKEN_TYPE (t));
-	  return true;
-	}
-      die ("label: expected ':' statement after 'default' token");
+      // need lookahead to resolve
+      lookahead=pcontext_read_token(context, 1);
+      if (terminal_is_colon(lookahead)) {
+        pcontext_shift_token(context, 2);
+        pcontext_push_node(context, make_terminal_node(t)); // push identifier
+        if (stmt_is_statement(context)) {
+          reduce_label_stmt(context, TOKEN_TYPE(t));
+          return true;
+        } die ("label: expected statement after 'identifier:'");
+      } // fall through
     default:
       return false;
     }
@@ -300,18 +321,6 @@ reduce_compound (pcontext * context)
   pcontext_push_node (context, TO_NODE_BASE (compound));
 }
 
-static void
-reduce_vector (pcontext * context, size_t size)
-{
-  vector_node *v = (vector_node *) make_vector_node ();
-  for (int i = 0; i < size; ++i)
-    {
-      node_base *x = pcontext_pop_node (context);
-      vector_node_push_back (v, x);
-    }
-  pcontext_push_node (context, TO_NODE_BASE (v));
-}
-
 STMT_IS_FUNC_DECLARE (braceL)
 {
   return util_is_terminal (context, TKT_LEFT_BRACE, false);
@@ -324,44 +333,31 @@ STMT_IS_FUNC_DECLARE (braceR)
 
 STMT_IS_FUNC_DECLARE (statement_list)
 {
-  return util_is_list (context, stmt_is_statement);
+  return util_is_list (context, stmt_is_statement, true /* allow_empty */);
 }
 
 STMT_IS_FUNC_DECLARE (declare_list)
 {
-  return util_is_list (context, decl_is_declare);
+  return util_is_list (context, decl_is_declare, true /* allow_empty */);
+}
+
+STMT_IS_FUNC_DECLARE(compound_seq)
+{
+  return util_is_sequence(context, 
+      stmt_is_statement_list,
+      stmt_is_declare_list,
+      NULL);
 }
 
 STMT_IS_FUNC_DECLARE (compound)
 {
-  if (stmt_is_braceL (context))
-    {
-      size_t size = 0;
-      if (size = stmt_is_declare_list (context))
-	{
-	  reduce_vector (context, size);
-	}
-      else
-	{			// optional 
-	  pcontext_push_node (context, NULL);
-	}
-      if (size = stmt_is_statement_list (context))
-	{
-	  reduce_vector (context, size);
-	}
-      else
-	{			// optional 
-	  pcontext_push_node (context, NULL);
-	}
-      if (stmt_is_braceR (context))
-	{
-	  reduce_compound (context);
-	  return true;
-	}
-    }
+  if (util_is_in_braces(context, stmt_is_compound_seq))
+  {
+    reduce_compound(context);
+    return true;
+  }
   return false;
 }
-
 STMT_IS_FUNC_DECLARE (statement)
 {
   return
@@ -372,15 +368,3 @@ STMT_IS_FUNC_DECLARE (statement)
 		    stmt_is_label, stmt_is_compound, stmt_is_exprstmt, NULL);
 }
 
-STMT_IS_FUNC_DECLARE (statement_expt)
-{
-  if (stmt_is_statement (context))
-    {
-      // mark this guy is a statement.
-      nullary_node *stmt = (nullary_node *)
-	make_nullary_node (NODE_TAG_STMT, pcontext_pop_node (context));
-      pcontext_push_node (context, TO_NODE_BASE (stmt));
-      return true;
-    }
-  return false;
-}

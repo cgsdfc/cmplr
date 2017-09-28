@@ -1,11 +1,7 @@
 project(recursive C)
 include_directories(${CMAKE_SOURCE_DIR})
-
-
-
 add_library(recursive
   ./print_xml.c
-  ./vector.c
   ./decl.c
   ./util.c
   ./context.c
@@ -18,6 +14,7 @@ add_library(recursive
 )
 target_link_libraries(recursive
   lexer_lib
+  utillib
 )
 
 add_executable(rp ./driver.c)

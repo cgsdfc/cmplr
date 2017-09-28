@@ -29,10 +29,29 @@ bool expr_is_ ## FUNC (pcontext *context) {\
   } return false;\
 }
 
-
+// =============================================== //
+// unary_expr := postfix_expr
+// | unary_op cast_expr
+// | -- unary_expr
+// | ++ unary_expr
+// | sizeof '(' typename ')
+// | sizeof unary_expr
+// ;
 EXPR_IS_FUNC_DECLARE (unary);
+// =============================================== //
+// cast_expr := unary_expr
+// | '(' typename ')' cast_expr
+// ;
 EXPR_IS_FUNC_DECLARE (cast);
+// =============================================== //
 EXPR_IS_FUNC_DECLARE (postfix);
+// =============================================== //
+// primary_expr := string
+// | identifier
+// | float
+// | int
+// | '(' expr ')'
+// ;
 EXPR_IS_FUNC_DECLARE (primary);
 EXPR_IS_FUNC_DECLARE (expression);
 EXPR_IS_FUNC_DECLARE (additive);
@@ -45,9 +64,19 @@ EXPR_IS_FUNC_DECLARE (bit_or);
 EXPR_IS_FUNC_DECLARE (bit_xor);
 EXPR_IS_FUNC_DECLARE (log_or);
 EXPR_IS_FUNC_DECLARE (log_and);
+// =============================================== //
+// assign_expr := condition_expr
+// | unary_expr assign_op assign_expr
+// ;
 EXPR_IS_FUNC_DECLARE (assign);
-EXPR_IS_FUNC_DECLARE (argument);
+EXPR_IS_FUNC_DECLARE (arglist);
+// =============================================== //
+// condition_expr := logical_or_expr [ '?' expr ':' condition ]
+// ;
 EXPR_IS_FUNC_DECLARE (condition);
+// =============================================== //
+// constant_expr = condition_expr
+// ;
 EXPR_IS_FUNC_DECLARE (constant);
 EXPR_IS_FUNC_DECLARE (in_parenthesis);
 EXPR_IS_FUNC_DECLARE (colon);

@@ -62,29 +62,25 @@ make_vector_node ()
 int
 vector_node_push_back (vector_node * node, node_base * x)
 {
-  return vector_push_back (&(node->vec), x);
+  return utillib_vector_push_back (&(node->vec), x);
 }
 
 node_base *
 vector_node_at (struct vector_node * node, size_t pos)
 {
-  return vector_at (&(node->vec), pos);
+  return utillib_vector_at (&(node->vec), pos);
 }
 
 size_t
 vector_node_size (struct vector_node * node)
 {
-  return vector_size (&(node->vec));
+  return utillib_vector_size (&(node->vec));
 }
 
 node_base *
-make_nullary_node (node_tag tag, node_base * what)
+make_nullary_node (void)
 {
-  CREATE_NODE (nullary_node, tag);
-  if (node)
-    {
-      node->what = what;
-    }
-  return TO_NODE_BASE (node);
+  static node_base nullary = { .tag=NODE_TAG_NULLARY };
+  return &nullary;
 }
 

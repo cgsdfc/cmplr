@@ -32,7 +32,7 @@ DestroyParser (Parser * parser)
 bool
 ParserDoParsing (Parser * parser)
 {
-  if (!expr_is_expression (parser))
+  if (!stmt_is_statement (parser))
     return false;
   Token *t = pcontext_read_token (parser, 0);
   return TOKEN_TYPE (t) == TKT_EOF;

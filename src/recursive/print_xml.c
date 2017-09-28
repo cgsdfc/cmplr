@@ -198,10 +198,16 @@ print_xml_ternary (xml_printer * p)
 {
   ternary_node *ternary = (ternary_node *) XML_GET_NODE (p);
   print_xml_open_tag (p, "ternary");
-  print_xml_pair_of_tag (p, "cond", ternary->first);
-  print_xml_pair_of_tag (p, "first", ternary->second);
-  print_xml_pair_of_tag (p, "second", ternary->third);
+  print_xml_pair_of_tag (p, "first", ternary->first);
+  print_xml_pair_of_tag (p, "second", ternary->second);
+  print_xml_pair_of_tag (p, "third", ternary->third);
   print_xml_close_tag (p, "ternary");
+}
+
+static void
+print_xml_nullary(xml_printer *p)
+{
+  print_xml_unstrict_tag(p, "nullary",NULL,NULL);
 }
 
 static void
@@ -223,6 +229,9 @@ print_xml_impl (xml_printer * p)
       break;
     case NODE_TAG_TERNARY:
       print_xml_ternary (p);
+      break;
+    case NODE_TAG_NULLARY:
+      print_xml_nullary (p);
       break;
     }
 }

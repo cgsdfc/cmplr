@@ -36,11 +36,11 @@ util_is_surrounded (pcontext * context, pfunction * parse,
   return false;
 }
 
-static void
+void
 util_push_node_null (pcontext * context)
 {
   // place holder;
-  pcontext_push_node (context, NULL);
+  pcontext_push_node (context, make_nullary_node());
 }
 
 bool
@@ -54,15 +54,31 @@ util_is_optional (pcontext * context, pfunction * parse)
   return true;
 }
 
-size_t
-util_is_list (pcontext * context, pfunction * parse)
+static void
+reduce_vector (pcontext * context, size_t size)
+{
+  vector_node *v = (vector_node *) make_vector_node ();
+  for (int i = 0; i < size; ++i)
+    {
+      node_base *x = pcontext_pop_node (context);
+      vector_node_push_back (v, x);
+    }
+  pcontext_push_node (context, TO_NODE_BASE (v));
+}
+
+bool
+util_is_list (pcontext * context, pfunction * parse, bool allow_empty)
 {
   size_t i = 0;
   while (parse (context))
     {
       i++;
     }
-  return i;
+  if (i) { reduce_vector(context, i); return true; }
+  if (allow_empty) {
+    util_push_node_null(context); // place holder;
+    return true;
+  } return false;
 }
 
 bool
@@ -216,3 +232,16 @@ util_is_nonshortcut_or (pcontext * context, pfunction * first,
 	}
     }
 }
+
+bool util_is_comma (pcontext *context)
+{
+  // discard the colon
+  return util_is_terminal (context, TKT_COMMA, false /* pushing */ );
+}
+
+bool util_is_colon(pcontext *context)
+{
+  // discard the colon
+  return util_is_terminal (context, TKT_COLON, false /* pushing */ );
+}
+
