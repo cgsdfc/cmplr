@@ -163,11 +163,12 @@ EXPR_IS_FUNC_DECLARE (postfix_list)
 	}
       die ("postfix: expected expression after '['");
     case TKT_LEFT_PARENTHESIS:
+      util_shift_one_token(context);
       pcontext_push_node (context, make_binary_node (TKT_BINARY_OP_INVOKE));
-      t = pcontext_read_token (context, 1);	// lookahead for ')'
+      t = pcontext_read_token (context, 0);	// lookahead for ')'
       if (terminal_is_parenthesisR (t))	// ()
 	{
-	  pcontext_shift_token (context, 2);	// shift away the '(' and ')';
+	  pcontext_shift_token (context, 1);
 	  util_push_node_null (context);
 	  reduce_binary (context);
 	  return true;
@@ -421,20 +422,22 @@ EXPR_IS_FUNC_DECLARE (comma_assign_seq)
   return util_is_sequence (context, util_is_comma, expr_is_assign, NULL);
 }
 
-EXPR_IS_FUNC_DECLARE (comma_assign_list)
-{
-  return util_is_list (context, expr_is_comma_assign_seq, true	/* allow_empty */
-    );
-}
-
 // note: arglist is in fact a list of 
 // assign expr separated by comma.
 EXPR_IS_FUNC_DECLARE (arglist)
 {
-  if (expr_is_assign (context))
-    {
-      expr_is_comma_assign_list (context);
-      return true;
-    }
-  return false;
+  if (expr_is_assign(context)) {
+    vector_node *v = (vector_node*) make_vector_node();
+    vector_node_push_back(v, pcontext_pop_node(context));
+    while (util_is_comma(context)) {
+      if (expr_is_assign(context)) {
+        vector_node_push_back(v, pcontext_pop_node(context));
+        continue;
+      } die("arglist: expected assign expression after ',' token");
+    } 
+    pcontext_push_node(context, TO_NODE_BASE(v));
+    return true;
+  }
+  util_push_node_null(context);
+  return true;
 }
