@@ -4,6 +4,12 @@
 #include "utillib/vector.h"
 #define TO_NODE_BASE(NODE) ((node_base*) NODE)
 #define NODE_TAG(NODE) ((NODE)->tag)
+#define FOR_NODE_HEAD(NODE) ((ternary_node*) ((NODE)->lhs))
+#define FOR_NODE_BODY(NODE) ((NODE)->rhs)
+#define BINARY_NODE_OP(NODE) ((NODE)->op)
+#define UNARY_NODE_OP(NODE) ((NODE)->op)
+#define IF_NODE_BODY(NODE) ((ternary_node*) (NODE)->operand)
+
 typedef enum node_tag
 {
   NODE_TAG_NULLARY,
@@ -61,6 +67,11 @@ typedef struct nullary_node
   node_base *what;
 } nullary_node;
 
+// the visitor function
+typedef void (vfunction) (void* /* visitor_data */, void * /* node_base */);
+// the visitor factory function
+typedef vfunction *(vfactory) (void *, node_tag);
+
 void init_node_base (struct node_base *, node_tag);
 node_base *make_ternary_node (void);
 node_base *make_unary_node (TokenType);
@@ -72,4 +83,5 @@ node_base *vector_node_at (struct vector_node *, size_t);
 size_t vector_node_size (struct vector_node *);
 void destroy_vector_node (struct vector_node *);
 node_base *make_nullary_node (void); 
+void visit_node(void *, struct node_base *, vfactory *);
 #endif // RECURSIVE_NODE_BASE_H

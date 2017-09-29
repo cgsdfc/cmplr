@@ -90,3 +90,12 @@ destroy_vector_node(vector_node *node)
   utillib_vector_destroy(&(node->vec));
   free (node);
 }
+
+
+void
+visit_node (void *data, node_base *node, vfactory *factory)
+{
+  node_tag tag=NODE_TAG (node);
+  vfunction *visit = factory(data, tag);
+  return visit(data, node);
+}
