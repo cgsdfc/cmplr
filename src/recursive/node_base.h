@@ -70,5 +70,6 @@ node_base *make_vector_node (void);
 int vector_node_push_back (struct vector_node *, struct node_base *);
 node_base *vector_node_at (struct vector_node *, size_t);
 size_t vector_node_size (struct vector_node *);
+void destroy_vector_node (struct vector_node *);
 node_base *make_nullary_node (void); 
 #endif // RECURSIVE_NODE_BASE_H

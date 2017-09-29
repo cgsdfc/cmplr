@@ -84,3 +84,9 @@ make_nullary_node (void)
   return &nullary;
 }
 
+void 
+destroy_vector_node(vector_node *node)
+{
+  utillib_vector_destroy(&(node->vec));
+  free (node);
+}

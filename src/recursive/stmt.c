@@ -305,8 +305,17 @@ STMT_IS_FUNC_DECLARE (label)
 
 STMT_IS_FUNC_DECLARE (exprstmt)
 {
-  stmt_is_optional_expr (context);
-  return util_is_semicolon (context);
+  // cannot push null until the semicolon is seen
+  bool has_expr = expr_is_expression(context);
+  bool has_semicolon = util_is_semicolon(context);
+  if (has_expr) {
+    if (has_semicolon) {
+      return true;
+    } die("exprstmt: expected ';' after expression");
+  } else if (has_semicolon) {
+    util_push_node_null(context);
+    return true;
+  } return false;
 }
 
 static void
@@ -349,7 +358,8 @@ STMT_IS_FUNC_DECLARE(compound_seq)
       NULL);
 }
 
-STMT_IS_FUNC_DECLARE (compound)
+static
+STMT_IS_FUNC_DECLARE (compound_impl1)
 {
   if (util_is_in_braces(context, stmt_is_compound_seq))
   {
@@ -358,13 +368,46 @@ STMT_IS_FUNC_DECLARE (compound)
   }
   return false;
 }
+
+static
+STMT_IS_FUNC_DECLARE (compound_impl2)
+{
+  Token * t1 = pcontext_read_token(context, 0);
+  Token * t2 = pcontext_read_token(context, 1);
+  // not a compound
+  if (!terminal_is_braceL(t1)) { return false; }
+  // '{' '}' special case
+  if (terminal_is_braceR(t2)) {
+    pcontext_shift_token(context, 2);
+    util_push_node_null(context);
+    return true;
+  }
+  util_shift_one_token(context); 
+  stmt_is_declare_list(context);
+  stmt_is_statement_list(context);
+  t2=pcontext_read_token(context,0);
+  if (terminal_is_braceR(t2)) {
+    util_shift_one_token(context); 
+    reduce_compound(context);
+    return true;
+  } 
+  die("compound: expected '}' at the end of statement list");
+}
+
+STMT_IS_FUNC_DECLARE(compound)
+{
+  return stmt_is_compound_impl2(context);
+}
 STMT_IS_FUNC_DECLARE (statement)
 {
   return
-    util_is_one_of (context,
-		    stmt_is_iterate,
-		    stmt_is_select,
-		    stmt_is_jump,
-		    stmt_is_label, stmt_is_compound, stmt_is_exprstmt, NULL);
+  util_is_one_of (context,
+      stmt_is_iterate,
+      stmt_is_select,
+      stmt_is_jump,
+      stmt_is_label,
+      stmt_is_compound,
+      // no prefix comes last
+      stmt_is_exprstmt, NULL);
 }
 

@@ -12,5 +12,6 @@ void utillib_init_vector (utillib_vector *);
 size_t utillib_vector_size (utillib_vector *);
 void *utillib_vector_at (utillib_vector *, size_t);
 int utillib_vector_push_back (utillib_vector *, void *);
+void utillib_vector_destroy (utillib_vector *);
 
 #endif // UTILLIB_VECTOR_H

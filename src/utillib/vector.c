@@ -57,3 +57,10 @@ utillib_vector_push_back (utillib_vector * v, void *x)
   *(v->end)++ = x;
   return 0;
 }
+
+void
+utillib_vector_destroy (utillib_vector *v)
+{
+  free (v->begin);
+}
+
