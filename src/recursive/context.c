@@ -10,6 +10,7 @@ pcontext_init (pcontext * context, Lexer * lexer)
     }
   memset (context, 0, sizeof *context);
   context->lexer = lexer;
+  utillib_vector_init (&(context->subtrees));
   return 0;
 }
 
@@ -41,25 +42,24 @@ pcontext_shift_token (pcontext * context, unsigned num)
     }
 }
 
-void
+  void
 pcontext_push_node (pcontext * context, node_base * node)
 {
-  assert (context->subtree_top < PCONTEXT_MAX_SUBTREE);
-  context->subtrees[context->subtree_top++] = node;
+  int r;
+  r= utillib_vector_push_back(&(context->subtrees), node);
+  assert (r == 0);
 }
 
 node_base *
 pcontext_pop_node (pcontext * context)
 {
-  assert (context->subtree_top > 0);
-  // TODO: use vector instead
-  return context->subtrees[--context->subtree_top];
+  return utillib_vector_pop_back(&(context->subtrees));
 }
 
 node_base *
 pcontext_top_node (pcontext * context)
 {
-  node_base *root = context->subtrees[context->subtree_top - 1];
+  node_base *root = utillib_vector_back(&(context->subtrees));
   assert (root != NULL);
   return root;
 }
@@ -67,7 +67,7 @@ pcontext_top_node (pcontext * context)
 size_t
 pcontext_node_size (pcontext * context)
 {
-  return context->subtree_top;
+  return utillib_vector_size(&(context->subtrees));
 }
 
 bool pcontext_get_unary_ontop(struct pcontext* context)

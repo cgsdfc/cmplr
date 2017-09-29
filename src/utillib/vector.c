@@ -10,7 +10,7 @@ utillib_vector_empty (utillib_vector * v)
 }
 
 void
-init_vector (utillib_vector * v)
+utillib_vector_init(utillib_vector * v)
 {
   memset (v, 0, sizeof *v);
 }
@@ -62,5 +62,19 @@ void
 utillib_vector_destroy (utillib_vector *v)
 {
   free (v->begin);
+}
+
+void *
+utillib_vector_pop_back(utillib_vector *v)
+{
+  assert (utillib_vector_size(v) > 0);
+  return * -- (v->end);
+}
+
+void *
+utillib_vector_back(utillib_vector *v)
+{
+  assert (utillib_vector_size(v) > 0);
+  return * (v->end-1);
 }
 

@@ -56,6 +56,7 @@ node_base *
 make_vector_node ()
 {
   CREATE_NODE (vector_node, NODE_TAG_VECTOR);
+  utillib_vector_init (&(node->vec));
   return TO_NODE_BASE (node);
 }
 

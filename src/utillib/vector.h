@@ -8,10 +8,11 @@ typedef struct utillib_vector
 } utillib_vector;
 
 bool utillib_vector_empty (utillib_vector *);
-void utillib_init_vector (utillib_vector *);
+void utillib_vector_init (utillib_vector *);
 size_t utillib_vector_size (utillib_vector *);
 void *utillib_vector_at (utillib_vector *, size_t);
 int utillib_vector_push_back (utillib_vector *, void *);
 void utillib_vector_destroy (utillib_vector *);
-
+void * utillib_vector_pop_back(utillib_vector *);
+void * utillib_vector_back(utillib_vector *);
 #endif // UTILLIB_VECTOR_H

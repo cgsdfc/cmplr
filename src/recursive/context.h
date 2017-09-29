@@ -1,6 +1,7 @@
 #ifndef RECURSIVE_CONTEXT_H
 #define RECURSIVE_CONTEXT_H
 #include "lexer/lexer.h"
+#include "utillib/vector.h"
 // the interface between Lexer and RParser
 struct node_base;
 #define PCONTEXT_MAX_LOOKAHEAD 4
@@ -36,8 +37,7 @@ typedef struct pcontext
 {
   Lexer *lexer;
   Token *lookaheads[PCONTEXT_MAX_LOOKAHEAD + 5];
-  struct node_base *subtrees[PCONTEXT_MAX_SUBTREE];
-  int subtree_top;
+  utillib_vector subtrees;
   bool unary_on_top;
 } pcontext;
 

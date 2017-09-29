@@ -303,6 +303,11 @@ print_xml_compound_stmt (xml_printer * p, binary_node * compound)
 {
   print_xml_binary_impl (p, compound, "compound", "decl_list", "stmt_list");
 }
+static void
+print_xml_case_stmt(xml_printer *p, binary_node * case_node)
+{
+  print_xml_binary_impl (p, case_node, "case", "const-expr", "stmt");
+}
 
 static void
 print_xml_binary (void *printer, void *node)
@@ -310,6 +315,9 @@ print_xml_binary (void *printer, void *node)
   binary_node *binary = node;
   switch (BINARY_NODE_OP (binary))
     {
+    case TKT_KW_CASE:
+      print_xml_case_stmt(printer, binary);
+      break;
     case TKT_KW_FOR:
       print_xml_for_stmt (printer, binary);
       break;
