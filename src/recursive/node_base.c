@@ -80,22 +80,22 @@ vector_node_size (struct vector_node * node)
 node_base *
 make_nullary_node (void)
 {
-  static node_base nullary = { .tag=NODE_TAG_NULLARY };
+  static node_base nullary = {.tag = NODE_TAG_NULLARY };
   return &nullary;
 }
 
-void 
-destroy_vector_node(vector_node *node)
+void
+destroy_vector_node (vector_node * node)
 {
-  utillib_vector_destroy(&(node->vec));
+  utillib_vector_destroy (&(node->vec));
   free (node);
 }
 
 
 void
-visit_node (void *data, node_base *node, vfactory *factory)
+visit_node (void *data, node_base * node, vfactory * factory)
 {
-  node_tag tag=NODE_TAG (node);
-  vfunction *visit = factory(data, tag);
-  return visit(data, node);
+  node_tag tag = NODE_TAG (node);
+  vfunction *visit = factory (data, tag);
+  return visit (data, node);
 }

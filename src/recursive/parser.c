@@ -41,6 +41,6 @@ ParserDoParsing (Parser * parser)
 AstNode *
 ParserGetRoot (Parser * parser)
 {
-  assert (pcontext_node_size(parser) == 1);
+  assert (pcontext_node_size (parser) == 1);
   return pcontext_top_node (parser);
 }

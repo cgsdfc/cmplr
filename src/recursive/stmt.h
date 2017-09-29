@@ -16,7 +16,7 @@ struct pcontext;
 // return_node = terminal | unary (expr) ;
 // break_node, continue_node = terminal ;
 //
-STMT_IS_FUNC_DECLARE (jump); 
+STMT_IS_FUNC_DECLARE (jump);
 
 //=====================================================//
 // iterate_stmt := for ( [expr] ; [expr] ; [expr] ) stmt

@@ -59,14 +59,24 @@ pcontext_pop_node (pcontext * context)
 node_base *
 pcontext_top_node (pcontext * context)
 {
-  node_base *root = context->subtrees[context->subtree_top-1];
+  node_base *root = context->subtrees[context->subtree_top - 1];
   assert (root != NULL);
   return root;
 }
 
-size_t 
-pcontext_node_size(pcontext *context)
+size_t
+pcontext_node_size (pcontext * context)
 {
   return context->subtree_top;
+}
+
+bool pcontext_get_unary_ontop(struct pcontext* context)
+{
+  return context->unary_on_top;
+}
+
+void pcontext_set_unary_ontop(struct pcontext *context, bool ontop)
+{
+  context->unary_on_top=ontop;
 }
 

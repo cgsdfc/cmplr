@@ -40,7 +40,7 @@ void
 util_push_node_null (pcontext * context)
 {
   // place holder;
-  pcontext_push_node (context, make_nullary_node());
+  pcontext_push_node (context, make_nullary_node ());
 }
 
 bool
@@ -65,12 +65,18 @@ util_is_list (pcontext * context, pfunction * parse, bool allow_empty)
       vector_node_push_back (v, x);
       i++;
     }
-  if (i) { pcontext_push_node(context, TO_NODE_BASE(v)); return true; }
-  if (allow_empty) {
-    util_push_node_null(context); // place holder;
-    destroy_vector_node(v);
-    return true;
-  } return false;
+  if (i)
+    {
+      pcontext_push_node (context, TO_NODE_BASE (v));
+      return true;
+    }
+  if (allow_empty)
+    {
+      util_push_node_null (context);	// place holder;
+      destroy_vector_node (v);
+      return true;
+    }
+  return false;
 }
 
 bool
@@ -225,15 +231,16 @@ util_is_nonshortcut_or (pcontext * context, pfunction * first,
     }
 }
 
-bool util_is_comma (pcontext *context)
+bool
+util_is_comma (pcontext * context)
 {
   // discard the colon
   return util_is_terminal (context, TKT_COMMA, false /* pushing */ );
 }
 
-bool util_is_colon(pcontext *context)
+bool
+util_is_colon (pcontext * context)
 {
   // discard the colon
   return util_is_terminal (context, TKT_COLON, false /* pushing */ );
 }
-

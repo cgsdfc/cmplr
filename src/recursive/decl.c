@@ -15,14 +15,15 @@ DECL_IS_FUNC_DECLARE (type_qualifier)
   return util_is_terminal_pred (context, terminal_is_type_qualifier, true);
 }
 
-DECL_IS_FUNC_DECLARE(struct_declare)
+DECL_IS_FUNC_DECLARE (struct_declare)
 {
 
 }
 
 DECL_IS_FUNC_DECLARE (struct_declare_list)
 {
-  return util_is_list (context, decl_is_struct_declare, false /* allow_empty */);
+  return util_is_list (context, decl_is_struct_declare,
+		       false /* allow_empty */ );
 }
 
 
@@ -52,7 +53,8 @@ DECL_IS_FUNC_DECLARE (struct_or_union_specifier)
     case TKT_KW_STRUCT:
       util_shift_one_token (context);
       if (util_is_nonshortcut_or
-	  (context, util_is_identifier, decl_is_struct_declare_list_in_braces))
+	  (context, util_is_identifier,
+	   decl_is_struct_declare_list_in_braces))
 	{
 	  binary_node *struct_or_union =
 	    (binary_node *) make_binary_node (TOKEN_TYPE (t));
@@ -74,18 +76,20 @@ DECL_IS_FUNC_DECLARE (typename_in_parenthesis)
 {
   return util_is_in_parentheses (context, decl_is_typename);
 }
-DECL_IS_FUNC_DECLARE(declarator_in_parenthesis)
+
+DECL_IS_FUNC_DECLARE (declarator_in_parenthesis)
 {
-  return util_is_in_parentheses(context, decl_is_declarator);
+  return util_is_in_parentheses (context, decl_is_declarator);
 }
-DECL_IS_FUNC_DECLARE(parameter_list)
+
+DECL_IS_FUNC_DECLARE (parameter_list)
 {
 
 }
 
-DECL_IS_FUNC_DECLARE(parameter_list_in_parenthesis)
+DECL_IS_FUNC_DECLARE (parameter_list_in_parenthesis)
 {
-  return util_is_in_parentheses(context, decl_is_parameter_list);
+  return util_is_in_parentheses (context, decl_is_parameter_list);
 }
 
 DECL_IS_FUNC_DECLARE (declare)
@@ -93,14 +97,16 @@ DECL_IS_FUNC_DECLARE (declare)
   return false;
 }
 
-DECL_IS_FUNC_DECLARE(direct_declarator)
+DECL_IS_FUNC_DECLARE (direct_declarator)
 {
-  if (util_is_identifier(context)) {
-    return true;
-  }
-  if (decl_is_declarator_in_parenthesis(context)) {
-    return true;
-  }
+  if (util_is_identifier (context))
+    {
+      return true;
+    }
+  if (decl_is_declarator_in_parenthesis (context))
+    {
+      return true;
+    }
 }
 
 DECL_IS_FUNC_DECLARE (declarator)
@@ -108,16 +114,17 @@ DECL_IS_FUNC_DECLARE (declarator)
 
 }
 
-DECL_IS_FUNC_DECLARE(parameter_declare)
-{
-
-}
-DECL_IS_FUNC_DECLARE(type_qualifier_list)
-{
-
-}
-DECL_IS_FUNC_DECLARE(pointer)
+DECL_IS_FUNC_DECLARE (parameter_declare)
 {
 
 }
 
+DECL_IS_FUNC_DECLARE (type_qualifier_list)
+{
+
+}
+
+DECL_IS_FUNC_DECLARE (pointer)
+{
+
+}

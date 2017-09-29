@@ -68,7 +68,8 @@ typedef struct nullary_node
 } nullary_node;
 
 // the visitor function
-typedef void (vfunction) (void* /* visitor_data */, void * /* node_base */);
+typedef void (vfunction) (void * /* visitor_data */ ,
+			  void * /* node_base */ );
 // the visitor factory function
 typedef vfunction *(vfactory) (void *, node_tag);
 
@@ -82,6 +83,6 @@ int vector_node_push_back (struct vector_node *, struct node_base *);
 node_base *vector_node_at (struct vector_node *, size_t);
 size_t vector_node_size (struct vector_node *);
 void destroy_vector_node (struct vector_node *);
-node_base *make_nullary_node (void); 
-void visit_node(void *, struct node_base *, vfactory *);
+node_base *make_nullary_node (void);
+void visit_node (void *, struct node_base *, vfactory *);
 #endif // RECURSIVE_NODE_BASE_H

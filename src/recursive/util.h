@@ -7,7 +7,7 @@ struct pcontext;
 typedef bool (tfunction) (Token *);
 typedef bool (pfunction) (struct pcontext *);
 bool util_is_optional (struct pcontext *, pfunction *);
-bool util_is_list (struct pcontext *, pfunction *, bool /* allow_empty */);
+bool util_is_list (struct pcontext *, pfunction *, bool /* allow_empty */ );
 bool util_is_sequence (struct pcontext *, ...);
 bool util_is_one_of (struct pcontext *, ...);
 bool util_is_in_parentheses (struct pcontext *, pfunction *);
@@ -21,7 +21,7 @@ void util_shift_one_token (struct pcontext *);
 bool util_is_identifier (struct pcontext *);
 bool util_is_semicolon (struct pcontext *);
 bool util_is_nonshortcut_or (struct pcontext *, pfunction *, pfunction *);
-bool util_is_colon(struct pcontext *);
+bool util_is_colon (struct pcontext *);
 bool util_is_comma (struct pcontext *);
 void util_push_node_null (struct pcontext *);
 #endif // RECURSIVE_UTIL_H

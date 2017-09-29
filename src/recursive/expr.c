@@ -117,9 +117,11 @@ EXPR_IS_FUNC_DECLARE (primary)	// context
       pcontext_push_node (context, make_terminal_node (t));
       return true;
     case TKT_LEFT_PARENTHESIS:
-      if (expr_is_in_parenthesis (context)) {
-        return true;
-      } die
+      if (expr_is_in_parenthesis (context))
+	{
+	  return true;
+	}
+      die
 	("primary: expected string, int, float, identifier or expression in parenthesis");
     default:
       return false;
@@ -140,9 +142,10 @@ EXPR_IS_FUNC_DECLARE (optional_arglist_in_parenthesis)	// context
 {
   return util_is_in_parentheses (context, expr_is_optional_arglist);
 }
-EXPR_IS_FUNC_DECLARE(parenthesisR)
+
+EXPR_IS_FUNC_DECLARE (parenthesisR)
 {
-  return util_is_terminal(context, TKT_RIGHT_PARENTHESIS, false); // pushing
+  return util_is_terminal (context, TKT_RIGHT_PARENTHESIS, false);	// pushing
 }
 
 EXPR_IS_FUNC_DECLARE (postfix_list)
@@ -161,22 +164,24 @@ EXPR_IS_FUNC_DECLARE (postfix_list)
       die ("postfix: expected expression after '['");
     case TKT_LEFT_PARENTHESIS:
       pcontext_push_node (context, make_binary_node (TKT_BINARY_OP_INVOKE));
-      t=pcontext_read_token(context, 1); // lookahead for ')'
-      if (terminal_is_parenthesisR(t)) // ()
-      {
-        pcontext_shift_token(context,2); // shift away the '(' and ')';
-        util_push_node_null(context);
-        reduce_binary(context);
-        return true;
-      }
-      if (expr_is_arglist(context))
+      t = pcontext_read_token (context, 1);	// lookahead for ')'
+      if (terminal_is_parenthesisR (t))	// ()
 	{
-          if(expr_is_parenthesisR(context))
-          {
-            reduce_binary (context);	// 0==primary, 1==op(), 2==expr opl
-            return true;
-          } die("postfix: expected ')' after expression");
-        } die ("postfix: expected argument list after '('");
+	  pcontext_shift_token (context, 2);	// shift away the '(' and ')';
+	  util_push_node_null (context);
+	  reduce_binary (context);
+	  return true;
+	}
+      if (expr_is_arglist (context))
+	{
+	  if (expr_is_parenthesisR (context))
+	    {
+	      reduce_binary (context);	// 0==primary, 1==op(), 2==expr opl
+	      return true;
+	    }
+	  die ("postfix: expected ')' after expression");
+	}
+      die ("postfix: expected argument list after '('");
     case TKT_DOT:
     case TKT_BINARY_OP_MEMBER_ARROW:
       pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
@@ -204,8 +209,8 @@ EXPR_IS_FUNC_DECLARE (postfix)
 {
   if (expr_is_primary (context))
     {
-      while (expr_is_postfix_list(context))
-        ;
+      while (expr_is_postfix_list (context))
+	;
       return true;
     }
   return false;
@@ -214,6 +219,10 @@ EXPR_IS_FUNC_DECLARE (postfix)
 
 EXPR_IS_FUNC_DECLARE (unary)
 {
+  if (pcontext_get_unary_ontop(context)) {
+    pcontext_set_unary_ontop(context, false);
+    return true;
+  }
   if (expr_is_postfix (context))
     {
       return true;
@@ -294,28 +303,28 @@ EXPR_IS_FUNC_DECLARE (cast)
 }
 
 static
-EXPR_IS_FUNC_DECLARE(question)
+EXPR_IS_FUNC_DECLARE (question)
 {
-  return util_is_terminal(context, TKT_QUESTION, false /* pushing */);
+  return util_is_terminal (context, TKT_QUESTION, false /* pushing */ );
 }
 
 static
 EXPR_IS_FUNC_DECLARE (ternary_seq)
 {
-  return util_is_sequence (context,
-                           expr_is_question, // '?'
-			   expr_is_expression, // expr
-			   util_is_colon, // ':'
-                           expr_is_condition, // condition
-                           NULL);
+  return util_is_sequence (context, expr_is_question,	// '?'
+			   expr_is_expression,	// expr
+			   util_is_colon,	// ':'
+			   expr_is_condition,	// condition
+			   NULL);
 }
+
 EXPR_IS_FUNC_DECLARE (condition)
 {
   if (expr_is_log_or (context))
     {
-      if (expr_is_ternary_seq(context))
+      if (expr_is_ternary_seq (context))
 	{
-          pcontext_push_node(context, make_ternary_node());
+	  pcontext_push_node (context, make_ternary_node ());
 	  reduce_ternary (context);
 	}
       return true;
@@ -323,29 +332,71 @@ EXPR_IS_FUNC_DECLARE (condition)
   return false;
 }
 
+enum {
+  ASSIGN_IMPL_ONE_NODE,
+  ASSIGN_IMPL_THREE_NODE,
+  ASSIGN_IMPL_ERROR,
+};
+
+int
+expr_is_assign_impl(pcontext * context)
+{
+  // return ASSIGN_IMPL_ONE_NODE if
+  // only a unary was seen.
+  // return ASSIGN_IMPL_THREE_NODE if
+  // the stack has at least 3 node and
+  // the top node is unary to be reduce
+  // to a condition.
+  // return ASSIGN_IMPL_ERROR if after
+  // seeing an assign_op we failed to
+  // see a unary, thus, this tailing 
+  // cannot be reduce to condition.
+  // assuming there is a already a unary
+  // on the top of the node_stack
+  Token *t=util_read_first_token(context);
+  if (!terminal_is_assign_op(t)) {
+    return ASSIGN_IMPL_ONE_NODE;
+  }
+  util_shift_one_token(context);
+  pcontext_push_node(context, make_binary_node(TOKEN_TYPE(t)));
+  while (expr_is_unary(context)) {
+    Token *lookahead=util_read_first_token(context);
+    if (terminal_is_assign_op(lookahead)) {
+      util_shift_one_token(context);
+        reduce_binary(context);
+        pcontext_push_node(context, make_binary_node(TOKEN_TYPE(lookahead)));
+        continue;
+      } 
+      return ASSIGN_IMPL_THREE_NODE;
+    } 
+  return ASSIGN_IMPL_ERROR;
+}
+
+
 
 EXPR_IS_FUNC_DECLARE (assign)
 {
-  if (expr_is_condition (context))
-    {
+  if (expr_is_unary(context)) {
+    int r= (expr_is_assign_impl(context));
+    if (r==ASSIGN_IMPL_ERROR) {
+        die("assign: expected unary after assign operator");
+    }
+    pcontext_set_unary_ontop(context, true);
+    if (expr_is_condition(context)) {
+      switch (r) {
+        case ASSIGN_IMPL_ONE_NODE:
+          // the unary on the top was reduce to condition
+          // directly.
+          break;
+        case ASSIGN_IMPL_THREE_NODE:
+          // there is at least 3 nodes on top of stack;
+          // and the top one is reduced to condition;
+          reduce_binary(context);
+          break;
+      }
       return true;
-    }
-  if (expr_is_unary (context))
-    {
-      Token *t = pcontext_read_token (context, 0);
-      if (terminal_is_assign_op (t))
-	{
-	  pcontext_shift_token (context, 1);
-	  pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
-	  if (expr_is_assign (context))
-	    {
-	      reduce_binary (context);
-	      return true;
-	    }
-	  die ("assign: expected assign expression after assign operator");
-	}
-      die ("assign: expected assign operator after unary expression");
-    }
+    } die("assign: expected condition expression after assign operator");
+  }
   return false;
 }
 
@@ -365,20 +416,15 @@ EXPR_IS_FUNC_DECLARE (constant)
   return expr_is_condition (context);
 }
 
-EXPR_IS_FUNC_DECLARE(comma_assign_seq)
+EXPR_IS_FUNC_DECLARE (comma_assign_seq)
 {
-  return util_is_sequence(context,
-      util_is_comma,
-      expr_is_assign,
-      NULL);
+  return util_is_sequence (context, util_is_comma, expr_is_assign, NULL);
 }
 
-EXPR_IS_FUNC_DECLARE(comma_assign_list)
+EXPR_IS_FUNC_DECLARE (comma_assign_list)
 {
-  return util_is_list(context,
-      expr_is_comma_assign_seq,
-      true /* allow_empty */
-      );
+  return util_is_list (context, expr_is_comma_assign_seq, true	/* allow_empty */
+    );
 }
 
 // note: arglist is in fact a list of 
@@ -387,7 +433,7 @@ EXPR_IS_FUNC_DECLARE (arglist)
 {
   if (expr_is_assign (context))
     {
-      expr_is_comma_assign_list(context);
+      expr_is_comma_assign_list (context);
       return true;
     }
   return false;

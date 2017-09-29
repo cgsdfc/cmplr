@@ -29,7 +29,7 @@ STMT_IS_FUNC_DECLARE (jump)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_GOTO:		// goto identifier ;
-      util_shift_one_token(context); // shift off the goto
+      util_shift_one_token (context);	// shift off the goto
       if (util_is_identifier (context))
 	{
 	  reduce_jump_stmt (context, TOKEN_TYPE (t));
@@ -71,18 +71,18 @@ STMT_IS_FUNC_DECLARE (expr_for_seq)
 			   stmt_is_optional_expr, NULL);
 }
 
-STMT_IS_FUNC_DECLARE(expr_for)
+STMT_IS_FUNC_DECLARE (expr_for)
 {
-  return util_is_in_parentheses(context,stmt_is_expr_for_seq);
+  return util_is_in_parentheses (context, stmt_is_expr_for_seq);
 }
 
 static void
 reduce_for_expr (pcontext * context)
 {
   ternary_node *tri = (ternary_node *) make_ternary_node ();
-  node_base *init = pcontext_pop_node (context);
-  node_base *cond = pcontext_pop_node (context);
   node_base *step = pcontext_pop_node (context);
+  node_base *cond = pcontext_pop_node (context);
+  node_base *init = pcontext_pop_node (context);
   tri->first = init;
   tri->second = cond;
   tri->third = step;
@@ -166,15 +166,15 @@ STMT_IS_FUNC_DECLARE (iterate)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_WHILE:
-      util_shift_one_token(context);
-      if (stmt_is_expr_stmt_seq(context))
+      util_shift_one_token (context);
+      if (stmt_is_expr_stmt_seq (context))
 	{
 	  reduce_switch_or_while (context, TOKEN_TYPE (t));
 	  return true;
 	}
       die ("while: expected '(expr) statement' after 'while' token");
     case TKT_KW_FOR:
-      util_shift_one_token(context);
+      util_shift_one_token (context);
       if (stmt_is_expr_for (context))
 	{
 	  reduce_for_expr (context);
@@ -187,7 +187,7 @@ STMT_IS_FUNC_DECLARE (iterate)
 	}
       die ("for: expected '(' [expr];[expr];[expr] ')' after 'for' token");
     case TKT_KW_DO:
-      util_shift_one_token(context);
+      util_shift_one_token (context);
       if (stmt_is_do_while_stmt (context))
 	{
 	  reduce_do_while_stmt (context);
@@ -217,25 +217,26 @@ STMT_IS_FUNC_DECLARE (select)
   switch (TOKEN_TYPE (t))
     {
     case TKT_KW_IF:
-      util_shift_one_token(context);
-      if (stmt_is_expr_stmt_seq(context))
+      util_shift_one_token (context);
+      if (stmt_is_expr_stmt_seq (context))
 	{
 	  if (!stmt_is_else_stmt (context))
 	    {
-              util_push_node_null(context);
+	      util_push_node_null (context);
 	    }
 	  reduce_if_stmt (context);
 	  return true;
 	}
       die ("select: if: expected '(expr) statement' after 'if' token");
     case TKT_KW_SWITCH:
-      util_shift_one_token(context);
-      if (stmt_is_expr_stmt_seq(context))
+      util_shift_one_token (context);
+      if (stmt_is_expr_stmt_seq (context))
 	{
 	  reduce_switch_or_while (context, TOKEN_TYPE (t));
 	  return true;
 	}
-      die ("select: switch: expected '(' expr ')' statemnet after 'switch' token");
+      die
+	("select: switch: expected '(' expr ')' statemnet after 'switch' token");
     default:
       return false;
     }
@@ -277,27 +278,33 @@ STMT_IS_FUNC_DECLARE (label)
 	  reduce_label_stmt (context, TOKEN_TYPE (t));
 	  return true;
 	}
-      die ("case: expected constant expression ':' statement after 'case' token");
+      die
+	("case: expected constant expression ':' statement after 'case' token");
     case TKT_KW_DEFAULT:	// 'default' ':'
-      util_shift_one_token(context);
-      if (stmt_is_colon_stmt_seq(context))
-      {
-        unary_node * default_stmt = (unary_node*) make_unary_node(TOKEN_TYPE(t));
-        default_stmt->operand = pcontext_pop_node(context);
-        pcontext_push_node(context, TO_NODE_BASE(default_stmt));
-        return true;
-      } die ("lable: expected ':' statement after 'default' token");
+      util_shift_one_token (context);
+      if (stmt_is_colon_stmt_seq (context))
+	{
+	  unary_node *default_stmt =
+	    (unary_node *) make_unary_node (TOKEN_TYPE (t));
+	  default_stmt->operand = pcontext_pop_node (context);
+	  pcontext_push_node (context, TO_NODE_BASE (default_stmt));
+	  return true;
+	}
+      die ("lable: expected ':' statement after 'default' token");
     case TKT_IDENTIFIER:	// identifier ':'
       // need lookahead to resolve
-      lookahead=pcontext_read_token(context, 1);
-      if (terminal_is_colon(lookahead)) {
-        pcontext_shift_token(context, 2);
-        pcontext_push_node(context, make_terminal_node(t)); // push identifier
-        if (stmt_is_statement(context)) {
-          reduce_label_stmt(context, TOKEN_TYPE(t));
-          return true;
-        } die ("label: expected statement after 'identifier:'");
-      } // fall through
+      lookahead = pcontext_read_token (context, 1);
+      if (terminal_is_colon (lookahead))
+	{
+	  pcontext_shift_token (context, 2);
+	  pcontext_push_node (context, make_terminal_node (t));	// push identifier
+	  if (stmt_is_statement (context))
+	    {
+	      reduce_label_stmt (context, TOKEN_TYPE (t));
+	      return true;
+	    }
+	  die ("label: expected statement after 'identifier:'");
+	}			// fall through
     default:
       return false;
     }
@@ -306,16 +313,22 @@ STMT_IS_FUNC_DECLARE (label)
 STMT_IS_FUNC_DECLARE (exprstmt)
 {
   // cannot push null until the semicolon is seen
-  bool has_expr = expr_is_expression(context);
-  bool has_semicolon = util_is_semicolon(context);
-  if (has_expr) {
-    if (has_semicolon) {
+  bool has_expr = expr_is_expression (context);
+  bool has_semicolon = util_is_semicolon (context);
+  if (has_expr)
+    {
+      if (has_semicolon)
+	{
+	  return true;
+	}
+      die ("exprstmt: expected ';' after expression");
+    }
+  else if (has_semicolon)
+    {
+      util_push_node_null (context);
       return true;
-    } die("exprstmt: expected ';' after expression");
-  } else if (has_semicolon) {
-    util_push_node_null(context);
-    return true;
-  } return false;
+    }
+  return false;
 }
 
 static void
@@ -342,72 +355,74 @@ STMT_IS_FUNC_DECLARE (braceR)
 
 STMT_IS_FUNC_DECLARE (statement_list)
 {
-  return util_is_list (context, stmt_is_statement, true /* allow_empty */);
+  return util_is_list (context, stmt_is_statement, true /* allow_empty */ );
 }
 
 STMT_IS_FUNC_DECLARE (declare_list)
 {
-  return util_is_list (context, decl_is_declare, true /* allow_empty */);
+  return util_is_list (context, decl_is_declare, true /* allow_empty */ );
 }
 
-STMT_IS_FUNC_DECLARE(compound_seq)
+STMT_IS_FUNC_DECLARE (compound_seq)
 {
-  return util_is_sequence(context, 
-      stmt_is_statement_list,
-      stmt_is_declare_list,
-      NULL);
+  return util_is_sequence (context,
+			   stmt_is_statement_list,
+			   stmt_is_declare_list, NULL);
 }
 
 static
 STMT_IS_FUNC_DECLARE (compound_impl1)
 {
-  if (util_is_in_braces(context, stmt_is_compound_seq))
-  {
-    reduce_compound(context);
-    return true;
-  }
+  if (util_is_in_braces (context, stmt_is_compound_seq))
+    {
+      reduce_compound (context);
+      return true;
+    }
   return false;
 }
 
 static
 STMT_IS_FUNC_DECLARE (compound_impl2)
 {
-  Token * t1 = pcontext_read_token(context, 0);
-  Token * t2 = pcontext_read_token(context, 1);
+  Token *t1 = pcontext_read_token (context, 0);
+  Token *t2 = pcontext_read_token (context, 1);
   // not a compound
-  if (!terminal_is_braceL(t1)) { return false; }
+  if (!terminal_is_braceL (t1))
+    {
+      return false;
+    }
   // '{' '}' special case
-  if (terminal_is_braceR(t2)) {
-    pcontext_shift_token(context, 2);
-    util_push_node_null(context);
-    return true;
-  }
-  util_shift_one_token(context); 
-  stmt_is_declare_list(context);
-  stmt_is_statement_list(context);
-  t2=pcontext_read_token(context,0);
-  if (terminal_is_braceR(t2)) {
-    util_shift_one_token(context); 
-    reduce_compound(context);
-    return true;
-  } 
-  die("compound: expected '}' at the end of statement list");
+  if (terminal_is_braceR (t2))
+    {
+      pcontext_shift_token (context, 2);
+      util_push_node_null (context);
+      return true;
+    }
+  util_shift_one_token (context);
+  stmt_is_declare_list (context);
+  stmt_is_statement_list (context);
+  t2 = pcontext_read_token (context, 0);
+  if (terminal_is_braceR (t2))
+    {
+      util_shift_one_token (context);
+      reduce_compound (context);
+      return true;
+    }
+  die ("compound: expected '}' at the end of statement list");
 }
 
-STMT_IS_FUNC_DECLARE(compound)
+STMT_IS_FUNC_DECLARE (compound)
 {
-  return stmt_is_compound_impl2(context);
+  return stmt_is_compound_impl2 (context);
 }
+
 STMT_IS_FUNC_DECLARE (statement)
 {
   return
-  util_is_one_of (context,
-      stmt_is_iterate,
-      stmt_is_select,
-      stmt_is_jump,
-      stmt_is_label,
-      stmt_is_compound,
-      // no prefix comes last
-      stmt_is_exprstmt, NULL);
+    util_is_one_of (context,
+		    stmt_is_iterate,
+		    stmt_is_select,
+		    stmt_is_jump, stmt_is_label, stmt_is_compound,
+		    // no prefix comes last
+		    stmt_is_exprstmt, NULL);
 }
-
