@@ -2,7 +2,7 @@ project(recursive C)
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(recursive
   ./print_xml.c
-  ./decl.c
+# ./decl.c
   ./util.c
   ./context.c
   ./parser.c

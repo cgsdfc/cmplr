@@ -7,37 +7,19 @@ struct node_base;
 #define PCONTEXT_MAX_LOOKAHEAD 4
 #define PCONTEXT_MAX_SUBTREE 10
 
-typedef enum symbol_type
+typedef enum pcontext_prefix
 {
-  SYMBOL_UNKOWN,
-  EXPR_PRIMARY,
-  EXPR_POSTFIX,
-  EXPR_UNARY,
-  EXPR_CAST,
-  EXPR_MUL,
-  EXPR_ADD,
-  EXPR_SHIFT,
-  EXPR_REL,
-  EXPR_EQUAL,
-  EXPR_BIT_AND,
-  EXPR_BIT_XOR,
-  EXPR_BIT_BIT_OR,
-  EXPR_LOG_AND,
-  EXPR_LOG_OR,
-  EXPR_COND, 
-  EXPR_ASSIGN,
-  EXPR_EXPR,
-} symbol_type;
-
-enum {
-  EXPR_CONST=EXPR_COND,
-};
+  PCONTEXT_UNARY,
+  PCONTEXT_DESP_DECLR,
+  PCONTEXT_N_PREFIX,
+} pcontext_prefix;
 
 typedef struct pcontext
 {
   Lexer *lexer;
   Token *lookaheads[PCONTEXT_MAX_LOOKAHEAD + 5];
   utillib_vector subtrees;
+  bool prefix[PCONTEXT_N_PREFIX];
   bool unary_on_top;
 } pcontext;
 
@@ -50,4 +32,6 @@ struct node_base *pcontext_top_node (struct pcontext *);
 size_t pcontext_node_size (struct pcontext *);
 bool pcontext_get_unary_ontop(struct pcontext*);
 void pcontext_set_unary_ontop(struct pcontext *, bool);
+void pcontext_mark_prefix(struct pcontext *, pcontext_prefix, bool);
+bool pcontext_test_prefix(struct pcontext *, pcontext_prefix);
 #endif // RECURSIVE_CONTEXT_H

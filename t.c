@@ -1,2 +1,8 @@
-int i;
-i * = 1;
+extern int short i;
+extern int a(){
+
+
+}
+
+int main(){
+}

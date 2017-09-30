@@ -80,3 +80,14 @@ void pcontext_set_unary_ontop(struct pcontext *context, bool ontop)
   context->unary_on_top=ontop;
 }
 
+void pcontext_mark_prefix(struct pcontext * context, pcontext_prefix prefix, bool value)
+{
+  assert (prefix >=0 && prefix < PCONTEXT_N_PREFIX);
+  context->prefix[prefix]=value;
+}
+
+bool pcontext_test_prefix(struct pcontext * context, pcontext_prefix prefix)
+{
+  assert (prefix >=0 && prefix < PCONTEXT_N_PREFIX);
+  return context->prefix[prefix];
+}
