@@ -1,30 +1,6 @@
 #include "recursive/terminal.h"
 
-static TokenType
-get_toke_type_from_node (void *node /* terminal_node */ )
-{
-  if (node)
-    {
-      terminal_node *tnode = node;
-      return TOKEN_TYPE (tnode->token);
-    }
-  return TKT_UNKNOWN;
-}
 
-/* bool terminal_parser(parser_info * info) */
-/* { */
-/*   Token * tk = LexerGetToken(info->lexer); */
-/*   void * node; */
-/*   if (tk) { */
-/*     node = make_terminal_node(tk); */
-/*     if (node) { */
-/*       info->node=node; */
-/*       LexerConsume(info->lexer); */
-/*       return true; */
-/*     } */
-/*   } */
-/*   return false; */
-/* } */
 TERMINAL_DEFINE_PRED (int_const, TKT_INT_CONST);
 TERMINAL_DEFINE_PRED (string_const, TKT_STRING_CONST);
 TERMINAL_DEFINE_PRED (float_const, TKT_FLOAT_CONST);
@@ -121,11 +97,23 @@ TERMINAL_DECLARE_PRED (assign_op)
 {
   TokenType tt = TOKEN_TYPE (t);
   return tt == TKT_BINARY_OP_ASSIGN || tt == TKT_BINARY_OP_MUL_ASSIGN
-    || tt == TKT_BINARY_OP_DIV_ASSIGN || tt == TKT_BINARY_OP_ADD_ASSIGN
-    || tt == TKT_BINARY_OP_SUB_ASSIGN
-    || tt == TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN
-    || tt == TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN
-    || tt == TKT_BINARY_OP_BIT_AND_ASSIGN
-    || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN
-    || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN;
+  || tt == TKT_BINARY_OP_DIV_ASSIGN || tt == TKT_BINARY_OP_ADD_ASSIGN
+  || tt == TKT_BINARY_OP_SUB_ASSIGN
+  || tt == TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN
+  || tt == TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN
+  || tt == TKT_BINARY_OP_BIT_AND_ASSIGN
+  || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN
+  || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN;
 }
+TERMINAL_DECLARE_PRED(integral_keyword)
+{
+  TokenType tt=TOKEN_TYPE(t);
+  return 
+  tt == TKT_KW_SIGNED||
+  tt == TKT_KW_INT||
+  tt == TKT_KW_LONG||
+  tt == TKT_KW_CHAR||
+  tt == TKT_KW_SHORT||
+  tt == TKT_KW_UNSIGNED;
+}
+

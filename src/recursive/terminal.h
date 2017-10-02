@@ -41,5 +41,6 @@ TERMINAL_DECLARE_PRED (assign_op);
 TERMINAL_DECLARE_PRED (question);
 TERMINAL_DECLARE_PRED (type_qualifier);
 TERMINAL_DECLARE_PRED (storage_specifier);
+TERMINAL_DECLARE_PRED(integral_keyword);
 
 #endif // RECURSIVE_TERMINAL_H
