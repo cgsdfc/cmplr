@@ -463,4 +463,9 @@ EXPR_IS_FUNC_DECLARE (comma_assign_seq)
 {
   return util_is_sequence (context, util_is_comma, expr_is_assign, NULL);
 }
+EXPR_IS_FUNC_DEFINE(optional_constant)
+{
+  return util_is_optional(context,
+      expr_is_constant);
+}
 

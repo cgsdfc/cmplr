@@ -1,4 +1,5 @@
 #include "recursive/struct.h"
+#include "recursive/specifier.h"
 #include "recursive/decltor.h"
 #include "recursive/expr.h" // for expr_is_constant
 

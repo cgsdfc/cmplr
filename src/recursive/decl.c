@@ -22,7 +22,7 @@ static void reduce_func(pcontext *context)
   func->first=declare_specifier;
   func->second=decltor;
   func->third=compound_stmt;
-  func_def->operand=func;
+  func_def->operand=TO_NODE_BASE(func);
   pcontext_push_node(context, TO_NODE_BASE(func_def));
 }
 
@@ -136,7 +136,7 @@ DECL_IS_FUNC_DECLARE (typename)
     ternary->first=sqlist;
     ternary->second=p;
     ternary->third=abs;
-    pcontext_push_node(context, ternary);
+    pcontext_push_node(context, TO_NODE_BASE(ternary));
     return true;
   }
   return false;

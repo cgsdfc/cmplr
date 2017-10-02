@@ -26,4 +26,11 @@ bool util_is_comma (struct pcontext *);
 void util_push_node_null (struct pcontext *);
 bool util_is_separated_list(struct pcontext *, TokenType , pfunction *, bool /* allow_empty */);
 bool util_is_comma_sep_list(struct pcontext *, pfunction *, bool );
+bool util_is_braceL(struct pcontext *);
+bool util_is_braceR(struct pcontext *);
+bool util_is_bracketL(struct pcontext *);
+bool util_is_bracketR(struct pcontext *);
+bool util_is_parenthesisL(struct pcontext *);
+bool util_is_parenthesisR(struct pcontext *);
+#endif // RECURSIVE_UTIL_H
 #endif // RECURSIVE_UTIL_H

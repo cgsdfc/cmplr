@@ -11,6 +11,7 @@ typedef enum pcontext_prefix
 {
   PCONTEXT_UNARY,
   PCONTEXT_DESP_DECLR,
+  PCONTEXT_POINTER,
   PCONTEXT_N_PREFIX,
 } pcontext_prefix;
 
