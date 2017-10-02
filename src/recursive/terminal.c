@@ -97,23 +97,21 @@ TERMINAL_DECLARE_PRED (assign_op)
 {
   TokenType tt = TOKEN_TYPE (t);
   return tt == TKT_BINARY_OP_ASSIGN || tt == TKT_BINARY_OP_MUL_ASSIGN
-  || tt == TKT_BINARY_OP_DIV_ASSIGN || tt == TKT_BINARY_OP_ADD_ASSIGN
-  || tt == TKT_BINARY_OP_SUB_ASSIGN
-  || tt == TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN
-  || tt == TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN
-  || tt == TKT_BINARY_OP_BIT_AND_ASSIGN
-  || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN
-  || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN;
-}
-TERMINAL_DECLARE_PRED(integral_keyword)
-{
-  TokenType tt=TOKEN_TYPE(t);
-  return 
-  tt == TKT_KW_SIGNED||
-  tt == TKT_KW_INT||
-  tt == TKT_KW_LONG||
-  tt == TKT_KW_CHAR||
-  tt == TKT_KW_SHORT||
-  tt == TKT_KW_UNSIGNED;
+    || tt == TKT_BINARY_OP_DIV_ASSIGN || tt == TKT_BINARY_OP_ADD_ASSIGN
+    || tt == TKT_BINARY_OP_SUB_ASSIGN
+    || tt == TKT_BINARY_OP_BIT_LEFT_SHIFT_ASSIGN
+    || tt == TKT_BINARY_OP_BIT_RIGHT_SHIFT_ASSIGN
+    || tt == TKT_BINARY_OP_BIT_AND_ASSIGN
+    || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN
+    || tt == TKT_BINARY_OP_BIT_XOR_ASSIGN;
 }
 
+TERMINAL_DECLARE_PRED (integral_keyword)
+{
+  TokenType tt = TOKEN_TYPE (t);
+  return
+    tt == TKT_KW_SIGNED ||
+    tt == TKT_KW_INT ||
+    tt == TKT_KW_LONG ||
+    tt == TKT_KW_CHAR || tt == TKT_KW_SHORT || tt == TKT_KW_UNSIGNED;
+}

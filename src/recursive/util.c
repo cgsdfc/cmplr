@@ -245,36 +245,80 @@ util_is_colon (pcontext * context)
   return util_is_terminal (context, TKT_COLON, false /* pushing */ );
 }
 
-bool 
-util_is_separated_list(pcontext *context, TokenType sep, pfunction *each, bool allow_empty)
+bool
+util_is_separated_list (pcontext * context, TokenType sep, pfunction * each,
+			bool allow_empty)
 {
   // this parser repeatedly applies util_is_terminal(sep, false)
   // and the parser specified by each.
   // it fails if one of the called to each failed, and succeeds if
   // one of the called to parse sep failed.
-  if (each(context)) {
-    vector_node *v = (vector_node*) make_vector_node();
-    node_base *x=pcontext_pop_node(context);
-    vector_node_push_back(v, x);
-    while (util_is_terminal(context, sep)) {
-      if (each(context)) {
-        x=pcontext_pop_node(context);
-        vector_node_push_back(v, x);
-        continue;
-      } return false;
+  if (each (context))
+    {
+      vector_node *v = (vector_node *) make_vector_node ();
+      node_base *x = pcontext_pop_node (context);
+      vector_node_push_back (v, x);
+      while (util_is_terminal (context, sep, false /* pushing */ ))
+	{
+	  if (each (context))
+	    {
+	      x = pcontext_pop_node (context);
+	      vector_node_push_back (v, x);
+	      continue;
+	    }
+	  return false;
+	}
+      pcontext_push_node (context, TO_NODE_BASE (v));
+      return true;
     }
-    pcontext_push_node(context, TO_NODE_BASE(v));
-    return true;
-  }
-  if (allow_empty) {
-    util_push_node_null(context);
-    return true;
-  } return false;
+  if (allow_empty)
+    {
+      util_push_node_null (context);
+      return true;
+    }
+  return false;
 }
 
 bool
-util_is_comma_sep_list(pcontext *context, pfunction *parse, bool allow_empty)
+util_is_comma_sep_list (pcontext * context, pfunction * parse,
+			bool allow_empty)
 {
-  return util_is_separated_list(context, TKT_COMMA, parse, allow_empty);
+  return util_is_separated_list (context, TKT_COMMA, parse, allow_empty);
 }
 
+bool
+util_is_parenthesisL (pcontext * context)
+{
+  return util_is_terminal (context, TKT_LEFT_PARENTHESIS, false);	// pushing
+}
+
+bool
+util_is_parenthesisR (pcontext * context)
+{
+  return util_is_terminal (context, TKT_RIGHT_PARENTHESIS, false);	// pushing
+}
+
+bool
+util_is_braceL (pcontext * context)
+{
+  return util_is_terminal (context, TKT_LEFT_BRACE, false);	// pushing
+}
+
+bool
+util_is_braceR (pcontext * context)
+{
+  return util_is_terminal (context, TKT_RIGHT_BRACE, false);	// pushing
+}
+
+
+bool
+util_is_bracketL (pcontext * context)
+{
+  return util_is_terminal (context, TKT_LEFT_BRACKET, false);	// pushing
+}
+
+bool
+util_is_bracketR (pcontext * context)
+{
+  return util_is_terminal (context, TKT_RIGHT_BRACKET, false);	// pushing
+}

@@ -31,8 +31,8 @@ void pcontext_push_node (struct pcontext *, struct node_base *);
 struct node_base *pcontext_pop_node (struct pcontext *);
 struct node_base *pcontext_top_node (struct pcontext *);
 size_t pcontext_node_size (struct pcontext *);
-bool pcontext_get_unary_ontop(struct pcontext*);
-void pcontext_set_unary_ontop(struct pcontext *, bool);
-void pcontext_mark_prefix(struct pcontext *, pcontext_prefix, bool);
-bool pcontext_test_prefix(struct pcontext *, pcontext_prefix);
+bool pcontext_get_unary_ontop (struct pcontext *);
+void pcontext_set_unary_ontop (struct pcontext *, bool);
+void pcontext_mark_prefix (struct pcontext *, pcontext_prefix, bool);
+bool pcontext_test_prefix (struct pcontext *, pcontext_prefix);
 #endif // RECURSIVE_CONTEXT_H

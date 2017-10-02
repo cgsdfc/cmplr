@@ -80,5 +80,5 @@ EXPR_IS_FUNC_DECLARE (condition);
 EXPR_IS_FUNC_DECLARE (constant);
 EXPR_IS_FUNC_DECLARE (in_parenthesis);
 EXPR_IS_FUNC_DECLARE (colon);
-EXPR_IS_FUNC_DECLARE(optional_constant);
+EXPR_IS_FUNC_DECLARE (optional_constant);
 #endif // RECUSIVE_EXPR_H
