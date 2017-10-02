@@ -1,0 +1,38 @@
+  switch (TOKEN_TYPE (t))
+    {
+    case TKT_LEFT_BRACKET:
+      pcontext_push_node (context,
+			  make_binary_node (TKT_BINARY_OP_SUBSCRIPT));
+      if (expr_is_in_bracket (context))
+	{ // expr is bracket is not optional
+	  reduce_binary (context);
+	  return true;
+	}
+      die ("postfix: expected expression after '[' token");
+    case TKT_LEFT_PARENTHESIS:
+      pcontext_push_node(context, make_binary_node(TKT_BINARY_OP_INVOKE));
+      if (expr_is_optional_arglist(context)) {
+        reduce_binary(context);
+        return true;
+      } die ("postfix: expected argument list after '(' token");
+    case TKT_DOT:
+    case TKT_BINARY_OP_MEMBER_ARROW:
+      pcontext_push_node (context, make_binary_node (TOKEN_TYPE (t)));
+      t = pcontext_read_token (context, 1);
+      if (terminal_is_identifier (t))
+	{
+	  pcontext_shift_token (context, 2);
+	  pcontext_push_node (context, make_terminal_node (t));
+	  reduce_binary (context);
+	  return true;
+	}
+      die ("postfix: expected identifier after '->' or '.' token");
+    case TKT_UNARY_OP_PLUS_PLUS:	// '++'
+    case TKT_UNARY_OP_MINUS_MINUS:	// '--'
+      pcontext_shift_token (context, 1);
+      pcontext_push_node (context, make_unary_node (TOKEN_TYPE (t)));
+      reduce_unary (context);
+      return true;
+    default:
+      return false;
+    }

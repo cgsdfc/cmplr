@@ -95,7 +95,7 @@ DECL_IS_FUNC_DECLARE (struct_or_union_specifier)
       if (decl_is_struct_declare_list(context)) {
         if (util_is_braceR(context)) {
           body=pcontext_pop_node(context);
-          tag=has_tag?pcontext_pop_node(context):make_nullary_node(context);
+          tag=has_tag?pcontext_pop_node(context):make_nullary_node();
           reduce_enum_struct_union(context, what, tag, body);
           return true;
         } die("struct_or_union_specifier: expected '}'");
@@ -111,7 +111,7 @@ DECL_IS_FUNC_DECLARE (struct_or_union_specifier)
 static
 DECL_IS_FUNC_DECLARE(assign)
 {
-  return util_is_terminal(context, TKT_BINARY_OP_ASSIGN, false, /* pushing */);
+  return util_is_terminal(context, TKT_BINARY_OP_ASSIGN, false /* pushing */);
 }
 static
 DECL_IS_FUNC_DECLARE(enumerator)
@@ -163,6 +163,7 @@ DECL_IS_FUNC_DECLARE(enum_specifier)
   // ( identifier | identifier '{' list '}' | '{' list '}' )
   util_shift_one_token(context); // enum
   node_base *tag, *body;
+  Token *t=util_read_first_token(context);
   switch (TOKEN_TYPE(t)) {
     case TKT_IDENTIFIER:
       util_shift_one_token(context);

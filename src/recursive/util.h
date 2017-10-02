@@ -24,6 +24,6 @@ bool util_is_nonshortcut_or (struct pcontext *, pfunction *, pfunction *);
 bool util_is_colon (struct pcontext *);
 bool util_is_comma (struct pcontext *);
 void util_push_node_null (struct pcontext *);
-bool util_is_separated_list(struct pcontext *, TokenType , bool /* allow_empty */);
+bool util_is_separated_list(struct pcontext *, TokenType , pfunction *, bool /* allow_empty */);
 bool util_is_comma_sep_list(struct pcontext *, pfunction *, bool );
 #endif // RECURSIVE_UTIL_H

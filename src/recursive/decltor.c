@@ -12,7 +12,7 @@ reduce_decltor(pcontext * context , TokenType what)
   node_base * lhs = pcontext_pop_node(context);
   decltor->rhs=rhs;
   decltor->lhs=lhs;
-  pcontext_push_node(context);
+  pcontext_push_node(context, TO_NODE_BASE(decltor));
 }
 static
 DECL_IS_FUNC_DECLARE (parameter_declare)
@@ -24,7 +24,11 @@ DECL_IS_FUNC_DECLARE (parameter_declare)
   // so it was modified to specifier_qualifier_list
   // NOTICE;
   if (decl_is_specifier_qualifier_list(context)) {
-    if (decl_is_decltor(context))
+    if (decl_is_pointer(context)) {
+      pcontext_mark_prefix(context, PCONTEXT_POINTER, true);
+    }
+    if 
+  }
 
 
 }
@@ -32,14 +36,14 @@ static
 DECL_IS_FUNC_DECLARE (parameter_list)
 {
   return util_is_comma_sep_list(context,
-      parameter_declare,
+      decl_is_parameter_declare,
       true);
 }
 static
 DECL_IS_FUNC_DECLARE(optional_parameter_list)
 {
   return util_is_optional(context,
-      parameter_list);
+      decl_is_parameter_list);
 }
 static
 DECL_IS_FUNC_DECLARE(star)
@@ -83,7 +87,7 @@ DECL_IS_FUNC_DECLARE (parameter_list_in_parenthesis)
 }
 
 static
-DECL_IS_FUNC_DECLARE(dirdecltor_primary)
+DECL_IS_FUNC_DECLARE(decltor_primary)
 {
   // identifier | '(' decltor ')'
   Token *t=util_read_first_token(context);
@@ -98,51 +102,36 @@ DECL_IS_FUNC_DECLARE(dirdecltor_primary)
       return false;
   }
 }
-DECL_IS_FUNC_DECLARE (dirdecltor_list)
+DECL_IS_FUNC_DECLARE (decltor_list)
 {
   // dirdecltor := identifier 
   // | dirdecltor '[' [const_expr] ']'
   // | dirdecltor '(' parameter_list ')'
   // | '(' decltor ')'
-  if (util_is_identifier (context))
-  {
-    Token *t=util_read_first_token(context);
-    switch (TOKEN_TYPE(t)) {
-      case TKT_LEFT_BRACKET:
-        util_shift_one_token(context);
-        t=util_read_first_token(context);
-        if (terminal_is_braceR(t)) {
-          util_shift_one_token(context);
-
-        break;
-      case TKT_LEFT_PARENTHESIS:
-        break;
-    }
+  Token *t=util_read_first_token(context);
+  switch (TOKEN_TYPE(t)) {
+    case TKT_LEFT_BRACKET:
+      if (decl_is_constant_in_brackets(context)) {
+          reduce_decltor(context, TKT_BINARY_OP_SUBSCRIPT);
+          return true;
+      } die("decltor_list: expected constant expression after '[' token");
+      break;
+    case TKT_LEFT_PARENTHESIS:
+      if (decl_is_parameter_list_in_parentheses(context)) {
+        reduce_decltor(context, TKT_BINARY_OP_INVOKE);
+        return true;
+      } die("decltor_list: expected parameter_list after '(' token");
+      break;
+    default:
+      return false;
   }
-  return false;
 }
-static
-DECL_IS_FUNC_DECLARE(dirdecltor)
-{
-  if (decl_is_dirdecltor_primary(context)) {
-    while (decl_is_dirdecltor_list(context))
-      ;
-    return true;
-  }
-  return false;
-}
-
 DECL_IS_FUNC_DECLARE (decltor)
 {
   // decltor := [pointer] direct_decltor
   util_is_optional(context, decl_is_pointer);
   if (decl_is_direct_decltor(context)) {
-    node_base * direct = pcontext_pop_node(context);
-    node_base * pointer = pcontext_pop_node(context);
-    binary_node * decltor = (binary_node*)make_binary_node(TKT_UNARY_OP_DEREFERENCE);
-    decltor->lhs=pointer;
-    decltor->rhs=direct;
-    pcontext_push_node(context, decltor);
+    reduce_decltor(context, TKT_UNARY_OP_DEREFERENCE);
     return true;
   }
   die("decltor: expected direct decltor after pointer");
@@ -150,15 +139,6 @@ DECL_IS_FUNC_DECLARE (decltor)
 // ========================================================== //
 // abstract_decltor bool (*) [100] (int *, char *);
 // ========================================================== //
-
-static void
-reduce_abstract_decltor(pcontext *context, TokenType what)
-{
-  unary_node * modifier = (unary_node*) make_unary_node(what);
-  node_base * extend_or_arg = pcontext_pop_node(context);
-  modifier->operand = extend_or_arg;
-  pcontext_push_node(context, modifier);
-}
 
 static
 DECL_IS_FUNC_DECLARE(abstract_decltor_primary)
@@ -191,7 +171,7 @@ static
 DECL_IS_FUNC_DECLARE(abstract_dirdecltor)
 {
   return util_is_list(context,
-      abstract_decltor_primary, 
+      decl_is_abstract_decltor_primary, 
       false /* allow_empty */
       );
 }
@@ -211,6 +191,6 @@ DECL_IS_FUNC_DECLARE(abstract_decltor)
 {
   if (decl_is_pointer(context)){
     if (decl_is_abstract_dirdecltor(context)) {
-      reduce_abstract_decltor
-
+    }
+  }
 }

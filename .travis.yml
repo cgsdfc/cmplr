@@ -1,0 +1,9 @@
+sudo: required
+dist: trusty
+language: c
+
+script:
+- mkdir build
+- cd build
+- cmake ../src
+- make
