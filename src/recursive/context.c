@@ -42,24 +42,24 @@ pcontext_shift_token (pcontext * context, unsigned num)
     }
 }
 
-  void
+void
 pcontext_push_node (pcontext * context, node_base * node)
 {
   int r;
-  r= utillib_vector_push_back(&(context->subtrees), node);
+  r = utillib_vector_push_back (&(context->subtrees), node);
   assert (r == 0);
 }
 
 node_base *
 pcontext_pop_node (pcontext * context)
 {
-  return utillib_vector_pop_back(&(context->subtrees));
+  return utillib_vector_pop_back (&(context->subtrees));
 }
 
 node_base *
 pcontext_top_node (pcontext * context)
 {
-  node_base *root = utillib_vector_back(&(context->subtrees));
+  node_base *root = utillib_vector_back (&(context->subtrees));
   assert (root != NULL);
   return root;
 }
@@ -67,27 +67,32 @@ pcontext_top_node (pcontext * context)
 size_t
 pcontext_node_size (pcontext * context)
 {
-  return utillib_vector_size(&(context->subtrees));
+  return utillib_vector_size (&(context->subtrees));
 }
 
-bool pcontext_get_unary_ontop(struct pcontext* context)
+bool
+pcontext_get_unary_ontop (struct pcontext * context)
 {
   return context->unary_on_top;
 }
 
-void pcontext_set_unary_ontop(struct pcontext *context, bool ontop)
+void
+pcontext_set_unary_ontop (struct pcontext *context, bool ontop)
 {
-  context->unary_on_top=ontop;
+  context->unary_on_top = ontop;
 }
 
-void pcontext_mark_prefix(struct pcontext * context, pcontext_prefix prefix, bool value)
+void
+pcontext_mark_prefix (struct pcontext *context, pcontext_prefix prefix,
+		      bool value)
 {
-  assert (prefix >=0 && prefix < PCONTEXT_N_PREFIX);
-  context->prefix[prefix]=value;
+  assert (prefix >= 0 && prefix < PCONTEXT_N_PREFIX);
+  context->prefix[prefix] = value;
 }
 
-bool pcontext_test_prefix(struct pcontext * context, pcontext_prefix prefix)
+bool
+pcontext_test_prefix (struct pcontext *context, pcontext_prefix prefix)
 {
-  assert (prefix >=0 && prefix < PCONTEXT_N_PREFIX);
+  assert (prefix >= 0 && prefix < PCONTEXT_N_PREFIX);
   return context->prefix[prefix];
 }

@@ -1,5 +1,4 @@
 project (cmplr)
-cmake_minimum_required(VERSION 3.5)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g3")
 set(tokenizer_src 
   lexer.c

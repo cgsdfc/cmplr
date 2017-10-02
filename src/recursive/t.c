@@ -1,8 +1,12 @@
-struct a {
+struct a
+{
 
 };
 
-struct a aa = {};
-int i={0};
+struct a aa = { };
+int i = { 0 };
 
-int main() {}
+int
+main ()
+{
+}
