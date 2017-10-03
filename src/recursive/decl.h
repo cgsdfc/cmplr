@@ -13,8 +13,9 @@ bool decl_is_ ## FUNC (struct pcontext * context)
 DECL_IS_FUNC_DECLARE (translation);
 DECL_IS_FUNC_DECLARE (external);
 DECL_IS_FUNC_DECLARE (declare);
+DECL_IS_FUNC_DECLARE (declare_list);
 DECL_IS_FUNC_DECLARE (function);
-DECL_IS_FUNC_DECLARE (typename);
+DECL_IS_FUNC_DECLARE (typename_);
 DECL_IS_FUNC_DECLARE (typename_in_parenthesis);
 DECL_IS_FUNC_DECLARE (optional_comma);
 DECL_IS_FUNC_DECLARE (assign);

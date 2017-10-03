@@ -180,7 +180,7 @@ DECL_IS_FUNC_DECLARE (translation)
 // ============================================================ //
 // typename
 //============================================================ //
-DECL_IS_FUNC_DECLARE (typename)
+DECL_IS_FUNC_DECLARE (typename_)
 {
   // typename := (specifier|qualifier)+ [pointer] [abstract_dirdecltor]
   if (decl_is_specifier_qualifier_list (context))
@@ -202,5 +202,9 @@ DECL_IS_FUNC_DECLARE (typename)
 
 DECL_IS_FUNC_DECLARE (typename_in_parenthesis)
 {
-  return util_is_in_parentheses (context, decl_is_typename);
+  return util_is_in_parentheses (context, decl_is_typename_);
+}
+DECL_IS_FUNC_DECLARE (declare_list)
+{
+  return util_is_list (context, decl_is_declare, true /* allow_empty */ );
 }

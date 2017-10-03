@@ -145,17 +145,17 @@ EXPR_IS_FUNC_DECLARE (primary)	// context
     }
 }
 
-EXPR_IS_FUNC_DECLARE (in_bracket)	// context
+EXPR_IS_FUNC_DECLARE (in_bracket)
 {
   return util_is_in_brackets (context, expr_is_expression);
 }
 
-EXPR_IS_FUNC_DECLARE (optional_arglist)	// context
+EXPR_IS_FUNC_DECLARE (optional_arglist)
 {
   return util_is_optional (context, expr_is_arglist);
 }
 
-EXPR_IS_FUNC_DECLARE (optional_arglist_in_parenthesis)	// context
+EXPR_IS_FUNC_DECLARE (optional_arglist_in_parenthesis)
 {
   return util_is_in_parentheses (context, expr_is_optional_arglist);
 }
@@ -203,7 +203,7 @@ EXPR_IS_FUNC_DECLARE (postfix_list)
 	  pcontext_shift_token (context, 2);
           pcontext_reduce_terminal(context, t);
 	  pcontext_reduce_binary (context,
-              util_token_type_to_construct(TOKEN_TYPE(t)));
+              util_token_type_to_construct(TOKEN_TYPE(t), 0));
 	  return true;
 	}
       die ("postfix: expected identifier after '->' or '.' token");
@@ -229,12 +229,11 @@ EXPR_IS_FUNC_DECLARE (postfix)
   return false;
 }
 
-EXPR_IS_FUNC_DECLARE (sizeof)
+EXPR_IS_FUNC_DECLARE (sizeof_)
 {
   // this is called by unary only when
   // the sizeof token has been seen but
   // not shift;
-  assert (TKT_KW_SIZEOF == TOKEN_TYPE (util_read_first_token (context)));
   util_shift_one_token (context);	// shift off sizeof
   if (util_is_parenthesisL (context))
     {
@@ -242,10 +241,7 @@ EXPR_IS_FUNC_DECLARE (sizeof)
 	{
 	  if (util_is_parenthesisR (context))
 	    {
-	      pcontext_push_node (context,
-				  make_unary_node
-				  (TKT_UNARY_OP_SIZOF_TYPENAME));
-	      reduce_unary (context);	// typename, sizeof
+              pcontext_reduce_unary (context, OP_SIZEOF_TYPE);
 	      return true;
 	    }
 	  die ("unary: expected ')' at the end of sizeof ");
@@ -253,8 +249,7 @@ EXPR_IS_FUNC_DECLARE (sizeof)
     }
   else if (expr_is_unary (context))
     {
-      pcontext_push_node (context, make_unary_node (TKT_UNARY_OP_SIZOF_EXPR));
-      reduce_unary (context);	// typename, sizeof
+      pcontext_reduce_unary (context, OP_SIZEOF_UNARY);
       return true;
     }
   return false;
@@ -264,9 +259,9 @@ EXPR_IS_FUNC_DECLARE (unary_impl)
 {
   Token *t;
   unary_node *op;
-  if (pcontext_get_unary_ontop (context))
+  if (pcontext_test_prefix(context, PCONTEXT_UNARY))
     {
-      pcontext_set_unary_ontop (context, false);
+      pcontext_mark_prefix(context, PCONTEXT_UNARY, false);
       return true;
     }
   t = util_read_first_token (context);
@@ -293,6 +288,7 @@ EXPR_IS_FUNC_DECLARE (unary_impl)
 EXPR_IS_FUNC_DECLARE (unary)
 {
   Token *t;
+  construct c;
   if (expr_is_unary_impl (context))
     {
       return true;
@@ -305,13 +301,13 @@ EXPR_IS_FUNC_DECLARE (unary)
       util_shift_one_token (context);
       if (expr_is_unary (context))
 	{
-	  pcontext_push_node (context, make_unary_node (TOKEN_TYPE (t)));
-	  reduce_unary (context);
+          c=util_token_type_to_construct(TOKEN_TYPE(t), NODE_TAG_UNARY);
+          pcontext_reduce_unary(context, c);
 	  return true;
 	}
       die ("unary: expected unary after '++' or '--' token");
     case TKT_KW_SIZEOF:
-      if (expr_is_sizeof (context))
+      if (expr_is_sizeof_ (context))
 	{
 	  return true;
 	}
@@ -329,13 +325,9 @@ EXPR_IS_FUNC_DECLARE (cast)
     }
   if (decl_is_typename_in_parenthesis (context))
     {
-      // rhs in stack
-      pcontext_push_node (context, make_binary_node (TKT_UNARY_OP_CAST));
-      // note that the cast-node is a binary node since it has rhs the typename, lhs the expr
-      // and op the cast, but its op is a unary op
       if (expr_is_cast (context))
 	{
-	  reduce_binary (context);
+          pcontext_reduce_binary(context, OP_C_CAST);
 	  return true;
 	}
       die ("cast: expected cast expression after '(typename)'");
@@ -344,15 +336,9 @@ EXPR_IS_FUNC_DECLARE (cast)
 }
 
 static
-EXPR_IS_FUNC_DECLARE (question)
-{
-  return util_is_terminal (context, TKT_QUESTION, false /* pushing */ );
-}
-
-static
 EXPR_IS_FUNC_DECLARE (ternary_seq)
 {
-  return util_is_sequence (context, expr_is_question,	// '?'
+  return util_is_sequence (context, util_is_question,	// '?'
 			   expr_is_expression,	// expr
 			   util_is_colon,	// ':'
 			   expr_is_condition,	// condition
@@ -361,12 +347,15 @@ EXPR_IS_FUNC_DECLARE (ternary_seq)
 
 EXPR_IS_FUNC_DECLARE (condition)
 {
+  // ternary expression in C
+  // if the '?' form is absent, it is just a 
+  // binary_node, otherwise, it will be a ternary_node
+  // NOTICE;
   if (expr_is_log_or (context))
     {
       if (expr_is_ternary_seq (context))
 	{
-	  pcontext_push_node (context, make_ternary_node ());
-	  reduce_ternary (context);
+          pcontext_reduce_ternary(context);
 	}
       return true;
     }
@@ -451,6 +440,20 @@ EXPR_IS_FUNC_DECLARE (assign)
   return false;
 }
 
+EXPR_IS_FUNC_DECLARE (comma_assign_seq)
+{
+  return util_is_sequence (context, util_is_comma, expr_is_assign, NULL);
+}
+
+EXPR_IS_FUNC_DECLARE (optional_constant)
+{
+  return util_is_optional (context, expr_is_constant);
+}
+EXPR_IS_FUNC_DECLARE (optional_expr)
+{
+  // [expr]
+  return util_is_optional (context, expr_is_expression);
+}
 EXPR_IS_FUNC_DEFINE (timing, timing_op, cast, "timing", "cast");
 EXPR_IS_FUNC_DEFINE (additive, additive_op, timing, "additive", "timing");
 EXPR_IS_FUNC_DEFINE (shift, shift_op, additive, "shift", "additive");
@@ -467,17 +470,3 @@ EXPR_IS_FUNC_DECLARE (constant)
   return expr_is_condition (context);
 }
 
-EXPR_IS_FUNC_DECLARE (comma_assign_seq)
-{
-  return util_is_sequence (context, util_is_comma, expr_is_assign, NULL);
-}
-
-EXPR_IS_FUNC_DECLARE (optional_constant)
-{
-  return util_is_optional (context, expr_is_constant);
-}
-EXPR_IS_FUNC_DECLARE (optional_expr)
-{
-  // [expr]
-  return util_is_optional (context, expr_is_expression);
-}

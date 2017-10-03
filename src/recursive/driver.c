@@ -1,8 +1,10 @@
 #include "recursive/parser.h"
 #include "recursive/print_xml.h"
 #include "recursive/error.h"
-int
-main (int argc, char **argv)
+#include "construct.h"
+
+
+static int main_do_parse(int argc, char **argv)
 {
   if (argc != 2)
     {
@@ -21,9 +23,17 @@ main (int argc, char **argv)
       init_xml_printer (&xmlp, stdout, argv[1], LexerTerminalTab ());
       printf ("rp: input was accepted!\n");
       print_xml (&xmlp, root);
+      return 0;
     }
   else
     {
       printf ("rp: input was rejected!\n");
+      return 1;
     }
+}
+
+int
+main (int argc, char **argv)
+{
+  utillib_print_enum(construct_tostring, construct_N);
 }

@@ -234,31 +234,16 @@ STMT_IS_FUNC_DECLARE (exprstmt)
   return false;
 }
 
-STMT_IS_FUNC_DECLARE (braceL)
-{
-  return util_is_terminal (context, TKT_LEFT_BRACE, false);
-}
-
-STMT_IS_FUNC_DECLARE (braceR)
-{
-  return util_is_terminal (context, TKT_RIGHT_BRACE, false);
-}
-
 STMT_IS_FUNC_DECLARE (statement_list)
 {
   return util_is_list (context, stmt_is_statement, true /* allow_empty */ );
-}
-
-STMT_IS_FUNC_DECLARE (declare_list)
-{
-  return util_is_list (context, decl_is_declare, true /* allow_empty */ );
 }
 
 STMT_IS_FUNC_DECLARE (compound_seq)
 {
   return util_is_sequence (context,
 			   stmt_is_statement_list,
-			   stmt_is_declare_list, NULL);
+			   decl_is_declare_list, NULL);
 }
 
 static
@@ -290,7 +275,7 @@ STMT_IS_FUNC_DECLARE (compound_impl2)
       return true;
     }
   util_shift_one_token (context);
-  stmt_is_declare_list (context);
+  decl_is_declare_list (context);
   stmt_is_statement_list (context);
   t2 = pcontext_read_token (context, 0);
   if (terminal_is_braceR (t2))

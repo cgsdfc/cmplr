@@ -23,6 +23,7 @@ bool util_is_semicolon (struct pcontext *);
 bool util_is_nonshortcut_or (struct pcontext *, pfunction *, pfunction *);
 bool util_is_colon (struct pcontext *);
 bool util_is_comma (struct pcontext *);
+bool util_is_question(struct pcontext *);
 void util_push_node_null (struct pcontext *);
 bool util_is_separated_list (struct pcontext *, TokenType, pfunction *,
 			     bool /* allow_empty */ );
@@ -33,6 +34,6 @@ bool util_is_bracketL (struct pcontext *);
 bool util_is_bracketR (struct pcontext *);
 bool util_is_parenthesisL (struct pcontext *);
 bool util_is_parenthesisR (struct pcontext *);
-int /* construct */ util_token_type_to_construct(int /* token_type */);
+int /* construct */ util_token_type_to_construct(int /* token_type */, int /* node_tag */);
 
 #endif // RECURSIVE_UTIL_H

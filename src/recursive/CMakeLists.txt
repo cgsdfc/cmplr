@@ -1,6 +1,7 @@
 project(recursive C)
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(recursive
+  ./construct.c
   ./print_xml.c
   ./decl.c
   ./struct.c

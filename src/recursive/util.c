@@ -324,17 +324,13 @@ util_is_bracketR (pcontext * context)
 {
   return util_is_terminal (context, TKT_RIGHT_BRACKET, false);	// pushing
 }
-int 
-util_token_type_to_construct(int tt)
+bool util_is_question(pcontext *context)
 {
-  switch(tt) {
-    case TKT_DOT:
-      return OP_DOT_ACCESS;
-    case TKT_BINARY_OP_MEMBER_ARROW:
-      return OP_PTR_ACCESS;
-    default:
-      return CONSTRUCT_NULL;
-  }
+  return util_is_terminal (context, TKT_QUESTION, false /* pushing */ );
 }
 
+int
+util_token_type_to_construct(int tt, int tag)
+{
 
+}
