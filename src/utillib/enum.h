@@ -2,16 +2,13 @@
 #define UTILLIB_ENUM
 #include <stdio.h> // for FILE*
 // ENUM
+#define UTILLIB_ETAB_TOSTRING(NAME) const char * NAME ## _tostring(int tag)
 #define UTILLIB_ENUM_ELEM(TAG) TAG,
-
 #define UTILLIB_ENUM_BEGIN(NAME) typedef enum NAME {
-
-#define UTILLIB_ENUM_END(NAME) NAME ## _N } NAME;
-
+#define UTILLIB_ENUM_END(NAME) NAME ## _N } NAME;UTILLIB_ETAB_TOSTRING(NAME);
 // ETAB
 #define UTILLIB_ETAB_ELEM_ARRAY(TAB) [TAB] = # TAB,
 #define UTILLIB_ETAB_ELEM_SWITCH(TAB) case (TAB): return # TAB;
-#define UTILLIB_ETAB_TOSTRING(NAME) const char * NAME ## _tostring(int tag)
 #define UTILLIB_ETAB_BIGIN_IMPL_COMMON(NAME) UTILLIB_ETAB_TOSTRING(NAME){
 #define UTILLIB_ETAB_BEGIN_SWITCH(NAME) switch(tag) {
 #define UTILLIB_ETAB_END_SWITCH(NAME) default: return "(null)"; }

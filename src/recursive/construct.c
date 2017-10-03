@@ -1,25 +1,4 @@
 #include "construct.h"
-#include "lexer/token_type.h"
-
-#define CTR_CASE_RETURN_1(LABEL, RET) case (LABEL): return (RET)
-#define CTR_CASE_RETURN_2(LABEL, COND, RET_1, RET_2)\
-case (LABEL): return tag == (COND) ? (RET_1) : (RET_2)
-
-/* int */ 
-/* ctr_token_type_to_construct(int tt, int tag) */
-/* { */
-/*   switch(tt) { */
-/*     CTR_CASE_RETURN_1(TK_DOT, OP_DOT_ACCESS); */
-/*     CTR_CASE_RETURN_1(TKT_UNARY_OP_ADDRESS, OP_PTR_ACCESS); */
-/*       return tag == NODE_TAG_UNARY ? OP_PREF_DEC:OP_POST_DEC; */
-/*     case TKT_UNARY_OP_PLUS_PLUS: */
-/*       return tag == NODE_TAG_UNARY ? OP_PREF_INC:OP_POST_INC; */
-/*     CTR_CASE_RETURN_1(TKT_BINARY_OP_ADD, OP_ADD); */
-/*     default: */
-/*       return CONSTRUCT_NULL; */
-/*   } */
-/* } */
-
   UTILLIB_ETAB_BEGIN(construct)
   UTILLIB_ETAB_ELEM(TYPE_S_CHAR)
   UTILLIB_ETAB_ELEM(TYPE_U_CHAR)
