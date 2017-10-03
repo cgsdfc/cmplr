@@ -131,11 +131,11 @@ LexerPrintToken (Lexer * lexer)
 const char **
 LexerTerminalTab (void)
 {
-  return token_tab;
+  return NULL;
 }
 
 const char *
 LexerTerminalString (Token * t)
 {
-  return token_tab[TOKEN_TYPE (t)];
+  return token_type_tostring(TOKEN_TYPE(t));
 }
