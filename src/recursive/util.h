@@ -33,4 +33,6 @@ bool util_is_bracketL (struct pcontext *);
 bool util_is_bracketR (struct pcontext *);
 bool util_is_parenthesisL (struct pcontext *);
 bool util_is_parenthesisR (struct pcontext *);
+int /* construct */ util_token_type_to_construct(int /* token_type */);
+
 #endif // RECURSIVE_UTIL_H

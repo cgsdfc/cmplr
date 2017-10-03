@@ -3,9 +3,26 @@
 #include "recursive/terminal.h"
 #include "recursive/util.h"
 #include "recursive/decl.h"
+#include "construct.h"
 
+#define EXPR_IS_FUNC_DEFINE(FUNC, OP_FUNC, RHS_FUNC, FUNC_STR, RHS_STR)\
+bool expr_is_ ## FUNC (pcontext *context) {\
+  if (expr_is_ ## RHS_FUNC (context)) {\
+    while (true) {\
+      Token *t=pcontext_read_token (context,0);\
+      if (terminal_is_ ## OP_FUNC (t)) {\
+        pcontext_shift_token (context,1);\
+        pcontext_push_node(context, make_binary_node(TOKEN_TYPE(t)));\
+        if (expr_is_ ## RHS_FUNC (context)) {\
+          reduce_binary(context);\
+          continue;\
+        } die(FUNC_STR ": expected " RHS_STR);\
+      } else { break; }\
+    } return true;\
+  } return false;\
+}
 static void
-reduce_operator (TokenType * op_type, node_tag tag)
+reduce_operator (int * op_type, node_tag tag)
 {
   // fix operator
   switch (*op_type)
@@ -91,7 +108,7 @@ reduce_binary (pcontext * context)
   // 0==rhs, 1==op, 2==lhs
   node_base *rhs = pcontext_pop_node (context);
   binary_node *op = (binary_node *) pcontext_pop_node (context);
-  TokenType *op_type = &(op->op);
+  int *op_type = &(op->op);
   node_base *lhs = pcontext_pop_node (context);
   op->lhs = lhs;
   op->rhs = rhs;
@@ -114,7 +131,7 @@ EXPR_IS_FUNC_DECLARE (primary)	// context
     case TKT_FLOAT_CONST:
     case TKT_IDENTIFIER:
       pcontext_shift_token (context, 1);
-      pcontext_push_node (context, make_terminal_node (t));
+      pcontext_reduce_terminal(context, t);
       return true;
     case TKT_LEFT_PARENTHESIS:
       if (expr_is_in_parenthesis (context))
@@ -143,40 +160,16 @@ EXPR_IS_FUNC_DECLARE (optional_arglist_in_parenthesis)	// context
   return util_is_in_parentheses (context, expr_is_optional_arglist);
 }
 
+static EXPR_IS_FUNC_DECLARE(arglist_aux)
+{
+  return util_is_comma_sep_list(context, 
+        expr_is_assign, 
+        true /* allow_empty */ );
+}
+
 EXPR_IS_FUNC_DECLARE (arglist)
 {
-  // this is only called by postfix_list when
-  // a '(' has been seen, but not shift.
-  assert (terminal_is_parenthesisL (util_read_first_token (context)));
-  util_shift_one_token (context);	// shift off the '('
-  vector_node *v = NULL;	// telling whether it is an empty list
-  if (expr_is_assign (context))
-    {
-      v = (vector_node *) make_vector_node ();	// non-empty
-      vector_node_push_back (v, pcontext_pop_node (context));
-      while (util_is_comma (context))
-	{
-	  if (expr_is_assign (context))
-	    {
-	      vector_node_push_back (v, pcontext_pop_node (context));
-	      continue;
-	    }
-	  die ("arglist: expected assign expression after ',' token");
-	}
-    }
-  if (util_is_parenthesisR (context))
-    {
-      if (v)
-	{
-	  pcontext_push_node (context, TO_NODE_BASE (v));
-	}
-      else
-	{
-	  util_push_node_null (context);
-	}
-      return true;
-    }
-  die ("arglist: expected ')' at the end of argument list");
+  return util_is_in_parentheses(context, expr_is_arglist_aux);
 }
 
 EXPR_IS_FUNC_DECLARE (postfix_list)
@@ -188,19 +181,16 @@ EXPR_IS_FUNC_DECLARE (postfix_list)
   switch (TOKEN_TYPE (t))
     {
     case TKT_LEFT_BRACKET:
-      pcontext_push_node (context,
-			  make_binary_node (TKT_BINARY_OP_SUBSCRIPT));
       if (expr_is_in_bracket (context))
 	{			// expr is bracket is not optional
-	  reduce_binary (context);
+	  pcontext_reduce_binary (context, OP_SUBSCRIPT);
 	  return true;
 	}
       die ("postfix: expected expression after '[' token");
     case TKT_LEFT_PARENTHESIS:
-      pcontext_push_node (context, make_binary_node (TKT_BINARY_OP_INVOKE));
       if (expr_is_optional_arglist (context))
 	{
-	  reduce_binary (context);
+	  pcontext_reduce_binary (context, OP_INVOKE);
 	  return true;
 	}
       die ("postfix: expected argument list after '(' token");
@@ -211,8 +201,9 @@ EXPR_IS_FUNC_DECLARE (postfix_list)
       if (terminal_is_identifier (t))
 	{
 	  pcontext_shift_token (context, 2);
-	  pcontext_push_node (context, make_terminal_node (t));
-	  reduce_binary (context);
+          pcontext_reduce_terminal(context, t);
+	  pcontext_reduce_binary (context,
+              util_token_type_to_construct(TOKEN_TYPE(t)));
 	  return true;
 	}
       die ("postfix: expected identifier after '->' or '.' token");
@@ -484,4 +475,9 @@ EXPR_IS_FUNC_DECLARE (comma_assign_seq)
 EXPR_IS_FUNC_DECLARE (optional_constant)
 {
   return util_is_optional (context, expr_is_constant);
+}
+EXPR_IS_FUNC_DECLARE (optional_expr)
+{
+  // [expr]
+  return util_is_optional (context, expr_is_expression);
 }

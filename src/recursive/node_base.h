@@ -36,14 +36,14 @@ typedef struct terminal_node
 typedef struct binary_node
 {
   node_base base;
-  TokenType op;
+  int op;
   node_base *lhs, *rhs;
 } binary_node;
 
 typedef struct unary_node
 {
   node_base base;
-  TokenType op;
+  int op;
   node_base *operand;
 } unary_node;
 
@@ -75,8 +75,8 @@ typedef vfunction *(vfactory) (void *, node_tag);
 
 void init_node_base (struct node_base *, node_tag);
 node_base *make_ternary_node (void);
-node_base *make_unary_node (TokenType);
-node_base *make_binary_node (TokenType);
+node_base *make_unary_node (int);
+node_base *make_binary_node (int);
 node_base *make_terminal_node (Token *);
 node_base *make_vector_node (void);
 int vector_node_push_back (struct vector_node *, struct node_base *);

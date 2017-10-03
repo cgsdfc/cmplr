@@ -17,4 +17,5 @@ DECL_IS_FUNC_DECLARE (function);
 DECL_IS_FUNC_DECLARE (typename);
 DECL_IS_FUNC_DECLARE (typename_in_parenthesis);
 DECL_IS_FUNC_DECLARE (optional_comma);
+DECL_IS_FUNC_DECLARE (assign);
 #endif // RECURSIVE_DECL_H

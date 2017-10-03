@@ -1,5 +1,6 @@
 #include "recursive/parser.h"
 #include "recursive/expr.h"
+#include "recursive/decl.c"
 #include "recursive/stmt.h"
 #include "recursive/error.h"
 #include <stdlib.h>		// malloc
@@ -29,10 +30,16 @@ DestroyParser (Parser * parser)
   free (parser);
 }
 
+static bool
+ParserImpl(Parser *parser)
+{
+  return decl_is_declare(parser);
+}
+
 bool
 ParserDoParsing (Parser * parser)
 {
-  if (!stmt_is_statement (parser))
+  if (!ParserImpl(parser))
     return false;
   Token *t = pcontext_read_token (parser, 0);
   return TOKEN_TYPE (t) == TKT_EOF;

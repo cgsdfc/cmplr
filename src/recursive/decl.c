@@ -1,5 +1,6 @@
 #include "recursive/decl.h"
 #include "recursive/decltor.h"
+#include "expr.h"
 #include "specifier.h"
 #include "stmt.h"
 
@@ -70,50 +71,97 @@ DECL_IS_FUNC_DECLARE (function)
     }
 }
 
+DECL_IS_FUNC_DECLARE (assign)
+{
+  return util_is_terminal (context, TKT_BINARY_OP_ASSIGN,
+			   false /* pushing */ );
+}
+
 // =============================================================== //
 // declare
 // =============================================================== //
+
+static void reduce_declare(pcontext *);
+static DECL_IS_FUNC_DECLARE(initializer);
 static
 DECL_IS_FUNC_DECLARE (init_decltor)
 {
-
+  if (decl_is_decltor(context)) {
+    if (decl_is_assign(context)) {
+      if (decl_is_initializer(context)) {
+        reduce_decltor(context);
+        return true;
+      } die("init_decltor: expected initializer after '=' token");
+    } 
+  } return false;
 }
 
 static
 DECL_IS_FUNC_DECLARE (init_decltor_list)
 {
-
+  return 
+  util_is_comma_sep_list(context, decl_is_init_decltor, 
+      true /* allow_empty */
+    );
 }
 
 static DECL_IS_FUNC_DECLARE (initializer_list);
+static DECL_IS_FUNC_DECLARE (initializer_seq)
+{
+  return util_is_sequence(context,
+      decl_is_initializer_list,
+      decl_is_optional_comma,
+      NULL);
+}
+static DECL_IS_FUNC_DECLARE (initializer_in_braces)
+{
+  return util_is_in_braces(context,
+      decl_is_initializer_seq);
+}
+
 static
 DECL_IS_FUNC_DECLARE (initializer)
 {
   if (util_is_braceL (context))
     {
-      if (decl_is_initializer_list (context))
-	{
-	  decl_is_optional_comma (context);
-	  if (util_is_braceR (context))
-	    {
-	      return true;
-	    }
-	  die ("initializer: expected '}' after initializer_list");
-	}
+      if (decl_is_initializer_in_braces(context)) {
+        return true;
+        } die ("initializer: expected '}' after initializer_list");
+    } else if (expr_is_assign(context)) {
+      return true;
     }
+  return false;
 }
 
 static
 DECL_IS_FUNC_DECLARE (initializer_list)
 {
-  return util_is_comma_sep_list (context, decl_is_initializer, true	/* allow_empty */
+  return util_is_comma_sep_list (context,
+      decl_is_initializer,
+      true	/* allow_empty */
     );
+}
+static void
+reduce_declare(pcontext * context)
+{
+  binary_node * declare=(binary_node*)make_binary_node(TKT_DECLARE);
+  node_base * init_decltors = pcontext_pop_node(context);
+  node_base * specifier = pcontext_pop_node(context);
+  declare->lhs=specifier;
+  declare->rhs=init_decltors;
+  pcontext_push_node(context, TO_NODE_BASE(declare));
 }
 
 DECL_IS_FUNC_DECLARE (declare)
 {
-  if (decl_is_declare_specifier (context));
-
+  if (decl_is_declare_specifier (context)) {
+    // optional init_decltor_list
+    reduce_declare(context);
+    if (util_is_semicolon(context)) {
+      return true;
+    } die("declare: expected ';' at the end of declaration");
+  }
+  return false;
 }
 
 // =============================================================== //

@@ -5,23 +5,7 @@
 #include "recursive/node_base.h"
 #include "recursive/util.h"
 #include "recursive/decl.h"
-
-STMT_IS_FUNC_DECLARE (optional_expr)
-{
-  // [expr]
-  return util_is_optional (context, expr_is_expression);
-}
-
-static void
-reduce_jump_stmt (pcontext * context, TokenType tt)
-{
-  // goto identifier
-  // return expr
-  unary_node *jump_stmt = (unary_node *) make_unary_node (tt);
-  node_base *operand = pcontext_pop_node (context);
-  jump_stmt->operand = operand;
-  pcontext_push_node (context, TO_NODE_BASE (jump_stmt));
-}
+#include "construct.h"
 
 STMT_IS_FUNC_DECLARE (jump)
 {
@@ -32,7 +16,7 @@ STMT_IS_FUNC_DECLARE (jump)
       util_shift_one_token (context);	// shift off the goto
       if (util_is_identifier (context))
 	{
-	  reduce_jump_stmt (context, TOKEN_TYPE (t));
+          pcontext_reduce_unary(context, STMT_GOTO);
 	  break;
 	}
       die ("jump: expected identifier after goto token");
@@ -43,14 +27,8 @@ STMT_IS_FUNC_DECLARE (jump)
       break;
     case TKT_KW_RETURN:	// return [expr] ;
       pcontext_shift_token (context, 1);
-      if (expr_is_expression (context))
-	{
-	  reduce_jump_stmt (context, TOKEN_TYPE (t));
-	}
-      else
-	{
-	  pcontext_push_node (context, make_terminal_node (t));
-	}
+      expr_is_optional_expr(context);
+      pcontext_reduce_unary (context, STMT_RETURN);
       break;
     default:
       return false;
@@ -64,11 +42,11 @@ STMT_IS_FUNC_DECLARE (jump)
 
 STMT_IS_FUNC_DECLARE (expr_for_seq)
 {
-  // for ([expr];[expr];[expr]) statement 
+  // for ([expr];[expr];[expr]) stmt 
   return util_is_sequence (context,
-			   stmt_is_optional_expr, util_is_semicolon,
-			   stmt_is_optional_expr, util_is_semicolon,
-			   stmt_is_optional_expr, NULL);
+			   expr_is_optional_expr, util_is_semicolon,
+			   expr_is_optional_expr, util_is_semicolon,
+			   expr_is_optional_expr, NULL);
 }
 
 STMT_IS_FUNC_DECLARE (expr_for)
@@ -76,87 +54,24 @@ STMT_IS_FUNC_DECLARE (expr_for)
   return util_is_in_parentheses (context, stmt_is_expr_for_seq);
 }
 
-static void
-reduce_for_expr (pcontext * context)
-{
-  ternary_node *tri = (ternary_node *) make_ternary_node ();
-  node_base *step = pcontext_pop_node (context);
-  node_base *cond = pcontext_pop_node (context);
-  node_base *init = pcontext_pop_node (context);
-  tri->first = init;
-  tri->second = cond;
-  tri->third = step;
-  pcontext_push_node (context, TO_NODE_BASE (tri));
-}
-
-
-static void
-reduce_for_stmt (pcontext * context)
-{
-  binary_node *for_node = (binary_node *) make_binary_node (TKT_KW_FOR);
-  node_base *for_body = pcontext_pop_node (context);
-  node_base *for_expr = pcontext_pop_node (context);
-  for_node->lhs = for_expr;
-  for_node->rhs = for_body;
-  pcontext_push_node (context, TO_NODE_BASE (for_node));
-}
-
-static void
-reduce_do_while_stmt (pcontext * context)
-{
-  binary_node *do_while = (binary_node *) make_binary_node (TKT_KW_DO);
-  node_base *do_stmt = pcontext_pop_node (context);
-  node_base *while_expr = pcontext_pop_node (context);
-  do_while->lhs = do_stmt;
-  do_while->rhs = while_expr;
-  pcontext_push_node (context, TO_NODE_BASE (do_while));
-}
-
-static void
-reduce_switch_or_while (pcontext * context, TokenType tt)
-{
-  binary_node *switch_or_while = (binary_node *) make_binary_node (tt);
-  node_base *stmt = pcontext_pop_node (context);
-  node_base *expr = pcontext_pop_node (context);
-  switch_or_while->lhs = expr;
-  switch_or_while->rhs = stmt;
-  pcontext_push_node (context, TO_NODE_BASE (switch_or_while));
-}
-
-static void
-reduce_if_stmt (pcontext * context)
-{
-  unary_node *if_stmt = (unary_node *) make_unary_node (TKT_KW_IF);
-  ternary_node *if_body = (ternary_node *) make_ternary_node ();
-  node_base *else_stmt = pcontext_pop_node (context);
-  node_base *then = pcontext_pop_node (context);
-  node_base *expr = pcontext_pop_node (context);
-  if_stmt->operand = TO_NODE_BASE (if_body);
-  if_body->first = expr;
-  if_body->second = then;
-  if_body->third = else_stmt;
-  pcontext_push_node (context, TO_NODE_BASE (if_stmt));
-}
-
 STMT_IS_FUNC_DECLARE (expr_stmt_seq)
 {
-  // '(' expr ')' statement
-  return
-    util_is_sequence (context,
-		      expr_is_in_parenthesis, stmt_is_statement, NULL);
+  // '(' expr ')' stmt
+  return util_is_sequence (context,
+      expr_is_in_parenthesis, stmt_is_statement, NULL);
 }
 
-STMT_IS_FUNC_DECLARE (while)
+STMT_IS_FUNC_DECLARE (while_)
   {
     return util_is_terminal (context, TKT_KW_WHILE, false);
   }
 
 STMT_IS_FUNC_DECLARE (do_while_stmt)
 {
-  // statement 'while' '(' expr ')' ';'
+  // stmt 'while' '(' expr ')' ';'
   return
     util_is_sequence (context,
-		      stmt_is_statement, stmt_is_while,
+		      stmt_is_statement, stmt_is_while_,
 		      expr_is_in_parenthesis, util_is_semicolon, NULL);
 }
 
@@ -169,7 +84,7 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-	  reduce_switch_or_while (context, TOKEN_TYPE (t));
+          pcontext_reduce_binary(context, STMT_WHILE);
 	  return true;
 	}
       die ("while: expected '(expr) statement' after 'while' token");
@@ -177,10 +92,10 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_expr_for (context))
 	{
-	  reduce_for_expr (context);
+          pcontext_reduce_ternary(context);
 	  if (stmt_is_statement (context))
 	    {
-	      reduce_for_stmt (context);
+              pcontext_reduce_binary (context, STMT_FOR);
 	      return true;
 	    }
 	  die ("for: expected statement after 'for...'");
@@ -190,7 +105,7 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_do_while_stmt (context))
 	{
-	  reduce_do_while_stmt (context);
+          pcontext_reduce_binaryR(context, STMT_DO_WHILE);
 	  return true;
 	}
       die ("do-while: expected 'while(expr);' after do '{' statement '}'");
@@ -199,16 +114,18 @@ STMT_IS_FUNC_DECLARE (iterate)
     }
 }
 
-STMT_IS_FUNC_DECLARE (
-		       else
-)
+STMT_IS_FUNC_DECLARE (else_)
 {
   return util_is_terminal (context, TKT_KW_ELSE, false /* pushing */ );
 }
 
 STMT_IS_FUNC_DECLARE (else_stmt)
 {
-  return util_is_sequence (context, stmt_is_else, stmt_is_statement);
+  return util_is_sequence (context, stmt_is_else_, stmt_is_statement);
+}
+STMT_IS_FUNC_DECLARE (optional_else_stmt)
+{
+  return util_is_optional(context, stmt_is_else_stmt);
 }
 
 STMT_IS_FUNC_DECLARE (select)
@@ -220,11 +137,11 @@ STMT_IS_FUNC_DECLARE (select)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-	  if (!stmt_is_else_stmt (context))
-	    {
-	      util_push_node_null (context);
-	    }
-	  reduce_if_stmt (context);
+          stmt_is_optional_else_stmt(context);
+          // binary_node(else, then_stmt, else_stmt);
+          pcontext_reduce_binary(context, STMT_ELSE);
+          // binary_node(if, expr, else);
+          pcontext_reduce_binary(context, STMT_IF);
 	  return true;
 	}
       die ("select: if: expected '(expr) statement' after 'if' token");
@@ -232,7 +149,7 @@ STMT_IS_FUNC_DECLARE (select)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-	  reduce_switch_or_while (context, TOKEN_TYPE (t));
+          pcontext_reduce_binary(context, STMT_SWITCH);
 	  return true;
 	}
       die
@@ -242,20 +159,9 @@ STMT_IS_FUNC_DECLARE (select)
     }
 }
 
-static void
-reduce_label_stmt (pcontext * context, TokenType tt)
-{
-  binary_node *label_stmt = (binary_node *) make_binary_node (tt);
-  node_base *stmt = pcontext_pop_node (context);
-  node_base *label = pcontext_pop_node (context);
-  label_stmt->lhs = label;
-  label_stmt->rhs = stmt;
-  pcontext_push_node (context, TO_NODE_BASE (label_stmt));
-}
-
 STMT_IS_FUNC_DECLARE (colon_stmt_seq)
 {
-  // ':' statement
+  // ':' stmt
   return util_is_sequence (context, util_is_colon, stmt_is_statement, NULL);
 }
 
@@ -275,7 +181,7 @@ STMT_IS_FUNC_DECLARE (label)
       pcontext_shift_token (context, 1);
       if (stmt_is_case_stmt (context))
 	{
-	  reduce_label_stmt (context, TOKEN_TYPE (t));
+          pcontext_reduce_binary(context, STMT_CASE);
 	  return true;
 	}
       die
@@ -284,10 +190,7 @@ STMT_IS_FUNC_DECLARE (label)
       util_shift_one_token (context);
       if (stmt_is_colon_stmt_seq (context))
 	{
-	  unary_node *default_stmt =
-	    (unary_node *) make_unary_node (TOKEN_TYPE (t));
-	  default_stmt->operand = pcontext_pop_node (context);
-	  pcontext_push_node (context, TO_NODE_BASE (default_stmt));
+          pcontext_reduce_unary(context, STMT_DEFAULT);
 	  return true;
 	}
       die ("lable: expected ':' statement after 'default' token");
@@ -300,7 +203,7 @@ STMT_IS_FUNC_DECLARE (label)
 	  pcontext_push_node (context, make_terminal_node (t));	// push identifier
 	  if (stmt_is_statement (context))
 	    {
-	      reduce_label_stmt (context, TOKEN_TYPE (t));
+              pcontext_reduce_binary(context, STMT_LABEL);
 	      return true;
 	    }
 	  die ("label: expected statement after 'identifier:'");
@@ -329,18 +232,6 @@ STMT_IS_FUNC_DECLARE (exprstmt)
       return true;
     }
   return false;
-}
-
-static void
-reduce_compound (pcontext * context)
-{
-  binary_node *compound =
-    (binary_node *) make_binary_node (TKT_STMT_COMPOUND);
-  node_base *stmt_list = pcontext_pop_node (context);
-  node_base *decl_list = pcontext_pop_node (context);
-  compound->lhs = decl_list;
-  compound->rhs = stmt_list;
-  pcontext_push_node (context, TO_NODE_BASE (compound));
 }
 
 STMT_IS_FUNC_DECLARE (braceL)
@@ -375,7 +266,7 @@ STMT_IS_FUNC_DECLARE (compound_impl1)
 {
   if (util_is_in_braces (context, stmt_is_compound_seq))
     {
-      reduce_compound (context);
+      pcontext_reduce_binary (context, STMT_COMPOUND);
       return true;
     }
   return false;
@@ -405,7 +296,7 @@ STMT_IS_FUNC_DECLARE (compound_impl2)
   if (terminal_is_braceR (t2))
     {
       util_shift_one_token (context);
-      reduce_compound (context);
+      pcontext_reduce_binary(context, STMT_COMPOUND);
       return true;
     }
   die ("compound: expected '}' at the end of statement list");

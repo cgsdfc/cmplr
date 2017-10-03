@@ -24,7 +24,7 @@ make_terminal_node (Token * tk)
 }
 
 node_base *
-make_binary_node (TokenType op)
+make_binary_node (int op)
 {
   CREATE_NODE (binary_node, NODE_TAG_BINARY);
   if (node)
@@ -35,7 +35,7 @@ make_binary_node (TokenType op)
 }
 
 node_base *
-make_unary_node (TokenType op)
+make_unary_node (int op)
 {
   CREATE_NODE (unary_node, NODE_TAG_UNARY);
   if (node)

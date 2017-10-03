@@ -2,6 +2,7 @@
 #define RECURSIVE_ENUM_H
 typedef enum construct
 {
+  CONSTRUCT_NULL,
   TYPE_S_CHAR,
   TYPE_U_CHAR,
   TYPE_S_INT,
@@ -33,10 +34,19 @@ typedef enum construct
   STMT_CONTINUE,
   STMT_BREAK,
   STMT_COMPOUND,
-
+  STMT_LABEL,
   DECL_FUNCTION,
   DECL_EXTERNAL,
 
+
+  OP_INVOKE,
+  OP_SUBSCRIPT,
+  OP_PTR_ACCESS,
+  OP_DOT_ACCESS,
+  OP_POST_INC,
+  OP_PREF_INC,
+  OP_POST_DEC,
+  OP_PREF_DEC,
 
 } construct;
 #endif // RECURSIVE_ENUM_H

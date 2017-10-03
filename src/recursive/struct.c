@@ -120,12 +120,6 @@ DECL_IS_FUNC_DECLARE (struct_or_union_specifier)
 // ========================================================== //
 // enum_specifier
 // ========================================================== //
-static
-DECL_IS_FUNC_DECLARE (assign)
-{
-  return util_is_terminal (context, TKT_BINARY_OP_ASSIGN,
-			   false /* pushing */ );
-}
 
 static
 DECL_IS_FUNC_DECLARE (enumerator)

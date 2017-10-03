@@ -2,12 +2,38 @@
 #include "recursive/specifier.h"
 #include "recursive/expr.h"	// for expr_is_constant
 #include "recursive/util.h"
-
-static DECL_IS_FUNC_DECLARE (pointer);
 // ============================================================ //
 // decltor
 //============================================================ //
-static void
+static DECL_IS_FUNC_DECLARE (pointer);
+static DECL_IS_FUNC_DECLARE (parameter_list);
+
+DECL_IS_FUNC_DECLARE (optional_pointer)
+{
+  return util_is_optional (context, decl_is_pointer);
+}
+
+DECL_IS_FUNC_DECLARE (optional_abstract_decltor)
+{
+  return util_is_optional (context, decl_is_abstract_decltor);
+}
+DECL_IS_FUNC_DECLARE (decltor_in_parenthesis)
+{
+  return util_is_in_parentheses (context, decl_is_decltor);
+}
+
+DECL_IS_FUNC_DECLARE (constant_in_brackets)
+{
+  return util_is_in_brackets (context, expr_is_constant);
+}
+
+DECL_IS_FUNC_DECLARE (parameter_list_in_parentheses)
+{
+  return util_is_in_parentheses (context, decl_is_parameter_list);
+}
+
+
+void
 reduce_decltor (pcontext * context, TokenType what)
 {
   binary_node *decltor = (binary_node *) make_binary_node (what);
@@ -41,7 +67,8 @@ DECL_IS_FUNC_DECLARE (parameter_declare)
 static
 DECL_IS_FUNC_DECLARE (parameter_list)
 {
-  return util_is_comma_sep_list (context, decl_is_parameter_declare, true);
+  return util_is_comma_sep_list (context, decl_is_parameter_declare, true /* allow_empty */
+      );
 }
 
 static
@@ -53,17 +80,14 @@ DECL_IS_FUNC_DECLARE (optional_parameter_list)
 static
 DECL_IS_FUNC_DECLARE (star)
 {
-  return util_is_terminal (context, TKT_STAR, true	/* pushing */
+  return util_is_terminal (context, TKT_STAR,
+      true /* pushing */
     );
 }
 
 static
 DECL_IS_FUNC_DECLARE (pointer)
 {
-  if (pcontext_test_prefix (context, PCONTEXT_POINTER))
-    {
-      return true;
-    }
   // pointer := '*' ('*'|type_qualifier) *
   if (decl_is_star (context))
     {
@@ -87,12 +111,6 @@ DECL_IS_FUNC_DECLARE (pointer)
   return false;
 }
 
-DECL_IS_FUNC_DECLARE (decltor_in_parenthesis)
-{
-  return util_is_in_parentheses (context, decl_is_decltor);
-}
-
-
 static
 DECL_IS_FUNC_DECLARE (decltor_primary)
 {
@@ -109,16 +127,6 @@ DECL_IS_FUNC_DECLARE (decltor_primary)
     default:
       return false;
     }
-}
-
-DECL_IS_FUNC_DECLARE (constant_in_brackets)
-{
-  return util_is_in_brackets (context, expr_is_constant);
-}
-
-DECL_IS_FUNC_DECLARE (parameter_list_in_parentheses)
-{
-  return util_is_in_parentheses (context, decl_is_parameter_list);
 }
 
 DECL_IS_FUNC_DECLARE (decltor_list)
@@ -210,15 +218,11 @@ DECL_IS_FUNC_DECLARE (abstract_decltor_primary)
 
 DECL_IS_FUNC_DECLARE (abstract_decltor)
 {
-
+  decl_is_optional_pointer(context);
+  size_t i=0;
+  while (decl_is_abstract_decltor_primary(context)) {
+    i++;
+  }
+  return i != 0;
 }
 
-DECL_IS_FUNC_DECLARE (optional_pointer)
-{
-  return util_is_optional (context, decl_is_pointer);
-}
-
-DECL_IS_FUNC_DECLARE (optional_abstract_decltor)
-{
-  return util_is_optional (context, decl_is_abstract_decltor);
-}
