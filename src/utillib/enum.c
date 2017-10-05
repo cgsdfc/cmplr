@@ -16,5 +16,5 @@ void utillib_print_enum_range(
 void
 utillib_print_enum(e2s_function * tostring, int limit)
 {
-  utillib_print_enum_range(stdout, tostring, ",\n", 0, limit);
+  utillib_print_enum_range(stdout, tostring, "\n", 0, limit);
 }

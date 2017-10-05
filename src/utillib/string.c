@@ -4,6 +4,7 @@
 #include <assert.h>
 #define UTILLIB_STR_CMP(S,T, OP)\
 (strcmp (UTILLIB_C_STR(S), UTILLIB_C_STR(T)) OP (0))
+#define UTILLIB_STRING_INIT_CAP 5
 
 int utillib_string_init(utillib_string * s, utillib_string_size_type init_cap)
 {

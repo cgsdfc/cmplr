@@ -4,6 +4,7 @@
 // ENUM
 #define UTILLIB_ETAB_TOSTRING(NAME) const char * NAME ## _tostring(int tag)
 #define UTILLIB_ENUM_ELEM(TAG) TAG,
+#define UTILLIB_ENUM_ELEM_INIT(TAG, VAL) TAG=(VAL),
 #define UTILLIB_ENUM_BEGIN(NAME) typedef enum NAME {
 #define UTILLIB_ENUM_END(NAME) NAME ## _N } NAME;UTILLIB_ETAB_TOSTRING(NAME);
 // ETAB
@@ -50,6 +51,7 @@
 #define UTILLIB_ETAB_END(NAME) UTILLIB_ETAB_END_IMPL(NAME)
 #define UTILLIB_ETAB_ELEM(NAME) UTILLIB_ETAB_ELEM_IMPL(NAME)
 
+#define UTILLIB_ENUM_CONST(NAME, VALUE) NAME=(VALUE),
 typedef const char * (e2s_function) (int);
 void utillib_print_enum_range(FILE *, e2s_function *, const char *, int , int );
 void utillib_print_enum(e2s_function * , int );
