@@ -2,6 +2,7 @@
 #include "recursive/decltor.h"
 #include "expr.h"
 #include "specifier.h"
+#include "construct.h"
 #include "stmt.h"
 
 DECL_IS_FUNC_DECLARE (optional_comma)
@@ -13,32 +14,17 @@ DECL_IS_FUNC_DECLARE (optional_comma)
 // =============================================================== //
 // function
 // =============================================================== //
-static void
-reduce_func (pcontext * context)
-{
-  node_base *compound_stmt = pcontext_pop_node (context);
-  node_base *decltor = pcontext_pop_node (context);
-  node_base *declare_specifier = pcontext_pop_node (context);
-  ternary_node *func = (ternary_node *) make_ternary_node ();
-  unary_node *func_def = (unary_node *) make_unary_node (TKT_FUNCTION);
-  func->first = declare_specifier;
-  func->second = decltor;
-  func->third = compound_stmt;
-  func_def->operand = TO_NODE_BASE (func);
-  pcontext_push_node (context, TO_NODE_BASE (func_def));
-}
-
 static
 DECL_IS_FUNC_DECLARE (function_impl)
 {
   // this is called only after the seq
   // declare_specifier decltor '{' has 
   // been seen and the '{' is not yet shift;
-  Token *t = util_read_first_token (context);
-  assert (terminal_is_braceL (t));
+  util_shift_one_token(context);
+  pcontext_reduce_binary(context, DECL_DECLARE);
   if (stmt_is_compound (context))
     {
-      reduce_func (context);
+      pcontext_reduce_binary(context, DECL_FUNCTION);
       return true;
     }
   return false;
@@ -81,7 +67,6 @@ DECL_IS_FUNC_DECLARE (assign)
 // declare
 // =============================================================== //
 
-static void reduce_declare(pcontext *);
 static DECL_IS_FUNC_DECLARE(initializer);
 static
 DECL_IS_FUNC_DECLARE (init_decltor)
@@ -89,7 +74,7 @@ DECL_IS_FUNC_DECLARE (init_decltor)
   if (decl_is_decltor(context)) {
     if (decl_is_assign(context)) {
       if (decl_is_initializer(context)) {
-        reduce_decltor(context);
+        pcontext_reduce_binary(context, DECL_DECLARE);
         return true;
       } die("init_decltor: expected initializer after '=' token");
     } 
@@ -141,22 +126,12 @@ DECL_IS_FUNC_DECLARE (initializer_list)
       true	/* allow_empty */
     );
 }
-static void
-reduce_declare(pcontext * context)
-{
-  binary_node * declare=(binary_node*)make_binary_node(TKT_DECLARE);
-  node_base * init_decltors = pcontext_pop_node(context);
-  node_base * specifier = pcontext_pop_node(context);
-  declare->lhs=specifier;
-  declare->rhs=init_decltors;
-  pcontext_push_node(context, TO_NODE_BASE(declare));
-}
 
 DECL_IS_FUNC_DECLARE (declare)
 {
   if (decl_is_declare_specifier (context)) {
     // optional init_decltor_list
-    reduce_declare(context);
+    pcontext_reduce_binary (context, DECL_DECLARE);
     if (util_is_semicolon(context)) {
       return true;
     } die("declare: expected ';' at the end of declaration");

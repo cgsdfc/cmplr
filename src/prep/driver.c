@@ -2,7 +2,7 @@
 
 int main() 
 {
-  scanner_enum_value v = prep_match_directive("efine");
-  puts(directive_tostring(v));
+  int v=prep_match_predefined_macro("__");
+  puts(predefined_macro_tostring(v));
 
 }

@@ -1,5 +1,6 @@
 project(prep C)
 set(prep_source 
+  ./predefined_macro.c
   ./directive.c
   ./lexer.c
 )

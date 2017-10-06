@@ -2,6 +2,8 @@
 #include "recursive/specifier.h"
 #include "recursive/expr.h"	// for expr_is_constant
 #include "recursive/util.h"
+#include "recursive/construct.h"
+
 // ============================================================ //
 // decltor
 //============================================================ //
@@ -32,17 +34,6 @@ DECL_IS_FUNC_DECLARE (parameter_list_in_parentheses)
   return util_is_in_parentheses (context, decl_is_parameter_list);
 }
 
-
-void
-reduce_decltor (pcontext * context, TokenType what)
-{
-  binary_node *decltor = (binary_node *) make_binary_node (what);
-  node_base *rhs = pcontext_pop_node (context);
-  node_base *lhs = pcontext_pop_node (context);
-  decltor->rhs = rhs;
-  decltor->lhs = lhs;
-  pcontext_push_node (context, TO_NODE_BASE (decltor));
-}
 
 static
 DECL_IS_FUNC_DECLARE (parameter_declare)
@@ -141,7 +132,7 @@ DECL_IS_FUNC_DECLARE (decltor_list)
     case TKT_LEFT_BRACKET:
       if (decl_is_constant_in_brackets (context))
 	{
-	  reduce_decltor (context, TKT_BINARY_OP_SUBSCRIPT);
+          pcontext_reduce_binary(context, OP_SUBSCRIPT);
 	  return true;
 	}
       die ("decltor_list: expected constant expression after '[' token");
@@ -149,7 +140,7 @@ DECL_IS_FUNC_DECLARE (decltor_list)
     case TKT_LEFT_PARENTHESIS:
       if (decl_is_parameter_list_in_parentheses (context))
 	{
-	  reduce_decltor (context, TKT_BINARY_OP_INVOKE);
+	  pcontext_reduce_binary (context, OP_INVOKE);
 	  return true;
 	}
       die ("decltor_list: expected parameter_list after '(' token");
@@ -187,7 +178,7 @@ DECL_IS_FUNC_DECLARE (abstract_decltor_primary)
       expr_is_optional_constant (context);
       if (util_is_bracketR (context))
 	{
-	  reduce_decltor (context, TKT_BINARY_OP_SUBSCRIPT);
+	  pcontext_reduce_binary (context, OP_SUBSCRIPT);
 	  return true;
 	}
       die ("abstract_decltor: expected ']' after constant expression");
@@ -205,7 +196,7 @@ DECL_IS_FUNC_DECLARE (abstract_decltor_primary)
       decl_is_optional_parameter_list (context);
       if (util_is_parenthesisR (context))
 	{
-	  reduce_decltor (context, TKT_BINARY_OP_INVOKE);
+	  pcontext_reduce_binary (context, OP_INVOKE);
 	  return true;
 	}
       die ("abstract_decltor: expected ')' after abstract_dirdecltor");

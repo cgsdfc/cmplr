@@ -7,7 +7,7 @@
 scanner_enum_value
 SCANNER_MATCH_RESERVED_IMPL(
     scanner_str_val_pair_array array,
-    scanner_string_lit lit)
+    scanner_string lit)
 {
   for (scanner_str_val_pair const* p=array;
       p->str != NULL || p->val != 0;

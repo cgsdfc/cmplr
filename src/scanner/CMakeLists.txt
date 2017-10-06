@@ -1,6 +1,7 @@
 project(scanner)
 set(scanner_source
   ./reserved.c
+  ./matcher.c
 )
 add_library(scanner
   ${scanner_source}
