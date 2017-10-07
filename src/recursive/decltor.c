@@ -19,6 +19,7 @@ DECL_IS_FUNC_DECLARE (optional_abstract_decltor)
 {
   return util_is_optional (context, decl_is_abstract_decltor);
 }
+
 DECL_IS_FUNC_DECLARE (decltor_in_parenthesis)
 {
   return util_is_in_parentheses (context, decl_is_decltor);
@@ -58,21 +59,20 @@ DECL_IS_FUNC_DECLARE (parameter_declare)
 static
 DECL_IS_FUNC_DECLARE (parameter_list)
 {
-  return util_is_comma_sep_list (context, decl_is_parameter_declare, true /* allow_empty */
-      );
+  return util_is_comma_sep_list (context, decl_is_parameter_declare, true	/* allow_empty */
+    );
 }
 
-static
-DECL_IS_FUNC_DECLARE (optional_parameter_list)
-{
-  return util_is_optional (context, decl_is_parameter_list);
-}
+/* static */
+/* DECL_IS_FUNC_DECLARE (optional_parameter_list) */
+/* { */
+/*   return util_is_optional (context, decl_is_parameter_list); */
+/* } */
 
 static
 DECL_IS_FUNC_DECLARE (star)
 {
-  return util_is_terminal (context, TKT_STAR,
-      true /* pushing */
+  return util_is_terminal (context, TKT_STAR, true	/* pushing */
     );
 }
 
@@ -132,7 +132,7 @@ DECL_IS_FUNC_DECLARE (decltor_list)
     case TKT_LEFT_BRACKET:
       if (decl_is_constant_in_brackets (context))
 	{
-          pcontext_reduce_binary(context, OP_SUBSCRIPT);
+	  pcontext_reduce_binary (context, OP_SUBSCRIPT);
 	  return true;
 	}
       die ("decltor_list: expected constant expression after '[' token");
@@ -158,6 +158,7 @@ DECL_IS_FUNC_DECLARE (decltor)
     {
       while (decl_is_decltor_list (context))
 	;
+      pcontext_reduce_binary (context, OP_DEREF);
       return true;
     }
   return false;
@@ -193,7 +194,7 @@ DECL_IS_FUNC_DECLARE (abstract_decltor_primary)
 	    }
 	  die ("abstract_decltor: expected ')' after abstract_decltor");
 	}
-      decl_is_optional_parameter_list (context);
+      decl_is_parameter_list (context);
       if (util_is_parenthesisR (context))
 	{
 	  pcontext_reduce_binary (context, OP_INVOKE);
@@ -209,11 +210,11 @@ DECL_IS_FUNC_DECLARE (abstract_decltor_primary)
 
 DECL_IS_FUNC_DECLARE (abstract_decltor)
 {
-  decl_is_optional_pointer(context);
-  size_t i=0;
-  while (decl_is_abstract_decltor_primary(context)) {
-    i++;
-  }
+  decl_is_optional_pointer (context);
+  size_t i = 0;
+  while (decl_is_abstract_decltor_primary (context))
+    {
+      i++;
+    }
   return i != 0;
 }
-

@@ -1,6 +1,9 @@
 set(CMAKE_C_FLAGS "-g3")
 include_directories(${CMAKE_SOURCE_DIR})
 set(UTILLIB_SOURCE
+  ./error.c
+  ./except.c
+  ./position.c
   ./input_buf.c
   ./enum.c
   ./slist.c

@@ -4,36 +4,41 @@
 #include "construct.h"
 #include <stdarg.h>
 
-#define UTIL_DEFINE_SURROUND(NAME, LEFT, RIGHT)\
-  static const util_surround NAME = {.left=LEFT, .right=RIGHT }
-
-typedef struct util_surround
+static char const *
+util_token_type_tostring (int tt)
 {
-  TokenType left, right;
-} util_surround;
-
-UTIL_DEFINE_SURROUND (PAIR_OF_PAREN, TKT_LEFT_PARENTHESIS,
-		      TKT_RIGHT_PARENTHESIS);
-UTIL_DEFINE_SURROUND (PAIR_OF_BRACE, TKT_LEFT_BRACE, TKT_RIGHT_BRACE);
-UTIL_DEFINE_SURROUND (PAIR_OF_BRACKET, TKT_LEFT_BRACKET, TKT_RIGHT_BRACKET);
+  switch (tt)
+    {
+    case TKT_LEFT_PARENTHESIS:
+      return "(";
+    case TKT_RIGHT_PARENTHESIS:
+      return ")";
+    case TKT_LEFT_BRACE:
+      return "{";
+    case TKT_RIGHT_BRACE:
+      return "}";
+    case TKT_LEFT_BRACKET:
+      return "[";
+    case TKT_RIGHT_BRACKET:
+      return "]";
+    default:
+      return "(null)";
+    }
+}
 
 static bool
 util_is_surrounded (pcontext * context, pfunction * parse,
-		    const util_surround * sur)
+		    int left, int right)
 {
-  Token *t = pcontext_read_token (context, 0);
-  if (TOKEN_TYPE (t) == sur->left)
+  if (util_is_terminal (context, left, false))
     {
-      pcontext_shift_token (context, 1);
       if (parse (context))
 	{
-	  t = pcontext_read_token (context, 0);
-	  if (TOKEN_TYPE (t) == sur->right)
+	  if (util_is_terminal (context, right, false))
 	    {
-	      pcontext_shift_token (context, 1);
 	      return true;
-	    }			// error
-	}			// error
+	    }
+	}
     }
   return false;
 }
@@ -41,7 +46,6 @@ util_is_surrounded (pcontext * context, pfunction * parse,
 void
 util_push_node_null (pcontext * context)
 {
-  // place holder;
   pcontext_push_node (context, make_nullary_node ());
 }
 
@@ -84,19 +88,21 @@ util_is_list (pcontext * context, pfunction * parse, bool allow_empty)
 bool
 util_is_in_parentheses (pcontext * context, pfunction * parse)
 {
-  return util_is_surrounded (context, parse, &PAIR_OF_PAREN);
+  return util_is_surrounded (context, parse, TKT_LEFT_PARENTHESIS,
+			     TKT_RIGHT_PARENTHESIS);
 }
 
 bool
 util_is_in_braces (pcontext * context, pfunction * parse)
 {
-  return util_is_surrounded (context, parse, &PAIR_OF_BRACE);
+  return util_is_surrounded (context, parse, TKT_LEFT_BRACE, TKT_RIGHT_BRACE);
 }
 
 bool
 util_is_in_brackets (pcontext * context, pfunction * parse)
 {
-  return util_is_surrounded (context, parse, &PAIR_OF_BRACKET);
+  return util_is_surrounded (context, parse, TKT_LEFT_BRACKET,
+			     TKT_RIGHT_BRACKET);
 }
 
 bool
@@ -324,13 +330,15 @@ util_is_bracketR (pcontext * context)
 {
   return util_is_terminal (context, TKT_RIGHT_BRACKET, false);	// pushing
 }
-bool util_is_question(pcontext *context)
+
+bool
+util_is_question (pcontext * context)
 {
   return util_is_terminal (context, TKT_QUESTION, false /* pushing */ );
 }
 
 int
-util_token_type_to_construct(int tt, int tag)
+util_token_type_to_construct (int tt, int tag)
 {
 
 }

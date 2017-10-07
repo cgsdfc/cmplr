@@ -1,5 +1,6 @@
 project(scanner)
 set(scanner_source
+  ./token.c
   ./reserved.c
   ./matcher.c
 )

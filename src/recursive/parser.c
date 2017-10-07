@@ -31,15 +31,15 @@ DestroyParser (Parser * parser)
 }
 
 static bool
-ParserImpl(Parser *parser)
+ParserImpl (Parser * parser)
 {
-  return decl_is_declare(parser);
+  return decl_is_declare (parser);
 }
 
 bool
 ParserDoParsing (Parser * parser)
 {
-  if (!ParserImpl(parser))
+  if (!ParserImpl (parser))
     return false;
   Token *t = pcontext_read_token (parser, 0);
   return TOKEN_TYPE (t) == TKT_EOF;

@@ -137,5 +137,5 @@ LexerTerminalTab (void)
 const char *
 LexerTerminalString (Token * t)
 {
-  return token_type_tostring(TOKEN_TYPE(t));
+  return token_type_tostring (TOKEN_TYPE (t));
 }

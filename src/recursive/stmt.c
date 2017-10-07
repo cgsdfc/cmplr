@@ -16,7 +16,7 @@ STMT_IS_FUNC_DECLARE (jump)
       util_shift_one_token (context);	// shift off the goto
       if (util_is_identifier (context))
 	{
-          pcontext_reduce_unary(context, STMT_GOTO);
+	  pcontext_reduce_unary (context, STMT_GOTO);
 	  break;
 	}
       die ("jump: expected identifier after goto token");
@@ -27,7 +27,7 @@ STMT_IS_FUNC_DECLARE (jump)
       break;
     case TKT_KW_RETURN:	// return [expr] ;
       pcontext_shift_token (context, 1);
-      expr_is_optional_expr(context);
+      expr_is_optional_expr (context);
       pcontext_reduce_unary (context, STMT_RETURN);
       break;
     default:
@@ -58,13 +58,13 @@ STMT_IS_FUNC_DECLARE (expr_stmt_seq)
 {
   // '(' expr ')' stmt
   return util_is_sequence (context,
-      expr_is_in_parenthesis, stmt_is_statement, NULL);
+			   expr_is_in_parenthesis, stmt_is_statement, NULL);
 }
 
 STMT_IS_FUNC_DECLARE (while_)
-  {
-    return util_is_terminal (context, TKT_KW_WHILE, false);
-  }
+{
+  return util_is_terminal (context, TKT_KW_WHILE, false);
+}
 
 STMT_IS_FUNC_DECLARE (do_while_stmt)
 {
@@ -84,7 +84,7 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-          pcontext_reduce_binary(context, STMT_WHILE);
+	  pcontext_reduce_binary (context, STMT_WHILE);
 	  return true;
 	}
       die ("while: expected '(expr) statement' after 'while' token");
@@ -92,10 +92,10 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_expr_for (context))
 	{
-          pcontext_reduce_ternary(context);
+	  pcontext_reduce_ternary (context);
 	  if (stmt_is_statement (context))
 	    {
-              pcontext_reduce_binary (context, STMT_FOR);
+	      pcontext_reduce_binary (context, STMT_FOR);
 	      return true;
 	    }
 	  die ("for: expected statement after 'for...'");
@@ -105,7 +105,7 @@ STMT_IS_FUNC_DECLARE (iterate)
       util_shift_one_token (context);
       if (stmt_is_do_while_stmt (context))
 	{
-          pcontext_reduce_binaryR(context, STMT_DO_WHILE);
+	  pcontext_reduce_binaryR (context, STMT_DO_WHILE);
 	  return true;
 	}
       die ("do-while: expected 'while(expr);' after do '{' statement '}'");
@@ -123,9 +123,10 @@ STMT_IS_FUNC_DECLARE (else_stmt)
 {
   return util_is_sequence (context, stmt_is_else_, stmt_is_statement);
 }
+
 STMT_IS_FUNC_DECLARE (optional_else_stmt)
 {
-  return util_is_optional(context, stmt_is_else_stmt);
+  return util_is_optional (context, stmt_is_else_stmt);
 }
 
 STMT_IS_FUNC_DECLARE (select)
@@ -137,11 +138,11 @@ STMT_IS_FUNC_DECLARE (select)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-          stmt_is_optional_else_stmt(context);
-          // binary_node(else, then_stmt, else_stmt);
-          pcontext_reduce_binary(context, STMT_ELSE);
-          // binary_node(if, expr, else);
-          pcontext_reduce_binary(context, STMT_IF);
+	  stmt_is_optional_else_stmt (context);
+	  // binary_node(else, then_stmt, else_stmt);
+	  pcontext_reduce_binary (context, STMT_ELSE);
+	  // binary_node(if, expr, else);
+	  pcontext_reduce_binary (context, STMT_IF);
 	  return true;
 	}
       die ("select: if: expected '(expr) statement' after 'if' token");
@@ -149,7 +150,7 @@ STMT_IS_FUNC_DECLARE (select)
       util_shift_one_token (context);
       if (stmt_is_expr_stmt_seq (context))
 	{
-          pcontext_reduce_binary(context, STMT_SWITCH);
+	  pcontext_reduce_binary (context, STMT_SWITCH);
 	  return true;
 	}
       die
@@ -181,7 +182,7 @@ STMT_IS_FUNC_DECLARE (label)
       pcontext_shift_token (context, 1);
       if (stmt_is_case_stmt (context))
 	{
-          pcontext_reduce_binary(context, STMT_CASE);
+	  pcontext_reduce_binary (context, STMT_CASE);
 	  return true;
 	}
       die
@@ -190,7 +191,7 @@ STMT_IS_FUNC_DECLARE (label)
       util_shift_one_token (context);
       if (stmt_is_colon_stmt_seq (context))
 	{
-          pcontext_reduce_unary(context, STMT_DEFAULT);
+	  pcontext_reduce_unary (context, STMT_DEFAULT);
 	  return true;
 	}
       die ("lable: expected ':' statement after 'default' token");
@@ -203,7 +204,7 @@ STMT_IS_FUNC_DECLARE (label)
 	  pcontext_push_node (context, make_terminal_node (t));	// push identifier
 	  if (stmt_is_statement (context))
 	    {
-              pcontext_reduce_binary(context, STMT_LABEL);
+	      pcontext_reduce_binary (context, STMT_LABEL);
 	      return true;
 	    }
 	  die ("label: expected statement after 'identifier:'");
@@ -281,7 +282,7 @@ STMT_IS_FUNC_DECLARE (compound_impl2)
   if (terminal_is_braceR (t2))
     {
       util_shift_one_token (context);
-      pcontext_reduce_binary(context, STMT_COMPOUND);
+      pcontext_reduce_binary (context, STMT_COMPOUND);
       return true;
     }
   die ("compound: expected '}' at the end of statement list");

@@ -11,6 +11,7 @@ pcontext_init (pcontext * context, Lexer * lexer)
   memset (context, 0, sizeof *context);
   context->lexer = lexer;
   utillib_vector_init (&(context->subtrees));
+  utillib_error_stack_init (&(context->error));
   return 0;
 }
 
@@ -96,56 +97,64 @@ pcontext_test_prefix (struct pcontext *context, pcontext_prefix prefix)
   assert (prefix >= 0 && prefix < PCONTEXT_N_PREFIX);
   return context->prefix[prefix];
 }
+
 void
-pcontext_reduce_ternary (pcontext *context)
+pcontext_reduce_ternary (pcontext * context)
 {
-  assert (pcontext_node_size(context) >= 3);
-  ternary_node * ternary = (ternary_node*) make_ternary_node();
-  ternary->third=pcontext_pop_node(context);
-  ternary->second=pcontext_pop_node(context);
-  ternary->first=pcontext_pop_node(context);
-  pcontext_push_node(context, TO_NODE_BASE(ternary));
+  assert (pcontext_node_size (context) >= 3);
+  ternary_node *ternary = (ternary_node *) make_ternary_node ();
+  ternary->third = pcontext_pop_node (context);
+  ternary->second = pcontext_pop_node (context);
+  ternary->first = pcontext_pop_node (context);
+  pcontext_push_node (context, TO_NODE_BASE (ternary));
 }
+
 void
-pcontext_reduce_unary(pcontext *context, int what)
+pcontext_reduce_unary (pcontext * context, int what)
 {
-  assert (pcontext_node_size(context) >= 1);
-  unary_node * unary = (unary_node*) make_unary_node(what);
-  unary->operand=pcontext_pop_node(context);
-  pcontext_push_node(context, TO_NODE_BASE(unary));
+  assert (pcontext_node_size (context) >= 1);
+  unary_node *unary = (unary_node *) make_unary_node (what);
+  unary->operand = pcontext_pop_node (context);
+  pcontext_push_node (context, TO_NODE_BASE (unary));
 }
 
 static void
-pcontext_reduce_binary_impl(pcontext *context, int what,
-    node_base * lhs, node_base *rhs)
+pcontext_reduce_binary_impl (pcontext * context, int what,
+			     node_base * lhs, node_base * rhs)
 {
-  binary_node * binary = (binary_node*) make_binary_node(what);
-  binary->rhs=rhs;
-  binary->lhs=lhs;
-  pcontext_push_node(context, TO_NODE_BASE(binary));
+  binary_node *binary = (binary_node *) make_binary_node (what);
+  binary->rhs = rhs;
+  binary->lhs = lhs;
+  pcontext_push_node (context, TO_NODE_BASE (binary));
 }
 
 void
-pcontext_reduce_binary(pcontext * context, int what)
+pcontext_reduce_binary (pcontext * context, int what)
 {
-  assert (pcontext_node_size(context) >= 2);
-  node_base * rhs=pcontext_pop_node(context);
-  node_base * lhs=pcontext_pop_node(context);
-  pcontext_reduce_binary_impl(context,what, lhs, rhs);
-}
-void
-pcontext_reduce_binaryR(pcontext * context, int what)
-{
-  assert (pcontext_node_size(context) >= 2);
-  node_base * lhs=pcontext_pop_node(context);
-  node_base * rhs=pcontext_pop_node(context);
-  pcontext_reduce_binary_impl(context,what,lhs, rhs);
+  assert (pcontext_node_size (context) >= 2);
+  node_base *rhs = pcontext_pop_node (context);
+  node_base *lhs = pcontext_pop_node (context);
+  pcontext_reduce_binary_impl (context, what, lhs, rhs);
 }
 
+void
+pcontext_reduce_binaryR (pcontext * context, int what)
+{
+  assert (pcontext_node_size (context) >= 2);
+  node_base *lhs = pcontext_pop_node (context);
+  node_base *rhs = pcontext_pop_node (context);
+  pcontext_reduce_binary_impl (context, what, lhs, rhs);
+}
 
 void
-pcontext_reduce_terminal(pcontext * context, Token *t)
+pcontext_reduce_terminal (pcontext * context, Token * t)
 {
   pcontext_push_node (context, make_terminal_node (t));
 }
 
+bool
+pcontext_push_error ()
+{
+
+
+}

@@ -1,13 +1,8 @@
 #include "utillib/slist.h"
+#include "except.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-
-typedef struct utillib_slist_node
-{
-  struct utillib_slist_node *next;
-  void *data;
-} utillib_slist_node;
 
 void
 utillib_slist_init (utillib_slist * list)
@@ -42,7 +37,14 @@ int utillib_slist_push_front (utillib_slist *list, void *data)
     push_front_aux(list, to_push);
     return 0;
   }
-  return -1;
+  return UTILLIB_ENOMEM;
+}
+
+void *
+utillib_slist_front(utillib_slist *list)
+{
+  assert (list->tail);
+  return list->tail->data;
 }
 
 static void
@@ -52,7 +54,7 @@ destroy_node(utillib_slist_node *node)
 }
 
 void *
-utillib_pop_front (utillib_slist *list)
+utillib_slist_pop_front (utillib_slist *list)
 {
   assert (list->tail);
   utillib_slist_node * tail=list->tail;

@@ -1,25 +1,42 @@
 #include "input_buf.h"
-#include "error.h"
-
+#include "except.h"
 #include <string.h>
 
-// if filename == NULL, open stdin and read from it
+UTILLIB_ETAB_BEGIN(utillib_input_buf_source)
+  UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_STDIN, "<stdin>")
+  UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_FILE, "<file>")
+  UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_STRING, "<string>")
+UTILLIB_ETAB_END(utillib_input_buf_source)
+
 int 
 utillib_input_buf_init(utillib_input_buf *b,
-    const char *filename)
+    int source,
+    char *arg)
 {
-  memset (b, 0, sizeof *b);
-  if (filename == NULL) {
-    b->file=stdin;
-    b->filename="<stdin>";
-    return 0;
+  FILE *file;
+  const char *filename;
+  switch (source) {
+    case INPUT_BUF_STDIN:
+      file=stdin;
+      filename=utillib_input_buf_source_tostring(source);
+      break;
+    case INPUT_BUF_FILE:
+      file = fopen(arg, "r");
+      filename=arg;
+      break;
+    case INPUT_BUF_STRING:
+      file = fmemopen(arg, strlen(arg), "r");
+      filename=utillib_input_buf_source_tostring(source);
+      break;
+    default:
+      return UTILLIB_EINVAL;
   }
-  FILE *file = fopen(filename, "r");
   if (file) {
-    b->file=file;
-    b->filename=filename;
     b->ch=fgetc(file);
     b->row=1;
+    b->col=0;
+    b->file=file;
+    b->filename=filename;
     return 0;
   }
   return UTILLIB_FILE_NOT_FOUND;
@@ -75,6 +92,15 @@ size_t
 utillib_input_buf_col(utillib_input_buf *b)
 {
   return b->col;
+}
+
+utillib_position
+utillib_input_buf_position(utillib_input_buf *b)
+{
+  utillib_position pos;
+  pos.lineno=b->row;
+  pos.column=b->col;
+  return pos;
 }
 
 void

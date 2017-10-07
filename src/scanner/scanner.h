@@ -1,11 +1,13 @@
 #ifndef SCANNER_SCANNER_H
 #define SCANNER_SCANNER_H
 #include <stddef.h>
+#include "utillib/input_buf.h"
 
-typedef char const* scanner_string;
-typedef long scanner_enum_value;
+typedef struct scanner_base
+{
+  utillib_input_buf buf;
+  utillib_vector separators;
 
-#include "error.h"
-#include "reserved.h"
+} scanner_base;
 
 #endif

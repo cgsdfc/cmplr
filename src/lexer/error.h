@@ -1,5 +1,6 @@
 #ifndef TKNZR_ERROR_H
 #define TKNZR_ERROR_H 1
+#include "utillib/enum.h"
 
 typedef enum cmplr_error
 {

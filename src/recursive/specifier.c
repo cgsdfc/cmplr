@@ -18,7 +18,7 @@ DECL_IS_FUNC_DECLARE (integral_keyword)
 static
 DECL_IS_FUNC_DECLARE (integral_type_impl1)
 {
-  return util_is_list (context, decl_is_integral_keyword, true	/* allow_empty */
+  return util_is_list (context, decl_is_integral_keyword, false	/* allow_empty */
     );
 }
 

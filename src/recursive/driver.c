@@ -4,7 +4,8 @@
 #include "construct.h"
 
 
-static int main_do_parse(int argc, char **argv)
+static int
+main_do_parse (int argc, char **argv)
 {
   if (argc != 2)
     {
@@ -32,8 +33,9 @@ static int main_do_parse(int argc, char **argv)
     }
 }
 
+
 int
 main (int argc, char **argv)
 {
-  utillib_print_enum(construct_tostring, construct_N);
+  return main_do_parse (argc, argv);
 }

@@ -4,9 +4,18 @@
 struct TYPE * node = calloc(sizeof *node, 1);\
 init_node_base(&(node->base), ( TAG ))
 
-
-void
-init_node_base (node_base * base, node_tag tag)
+UTILLIB_ETAB_BEGIN (node_tag)
+UTILLIB_ETAB_ELEM (NODE_TAG_NULLARY)
+UTILLIB_ETAB_ELEM (NODE_TAG_TERMINAL)
+UTILLIB_ETAB_ELEM (NODE_TAG_UNARY)
+UTILLIB_ETAB_ELEM (NODE_TAG_BINARY)
+UTILLIB_ETAB_ELEM (NODE_TAG_TERNARY)
+UTILLIB_ETAB_ELEM (NODE_TAG_VECTOR)
+UTILLIB_ETAB_ELEM (NODE_TAG_EXPR)
+UTILLIB_ETAB_ELEM (NODE_TAG_STMT)
+UTILLIB_ETAB_ELEM (NODE_TAG_DECL) UTILLIB_ETAB_END (node_tag)
+     void
+     init_node_base (node_base * base, node_tag tag)
 {
   base->tag = tag;
 }

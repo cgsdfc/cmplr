@@ -137,7 +137,7 @@ format_token (token * tk)
   assert (tk);
   extern const char *token_tab[];
   static char buf[BUFSIZ];
-  const char *type_string = token_type_tostring(TOKEN_TYPE (tk) );
+  const char *type_string = token_type_tostring (TOKEN_TYPE (tk));
   position *begin = &tk->begin;
   char *string = TOKEN_STRING (tk);
 

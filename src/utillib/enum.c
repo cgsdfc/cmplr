@@ -2,7 +2,8 @@
 
 void utillib_print_enum_range(
     FILE *file,
-    e2s_function tostring,
+    utillib_enum_tostring_function*
+    tostring,
     const char *sep,
     int from, int to)
 {
@@ -14,7 +15,7 @@ void utillib_print_enum_range(
 }
 
 void
-utillib_print_enum(e2s_function * tostring, int limit)
+utillib_print_enum(utillib_enum_tostring_function * tostring, int limit)
 {
   utillib_print_enum_range(stdout, tostring, "\n", 0, limit);
 }
