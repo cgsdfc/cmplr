@@ -3,8 +3,8 @@
 #include <stack>
 #include <vector>
 #include "grammar.hpp"
-#include "symbol_stream.hpp"
 #include "matrix.hpp"
+#include "symbol_stream.hpp"
 
 namespace experiment {
 class parser {

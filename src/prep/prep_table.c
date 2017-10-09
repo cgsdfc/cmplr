@@ -1,5 +1,4 @@
-typedef enum directive_type
-{
+typedef enum directive_type {
   _DR_BEGIN,
   DR_DEFINE,
   DR_UNDEF,
@@ -12,7 +11,7 @@ typedef enum directive_type
   DR_INCLUDE,
   DR_IFDEF,
   DR_ASSERT,
-/* #assert predicate (answer) */
+  /* #assert predicate (answer) */
   DR_CPU,
   DR_ELIF,
   DR_ELSE,
@@ -22,42 +21,41 @@ typedef enum directive_type
   DR_MACHINE,
   DR_PRAGMA, /* obsolete */
   DR_SYSTEM,
-  DR_PRAGMA_ONCE, /* obsolete */ /* include only once */
+  DR_PRAGMA_ONCE,
+  /* obsolete */ /* include only once */
   DR_UNASSERT,
   DR_WARNING,
   _DR_END,
 
 } directive_type;
 
-const char *pp_directives[]=
-{
-  [DR_DEFINE]="define",
-  [DR_UNDEF]="undef",
-  [DR_IF]="if",
-  [DR_IFNDEF]="ifndef",
-  [DR_DEFINED]="defined",
-  [DR_LINE]="line",
-  [DR_ERROR]="error",
-  [DR_INCLUDE]="include",
-  [DR_IFDEF]="ifdef",
-  [DR_ASSERT]="assert",
-  [DR_CPU]="cpu",
-  [dr_elif]="elif",
-  [DR_ELSE]="else",
-  [dr_ident]="ident",
-  [DR_IMPORT]="import",
-  [DR_INCLUDE_NEXT]="include_next",
-  [DR_MACHINE]="machine",
-  [DR_PRAGMA]="pragma",
-  [DR_SYSTEM]="system",
-  [DR_PRAGMA_ONCE]="pragma once",
-  [DR_UNASSERT]="unassert",
-  [DR_WARNING]="warning",
+const char *pp_directives[] = {
+        [DR_DEFINE] = "define",
+        [DR_UNDEF] = "undef",
+        [DR_IF] = "if",
+        [DR_IFNDEF] = "ifndef",
+        [DR_DEFINED] = "defined",
+        [DR_LINE] = "line",
+        [DR_ERROR] = "error",
+        [DR_INCLUDE] = "include",
+        [DR_IFDEF] = "ifdef",
+        [DR_ASSERT] = "assert",
+        [DR_CPU] = "cpu",
+        [dr_elif] = "elif",
+        [DR_ELSE] = "else",
+        [dr_ident] = "ident",
+        [DR_IMPORT] = "import",
+        [DR_INCLUDE_NEXT] = "include_next",
+        [DR_MACHINE] = "machine",
+        [DR_PRAGMA] = "pragma",
+        [DR_SYSTEM] = "system",
+        [DR_PRAGMA_ONCE] = "pragma once",
+        [DR_UNASSERT] = "unassert",
+        [DR_WARNING] = "warning",
 
 };
 
-typedef enum predined_macro
-{
+typedef enum predined_macro {
   _PD_BEGIN,
   PD_FILE,
   PD_LINE,
@@ -80,39 +78,30 @@ typedef enum predined_macro
   _PD_END,
 } predined_macro;
 
-
-const char *pd_tab[]=
-{
-  [PD_FILE]="__FILE__",
-  [PD_LINE]="__LINE__",
-  [PD_DATE]="__DATE__",
-  [PD_TIME]="__TIME__",
-  [PD_STDC]="__STDC__",
-  [PD_STDC_VERSION]="__STDC_VERSION__",
-  [PD_GNUC]="__GNUC__",
-  [PD_GNUC_MINOR]="__GNUC_MINOR__",
-  [PD_GNUG]="__GNUG__",
-  [PD_CPLUS_PLUS]="__cplusplus",
-  [PD_STRICT_ANSI]="__STRICT_ANSI__",
-  [PD_BASE_FILE]="__BASE_FILE__",
-  [PD_INCLUDE_LEVEL]="__INCLUDE_LEVEL__",
-  [PD_VERSION]="__VERSION__",
-  [PD_OPTIMIZE]="__OPTIMIZE__",
-  [PD_REGISTER_PREFIX]="__REGISTER_PREFIX__",
-  [PD_USER_LABEL_PREFIX]="__USER_LABEL_PREFIX__",
+const char *pd_tab[] = {
+        [PD_FILE] = "__FILE__",
+        [PD_LINE] = "__LINE__",
+        [PD_DATE] = "__DATE__",
+        [PD_TIME] = "__TIME__",
+        [PD_STDC] = "__STDC__",
+        [PD_STDC_VERSION] = "__STDC_VERSION__",
+        [PD_GNUC] = "__GNUC__",
+        [PD_GNUC_MINOR] = "__GNUC_MINOR__",
+        [PD_GNUG] = "__GNUG__",
+        [PD_CPLUS_PLUS] = "__cplusplus",
+        [PD_STRICT_ANSI] = "__STRICT_ANSI__",
+        [PD_BASE_FILE] = "__BASE_FILE__",
+        [PD_INCLUDE_LEVEL] = "__INCLUDE_LEVEL__",
+        [PD_VERSION] = "__VERSION__",
+        [PD_OPTIMIZE] = "__OPTIMIZE__",
+        [PD_REGISTER_PREFIX] = "__REGISTER_PREFIX__",
+        [PD_USER_LABEL_PREFIX] = "__USER_LABEL_PREFIX__",
 };
 
-typedef enum pp_state
-{
-
-
+typedef enum pp_state {
 
 } pp_state;
 
 static state_table *pp_table;
 
-void init_preprocessor(void)
-{
-
-
-}
+void init_preprocessor(void) {}

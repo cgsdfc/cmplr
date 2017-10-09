@@ -19,8 +19,7 @@ inline void grammar::add_edge(itemset_unique_id from, itemset_unique_id to,
   typedef typename graph_type::vertex_descriptor Vertex;
   boost::add_edge(Vertex(from), Vertex(to), symbol, m_graph);
 }
-inline item_type grammar::make_item(size_type dot,
-                                             rule_unique_id rule) {
+inline item_type grammar::make_item(size_type dot, rule_unique_id rule) {
   return item_type(dot, rule);
 }
 
@@ -71,8 +70,7 @@ inline rule_type const& grammar::rule(item_type const& item) const {
 inline rule_type const& grammar::rule(rule_unique_id id) const {
   return m_lang.rule(id);
 }
-inline itemset_type const& grammar::itemset(
-    itemset_unique_id id) const {
+inline itemset_type const& grammar::itemset(itemset_unique_id id) const {
   return m_itemset_map[id];
 }
 inline std::pair<grammar::item_iterator, grammar::item_iterator>

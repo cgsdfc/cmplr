@@ -83,7 +83,7 @@ unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::vend() const {
 }
 template <UNIQUE_MAP_TEMPLATE_PARAM>
 typename unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::mutable_item_iterator
-unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::ibegin(){
+unique_map<UNIQUE_MAP_TEMPLATE_ARGS>::ibegin() {
   return m_map.begin();
 }
 template <UNIQUE_MAP_TEMPLATE_PARAM>

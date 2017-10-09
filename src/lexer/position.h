@@ -1,7 +1,6 @@
 #ifndef LEXER_POSITION
 #define LEXER_POSITION
-typedef struct position
-{
+typedef struct position {
   int lineno;
   int column;
 

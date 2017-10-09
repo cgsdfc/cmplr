@@ -3,9 +3,9 @@
 #include "language.hpp"
 
 namespace experiment {
-  struct clang {
-      language lang;
-      clang();
-  };
+struct clang {
+  language lang;
+  clang();
+};
 }  // namespace experiment
 #endif  // EXPERIMENT_CLANG_H

@@ -3,17 +3,12 @@
 #include <boost/serialization/unordered_map.hpp>
 #include <boost/serialization/vector.hpp>
 namespace experiment {
-inline void
-language::add_edge(symbol_unique_id source, symbol_unique_id target,rule_unique_id rule_on_edge) {
-  boost::add_edge(
-      vertex_descriptor(source),
-      vertex_descriptor(target),
-      rule_on_edge,
-      m_symbol_graph
-    );
+inline void language::add_edge(symbol_unique_id source, symbol_unique_id target,
+                               rule_unique_id rule_on_edge) {
+  boost::add_edge(vertex_descriptor(source), vertex_descriptor(target),
+                  rule_on_edge, m_symbol_graph);
 }
-inline language::rule_unique_id
-language::principle_rule() const {
+inline language::rule_unique_id language::principle_rule() const {
   return m_principle_rule;
 }
 inline language::size_type language::num_rules() const {

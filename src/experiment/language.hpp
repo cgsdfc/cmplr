@@ -46,8 +46,8 @@ class language {
   typedef std::vector<symbol_unique_id> symbol_vector;
   typedef std::map<symbol_unique_id, rule_vector> nonterminal2rule_map;
   typedef boost::adjacency_list<
-      boost::vecS, boost::vecS,
-      boost::bidirectionalS, boost::no_property /*vertex*/,
+      boost::vecS, boost::vecS, boost::bidirectionalS,
+      boost::no_property /*vertex*/,
       boost::property<boost::edge_name_t, rule_unique_id> /* edge */>
       symbol_ref_graph;
   // bidirectiional is not allowed, but with directedS, we have in_edges
@@ -67,6 +67,7 @@ class language {
   symbol_unique_id m_list_count;
   symbol_unique_id m_optional_count;
   rule_unique_id m_principle_rule;
+
  public:
   void notify();
   void name(const char* str) { m_name = str; }
@@ -97,7 +98,7 @@ class language {
   rule_unique_id register_rule(rule_type const&);
   symbol_unique_id make_list();
   symbol_unique_id make_optional();
-  void add_edge(symbol_unique_id, symbol_unique_id,rule_unique_id id=0);
+  void add_edge(symbol_unique_id, symbol_unique_id, rule_unique_id id = 0);
   bool all_optional(rule_unique_id) const;
   bool any_optional(rule_vector const&) const;
   size_type resolve_nullable();
@@ -112,8 +113,8 @@ class language {
   friend std::ostream& operator<<(std::ostream& os, const language& lang);
   void print(ostream_reference) const;
   void print(ostream_reference, rule_type const&) const;
-  void print(ostream_reference, symbol const&, bool show_property=false) const;
-
+  void print(ostream_reference, symbol const&,
+             bool show_property = false) const;
 };
 }  // namespace experiment
 #include "impl/language.ipp"

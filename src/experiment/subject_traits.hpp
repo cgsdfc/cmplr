@@ -2,7 +2,7 @@
 #define EXPERIMENT_SUBJECT_TRAITS_HPP 1
 #include "unique_map.hpp"
 namespace experiment {
-template<class Subject>
+template <class Subject>
 struct subject_traits {
   typedef Subject type;
   typedef unique_map<type> map_type;
@@ -10,5 +10,5 @@ struct subject_traits {
   typedef typename map_type::value_iterator value_iterator;
   typedef typename map_type::item_iterator item_iterator;
 };
-} // namespace experiment
-#endif // EXPERIMENT_SUBJECT_TRAITS_HPP
+}  // namespace experiment
+#endif  // EXPERIMENT_SUBJECT_TRAITS_HPP

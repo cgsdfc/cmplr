@@ -2,7 +2,7 @@
 #define UTILLIB_UTILLIB_H
 
 #include "except.h"
-#include "slist.h"
 #include "position.h"
+#include "slist.h"
 #include "vector.h"
 #endif

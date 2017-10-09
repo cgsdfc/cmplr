@@ -2,8 +2,7 @@
 #define TKNZR_ERROR_H 1
 #include "utillib/enum.h"
 
-typedef enum cmplr_error
-{
+typedef enum cmplr_error {
   ER_NO_INPUT = 1,
   ER_BAD_TOKEN,
   ER_NOMEM,
@@ -20,22 +19,20 @@ typedef enum cmplr_error
   ER_INVALID_CHAR,
 } cmplr_error;
 
-typedef enum error_level
-{
+typedef enum error_level {
   LV_WARNING,
   LV_ERROR,
   LV_FATAL,
   LV_NOTE,
 } error_level;
 
-typedef struct err_entry
-{
+typedef struct err_entry {
   char *errmsg;
   int lv;
 } err_entry;
 
 struct char_buffer;
-void tknzr_error_set (int err);
-int tknzr_error_handle (struct char_buffer *);
+void tknzr_error_set(int err);
+int tknzr_error_handle(struct char_buffer *);
 
 #endif

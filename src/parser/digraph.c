@@ -109,7 +109,7 @@ void traverse(digraph_struct *self, int x) {
       }
     }
   }
-  if (*xid == depth)  // if x is the root of SCC
+  if (*xid == depth) // if x is the root of SCC
   {
     // pop the members of SCC
     while (!((top = top_stack(self)) == x)) {

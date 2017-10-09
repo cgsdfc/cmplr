@@ -11,12 +11,8 @@ struct symbol_node {
   typedef typename base_type::size_type size_type;
   typedef typename base_type::reference reference;
   base_type m_symbols;
-  size_type size() const {
-    return m_symbols.size();
-  }
-  reference operator[] (size_type pos) {
-    m_symbols[pos];
-  }
+  size_type size() const { return m_symbols.size(); }
+  reference operator[](size_type pos) { m_symbols[pos]; }
   /* operator base_type&() { return m_symbols; } */
   /* operator base_type const&() const { return m_symbols; } */
 };

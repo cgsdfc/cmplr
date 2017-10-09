@@ -15,7 +15,7 @@ rule_adder::symbol_unique_id rule_adder::register_rule(
   rule.head() = head;
   rule.body() = body;
   auto ruleid = register_rule(std::move(rule));
-  for (auto id:body) {
+  for (auto id : body) {
     m_lang.add_edge(head, id, ruleid);
   }
 }
@@ -62,9 +62,9 @@ void rule_node::parse() {
 rule_tree::~rule_tree() {
   for (auto const& node : m_nodes) {
     auto body = node->body();
-    auto ruleid=register_rule(m_head, body.begin(), body.end());
+    auto ruleid = register_rule(m_head, body.begin(), body.end());
     for (auto symid : body) {
-      m_lang.add_edge(m_head, symid,ruleid);
+      m_lang.add_edge(m_head, symid, ruleid);
     }
   }
 }

@@ -4,8 +4,8 @@
 #include <boost/type_traits/is_integral.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <map>
+#include <memory>  // for shared_ptr
 #include <vector>
-#include <memory> // for shared_ptr
 
 #define UNIQUE_MAP_TEMPLATE_PARAM \
   class T, class Integer, class Map, class Vector
@@ -51,7 +51,7 @@ class unique_map {
   typedef typename map_type::iterator mutable_item_iterator;
 
   mutable_value_iterator vbegin();
-  mutable_value_iterator vend() ;
+  mutable_value_iterator vend();
   value_iterator vbegin() const;
   value_iterator vend() const;
   item_iterator ibegin() const;

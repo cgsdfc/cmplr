@@ -1,7 +1,7 @@
 #include "grammar.hpp"
-#include <boost/format.hpp>
 #include <algorithm>
 #include <bitset>
+#include <boost/format.hpp>
 #include <queue>
 
 namespace experiment {
@@ -9,7 +9,7 @@ void grammar::build_itemset() {
   std::queue<itemset_unique_id> queue;
   std::unordered_set<itemset_unique_id> visited;
   itemset_type initial;
-  for (auto rule :m_lang.rule_for(language::start)) {
+  for (auto rule : m_lang.rule_for(language::start)) {
     item_type first_item = make_item(0, rule);
     initial.push_back(m_item_map[first_item]);
   }
@@ -46,7 +46,7 @@ void grammar::build_itemset() {
 void grammar::do_closure(itemset_type& itemset) {
   std::vector<bool> accounted(m_lang.num_symbols(), false);
   itemset.reserve(m_lang.num_rules());
-  for (int i=0;i<itemset.size();++i) {
+  for (int i = 0; i < itemset.size(); ++i) {
     auto item_id = itemset[i];
     const item_type& item = m_item_map[item_id];
     if (item_dot_reach_end(item)) continue;
@@ -57,7 +57,7 @@ void grammar::do_closure(itemset_type& itemset) {
       auto new_item = make_item(0, ruleid);
       itemset.push_back(m_item_map[new_item]);
     }
-    accounted[symbol]=true;
+    accounted[symbol] = true;
   }
   std::sort(itemset.begin(), itemset.end());
   itemset.shrink_to_fit();
@@ -65,12 +65,12 @@ void grammar::do_closure(itemset_type& itemset) {
 
 void grammar::print(ostream_reference os, item_type const& item) const {
   // item is just a rule plus a dot indicating position
-  auto rule=m_lang.rule(item.rule());
-  auto dot=item.dot();
+  auto rule = m_lang.rule(item.rule());
+  auto dot = item.dot();
   m_lang.print(os, m_lang.get_symbol(rule.head()));
   os << " := ";
   auto body = rule.body();
-  for (int i=0;i<body.size();++i) {
+  for (int i = 0; i < body.size(); ++i) {
     if (i == dot) {
       os << "^";
     }
@@ -79,9 +79,9 @@ void grammar::print(ostream_reference os, item_type const& item) const {
   }
 }
 
-void grammar::print(ostream_reference os, itemset_type const& itemset) const{
+void grammar::print(ostream_reference os, itemset_type const& itemset) const {
   os << "itemset:\n";
-  for (auto id: itemset) {
+  for (auto id : itemset) {
     print(os, item(id));
     os << "\n";
   }

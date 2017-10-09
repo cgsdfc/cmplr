@@ -78,7 +78,7 @@ optional_node list(Args&&... args) {
   return node;
 }
 
-inline symbol toplevel(const char *str) {
+inline symbol toplevel(const char* str) {
   return symbol(str, symbol_property::toplevel);
 }
 

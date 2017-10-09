@@ -2,9 +2,9 @@
 #define EXPERIMENT_SYMBOL_HPP 1
 #include <boost/serialization/access.hpp>
 #include <functional>
+#include <functional>
 #include <iostream>
 #include <string>
-#include <functional>
 #include "subject_traits.hpp"
 
 namespace experiment {
@@ -13,7 +13,7 @@ enum class symbol_property {
   nonterminal,  // general nonterminal.
   optional,     // nonterminal that has a nullable body.
   toplevel,
-  unknown,      // illegal value.
+  unknown,  // illegal value.
 };
 
 class symbol {
@@ -26,14 +26,15 @@ class symbol {
 
  public:
   symbol(const char *str, symbol_property prop) : m_str(str), m_prop(prop) {}
-  symbol(std::string const& str, symbol_property prop) : m_str(str), m_prop(prop) {}
+  symbol(std::string const &str, symbol_property prop)
+      : m_str(str), m_prop(prop) {}
   symbol(std::string const &str) : m_str(str) {}
   symbol(const char *str) : m_str(str), m_prop(symbol_property::unknown) {}
   symbol() : m_str(), m_prop(symbol_property::unknown) {}
 
  public:
   symbol_property property() const;
-  void set(symbol_property prop)const;
+  void set(symbol_property prop) const;
   bool unknown() const;
   bool terminal() const;
   bool nonterminal() const;
@@ -41,10 +42,11 @@ class symbol {
   bool toplevel() const;
 
  public:
-  template<class T> friend struct std::hash;
+  template <class T>
+  friend struct std::hash;
   friend std::ostream &operator<<(std::ostream &os, symbol const &s);
-  friend bool operator< (symbol const& left, symbol const& right);
-  friend bool operator== (symbol const& left, symbol const& right);
+  friend bool operator<(symbol const &left, symbol const &right);
+  friend bool operator==(symbol const &left, symbol const &right);
 };
 struct is_terminal {
   bool operator()(symbol const &s) const { return s.terminal(); }

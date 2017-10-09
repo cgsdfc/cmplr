@@ -1,22 +1,18 @@
-#ifndef DIGRAPH_H 
+#ifndef DIGRAPH_H
 #define DIGRAPH_H 1
 #include <stdio.h>
 #define DIGRAPH_BUFSIZ 3000
-#define DIGRAPH_SET_RELATION(self, X, Y) ((self)->m_relation[(X)][(Y)]=1)
-#define DIGRAPH_SET_DIMENSION(self, D) ((self)->m_dimension=(D)) 
-#define DIGRAPH_SET_DATA(self, data) ((self)->m_data=(data))
+#define DIGRAPH_SET_RELATION(self, X, Y) ((self)->m_relation[(X)][(Y)] = 1)
+#define DIGRAPH_SET_DIMENSION(self, D) ((self)->m_dimension = (D))
+#define DIGRAPH_SET_DATA(self, data) ((self)->m_data = (data))
 
-# ifdef DEBUG_DIGRAPH
-enum
-{
-  a, b, c, d, e, f, N
-};
+#ifdef DEBUG_DIGRAPH
+enum { a, b, c, d, e, f, N };
 
 extern const char *name[];
-# endif
+#endif
 
-typedef struct digraph_struct
-{
+typedef struct digraph_struct {
   int m_stack_array[DIGRAPH_BUFSIZ];
   int m_stack_top;
 
@@ -31,14 +27,10 @@ typedef struct digraph_struct
 
 } digraph_struct;
 
-void
-digraph (digraph_struct*);
+void digraph(digraph_struct *);
 
-void
-init_digraph (digraph_struct*);
+void init_digraph(digraph_struct *);
 
-int 
-alloc_nonterm_tran_node(digraph_struct*,int,int);
+int alloc_nonterm_tran_node(digraph_struct *, int, int);
 
 #endif
-

@@ -28,11 +28,11 @@ UTILLIB_ETAB_END(predefined_macro)
 /*     case PD_FILE: */
 /*       pbuf_output_filename(buf); */
 /*       break; */
-/*     case PD_LINE: */              
+/*     case PD_LINE: */
 /*       pbuf_output_filename(buf); */
 /*       break; */
-/*     case PD_DATE: */             
-/*     case PD_TIME: */                
+/*     case PD_DATE: */
+/*     case PD_TIME: */
 /*     case PD_STDC: */
 /*     case PD_STDC_VERSION: */
 /*     case PD_GNUC: */

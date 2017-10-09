@@ -15,7 +15,7 @@ struct unique_traits<symbol> {
 namespace detail {
 // the types needed by class language
 struct language_base {
-  typedef int symbol_ref_graph; // temporary
+  typedef int symbol_ref_graph;  // temporary
   typedef std::size_t size_type;
   typedef unique_map<symbol, unique_traits<symbol>> symbol_unique_map;
   typedef typename symbol_unique_map::unique_id symbol_unique_id;
@@ -33,7 +33,8 @@ struct language_base {
   };
   typedef unique_map<rule_type> rule_unique_map;
   typedef typename rule_unique_map::unique_id rule_unique_id;
-  typedef std::map<symbol_unique_id, std::vector<rule_unique_id>> nonterminal2rule_map;
+  typedef std::map<symbol_unique_id, std::vector<rule_unique_id>>
+      nonterminal2rule_map;
   /* struct nonterminal2rule_map : public matrix<rule_unique_id> { */
   /*   typedef matrix<rule_unique_id> base_t; */
   /*   typedef typename base_t::size_type size_type; */
