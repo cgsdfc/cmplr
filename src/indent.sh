@@ -1,4 +1,3 @@
 #!/bin/bash
 
-indent ./lexer/*.[ch] ./recursive/*.[ch]
-./clean.sh
+clang-format -i ./*/*.[ch]

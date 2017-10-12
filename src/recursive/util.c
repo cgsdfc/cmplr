@@ -286,19 +286,20 @@ case TKT_AMPERSAND:
   UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_ADDROF)
   UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_BIT_AND)
   UTIL_TKT_TO_CTR_END(tag)
-  case TKT_STAR : UTIL_TKT_TO_CTR_BEGIN(tag)
-                      UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_DEREF)
-                          UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_MUL)
-                              UTIL_TKT_TO_CTR_END(tag) case TKT_PLUS
-                  : UTIL_TKT_TO_CTR_BEGIN(tag)
-                        UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_POSIV)
-                            UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_ADD)
-                                UTIL_TKT_TO_CTR_END(tag) case TKT_MINUS
-                    : UTIL_TKT_TO_CTR_BEGIN(tag)
-                          UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_NEGAV)
-                              UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_SUB)
-                                  UTIL_TKT_TO_CTR_END(tag)
-                                      UTIL_TKT_TO_CTR_END(tt)}
+case TKT_STAR:
+  UTIL_TKT_TO_CTR_BEGIN(tag)
+  UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_DEREF)
+  UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_MUL)
+  UTIL_TKT_TO_CTR_END(tag)
+case TKT_PLUS:
+  UTIL_TKT_TO_CTR_BEGIN(tag)
+  UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_POSIV)
+  UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_ADD)
+  UTIL_TKT_TO_CTR_END(tag)
+  case TKT_MINUS : UTIL_TKT_TO_CTR_BEGIN(tag)
+                       UTIL_TKT_TO_CTR_CASE(NODE_TAG_UNARY, OP_NEGAV)
+                           UTIL_TKT_TO_CTR_CASE(NODE_TAG_BINARY, OP_SUB)
+                               UTIL_TKT_TO_CTR_END(tag) UTIL_TKT_TO_CTR_END(tt)}
 
 		       int util_token_type_to_construct (int tt)
 		       {

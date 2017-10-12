@@ -1,12 +1,28 @@
 #include "input_buf.h"
+#include "error.h"
 #include "except.h"
 #include <string.h>
+#include <unistd.h>
 
 UTILLIB_ETAB_BEGIN(utillib_input_buf_source)
 UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_STDIN, "<stdin>")
 UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_FILE, "<file>")
 UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_STRING, "<string>")
 UTILLIB_ETAB_END(utillib_input_buf_source)
+
+const utillib_char_buf_ft *utillib_input_buf_ft(void) {
+  static const utillib_char_buf_ft ft = {
+      .cb_getc = (utillib_getc_func_t *)utillib_input_buf_getc,
+      .cb_ungetc = (utillib_ungetc_func_t *)utillib_input_buf_ungetc,
+      .cb_feof = (utillib_feof_func_t*) utillib_input_buf_feof,
+  };
+  return &ft;
+}
+
+bool utillib_input_buf_feof(utillib_input_buf *b)
+{
+  return feof(b->file);
+}
 
 int utillib_input_buf_init(utillib_input_buf *b, int source, char *arg) {
   FILE *file;
@@ -28,7 +44,6 @@ int utillib_input_buf_init(utillib_input_buf *b, int source, char *arg) {
     return UTILLIB_EINVAL;
   }
   if (file) {
-    b->ch = fgetc(file);
     b->row = 1;
     b->col = 0;
     b->file = file;
@@ -38,9 +53,8 @@ int utillib_input_buf_init(utillib_input_buf *b, int source, char *arg) {
   return UTILLIB_FILE_NOT_FOUND;
 }
 
-int utillib_input_buf_getchar(utillib_input_buf *b) {
-  int ch = b->ch;
-  b->ch = fgetc(b->file);
+int utillib_input_buf_getc(utillib_input_buf *b) {
+  int ch = fgetc(b->file);
   switch (ch) {
   case '\n':
     b->row++;
@@ -55,8 +69,8 @@ int utillib_input_buf_getchar(utillib_input_buf *b) {
   return ch;
 }
 
-int utillib_input_buf_ungetc(utillib_input_buf *b) {
-  switch (b->ch) {
+int utillib_input_buf_ungetc(utillib_input_buf *b, int ch) {
+  switch (ch) {
   case '\n':
     b->row--;
     break;
@@ -64,7 +78,7 @@ int utillib_input_buf_ungetc(utillib_input_buf *b) {
     b->col--;
     break;
   }
-  return ungetc(b->ch, b->file);
+  return ungetc(ch, b->file);
 }
 
 const char *utillib_input_buf_filename(utillib_input_buf *b) {
@@ -86,4 +100,12 @@ void utillib_input_buf_destroy(utillib_input_buf *b) {
   if (b->file != stdin) {
     fclose(b->file);
   }
+}
+
+// print the (path:row:col:lv) 4 tuple to FILE
+void utillib_input_buf_perror(utillib_input_buf *b, FILE *file, int lv) {
+  static char buf[BUFSIZ];
+  getcwd(buf, sizeof buf);
+  fprintf(file, "%s/%s:%lu:%lu:%s", buf, b->filename, b->row, b->col,
+          utillib_error_lv_tostring(lv));
 }

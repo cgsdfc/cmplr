@@ -1,8 +1,9 @@
 project(scanner)
 set(scanner_source
-  ./token.c
-  ./reserved.c
-  ./matcher.c
+  ./scanner.c
+# ./token.c
+# ./reserved.c
+  ./match.c
 )
 add_library(scanner
   ${scanner_source}
@@ -12,4 +13,5 @@ add_executable(scan
 )
 target_link_libraries(scan
   scanner
+  utillib
 )

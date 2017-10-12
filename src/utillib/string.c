@@ -2,65 +2,58 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#define UTILLIB_STR_CMP(S, T, OP)                                              \
-  (strcmp(UTILLIB_C_STR(S), UTILLIB_C_STR(T)) OP(0))
-#define UTILLIB_STRING_INIT_CAP 5
+static const size_t utillib_string_init_capacity = 5;
+void utillib_string_clear(utillib_string *s) { s->size = 0; }
+void utillib_string_erase_last(utillib_string *s) { s->size--; }
 
-int utillib_string_init(utillib_string *s, utillib_string_size_type init_cap) {
-  // must init to be able to hold init_cap of character
-  assert(init_cap != 0);
-  // init_cap should be
-  utillib_string_char_type *c_str =
-      calloc(sizeof *c_str, init_cap + 1); /* for NULL */
+int utillib_string_init(utillib_string *s) {
+  char *c_str = calloc(sizeof *c_str, utillib_string_init_capacity);
   if (!c_str) {
     return -1;
   }
   s->c_str = c_str;
-  s->capacity = init_cap;
+  s->capacity = utillib_string_init_capacity;
   s->size = 0;
   return 0;
 }
 
-static int utillib_string_reserve(utillib_string *s,
-                                  utillib_string_size_type new_capa) {
-  assert(new_capa > s->size + 1);
-  // change s's capacity to new_capa
-  assert(new_capa);
-  utillib_string_char_type *newspace = calloc(sizeof *newspace, new_capa);
+int utillib_string_reserve(utillib_string *s, size_t new_capa) {
+  if (new_capa - 1 <= s->size) {
+    return 0;
+  }
+  char *newspace = realloc(s->c_str, new_capa * sizeof *newspace);
   if (!newspace) {
     return -1;
   }
-  memcpy(newspace, s->c_str, s->size + 1); // for NULL
-  free(s->c_str);
   s->c_str = newspace;
   s->capacity = new_capa;
   return 0;
 }
 
-static int // 0
-    utillib_string_append_aux(utillib_string *s, utillib_string_char_type x) {
+static void utillib_string_append_aux(utillib_string *s, char x) {
   assert(x);
   assert(s->size < s->capacity - 1);
-  utillib_string_char_type *end = s->c_str + s->size;
-  *end++ = x;
-  *end = 0;
-  s->size++;
+  s->c_str[s->size++] = x;
+}
+
+int utillib_string_append(utillib_string *s, char x) {
+  int r;
+  if (s->capacity - 1 == s->size) {
+    r = utillib_string_reserve(s, s->size << 1);
+    if (r != 0) {
+      return r;
+    }
+  }
+  utillib_string_append_aux(s, x);
   return 0;
 }
 
-int utillib_string_append(utillib_string *s, utillib_string_char_type x) {
-  if (s->capacity - 1 == s->size) {
-    if (utillib_string_reserve(s, s->size << 1) == 0) {
-      return utillib_string_append_aux(s, x);
-    }
-    return -1;
-  }
-  return utillib_string_append_aux(s, x);
+char const *utillib_string_c_str(utillib_string *s) {
+  s->c_str[s->size] = 0;
+  return s->c_str;
 }
 
-utillib_string_size_type utillib_string_size(utillib_string *s) {
-  return s->size;
-}
+size_t utillib_string_size(utillib_string *s) { return s->size; }
 
 void utillib_string_destroy(utillib_string *s) { free(s->c_str); }
 
@@ -68,6 +61,8 @@ bool utillib_string_empty(utillib_string *s) { return s->size == 0; }
 
 bool utillib_string_richcmp(utillib_string *s, utillib_string *t,
                             string_cmpop op) {
+#define UTILLIB_STR_CMP(S, T, OP)                                              \
+  (strcmp(UTILLIB_C_STR(S), UTILLIB_C_STR(T)) OP 0)
   switch (op) {
   case STRING_EQ:
     return UTILLIB_STR_CMP(s, t, ==);
