@@ -24,6 +24,8 @@ UTILLIB_ENUM_END(utillib_error_lv)
 
 struct utillib_error_base;
 typedef void(utillib_error_destructor)(struct utillib_error_base *);
+typedef void(utillib_error_cleanup_func_t)(void);
+
 typedef struct utillib_error_tag {
   int level;
   /* virtual */

@@ -31,7 +31,7 @@ int utillib_string_reserve(utillib_string *s, size_t new_capa) {
 }
 
 static void utillib_string_append_aux(utillib_string *s, char x) {
-  assert(x);
+  /* assert(x); */
   assert(s->size < s->capacity - 1);
   s->c_str[s->size++] = x;
 }

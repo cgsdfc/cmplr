@@ -5,7 +5,14 @@
 #include "utillib/enum.h"
 #include "utillib/string.h"
 #include <stddef.h>
+
+#define SCANNER_MATCH_ENTRY_BEGIN(NAME) static const scanner_match_entry_t NAME[]={
+#define SCANNER_MATCH_ENTRY_END(NAME) { NULL, 0 }};
 #define SCANNER_MATCH_ENTRY(FUNC, VAL) {.scm_func = (FUNC), .scm_val = (VAL)},
+
+#define SCANNER_STR_ENTRY_BEGIN(NAME) static const scanner_str_entry_t NAME[] = {
+#define SCANNER_STR_ENTRY_ELEM(STR, VAL) { .se_str=(STR), .se_val=(VAL)},
+#define SCANNER_STR_ENTRY_END(NAME) { NULL, 0 }};
 
 UTILLIB_ENUM_BEGIN(scanner_retval_t)
 UTILLIB_ENUM_ELEM(SCANNER_MATCHED)
@@ -53,6 +60,8 @@ typedef struct scanner_base_t {
   int sc_flags;
 } scanner_base_t;
 
+int scanner_ungetchar(scanner_base_t *, int);
+int scanner_getchar(scanner_base_t *);
 int scanner_init(scanner_base_t *, void *, struct utillib_char_buf_ft const *,
                  scanner_match_entry_t const *, scanner_str_entry_t const *,
                  int);

@@ -1,8 +1,6 @@
 project(prep C)
 set(prep_source 
-  ./predefined_macro.c
-  ./directive.c
-  ./lexer.c
+  ./first_pass.c
 )
 
 add_library(prep

@@ -1,4 +1,4 @@
-#include "utillib/vector.h"
+#include "vector.h"
 #include <assert.h>
 #include <stdlib.h> // calloc free
 #include <string.h> // memset

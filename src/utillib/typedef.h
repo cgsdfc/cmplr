@@ -1,0 +1,4 @@
+#ifndef UTILLIB_TYPEDEF_H
+#define UTILLIB_TYPEDEF_H
+
+#endif // UTILLIB_TYPEDEF_H

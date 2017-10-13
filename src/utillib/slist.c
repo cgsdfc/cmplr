@@ -1,4 +1,4 @@
-#include "utillib/slist.h"
+#include "slist.h"
 #include "except.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -29,12 +29,22 @@ int utillib_slist_push_front(utillib_slist *list, void *data) {
   return UTILLIB_ENOMEM;
 }
 
+static void destroy_node(utillib_slist_node *node) { free(node); }
+
+void utillib_slist_erase(utillib_slist *list, utillib_slist_node *node)
+{
+  // remove node from list
+  utillib_slist_node ** prev=&(list->tail);
+  for (; *prev && (*prev)->next != node; *prev=(*prev)->next);
+  *prev=node->next;
+  destroy_node(node);
+}
+
 void *utillib_slist_front(utillib_slist *list) {
   assert(list->tail);
   return list->tail->data;
 }
 
-static void destroy_node(utillib_slist_node *node) { free(node); }
 
 void *utillib_slist_pop_front(utillib_slist *list) {
   assert(list->tail);

@@ -10,11 +10,12 @@ UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_FILE, "<file>")
 UTILLIB_ETAB_ELEM_INIT(INPUT_BUF_STRING, "<string>")
 UTILLIB_ETAB_END(utillib_input_buf_source)
 
-const utillib_char_buf_ft *utillib_input_buf_ft(void) {
+const utillib_char_buf_ft *utillib_input_buf_getft(void) {
   static const utillib_char_buf_ft ft = {
       .cb_getc = (utillib_getc_func_t *)utillib_input_buf_getc,
       .cb_ungetc = (utillib_ungetc_func_t *)utillib_input_buf_ungetc,
       .cb_feof = (utillib_feof_func_t*) utillib_input_buf_feof,
+      .cb_close = (utillib_fclose_func_t*) utillib_input_buf_destroy,
   };
   return &ft;
 }
@@ -24,7 +25,7 @@ bool utillib_input_buf_feof(utillib_input_buf *b)
   return feof(b->file);
 }
 
-int utillib_input_buf_init(utillib_input_buf *b, int source, char *arg) {
+int utillib_input_buf_init(utillib_input_buf *b, char *arg, int source) {
   FILE *file;
   const char *filename;
   switch (source) {
@@ -103,9 +104,20 @@ void utillib_input_buf_destroy(utillib_input_buf *b) {
 }
 
 // print the (path:row:col:lv) 4 tuple to FILE
-void utillib_input_buf_perror(utillib_input_buf *b, FILE *file, int lv) {
-  static char buf[BUFSIZ];
-  getcwd(buf, sizeof buf);
-  fprintf(file, "%s/%s:%lu:%lu:%s", buf, b->filename, b->row, b->col,
-          utillib_error_lv_tostring(lv));
+char const* utillib_input_buf_tostring(utillib_input_buf *b, char *buf, size_t size, int lv) {
+  char * absdir = getcwd(buf, sizeof buf);
+  int nwrite = snprintf(buf, size, "%s/%s:%lu:%lu:%s", absdir, 
+      b->filename, b->row, b->col, utillib_error_lv_tostring(lv));
+  return nwrite >= size ? NULL : buf;
+}
+
+void utillib_input_buf_perror(utillib_input_buf *b, char const* errmsg)
+{
+  static char buf[BUFSIZ]; // 4096
+  char const * path_row_col_lv=utillib_input_buf_tostring(b, buf, BUFSIZ, ERROR_LV_ERROR);
+  if (path_row_col_lv) {
+    fprintf(stderr, "%s %s\n", path_row_col_lv, errmsg);
+  } else {
+    utillib_die("static buffer overflow");
+  }
 }

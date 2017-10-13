@@ -1,6 +1,9 @@
 set(CMAKE_C_FLAGS "-g3")
 include_directories(${CMAKE_SOURCE_DIR})
 set(UTILLIB_SOURCE
+  ./equal.c
+  ./hash.c
+  ./unordered_map.c
   ./char_buf.c
   ./error.c
   ./except.c

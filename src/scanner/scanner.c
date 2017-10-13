@@ -9,12 +9,14 @@ UTILLIB_ETAB_ELEM_INIT(SCANNER_UNMATCHED, "unmatched token")
 UTILLIB_ETAB_ELEM_INIT(SCANNER_ERROR, "scanner error")
 UTILLIB_ETAB_END(scanner_retval_t)
 
-static int scanner_ungetchar(scanner_base_t *self, int c)
+// not appending internal str
+int scanner_ungetchar(scanner_base_t *self, int c)
 {
   return utillib_char_buf_ungetc(self->sc_char_buf, c, self->sc_cb_ft);
 }
 
-static int scanner_getchar(scanner_base_t *self)
+// not erasing internal str
+int scanner_getchar(scanner_base_t *self)
 {
   int c = utillib_char_buf_getc(self->sc_char_buf, self->sc_cb_ft);
   return c;
@@ -53,7 +55,7 @@ int scanner_getc(scanner_base_t *self) {
 }
 
 int scanner_ungetc(scanner_base_t *self, int c) {
-  int ch = utillib_char_buf_ungetc(self->sc_char_buf, c, self->sc_cb_ft);
+  int ch = scanner_ungetchar(self, c);
   utillib_string_erase_last(&(self->sc_str));
   return ch;
 }
@@ -114,5 +116,7 @@ void scanner_skip_to(scanner_base_t *self, int c) {
 }
 
 void scanner_destroy(scanner_base_t *self) {
+  utillib_char_buf_destroy(&(self->sc_char_buf), self->sc_cb_ft);
   utillib_string_destroy(&(self->sc_str));
 }
+

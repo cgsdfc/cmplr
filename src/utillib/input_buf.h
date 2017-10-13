@@ -21,7 +21,7 @@ typedef struct utillib_input_buf {
 } utillib_input_buf;
 
 bool utillib_input_buf_feof(utillib_input_buf *);
-int utillib_input_buf_init(utillib_input_buf *, int, char *);
+int utillib_input_buf_init(utillib_input_buf *, char *, int);
 int utillib_input_buf_getc(utillib_input_buf *);
 int utillib_input_buf_ungetc(utillib_input_buf *, int);
 void utillib_input_buf_destroy(utillib_input_buf *);
@@ -29,6 +29,8 @@ const char *utillib_input_buf_filename(utillib_input_buf *);
 size_t utillib_input_buf_row(utillib_input_buf *);
 size_t utillib_input_buf_col(utillib_input_buf *);
 utillib_position utillib_input_buf_position(utillib_input_buf *);
-const utillib_char_buf_ft *utillib_input_buf_ft(void);
-void utillib_input_buf_perror(utillib_input_buf *, FILE *, int);
+const utillib_char_buf_ft *utillib_input_buf_getft(void);
+void utillib_input_buf_perror(utillib_input_buf *, char const *);
+char const* utillib_input_buf_tostring(utillib_input_buf *, char *, size_t , int );
+
 #endif // UTILLIB_INPUT_BUF_H
