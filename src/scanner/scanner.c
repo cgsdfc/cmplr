@@ -10,14 +10,12 @@ UTILLIB_ETAB_ELEM_INIT(SCANNER_ERROR, "scanner error")
 UTILLIB_ETAB_END(scanner_retval_t)
 
 // not appending internal str
-int scanner_ungetchar(scanner_base_t *self, int c)
-{
+int scanner_ungetchar(scanner_base_t *self, int c) {
   return utillib_char_buf_ungetc(self->sc_char_buf, c, self->sc_cb_ft);
 }
 
 // not erasing internal str
-int scanner_getchar(scanner_base_t *self)
-{
+int scanner_getchar(scanner_base_t *self) {
   int c = utillib_char_buf_getc(self->sc_char_buf, self->sc_cb_ft);
   return c;
 }
@@ -72,6 +70,7 @@ void scanner_ungets(scanner_base_t *self) {
 static int scanner_try_match(scanner_base_t *self) {
   scanner_match_entry_t const *match;
   scanner_str_clear(self);
+  int c;
   for (match = self->sc_match; match->scm_func != NULL || match->scm_val != 0;
        ++match) {
     int r;
@@ -91,7 +90,9 @@ static int scanner_try_match(scanner_base_t *self) {
       return SCANNER_ERROR;
     }
   }
-  self->sc_val = scanner_getc(self);
+  c=scanner_getc(self);
+  if (c == EOF) { return SCANNER_EOF; }
+  self->sc_val=c;
   if (self->sc_flags & SCANNER_MATCH_ANY_CHAR) {
     return SCANNER_ANY_CHAR;
   }
@@ -101,10 +102,7 @@ static int scanner_try_match(scanner_base_t *self) {
 char const *scanner_get_text(scanner_base_t *self) { return self->sc_text; }
 int scanner_get_val(scanner_base_t *self) { return self->sc_val; }
 
-int scanner_yylex(scanner_base_t *self) { 
-  if (utillib_char_buf_feof(self->sc_char_buf, self->sc_cb_ft)){
-    return SCANNER_EOF;
-  }
+int scanner_yylex(scanner_base_t *self) {
   return scanner_try_match(self);
 }
 
@@ -116,7 +114,6 @@ void scanner_skip_to(scanner_base_t *self, int c) {
 }
 
 void scanner_destroy(scanner_base_t *self) {
-  utillib_char_buf_destroy(&(self->sc_char_buf), self->sc_cb_ft);
+  utillib_char_buf_destroy(self->sc_char_buf, self->sc_cb_ft);
   utillib_string_destroy(&(self->sc_str));
 }
-

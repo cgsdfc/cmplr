@@ -51,3 +51,9 @@ void *utillib_vector_back(utillib_vector *v) {
   assert(utillib_vector_size(v) > 0);
   return *(v->end - 1);
 }
+void **utillib_vector_atp(utillib_vector *v, size_t pos) {
+  assert(pos < utillib_vector_size(v));
+  return &(v->begin[pos]);
+}
+
+int utillib_vector_reserve(utillib_vector *v, size_t size) {}

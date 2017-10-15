@@ -47,4 +47,6 @@ size_t utillib_error_stack_size(utillib_error_stack *s);
 bool utillib_error_stack_empty(utillib_error_stack *s);
 utillib_error_base *utillib_error_stack_top(utillib_error_stack *s);
 void utillib_error_base_destroy_trivial(utillib_error_base *);
+utillib_error_cleanup_func_t * utillib_error_cleanup_func(utillib_error_cleanup_func_t *);
+
 #endif // UTILLIB_ERROR_H

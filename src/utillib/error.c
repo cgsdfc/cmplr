@@ -20,16 +20,20 @@ void utillib_error_base_destroy_trivial(utillib_error_base *base) {
   free(base);
 }
 
-utillib_error_cleanup_func_t const *utillib_error_cleanup_func(void) {
-  static utillib_error_cleanup_func_t const* cleanup_func;
+utillib_error_cleanup_func_t * utillib_error_cleanup_func(utillib_error_cleanup_func_t * func) {
+  static utillib_error_cleanup_func_t  *cleanup_func;
+  if (func) {
+    cleanup_func=func;
+  }
   return cleanup_func;
 }
 
 void utillib_die(const char *msg) {
-  utillib_error_cleanup_func_t * cleanup
-  =utillib_error_cleanup_func();
-  if (cleanup) { cleanup(); }
-  fprintf(stderr, "%s %s\n", utillib_error_lv_tostring(ERROR_LV_ICE), msg);
+  utillib_error_cleanup_func_t * cleanup = utillib_error_cleanup_func(NULL);
+  if (cleanup) {
+    (cleanup) ();
+  }
+  fprintf(stderr, "%s %s\n", utillib_error_lv_tostring(ERROR_LV_ERROR), msg);
   exit(1);
 }
 

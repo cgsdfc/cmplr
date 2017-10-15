@@ -48,7 +48,8 @@ int scanner_match_string(scanner_base_t *self, const char *str) {
   return SCANNER_MATCHED;
 }
 
-static int scanner_match_string_impl(scanner_base_t *self, int left, int right) {
+static int scanner_match_string_impl(scanner_base_t *self, int left,
+                                     int right) {
   int state = 0;
   int c = scanner_getc(self);
   if (c == left) {
@@ -80,13 +81,12 @@ static int scanner_match_string_impl(scanner_base_t *self, int left, int right) 
   return SCANNER_UNMATCHED;
 }
 
-int scanner_match_string_angle(scanner_base_t *self)
-{
+int scanner_match_string_angle(scanner_base_t *self) {
   return scanner_match_string_impl(self, '<', '>');
 }
 
 int scanner_match_string_single(scanner_base_t *self) {
-  static const int single_quote='\'';
+  static const int single_quote = '\'';
   return scanner_match_string_impl(self, single_quote, single_quote);
 }
 
@@ -94,59 +94,69 @@ int scanner_match_string_double(scanner_base_t *self) {
   static const int double_quote = '\"';
   return scanner_match_string_impl(self, double_quote, double_quote);
 }
-int scanner_skip_space(scanner_base_t *self)
-{
-  // skip spaces
+int scanner_skip_space(scanner_base_t *self) {
   int c;
-  do { c=scanner_getchar(self); }
-  while (isspace(c));
+  int cnt=0;
+  do {
+    c = scanner_getchar(self);
+    cnt++;
+  } while (isspace(c));
   scanner_ungetchar(self, c);
-  return SCANNER_MATCHED;
+  return cnt>1?SCANNER_MATCHED:SCANNER_UNMATCHED;
 }
 
-int scanner_skip_cpp_comment(scanner_base_t * self)
-{
+int scanner_skip_cpp_comment(scanner_base_t *self) {
   int c;
-  if ((c=scanner_getchar(self)) == '/') {
-    if ((c=scanner_getchar(self)) == '/') {
-      do { c=scanner_getchar(self); }
-      while (c != '\n');
+  if ((c = scanner_getchar(self)) == '/') {
+    if ((c = scanner_getchar(self)) == '/') {
+      do {
+        c = scanner_getchar(self);
+      } while (c != '\n');
       return SCANNER_MATCHED;
-    } 
+    }
     scanner_ungetchar(self, c);
   }
   scanner_ungetchar(self, c);
   return SCANNER_UNMATCHED;
 }
 
-int scanner_skip_c_comment(scanner_base_t * self)
-{
+int scanner_skip_c_comment(scanner_base_t *self) {
   int c;
-  int state=0;
-  if ((c=scanner_getchar(self)) == '/') {
-    if ((c=scanner_getchar(self)) == '*') {
+  int state = 0;
+  if ((c = scanner_getchar(self)) == '/') {
+    if ((c = scanner_getchar(self)) == '*') {
       while (true) {
         switch (state) {
-          case 0:
-            c=scanner_getchar(self);
-            if (c == '*') { state=1; }
-            else if (c == '/') { state=2; }
-            else if (c == EOF) { state=4; }
-            break;
-          case 1:
-            c=scanner_getchar(self);
-            if (c == '/') { state=3; }
-            else if (c != '*') { state=0; }
-            break;
-          case 2:
-            c=scanner_getchar(self);
-            if (c == '*') { state=4; }
-            else { state=1; }
-            break;
-          case 3:
-            return SCANNER_MATCHED;
-          case 4:
-            return SCANNER_ERROR;
+        case 0:
+          c = scanner_getchar(self);
+          if (c == '*') {
+            state = 1;
+          } else if (c == '/') {
+            state = 2;
+          } else if (c == EOF) {
+            state = 4;
+          }
+          break;
+        case 1:
+          c = scanner_getchar(self);
+          if (c == '/') {
+            state = 3;
+          } else if (c != '*') {
+            state = 0;
+          }
+          break;
+        case 2:
+          c = scanner_getchar(self);
+          if (c == '*') {
+            state = 4;
+          } else {
+            state = 1;
+          }
+          break;
+        case 3:
+          return SCANNER_MATCHED;
+        case 4:
+          return SCANNER_ERROR;
         }
       }
     }
@@ -155,4 +165,3 @@ int scanner_skip_c_comment(scanner_base_t * self)
   scanner_ungetchar(self, c);
   return SCANNER_UNMATCHED;
 }
-

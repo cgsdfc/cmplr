@@ -1,17 +1,17 @@
 #include "slist.h"
-#include "except.h"
+#include "error.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
-void utillib_slist_init(utillib_slist *list) { memset(list, 0, sizeof *list); }
-
+static void destroy_node(utillib_slist_node *node) { free(node); }
 static utillib_slist_node *make_node(void *t) {
   utillib_slist_node *node = calloc(sizeof *node, 1);
   if (node) {
     node->data = t;
+    return node;
   }
-  return node;
+  utillib_die("ENOMEM in make_node");
 }
 
 static void push_front_aux(utillib_slist *list, utillib_slist_node *node) {
@@ -19,24 +19,25 @@ static void push_front_aux(utillib_slist *list, utillib_slist_node *node) {
   node->next = (*tail);
   *tail = node;
 }
-
-int utillib_slist_push_front(utillib_slist *list, void *data) {
-  utillib_slist_node *to_push = make_node(data);
-  if (to_push) {
-    push_front_aux(list, to_push);
-    return 0;
-  }
-  return UTILLIB_ENOMEM;
+void utillib_slist_push_front_node(utillib_slist *list,
+                                   utillib_slist_node *node) {
+  assert(node);
+  push_front_aux(list, node);
 }
 
-static void destroy_node(utillib_slist_node *node) { free(node); }
-
-void utillib_slist_erase(utillib_slist *list, utillib_slist_node *node)
-{
+void utillib_slist_init(utillib_slist *list) { memset(list, 0, sizeof *list); }
+int utillib_slist_push_front(utillib_slist *list, void *data) {
+  utillib_slist_node *to_push = make_node(data);
+  push_front_aux(list, to_push);
+  return 0;
+}
+void utillib_slist_erase(utillib_slist *list, utillib_slist_node *node) {
+  assert(node);
   // remove node from list
-  utillib_slist_node ** prev=&(list->tail);
-  for (; *prev && (*prev)->next != node; *prev=(*prev)->next);
-  *prev=node->next;
+  utillib_slist_node **prev = &(list->tail);
+  for (; *prev && (*prev)->next != node; *prev = (*prev)->next)
+    ;
+  *prev = node->next;
   destroy_node(node);
 }
 
@@ -44,7 +45,6 @@ void *utillib_slist_front(utillib_slist *list) {
   assert(list->tail);
   return list->tail->data;
 }
-
 
 void *utillib_slist_pop_front(utillib_slist *list) {
   assert(list->tail);

@@ -1,6 +1,7 @@
 project(prep C)
 set(prep_source 
   ./first_pass.c
+  ./second_pass.c
 )
 
 add_library(prep

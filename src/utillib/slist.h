@@ -22,6 +22,7 @@ void utillib_slist_init(utillib_slist *);
 void utillib_slist_destroy(utillib_slist *);
 bool utillib_slist_empty(utillib_slist *);
 int utillib_slist_push_front(utillib_slist *, void *);
+void utillib_slist_push_front_node(utillib_slist *, utillib_slist_node *);
 void utillib_slist_erase(utillib_slist *, utillib_slist_node *);
 size_t utillib_slist_size(utillib_slist *);
 void *utillib_slist_front(utillib_slist *);

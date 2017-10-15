@@ -4,8 +4,8 @@
 #include "enum.h"
 #include "position.h"
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdio.h>
 UTILLIB_ENUM_BEGIN(utillib_input_buf_source)
 UTILLIB_ENUM_ELEM(INPUT_BUF_STDIN)
@@ -31,6 +31,8 @@ size_t utillib_input_buf_col(utillib_input_buf *);
 utillib_position utillib_input_buf_position(utillib_input_buf *);
 const utillib_char_buf_ft *utillib_input_buf_getft(void);
 void utillib_input_buf_perror(utillib_input_buf *, char const *);
-char const* utillib_input_buf_tostring(utillib_input_buf *, char *, size_t , int );
+char const *utillib_input_buf_tostring(utillib_input_buf *, char *, size_t,
+                                       int);
+long utillib_input_buf_ftell(utillib_input_buf *);
 
 #endif // UTILLIB_INPUT_BUF_H
