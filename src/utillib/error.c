@@ -37,36 +37,3 @@ void utillib_die(const char *msg) {
   exit(1);
 }
 
-void utillib_error_stack_init(utillib_error_stack *s) {
-  utillib_slist_init(&(s->list));
-}
-
-void utillib_error_stack_push(utillib_error_stack *s, utillib_error_base *e) {
-  int r = utillib_slist_push_front(&(s->list), e);
-  assert(r == 0);
-}
-
-utillib_error_base *utillib_error_stack_top(utillib_error_stack *s) {
-  return utillib_slist_front(&(s->list));
-}
-
-utillib_error_base *utillib_error_stack_pop(utillib_error_stack *s) {
-  return utillib_slist_pop_front(&(s->list));
-}
-
-bool utillib_error_stack_empty(utillib_error_stack *s) {
-  return utillib_slist_empty(&(s->list));
-}
-
-size_t utillib_error_stack_size(utillib_error_stack *s) {
-  return utillib_slist_size(&(s->list));
-}
-
-void utillib_error_stack_destroy(utillib_error_stack *s) {
-  UTILLIB_SLIST_FOREACH(utillib_error_base *, e, &(s->list)) {
-    utillib_error_destructor *dtor = e->tag->dtor;
-    assert(dtor);
-    dtor(e);
-  }
-  utillib_slist_destroy(&(s->list));
-}

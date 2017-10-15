@@ -12,8 +12,13 @@ int main() {
       {"Simpson", (utillib_value_t)7}, {"Adison", (utillib_value_t)8},
       {"Wang", (utillib_value_t)9},    {NULL, NULL}};
 
-  utillib_unordered_map_init_from_array(
-      &map, utillib_unordered_map_const_charp_ft(), stu);
+  utillib_unordered_map_init(&map, utillib_unordered_map_const_charp_ft());
+  for (int i=0;i<100000;i++) {
+    for (utillib_pair_t *p=stu; UTILLIB_PAIR_FIRST(p)!=NULL;++p)
+    {
+      utillib_unordered_map_insert(&map, p);
+    }
+  }
   for (utillib_pair_t *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
     utillib_pair_t *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
 

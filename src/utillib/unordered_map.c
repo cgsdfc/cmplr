@@ -4,6 +4,8 @@
 #include "hash.h"
 #include "slist.h"
 #include <assert.h>
+#include <float.h>
+
 UTILLIB_ENUM_BEGIN(find_mode_t)
 UTILLIB_ENUM_ELEM(FIND_ONLY)
 UTILLIB_ENUM_ELEM(FORCE_INSERT)
@@ -51,6 +53,30 @@ static void push_back_bucket(utillib_unordered_map *self, size_t nbucket) {
   }
 }
 
+static void rehash_impl(utillib_unordered_map *self,
+                                             size_t nbucket) {
+  utillib_vector holder;
+  utillib_vector_init(&holder);
+  utillib_vector_reserve(&holder, self->un_size);
+  size_t cur_nb = utillib_vector_size(&(self->un_bucket));
+  UTILLIB_VECTOR_FOREACH(utillib_slist *, l, &(self->un_bucket)) {
+    while (! utillib_slist_empty(l) ) {
+      utillib_vector_push_back(&holder, utillib_slist_front(l));
+      utillib_slist_pop_front(l);
+    }
+  }
+  for (int i = cur_nb; i < nbucket; ++i) {
+    utillib_vector_push_back(&(self->un_bucket), make_slist());
+  }
+  UTILLIB_VECTOR_FOREACH(utillib_pair_t*, pair, &holder) {
+    size_t hashv = do_hash(self, UTILLIB_PAIR_FIRST(pair));
+    utillib_slist *l = utillib_vector_at(&(self->un_bucket), hashv);
+    utillib_slist_push_front(l, pair);
+  }
+  self->un_nbucket = nbucket;
+  utillib_vector_destroy(&holder);
+}
+
 void utillib_unordered_map_init(utillib_unordered_map *self,
                                 utillib_unordered_map_ft ft) {
   static const size_t init_nbucket = 10;
@@ -68,8 +94,7 @@ void utillib_unordered_map_init_from_array(utillib_unordered_map *self,
                                            utillib_pair_t const *p) {
   utillib_unordered_map_init(self, ft);
   for (; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
-    utillib_unordered_map_insert(self, UTILLIB_PAIR_FIRST(p),
-                                 UTILLIB_PAIR_SECOND(p));
+    utillib_unordered_map_insert(self, p);
   }
 }
 
@@ -127,20 +152,29 @@ static int find_impl(utillib_unordered_map *self, utillib_key_t key,
   }
 }
 
-int utillib_unordered_map_emplace(utillib_unordered_map *self,
-                                  utillib_value_t key,
-                                  utillib_value_t value) { // list, node, pair
+static int insert_impl(utillib_unordered_map *self, 
+    utillib_key_t key, utillib_value_t value) {
+  if (self->un_max_lf - utillib_unordered_map_load_factor(self) < DBL_EPSILON) {
+    rehash_impl(self, self->un_nbucket << 1);
+  }
+  return find_impl(self, key, value, FORCE_INSERT, NULL, NULL, NULL);
 }
 
 int utillib_unordered_map_insert(utillib_unordered_map *self,
-                                 utillib_value_t key,
-                                 utillib_value_t value) { // list, node, pair
-  return find_impl(self, key, value, FORCE_INSERT, NULL, NULL, NULL);
+    utillib_pair_t const* pair)
+{
+  return insert_impl(self, UTILLIB_PAIR_FIRST(pair), UTILLIB_PAIR_SECOND(pair));
+}
+
+int utillib_unordered_map_emplace(utillib_unordered_map *self,
+                                 utillib_key_t key,
+                                 utillib_value_t value) {
+  return insert_impl(self, key, value);
 }
 
 utillib_pair_t *utillib_unordered_map_find(utillib_unordered_map *self,
                                            utillib_key_t key) {
-  utillib_pair_t *p; // list, node, pair
+  utillib_pair_t *p;
   find_impl(self, key, NULL, FIND_ONLY, NULL, NULL, &p);
   return p;
 }
@@ -148,8 +182,9 @@ utillib_pair_t *utillib_unordered_map_find(utillib_unordered_map *self,
 int utillib_unordered_map_erase(utillib_unordered_map *self,
                                 utillib_key_t key) {
   utillib_slist *l;
-  utillib_slist_node *n; // list, node, pair
+  utillib_slist_node *n; 
   switch (find_impl(self, key, NULL, FIND_ONLY, &l, &n, NULL)) {
+    default: assert(false);
   case KEY_MISSING:
     return KEY_MISSING;
   case KEY_FOUND:
@@ -184,38 +219,6 @@ size_t utillib_unordered_map_bucket_count(utillib_unordered_map *self) {
   return self->un_nbucket;
 }
 
-static int utillib_unordered_map_rehash_impl(utillib_unordered_map *self,
-                                             size_t nbucket) {
-  int r;
-  utillib_vector holder;
-  utillib_vector_init(&holder);
-  r = utillib_vector_reserve(&holder, self->un_size);
-  size_t cur_nb = utillib_vector_size(&(self->un_bucket));
-  if (r != 0) {
-    return r;
-  }
-  // move all the elem to holder from all buckets
-  UTILLIB_VECTOR_FOREACH(utillib_slist *, l, &(self->un_bucket)) {
-    for (utillib_slist_node *x = UTILLIB_SLIST_HEAD(l); x != NULL;
-         x = UTILLIB_SLIST_NODE_NEXT(x)) {
-      utillib_vector_push_back(&holder, x);
-    }
-    UTILLIB_SLIST_HEAD(l) = NULL;
-  }
-  for (int i = cur_nb; i < nbucket; ++i) {
-    utillib_vector_push_back(&(self->un_bucket), make_slist());
-  }
-  UTILLIB_VECTOR_FOREACH(utillib_slist_node *, x, &holder) {
-    utillib_pair_t *pair = UTILLIB_SLIST_NODE_DATA(x);
-    size_t hashv = do_hash(self, UTILLIB_PAIR_FIRST(pair));
-    utillib_slist *l = utillib_vector_at(&(self->un_bucket), hashv);
-    utillib_slist_push_front_node(l, x);
-  }
-  self->un_nbucket = nbucket;
-  utillib_vector_destroy(&holder);
-  return 0;
-}
-
 size_t utillib_unordered_map_bucket_size(utillib_unordered_map *self,
                                          size_t n) {
   assert(n < self->un_nbucket);
@@ -223,8 +226,10 @@ size_t utillib_unordered_map_bucket_size(utillib_unordered_map *self,
   return utillib_slist_size(l);
 }
 
-size_t utillib_unordered_map_bucket(utillib_unordered_map *self,
-                                    utillib_key_t key) {}
+double utillib_unordered_map_max_load_factor(utillib_unordered_map *self)
+{
+  return self->un_max_lf;
+}
 
 void utillib_unordered_map_set_max_load_factor(utillib_unordered_map *self,
                                                double max_lf) {

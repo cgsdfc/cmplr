@@ -6,9 +6,9 @@
   T X;                                                                         \
   for (void **_begin = (V)->begin, **_end = (V)->end; _begin != _end;          \
        X = *_begin, ++_begin)
-
+typedef void ** utillib_vector_impl_t;
 typedef struct utillib_vector {
-  void **begin, **end, **stor_end;
+  utillib_vector_impl_t begin, end, stor_end;
 } utillib_vector;
 
 bool utillib_vector_empty(utillib_vector *);
@@ -20,5 +20,5 @@ void utillib_vector_destroy(utillib_vector *);
 void *utillib_vector_pop_back(utillib_vector *);
 void *utillib_vector_back(utillib_vector *);
 int utillib_vector_reserve(utillib_vector *, size_t);
-void **utillib_vector_atp(utillib_vector *, size_t);
+void utillib_vector_set(utillib_vector *, size_t, void *);
 #endif // UTILLIB_VECTOR_H

@@ -5,14 +5,18 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-#define UTILLIB_PAIR_FIRST(P) ((*(P))[0])
-#define UTILLIB_PAIR_SECOND(P) ((*(P))[1])
+#define UTILLIB_PAIR_FIRST(P) ((P)->up_first)
+#define UTILLIB_PAIR_SECOND(P) ((P)->up_second)
 
 typedef void const *utillib_key_t;
-typedef void const *utillib_value_t;
-typedef size_t(utillib_hash_func_t)(void const *);
-typedef bool(utillib_equal_func_t)(void const *, void const *);
-typedef void const *utillib_pair_t[2];
+typedef void *utillib_value_t;
+typedef size_t(utillib_hash_func_t)(utillib_key_t);
+typedef bool(utillib_equal_func_t)(utillib_key_t, utillib_key_t);
+typedef struct utillib_pair_t 
+{
+  void const * up_first;
+  void * up_second;
+} utillib_pair_t;
 
 UTILLIB_ENUM_BEGIN(utillib_unordered_map_retval_t)
 // for mode find_only
@@ -42,8 +46,8 @@ void utillib_unordered_map_init_from_array(
 void utillib_unordered_map_init(utillib_unordered_map *,
                                 utillib_unordered_map_ft);
 void utillib_unordered_map_destroy(utillib_unordered_map *);
-int utillib_unordered_map_insert(utillib_unordered_map *, utillib_key_t,
-                                 utillib_value_t);
+int utillib_unordered_map_emplace(utillib_unordered_map *, utillib_key_t, utillib_value_t);
+int utillib_unordered_map_insert(utillib_unordered_map *, utillib_pair_t const *);
 int utillib_unordered_map_erase(utillib_unordered_map *, utillib_key_t);
 utillib_pair_t *utillib_unordered_map_find(utillib_unordered_map *,
                                            utillib_key_t);
@@ -53,7 +57,6 @@ size_t utillib_unordered_map_size(utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(utillib_unordered_map *);
 bool utillib_unordered_map_empty(utillib_unordered_map *);
 double utillib_unordered_map_load_factor(utillib_unordered_map *);
-void utillib_unordered_map_max_load_factor(utillib_unordered_map *);
 void utillib_unordered_map_set_max_load_factor(utillib_unordered_map *, double);
-int utillib_unordered_map_rehash(utillib_unordered_map *, size_t);
+void utillib_unordered_map_rehash(utillib_unordered_map *, size_t);
 #endif // UTILLIB_UNORDERED_MAP_H
