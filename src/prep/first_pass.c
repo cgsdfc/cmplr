@@ -15,8 +15,7 @@ static int prep_delete_escape_newline(scanner_base_t *scan) {
   scanner_ungetchar(scan, c);
   return SCANNER_UNMATCHED;
 }
-static scanner_match_entry_t const * prep_first_pass_match(void)
-{
+static scanner_match_entry_t const *prep_first_pass_match(void) {
   SCANNER_MATCH_ENTRY_BEGIN(first_pass_match)
   SCANNER_MATCH_ENTRY(scanner_skip_c_comment, PREP_COMMENT)
   SCANNER_MATCH_ENTRY(scanner_skip_cpp_comment, PREP_COMMENT)
@@ -24,14 +23,12 @@ static scanner_match_entry_t const * prep_first_pass_match(void)
   SCANNER_MATCH_ENTRY_END(first_pass_match)
   return first_pass_match;
 }
-int prep_first_pass_init(prep_first_pass_t *self, FILE *input,
-                         FILE *output) {
+int prep_first_pass_init(prep_first_pass_t *self, FILE *input, FILE *output) {
   int r;
-  r = scanner_init(&(self->fps_scan), input,
-      utillib_get_FILE_ft(),
-      prep_first_pass_match(),
-      NULL, // str_tab
-      SCANNER_MATCH_ANY_CHAR);
+  r = scanner_init(&(self->fps_scan), input, utillib_get_FILE_ft(),
+                   prep_first_pass_match(),
+                   NULL, // str_tab
+                   SCANNER_MATCH_ANY_CHAR);
   if (r != 0) {
     return -1;
   }
@@ -45,7 +42,7 @@ void prep_first_pass_destroy(prep_first_pass_t *self) {
 }
 
 int prep_first_pass_scan(prep_first_pass_t *self) {
-  static const char * comment_replace="<comment>";
+  static const char *comment_replace = "<comment>";
   int r;
   scanner_base_t *scan = &self->fps_scan;
   while (true) {

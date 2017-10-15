@@ -96,13 +96,13 @@ int scanner_match_string_double(scanner_base_t *self) {
 }
 int scanner_skip_space(scanner_base_t *self) {
   int c;
-  int cnt=0;
+  int cnt = 0;
   do {
     c = scanner_getchar(self);
     cnt++;
   } while (isspace(c));
   scanner_ungetchar(self, c);
-  return cnt>1?SCANNER_MATCHED:SCANNER_UNMATCHED;
+  return cnt > 1 ? SCANNER_MATCHED : SCANNER_UNMATCHED;
 }
 
 int scanner_skip_cpp_comment(scanner_base_t *self) {

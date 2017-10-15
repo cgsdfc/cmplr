@@ -40,6 +40,7 @@ typedef struct utillib_error_stack { utillib_slist list; } utillib_error_stack;
 
 void utillib_die(const char *);
 void utillib_error_base_init(utillib_error_base *, utillib_error_tag *);
-utillib_error_cleanup_func_t * utillib_error_cleanup_func(utillib_error_cleanup_func_t *);
+utillib_error_cleanup_func_t *
+utillib_error_cleanup_func(utillib_error_cleanup_func_t *);
 
 #endif // UTILLIB_ERROR_H

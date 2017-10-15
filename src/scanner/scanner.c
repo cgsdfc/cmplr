@@ -90,9 +90,11 @@ static int scanner_try_match(scanner_base_t *self) {
       return SCANNER_ERROR;
     }
   }
-  c=scanner_getc(self);
-  if (c == EOF) { return SCANNER_EOF; }
-  self->sc_val=c;
+  c = scanner_getc(self);
+  if (c == EOF) {
+    return SCANNER_EOF;
+  }
+  self->sc_val = c;
   if (self->sc_flags & SCANNER_MATCH_ANY_CHAR) {
     return SCANNER_ANY_CHAR;
   }
@@ -102,9 +104,7 @@ static int scanner_try_match(scanner_base_t *self) {
 char const *scanner_get_text(scanner_base_t *self) { return self->sc_text; }
 int scanner_get_val(scanner_base_t *self) { return self->sc_val; }
 
-int scanner_yylex(scanner_base_t *self) {
-  return scanner_try_match(self);
-}
+int scanner_yylex(scanner_base_t *self) { return scanner_try_match(self); }
 
 void scanner_skip_to(scanner_base_t *self, int c) {
   int ch;

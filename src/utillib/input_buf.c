@@ -120,7 +120,4 @@ void utillib_input_buf_perror(utillib_input_buf *b, char const *errmsg) {
   }
 }
 
-long utillib_input_buf_ftell(utillib_input_buf *b)
-{
-  return ftell(b->file);
-}
+long utillib_input_buf_ftell(utillib_input_buf *b) { return ftell(b->file); }

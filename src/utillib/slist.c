@@ -9,16 +9,18 @@ static void destory_slist(utillib_slist_node *node) {
   utillib_slist_node *x;
   while (node) {
     x = node;
-    node=x->next;
+    node = x->next;
     destroy_node(x);
   }
 }
 
-static void push_front_aux(utillib_slist_node **tail, utillib_slist_node *node) {
+static void push_front_aux(utillib_slist_node **tail,
+                           utillib_slist_node *node) {
   node->next = (*tail);
   *tail = node;
 }
-static void pop_front_aux(utillib_slist_node **tail, utillib_slist_node ** node) {
+static void pop_front_aux(utillib_slist_node **tail,
+                          utillib_slist_node **node) {
   *node = *tail;
   *tail = (*tail)->next;
 }
@@ -27,8 +29,8 @@ static utillib_slist_node *make_node(utillib_slist *self, void *data) {
   utillib_slist_node *node;
   if (self->sl_free) {
     pop_front_aux(&(self->sl_free), &node);
-    node->data=data;
-    node->next=NULL;
+    node->data = data;
+    node->next = NULL;
     return node;
   }
   node = calloc(sizeof *node, 1);
@@ -45,8 +47,8 @@ void utillib_slist_push_front_node(utillib_slist *self,
   push_front_aux(&(self->sl_tail), node);
 }
 
-void utillib_slist_init(utillib_slist *self) { 
-  self->sl_tail = self->sl_free=NULL;
+void utillib_slist_init(utillib_slist *self) {
+  self->sl_tail = self->sl_free = NULL;
 }
 
 void utillib_slist_push_front(utillib_slist *self, void *data) {
@@ -84,7 +86,8 @@ bool utillib_slist_empty(utillib_slist *self) { return self->sl_tail == NULL; }
 
 size_t utillib_slist_size(utillib_slist *self) {
   size_t i = 0;
-  for (utillib_slist_node *tail = self->sl_tail; tail != NULL; tail = tail->next) {
+  for (utillib_slist_node *tail = self->sl_tail; tail != NULL;
+       tail = tail->next) {
     i++;
   }
   return i;

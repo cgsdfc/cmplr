@@ -9,7 +9,7 @@ typedef struct prep_first_pass_t {
   FILE *fps_out;
 } prep_first_pass_t;
 
-int prep_first_pass_init(prep_first_pass_t *, FILE * , FILE *);
+int prep_first_pass_init(prep_first_pass_t *, FILE *, FILE *);
 int prep_first_pass_scan(prep_first_pass_t *);
 void prep_first_pass_destroy(prep_first_pass_t *);
 

@@ -8,7 +8,7 @@
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
-  for (utillib_slist_node *_p = (L)->sl_tail; _p != NULL && ((X) = _p->data);     \
+  for (utillib_slist_node *_p = (L)->sl_tail; _p != NULL && ((X) = _p->data);  \
        _p = _p->next)
 
 typedef struct utillib_slist_node {
@@ -16,9 +16,10 @@ typedef struct utillib_slist_node {
   void *data;
 } utillib_slist_node;
 
-typedef struct utillib_slist { 
+typedef struct utillib_slist {
   struct utillib_slist_node *sl_free;
-  struct utillib_slist_node *sl_tail; } utillib_slist;
+  struct utillib_slist_node *sl_tail;
+} utillib_slist;
 
 void utillib_slist_init(utillib_slist *);
 void utillib_slist_destroy(utillib_slist *);

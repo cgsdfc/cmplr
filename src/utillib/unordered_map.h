@@ -12,10 +12,9 @@ typedef void const *utillib_key_t;
 typedef void *utillib_value_t;
 typedef size_t(utillib_hash_func_t)(utillib_key_t);
 typedef bool(utillib_equal_func_t)(utillib_key_t, utillib_key_t);
-typedef struct utillib_pair_t 
-{
-  void const * up_first;
-  void * up_second;
+typedef struct utillib_pair_t {
+  void const *up_first;
+  void *up_second;
 } utillib_pair_t;
 
 UTILLIB_ENUM_BEGIN(utillib_unordered_map_retval_t)
@@ -46,8 +45,10 @@ void utillib_unordered_map_init_from_array(
 void utillib_unordered_map_init(utillib_unordered_map *,
                                 utillib_unordered_map_ft);
 void utillib_unordered_map_destroy(utillib_unordered_map *);
-int utillib_unordered_map_emplace(utillib_unordered_map *, utillib_key_t, utillib_value_t);
-int utillib_unordered_map_insert(utillib_unordered_map *, utillib_pair_t const *);
+int utillib_unordered_map_emplace(utillib_unordered_map *, utillib_key_t,
+                                  utillib_value_t);
+int utillib_unordered_map_insert(utillib_unordered_map *,
+                                 utillib_pair_t const *);
 int utillib_unordered_map_erase(utillib_unordered_map *, utillib_key_t);
 utillib_pair_t *utillib_unordered_map_find(utillib_unordered_map *,
                                            utillib_key_t);

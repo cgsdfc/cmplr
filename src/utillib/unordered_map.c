@@ -53,14 +53,13 @@ static void push_back_bucket(utillib_unordered_map *self, size_t nbucket) {
   }
 }
 
-static void rehash_impl(utillib_unordered_map *self,
-                                             size_t nbucket) {
+static void rehash_impl(utillib_unordered_map *self, size_t nbucket) {
   utillib_vector holder;
   utillib_vector_init(&holder);
   utillib_vector_reserve(&holder, self->un_size);
   size_t cur_nb = utillib_vector_size(&(self->un_bucket));
   UTILLIB_VECTOR_FOREACH(utillib_slist *, l, &(self->un_bucket)) {
-    while (! utillib_slist_empty(l) ) {
+    while (!utillib_slist_empty(l)) {
       utillib_vector_push_back(&holder, utillib_slist_front(l));
       utillib_slist_pop_front(l);
     }
@@ -68,7 +67,7 @@ static void rehash_impl(utillib_unordered_map *self,
   for (int i = cur_nb; i < nbucket; ++i) {
     utillib_vector_push_back(&(self->un_bucket), make_slist());
   }
-  UTILLIB_VECTOR_FOREACH(utillib_pair_t*, pair, &holder) {
+  UTILLIB_VECTOR_FOREACH(utillib_pair_t *, pair, &holder) {
     size_t hashv = do_hash(self, UTILLIB_PAIR_FIRST(pair));
     utillib_slist *l = utillib_vector_at(&(self->un_bucket), hashv);
     utillib_slist_push_front(l, pair);
@@ -80,7 +79,7 @@ static void rehash_impl(utillib_unordered_map *self,
 void utillib_unordered_map_init(utillib_unordered_map *self,
                                 utillib_unordered_map_ft ft) {
   static const size_t init_nbucket = 10;
-  static const double init_max_lf = 15;
+  static const double init_max_lf = 1;
   self->un_nbucket = init_nbucket;
   self->un_max_lf = init_max_lf;
   self->un_ft = ft;
@@ -152,8 +151,8 @@ static int find_impl(utillib_unordered_map *self, utillib_key_t key,
   }
 }
 
-static int insert_impl(utillib_unordered_map *self, 
-    utillib_key_t key, utillib_value_t value) {
+static int insert_impl(utillib_unordered_map *self, utillib_key_t key,
+                       utillib_value_t value) {
   if (self->un_max_lf - utillib_unordered_map_load_factor(self) < DBL_EPSILON) {
     rehash_impl(self, self->un_nbucket << 1);
   }
@@ -161,14 +160,12 @@ static int insert_impl(utillib_unordered_map *self,
 }
 
 int utillib_unordered_map_insert(utillib_unordered_map *self,
-    utillib_pair_t const* pair)
-{
+                                 utillib_pair_t const *pair) {
   return insert_impl(self, UTILLIB_PAIR_FIRST(pair), UTILLIB_PAIR_SECOND(pair));
 }
 
 int utillib_unordered_map_emplace(utillib_unordered_map *self,
-                                 utillib_key_t key,
-                                 utillib_value_t value) {
+                                  utillib_key_t key, utillib_value_t value) {
   return insert_impl(self, key, value);
 }
 
@@ -182,9 +179,10 @@ utillib_pair_t *utillib_unordered_map_find(utillib_unordered_map *self,
 int utillib_unordered_map_erase(utillib_unordered_map *self,
                                 utillib_key_t key) {
   utillib_slist *l;
-  utillib_slist_node *n; 
+  utillib_slist_node *n;
   switch (find_impl(self, key, NULL, FIND_ONLY, &l, &n, NULL)) {
-    default: assert(false);
+  default:
+    assert(false);
   case KEY_MISSING:
     return KEY_MISSING;
   case KEY_FOUND:
@@ -226,8 +224,7 @@ size_t utillib_unordered_map_bucket_size(utillib_unordered_map *self,
   return utillib_slist_size(l);
 }
 
-double utillib_unordered_map_max_load_factor(utillib_unordered_map *self)
-{
+double utillib_unordered_map_max_load_factor(utillib_unordered_map *self) {
   return self->un_max_lf;
 }
 
