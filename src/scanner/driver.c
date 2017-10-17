@@ -1,7 +1,9 @@
+#define _GNU_SOURCE
 #include "match.h"
 #include "scanner.h"
-#include "utillib/error.h"
-#include "utillib/input_buf.h"
+#include <utillib/error.h>
+#include <utillib/input_buf.h>
+#include <stdio.h>
 
 static const scanner_match_entry_t main_match[] = {
     SCANNER_MATCH_ENTRY(scanner_match_identifier, 1)

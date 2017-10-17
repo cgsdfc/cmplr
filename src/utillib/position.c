@@ -1,8 +1,8 @@
 #include "position.h"
 #include <assert.h>
 
-char const *utillib_position_tostring(utillib_position *pos) {
-  static char buf[100];
-  snprintf(buf, sizeof buf, "%lu:%lu:", pos->lineno, pos->column);
-  return buf;
+utillib_position const * utillib_position_current(void)
+{
+  static const utillib_position cur_pos={0,0};
+  return &cur_pos;
 }

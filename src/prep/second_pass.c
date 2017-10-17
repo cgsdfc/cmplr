@@ -76,70 +76,25 @@ static scanner_match_entry_t const *prep_get_match_entry(void) {
   return second_pass_match;
 }
 
-static scanner_base_t *prep_make_scanner(char *input) {
-  static const char *last_words = "prep_make_scanner failed";
-  utillib_input_buf *buf;
-  scanner_base_t *scan;
-  buf = malloc(sizeof *buf);
-  if (!buf) {
-    utillib_die(last_words);
+void prep_second_pass_init(prep_second_pass_t *self, char *input, utillib_vector *err) {
+  int r;
+  if ((r=prep_first_pass_init(&(self->psc_first), input, err))!=0) {
+    utillib_die("prep_make_scanner: prep_first_pass_init failed");
   }
-  if (0 != utillib_input_buf_init(buf, input, INPUT_BUF_FILE)) {
-    free(buf);
-    utillib_die(last_words);
-  }
-  scan = malloc(sizeof *scan);
-  if (!scan) {
-    free(buf);
-    utillib_die(last_words);
-  }
-  if (0 != scanner_init(scan, buf, utillib_input_buf_getft(),
-                        prep_get_match_entry(), prep_get_pdmacro(),
-                        SCANNER_MATCH_STR_AS_ID | SCANNER_MATCH_ANY_CHAR)) {
-    free(buf);
-    free(scan);
-    utillib_die(last_words);
-  }
-  return scan;
+  scanner_init(&(self->psc_scan), &(self->psc_first),
+      prep_first_pass_getft(),
+      prep_get_match_entry(), prep_get_pdmacro(),
+      SCANNER_MATCH_STR_AS_ID | SCANNER_MATCH_ANY_CHAR);
+  self->psc_err=err;
 }
 
-static void prep_destroy_scanner(scanner_base_t *scan) {
-  utillib_input_buf *buf = SCANNER_CHAR_BUF(scan);
-  utillib_input_buf_destroy(buf);
-  free(buf);
-  scanner_destroy(scan);
-  free(scan);
+void prep_second_pass_destroy(prep_second_pass_t *self)
+{
+  prep_first_pass_destroy(&(self->psc_first));
+  scanner_destroy(&(self->psc_scan));
 }
 
-int prep_second_pass_init(prep_second_pass_t *self, char *input) {
-  scanner_base_t *scan = prep_make_scanner(input);
-  self->cur_scan = scan;
-  utillib_slist_init(&(self->incl_stack));
-  utillib_slist_push_front(&(self->incl_stack), scan);
-  utillib_unordered_map_init(&(self->macro_map),
-                             utillib_unordered_map_const_charp_ft());
-}
+int prep_second_pass_yylex(prep_second_pass_t *self) {
 
-void prep_second_pass_destroy(prep_second_pass_t *self) {
-  utillib_unordered_map_destroy(&(self->macro_map));
-  UTILLIB_SLIST_FOREACH(scanner_base_t *, scan, &(self->incl_stack)) {
-    prep_destroy_scanner(scan);
-  }
-  utillib_slist_destroy(&(self->incl_stack));
-}
 
-static prep_second_pass_t *prep_static_instance(void) {
-  static prep_second_pass_t x;
-  return &x;
-}
-
-static void prep_second_pass_cleanup(void) {
-  prep_second_pass_destroy(prep_static_instance());
-}
-
-prep_second_pass_t *prep_static_init(char *input) {
-  prep_second_pass_t *self = prep_static_instance();
-  prep_second_pass_init(self, input);
-  utillib_error_cleanup_func(prep_second_pass_cleanup);
-  return self;
 }

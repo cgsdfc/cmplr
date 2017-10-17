@@ -1,9 +1,11 @@
+#define _GNU_SOURCE
+#include <stdio.h>
 #include "error.h"
 #include "except.h"
 #include "input_buf.h"
 #include "unordered_map.h"
-
-int main() {
+static void test_unordered_map(void)
+{
   utillib_unordered_map map;
   utillib_pair_t stu[] = {
       {"Tony", (utillib_value_t)1},    {"John", (utillib_value_t)2},
@@ -39,4 +41,31 @@ int main() {
          utillib_unordered_map_bucket_count(&map),
          utillib_unordered_map_load_factor(&map));
   utillib_unordered_map_destroy(&map);
+}
+
+static void test_input_buf(void) {
+  int c;
+  char s[1024]="static void test_input_buf(void) {\n";
+  utillib_input_buf buf;
+  FILE *file=fmemopen(s, 1024, "r");
+  utillib_input_buf_init(&buf, file, INPUT_BUF_STRING);
+  while ((c=utillib_input_buf_getc(&buf))!=EOF) {
+    printf("%lu:%lu:%c\n", 
+        utillib_input_buf_row(&buf),
+        utillib_input_buf_col(&buf),
+        c);
+    if (c=='(') {
+      utillib_error *err=utillib_make_error(ERROR_LV_ERROR, 
+          utillib_input_buf_current_pos(&buf),
+          "bad LP");
+      utillib_input_buf_pretty_perror(&buf, err);
+      utillib_destroy_error(err);
+      break;
+    }
+  }
+  utillib_input_buf_destroy(&buf);
+}
+
+int main() {
+  test_input_buf();
 }

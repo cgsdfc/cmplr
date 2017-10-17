@@ -37,6 +37,8 @@ typedef struct utillib_unordered_map {
   double un_max_lf;
   size_t un_nbucket;
   size_t un_size;
+  // manage memory of utillib_pair_t 
+  utillib_pair_t * un_free;
 } utillib_unordered_map;
 
 void utillib_unordered_map_init_from_array(

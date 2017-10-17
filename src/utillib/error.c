@@ -12,12 +12,20 @@ UTILLIB_ETAB_ELEM_INIT(ERROR_LV_WARNING, PURPLE_WARNING)
 UTILLIB_ETAB_ELEM_INIT(ERROR_LV_NOTE, CYAN_NOTE)
 UTILLIB_ETAB_END(utillib_error_lv)
 
-void utillib_error_base_init(utillib_error_base *base, utillib_error_tag *tag) {
-  base->tag = tag;
+utillib_error * utillib_make_error(int lv, utillib_position* pos, char const*msg){
+  utillib_error *error=malloc(sizeof *error);
+  if (error) {
+    error->ue_lv=lv;
+    error->ue_msg=strdup(msg);
+    memcpy(&(error->ue_pos), pos, sizeof *pos);
+    return error;
+  }
+  utillib_die("utillib_make_error: malloc failed");
 }
 
-void utillib_error_base_destroy_trivial(utillib_error_base *base) {
-  free(base);
+void utillib_destroy_error(utillib_error *self) {
+  free(self->ue_msg);
+  free(self);
 }
 
 utillib_error_cleanup_func_t *
@@ -28,7 +36,6 @@ utillib_error_cleanup_func(utillib_error_cleanup_func_t *func) {
   }
   return cleanup_func;
 }
-
 void utillib_die(const char *msg) {
   utillib_error_cleanup_func_t *cleanup = utillib_error_cleanup_func(NULL);
   if (cleanup) {

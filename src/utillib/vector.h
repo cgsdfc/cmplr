@@ -6,6 +6,7 @@
   T X;                                                                         \
   for (void **_begin = (V)->begin, **_end = (V)->end;                          \
        _begin != _end && (X = *_begin); ++_begin)
+typedef void * utillib_vector_elem_t;
 typedef void **utillib_vector_impl_t;
 typedef struct utillib_vector {
   utillib_vector_impl_t begin, end, stor_end;

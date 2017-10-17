@@ -1,19 +1,14 @@
 #ifndef PREP_SECOND_PASS_H
 #define PREP_SECOND_PASS_H
 #include "token.h"
+#include "first_pass.h"
 #include <scanner/scanner.h>
-#include <utillib/slist.h>
-#include <utillib/unordered_map.h>
-
-typedef struct prep_macro_entry_t {
-
-} prep_macro_entry_t;
 
 typedef struct prep_second_pass_t {
-  scanner_base_t *cur_scan;
-  utillib_slist incl_stack;
-  utillib_unordered_map macro_map;
+  scanner_base_t psc_scan;
+  prep_first_pass_t psc_first;
 } prep_second_pass_t;
 
-prep_second_pass_t *prep_second_pass_init_static(char const *);
+int prep_second_pass_init(prep_second_pass_t *, char *);
+void prep_second_pass_destroy(prep_second_pass_t *);
 #endif // PREP_SECOND_PASS_H

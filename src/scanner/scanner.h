@@ -71,7 +71,7 @@ typedef struct scanner_base_t {
 
 int scanner_ungetchar(scanner_base_t *, int);
 int scanner_getchar(scanner_base_t *);
-int scanner_init(scanner_base_t *, void *, struct utillib_char_buf_ft const *,
+void scanner_init(scanner_base_t *, void *, struct utillib_char_buf_ft const *,
                  scanner_match_entry_t const *, scanner_str_entry_t const *,
                  int);
 int scanner_getc(scanner_base_t *);

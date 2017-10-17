@@ -1,7 +1,6 @@
 #include "first_pass.h"
-#include "scanner/match.h"
-#include "scanner/scanner.h"
-#include "utillib/error.h"
+#include "token.h"
+#include <utillib/error.h>
 #include <assert.h>
 
 static int prep_delete_escape_newline(scanner_base_t *scan) {
@@ -23,56 +22,73 @@ static scanner_match_entry_t const *prep_first_pass_match(void) {
   SCANNER_MATCH_ENTRY_END(first_pass_match)
   return first_pass_match;
 }
-int prep_first_pass_init(prep_first_pass_t *self, FILE *input, FILE *output) {
+
+int prep_first_pass_init(prep_first_pass_t *self, char *arg, utillib_vector *err)
+{
   int r;
-  r = scanner_init(&(self->fps_scan), input, utillib_get_FILE_ft(),
-                   prep_first_pass_match(),
-                   NULL, // str_tab
-                   SCANNER_MATCH_ANY_CHAR);
-  if (r != 0) {
-    return -1;
+  if ((r=utillib_input_buf_init(&(self->fps_buf), arg, mode))!=0) {
+    // file not existing
+    return r;
   }
-  self->fps_out = output;
-  return 0;
+  self->fps_err=err;
+  scanner_init(&(self->fps_scan), &(self->fps_buf),
+      utillib_get_FILE_ft(), prep_first_pass_match(),
+      NULL, SCANNER_MATCH_ANY_CHAR);
 }
 
 void prep_first_pass_destroy(prep_first_pass_t *self) {
-  fclose(self->fps_out);
+  utillib_input_buf_destroy(&(self->fps_buf));
   scanner_destroy(&(self->fps_scan));
 }
 
-int prep_first_pass_scan(prep_first_pass_t *self) {
-  static const char *comment_replace = "<comment>";
-  int r;
+int prep_first_pass_getc(prep_first_pass_t *self) {
+  static const char comment_replace = ' ';
   scanner_base_t *scan = &self->fps_scan;
+  utillib_input_buf *buf = &self->fps_buf;
   while (true) {
     switch (scanner_yylex(scan)) {
-    case SCANNER_ERROR:
-      switch (scanner_get_val(scan)) {
+      case SCANNER_ERROR:
+        switch (scanner_get_val(scan)) {
+          default:
+          case PREP_COMMENT:
+            utillib_vector_push_back(self->fps_err, 
+                utillib_make_error(ERROR_LV_ERROR,
+                  utillib_input_buf_current_pos(buf),
+                  "unterminated or nested comment"));
+            return PREP_ERROR_TOKEN;
+        }
+        break;
+      case SCANNER_EOF:
+        return PREP_EOF;
+      case SCANNER_MATCHED:
+        switch (scanner_get_val(scan)) {
+          case PREP_ESNL: // delete 
+            break;
+          case PREP_COMMENT: // replace with ' '
+            scanner_ungetchar(scan, comment_replace);
+            break;
+          default:
+            assert(false);
+        }
+        break;
+      case SCANNER_ANY_CHAR:
+        return scanner_get_val(scan);
+        break;
       default:
-      case PREP_COMMENT:
-        prep_first_pass_destroy(self);
-        utillib_die("unterminated or nested comment");
-      }
-      break;
-    case SCANNER_EOF:
-      return 0;
-    case SCANNER_MATCHED:
-      switch (scanner_get_val(scan)) {
-      case PREP_ESNL:
-        break;
-      case PREP_COMMENT:
-        fputs(comment_replace, self->fps_out);
-        break;
-      default:
-        break;
-      }
-      break;
-    case SCANNER_ANY_CHAR:
-      fputc(scanner_get_val(scan), self->fps_out);
-      break;
-    default:
-      assert(false);
+        assert(false);
     }
   }
+}
+
+int prep_first_pass_ungetc(prep_first_pass_t *self, int c) {
+  return scanner_ungetchar(&(self->fps_scan), c);
+}
+
+utillib_char_buf_ft const * prep_first_pass_getft(void)
+{
+  static const utillib_char_buf_ft first_pass_ft={
+    .cb_getc=(utillib_getc_func_t*) prep_first_pass_getc,
+    .cb_ungetc=(utillib_ungetc_func_t*) prep_first_pass_ungetc,
+  };
+  return & first_pass_ft;
 }

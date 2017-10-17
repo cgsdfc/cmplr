@@ -24,18 +24,11 @@ static void scanner_str_clear(scanner_base_t *self) {
   utillib_string_clear(&(self->sc_str));
 }
 
-int scanner_init(scanner_base_t *self, void *char_buf,
+void scanner_init(scanner_base_t *self, void *char_buf,
                  utillib_char_buf_ft const *cb_ft,
                  scanner_match_entry_t const *match,
                  scanner_str_entry_t const *tab, int flags) {
-  if (!self || !char_buf || !cb_ft || !match) {
-    return -1;
-  }
-  int r;
-  r = utillib_string_init(&(self->sc_str));
-  if (r != 0) {
-    return r;
-  }
+  utillib_string_init(&(self->sc_str));
   self->sc_char_buf = char_buf;
   self->sc_cb_ft = cb_ft;
   self->sc_match = match;
@@ -114,6 +107,7 @@ void scanner_skip_to(scanner_base_t *self, int c) {
 }
 
 void scanner_destroy(scanner_base_t *self) {
-  utillib_char_buf_destroy(self->sc_char_buf, self->sc_cb_ft);
+  // client should destroy the self->sc_char_buf 
+  // itself
   utillib_string_destroy(&(self->sc_str));
 }
