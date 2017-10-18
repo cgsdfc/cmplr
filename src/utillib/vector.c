@@ -69,3 +69,10 @@ void utillib_vector_reserve(utillib_vector *self, size_t new_cap) {
     do_realloc(self, new_cap);
   }
 }
+
+void utillib_vector_print(utillib_vector *self,
+                          utillib_tostring_func_t *tostring) {
+  putchar('[');
+  UTILLIB_VECTOR_FOREACH(size_t, X, self) { printf("%s, ", tostring(X)); }
+  puts("]\n");
+}

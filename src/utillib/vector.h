@@ -1,12 +1,14 @@
 #ifndef UTILLIB_VECTOR_H
 #define UTILLIB_VECTOR_H
+#include "print.h" // for utillib_tostring_func_t
 #include <stdbool.h>
 #include <stddef.h> // size_t
+
 #define UTILLIB_VECTOR_FOREACH(T, X, V)                                        \
   T X;                                                                         \
   for (void **_begin = (V)->begin, **_end = (V)->end;                          \
-       _begin != _end && (X = *_begin); ++_begin)
-typedef void * utillib_vector_elem_t;
+       _begin != _end && ((X = *_begin) || 1); ++_begin)
+typedef void *utillib_vector_elem_t;
 typedef void **utillib_vector_impl_t;
 typedef struct utillib_vector {
   utillib_vector_impl_t begin, end, stor_end;
@@ -23,4 +25,5 @@ void *utillib_vector_back(utillib_vector *);
 void *utillib_vector_front(utillib_vector *);
 void utillib_vector_reserve(utillib_vector *, size_t);
 void utillib_vector_set(utillib_vector *, size_t, void *);
+void utillib_vector_print(utillib_vector *, utillib_tostring_func_t *);
 #endif // UTILLIB_VECTOR_H

@@ -1,6 +1,9 @@
-#include "first_pass.h"
-#include <utillib/cli.h>
+#include "scanner.h"
 
 int main(int argc, char **argv) {
-  prep_first_pass_t first_pass;
+  prep_scanner_t scan;
+  FILE *file = fopen("./t.c", "r");
+  prep_scanner_init(&scan, file, "./t.c", NULL);
+  scanner_read_all(&scan, stdout);
+  prep_scanner_destroy(&scan);
 }

@@ -1,11 +1,14 @@
 #ifndef SCANNER_SCANNER_H
 #define SCANNER_SCANNER_H
+#include "input_buf.h"
 #include "typedef.h"
-#include "utillib/char_buf.h"
-#include "utillib/enum.h"
-#include "utillib/string.h"
 #include <stddef.h>
+#include <stdio.h>
+#include <utillib/enum.h>
+#include <utillib/string.h>        // for utillib_string
+#include <utillib/unordered_map.h> // utillib_pair_t, utillib_unordered_map
 
+/* create a table for scanner to match against */
 #define SCANNER_MATCH_ENTRY_BEGIN(NAME)                                        \
   static const scanner_match_entry_t NAME[] = {
 #define SCANNER_MATCH_ENTRY_END(NAME)                                          \
@@ -13,49 +16,49 @@
   }                                                                            \
   ;
 #define SCANNER_MATCH_ENTRY(FUNC, VAL) {.scm_func = (FUNC), .scm_val = (VAL)},
+#define SCANNER_STR_ENTRY_STR(ENT) (UTILLIB_PAIR_FIRST(ENT))
+#define SCANNER_STR_ENTRY_VAL(ENT) (UTILLIB_PAIR_SECOND(ENT))
 
-#define SCANNER_STR_ENTRY_BEGIN(NAME)                                          \
-  static const scanner_str_entry_t NAME[] = {
-#define SCANNER_STR_ENTRY_ELEM(STR, VAL) {.se_str = (STR), .se_val = (VAL)},
+// wrapper around array of utillib_pair_t
+#define SCANNER_STR_ENTRY_BEGIN(NAME) static const utillib_pair_t NAME[] = {
+#define SCANNER_STR_ENTRY_ELEM(STR, VAL)                                       \
+  {(utillib_key_t)(STR), (utillib_value_t)(VAL)},
 #define SCANNER_STR_ENTRY_END(NAME)                                            \
-  { NULL, 0 }                                                                  \
+  { NULL, NULL }                                                               \
   }                                                                            \
   ;
-#define SCANNER_CHAR_BUF(S) ((S)->sc_char_buf)
+#define SCANNER_CHAR_BUF(S) ((S)->sc_buf)
+#define SCANNER_TO_BASE(S) (&((S)->sc_base))
+// currently the error code returned when scanner_yylex
+// returns SCANNER_ERROR is implemented as the same of
+// self->sc_val. but conceptually they are different.
+#define scanner_get_errc(S) (scanner_get_val(S))
 
+/* value return from scanner_yylex */
 UTILLIB_ENUM_BEGIN(scanner_retval_t)
 UTILLIB_ENUM_ELEM(SCANNER_MATCHED)
 UTILLIB_ENUM_ELEM(SCANNER_ERROR)
 UTILLIB_ENUM_ELEM(SCANNER_EOF)
 UTILLIB_ENUM_ELEM(SCANNER_UNMATCHED)
-UTILLIB_ENUM_ELEM(SCANNER_ANY_CHAR)
 UTILLIB_ENUM_END(scanner_retval_t)
 
-UTILLIB_ENUM_BEGIN(scanner_flag_t)
-UTILLIB_ENUM_ELEM_INIT(SCANNER_MATCH_STR_AS_ID, 1)
-UTILLIB_ENUM_ELEM_INIT(SCANNER_MATCH_ANY_CHAR, 2)
-UTILLIB_ENUM_END(scanner_flag_t)
-
-typedef struct scanner_str_entry_t {
-  char const *se_str;
-  int se_val;
-} scanner_str_entry_t;
-
 typedef struct scanner_match_entry_t {
+  /* the function used to mached this token */
   scanner_match_func_t *scm_func;
+  /* the value indicating variety of the token */
   int scm_val;
 } scanner_match_entry_t;
 
 typedef struct scanner_base_t {
   /* the underlying buffer providing single char functions */
-  void *sc_char_buf;
-  utillib_char_buf_ft const *sc_cb_ft;
+  scanner_input_buf *sc_buf;
+
+  /* the function pointer provids a little flexibility to filter */
+  /* the char return by the input_buf */
+  scanner_getc_func_t *sc_getc;
 
   /* match functions */
   scanner_match_entry_t const *sc_match;
-
-  /* string tab */
-  scanner_str_entry_t const *sc_tab;
 
   /* internal buffer */
   utillib_string sc_str;
@@ -65,21 +68,42 @@ typedef struct scanner_base_t {
 
   /* the code of the matched token */
   int sc_val;
-
-  int sc_flags;
 } scanner_base_t;
 
-int scanner_ungetchar(scanner_base_t *, int);
-int scanner_getchar(scanner_base_t *);
-void scanner_init(scanner_base_t *, void *, struct utillib_char_buf_ft const *,
-                 scanner_match_entry_t const *, scanner_str_entry_t const *,
-                 int);
+typedef struct scanner_t {
+  scanner_base_t sc_base;
+  scanner_input_buf sc_buf;
+} scanner_t;
+
+/* constructor destructor */
+void scanner_base_init(scanner_base_t *, scanner_input_buf *,
+                       scanner_getc_func_t *getc,
+                       scanner_match_entry_t const *);
+void scanner_init(scanner_t *, FILE *, char const *,
+                  scanner_match_entry_t const *);
+void scanner_base_destroy(scanner_base_t *);
+void scanner_destroy(scanner_t *);
+
+/* getc and ungetc that modifies the internal str */
 int scanner_getc(scanner_base_t *);
 void scanner_ungets(scanner_base_t *);
 int scanner_ungetc(scanner_base_t *, int);
+
+/* getc and ungetc that does not modifies the internal str */
+int scanner_ungetchar(scanner_base_t *, int);
+int scanner_getchar(scanner_base_t *);
+
+/* read-and-match loop */
 int scanner_yylex(scanner_base_t *);
+/* get the c_str of the internal str when scanner_yylex returns SCANNER_MATCHED
+ */
 char const *scanner_get_text(scanner_base_t *);
+/* get the variety of the token when scanner_yylex returns SCANNER_MATCHED */
+/* or when it returns SCANNER_ERROR, the variety it once tried */
 int scanner_get_val(scanner_base_t *);
-void scanner_destroy(scanner_base_t *);
-void scanner_skip_to(scanner_base_t *, int);
+/* when error happened, this can be used to skip to the occurance of a specific
+ * char */
+/* the char is then returned */
+int scanner_skip_to(scanner_base_t *, int);
+int scanner_read_all(scanner_base_t *, FILE *);
 #endif

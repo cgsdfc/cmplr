@@ -1,8 +1,8 @@
 project(scanner)
 set(scanner_source
+  ./token.c
   ./scanner.c
-# ./token.c
-# ./reserved.c
+  ./input_buf.c
   ./match.c
 )
 add_library(scanner

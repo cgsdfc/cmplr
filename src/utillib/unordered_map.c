@@ -13,8 +13,8 @@ UTILLIB_ENUM_END(find_mode_t)
 
 // using a linking way
 static size_t do_hash(utillib_unordered_map *self, utillib_key_t key) {
-// use fast modulo i.e. x % power_of_2 == x & (power_of_2-1)
-  return self->un_ft->un_hash(key) & ( self->un_nbucket-1 );
+  // use fast modulo i.e. x % power_of_2 == x & (power_of_2-1)
+  return self->un_ft->un_hash(key) & (self->un_nbucket - 1);
 }
 static bool do_equal(utillib_unordered_map *self, utillib_key_t lhs,
                      utillib_key_t rhs) {
@@ -85,7 +85,7 @@ void utillib_unordered_map_init(utillib_unordered_map *self,
   self->un_max_lf = init_max_lf;
   self->un_ft = ft;
   self->un_size = 0;
-  self->un_free=NULL;
+  self->un_free = NULL;
   utillib_vector_init(&(self->un_bucket));
   push_back_bucket(self, init_nbucket);
 }

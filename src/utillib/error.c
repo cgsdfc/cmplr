@@ -1,8 +1,10 @@
+#define _BSD_SOURCE
 #include "error.h"
 #include "color.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 UTILLIB_ETAB_BEGIN(utillib_error_lv)
 UTILLIB_ETAB_ELEM_INIT(ERROR_LV_ICE, RED_ICE)
@@ -12,11 +14,11 @@ UTILLIB_ETAB_ELEM_INIT(ERROR_LV_WARNING, PURPLE_WARNING)
 UTILLIB_ETAB_ELEM_INIT(ERROR_LV_NOTE, CYAN_NOTE)
 UTILLIB_ETAB_END(utillib_error_lv)
 
-utillib_error * utillib_make_error(int lv, utillib_position* pos, char const*msg){
-  utillib_error *error=malloc(sizeof *error);
+utillib_error *utillib_make_error(int lv, utillib_position *pos, char *msg) {
+  utillib_error *error = malloc(sizeof *error);
   if (error) {
-    error->ue_lv=lv;
-    error->ue_msg=strdup(msg);
+    error->ue_lv = lv;
+    error->ue_msg = strdup(msg);
     memcpy(&(error->ue_pos), pos, sizeof *pos);
     return error;
   }

@@ -1,24 +1,35 @@
 #include "match.h"
 #include "scanner.h"
-#include "util.h"
 #include <ctype.h>
+#include <string.h>
+
+/* if c is [_a-zA-Z] */
+static int isidbegin(int c) { return isalpha(c) || c == '_'; }
+/* if c is [_a-zA-z0-9] */
 static int isidmiddle(int c) { return isalnum(c) || c == '_'; }
 
-static int isidbegin(int c) { return isalpha(c) || c == '_'; }
-
-// this file provides common match function
-static int scanner_linear_search_string(scanner_base_t *self) {
-  char const *str = utillib_string_c_str(&(self->sc_str));
+/* search linearly in a str-val tab to match the identifier */
+/* against a fix string */
+/* usually used for reserved words. may perfect hasing provides */
+/* better efficiency */
+static void const *linear_search_string(scanner_str_entry_t const *entries,
+                                        char const *str) {
   scanner_str_entry_t const *e;
-  for (e = self->sc_tab; e->se_str != NULL; ++e) {
-    if (0 == strcmp(e->se_str, str)) {
-      self->sc_val = e->se_val;
-      return SCANNER_MATCHED;
+  for (e = entries; UTILLIB_PAIR_FIRST(e) != NULL; ++e) {
+    if (0 == strcmp(UTILLIB_PAIR_FIRST(e), str)) {
+      return e;
     }
   }
-  return SCANNER_UNMATCHED;
+  return NULL;
 }
 
+scanner_str_entry_t const *
+scanner_search_string(scanner_str_entry_t const *entries, char const *str) {
+  return linear_search_string(entries, str);
+}
+
+/* match an identifier = idbegin idmiddle * */
+/* also searches for fix string */
 int scanner_match_identifier(scanner_base_t *self) {
   int c = scanner_getc(self);
   int r = SCANNER_UNMATCHED;
@@ -27,29 +38,16 @@ int scanner_match_identifier(scanner_base_t *self) {
     do {
       c = scanner_getc(self);
     } while (isidmiddle(c));
-    if (self->sc_flags & SCANNER_MATCH_STR_AS_ID) {
-      return scanner_linear_search_string(self);
-    }
   }
   scanner_ungetc(self, c);
   return r;
 }
 
-int scanner_match_string(scanner_base_t *self, const char *str) {
-  char const *s;
-  int c;
-  for (s = str, c = scanner_getc(self); *s && *s == (char)c;
-       c = scanner_getc(self), ++s)
-    ;
-  if (*s) {
-    scanner_ungets(self);
-    return SCANNER_UNMATCHED;
-  }
-  return SCANNER_MATCHED;
-}
-
-static int scanner_match_string_impl(scanner_base_t *self, int left,
-                                     int right) {
+// impl of matching string with different delimiters
+// DO NOT check for escaped sequence strictly.
+// i.e. any escaped sequences will be treated as \x
+// where x is an arbitrary single character.
+static int match_string_impl(scanner_base_t *self, int left, int right) {
   int state = 0;
   int c = scanner_getc(self);
   if (c == left) {
@@ -61,7 +59,7 @@ static int scanner_match_string_impl(scanner_base_t *self, int left,
           state = 1;
         } else if (c == '\\') {
           state = 2;
-        } else if (c == '\n') {
+        } else if (c == '\n' || c == EOF) {
           state = 3;
         }
         break;
@@ -81,30 +79,25 @@ static int scanner_match_string_impl(scanner_base_t *self, int left,
   return SCANNER_UNMATCHED;
 }
 
+// match <xxxx>
 int scanner_match_string_angle(scanner_base_t *self) {
-  return scanner_match_string_impl(self, '<', '>');
+  return match_string_impl(self, '<', '>');
 }
 
+// match 'xxxx'
 int scanner_match_string_single(scanner_base_t *self) {
   static const int single_quote = '\'';
-  return scanner_match_string_impl(self, single_quote, single_quote);
+  return match_string_impl(self, single_quote, single_quote);
 }
 
+// match "xxxx"
 int scanner_match_string_double(scanner_base_t *self) {
   static const int double_quote = '\"';
-  return scanner_match_string_impl(self, double_quote, double_quote);
-}
-int scanner_skip_space(scanner_base_t *self) {
-  int c;
-  int cnt = 0;
-  do {
-    c = scanner_getchar(self);
-    cnt++;
-  } while (isspace(c));
-  scanner_ungetchar(self, c);
-  return cnt > 1 ? SCANNER_MATCHED : SCANNER_UNMATCHED;
+  return match_string_impl(self, double_quote, double_quote);
 }
 
+// match and skip a cpp style comment
+// \/\/.*\n
 int scanner_skip_cpp_comment(scanner_base_t *self) {
   int c;
   if ((c = scanner_getchar(self)) == '/') {
@@ -120,6 +113,7 @@ int scanner_skip_cpp_comment(scanner_base_t *self) {
   return SCANNER_UNMATCHED;
 }
 
+// match and skip a c style comment
 int scanner_skip_c_comment(scanner_base_t *self) {
   int c;
   int state = 0;
@@ -164,4 +158,20 @@ int scanner_skip_c_comment(scanner_base_t *self) {
   }
   scanner_ungetchar(self, c);
   return SCANNER_UNMATCHED;
+}
+
+// this a not a matcher, but a skipper
+// that can be passed as scanner_getc_func_t
+// to skip all space
+int scanner_skip_space(scanner_input_buf *self) {
+  int c;
+  do {
+    c = scanner_input_buf_getc(self);
+  } while (isspace(c));
+  return c;
+}
+
+int scanner_match_any_char(scanner_base_t *self) {
+  self->sc_val = scanner_getc(self);
+  return SCANNER_MATCHED;
 }

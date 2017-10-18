@@ -1,11 +1,10 @@
 #define _GNU_SOURCE
-#include <stdio.h>
 #include "error.h"
-#include "except.h"
-#include "input_buf.h"
+#include "print.h"
 #include "unordered_map.h"
-static void test_unordered_map(void)
-{
+#include <stdio.h>
+
+static void test_unordered_map(void) {
   utillib_unordered_map map;
   utillib_pair_t stu[] = {
       {"Tony", (utillib_value_t)1},    {"John", (utillib_value_t)2},
@@ -43,29 +42,14 @@ static void test_unordered_map(void)
   utillib_unordered_map_destroy(&map);
 }
 
-static void test_input_buf(void) {
-  int c;
-  char s[1024]="static void test_input_buf(void) {\n";
-  utillib_input_buf buf;
-  FILE *file=fmemopen(s, 1024, "r");
-  utillib_input_buf_init(&buf, file, INPUT_BUF_STRING);
-  while ((c=utillib_input_buf_getc(&buf))!=EOF) {
-    printf("%lu:%lu:%c\n", 
-        utillib_input_buf_row(&buf),
-        utillib_input_buf_col(&buf),
-        c);
-    if (c=='(') {
-      utillib_error *err=utillib_make_error(ERROR_LV_ERROR, 
-          utillib_input_buf_current_pos(&buf),
-          "bad LP");
-      utillib_input_buf_pretty_perror(&buf, err);
-      utillib_destroy_error(err);
-      break;
-    }
+static void test_vector(void) {
+  const int N = 4;
+  utillib_vector v;
+  utillib_vector_init(&v);
+  for (int i = 0; i < N; ++i) {
+    utillib_vector_push_back(&v, i);
   }
-  utillib_input_buf_destroy(&buf);
+  utillib_vector_print(&v, utillib_int_str);
+  utillib_vector_destroy(&v);
 }
-
-int main() {
-  test_input_buf();
-}
+int main() { test_vector(); }
