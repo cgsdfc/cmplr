@@ -1,13 +1,13 @@
-Copyright (C) 2017-2014 by Cong Feng.  All rights reserved.
+COPYRIGHT (C) 2017-2014 BY CONG FENG.  ALL RIGHTS RESERVED.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+REDISTRIBUTION AND USE IN SOURCE AND BINARY FORMS, WITH OR WITHOUT
+MODIFICATION, ARE PERMITTED PROVIDED THAT THE FOLLOWING CONDITIONS ARE MET:
 
-1. Redistributions of source code must retain the above copyright
-   notice, this list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright
-   notice, this list of conditions and the following disclaimer in the
-   documentation and/or other materials provided with the distribution.
+1. REDISTRIBUTIONS OF SOURCE CODE MUST RETAIN THE ABOVE COPYRIGHT
+   NOTICE, THIS LIST OF CONDITIONS AND THE FOLLOWING DISCLAIMER.
+2. REDISTRIBUTIONS IN BINARY FORM MUST REPRODUCE THE ABOVE COPYRIGHT
+   NOTICE, THIS LIST OF CONDITIONS AND THE FOLLOWING DISCLAIMER IN THE
+   DOCUMENTATION AND/OR OTHER MATERIALS PROVIDED WITH THE DISTRIBUTION.
 
 THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -22,8 +22,8 @@ OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 SUCH DAMAGE.
 
 
-Some files (mostly header files in the include/ directory, containing
-definitions of bitfields for hardware devices) are copied from NetBSD and
-possibly other sources.  If you plan to reuse code from tokenizer,
-please check individual files for their license terms.
+SOME FILES (MOSTLY HEADER FILES IN THE INCLUDE/ DIRECTORY, CONTAINING
+DEFINITIONS OF BITFIELDS FOR HARDWARE DEVICES) ARE COPIED FROM NETBSD AND
+POSSIBLY OTHER SOURCES.  IF YOU PLAN TO REUSE CODE FROM TOKENIZER,
+PLEASE CHECK INDIVIDUAL FILES FOR THEIR LICENSE TERMS.
 

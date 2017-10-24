@@ -41,9 +41,6 @@ utillib_position *scanner_input_buf_current_pos(scanner_input_buf *);
 void scanner_input_buf_pretty_perror(scanner_input_buf *, utillib_error *);
 
 /* other utility */
-char *scanner_static_buf(void);
-char const *scanner_static_vsprintf(char const *, va_list);
-char const *scanner_static_sprintf(char const *, ...);
 bool scanner_input_buf_begin_of_line(scanner_input_buf *);
 utillib_error *scanner_input_buf_make_error(scanner_input_buf *, int,
                                             char const *, ...);

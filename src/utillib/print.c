@@ -7,6 +7,7 @@ void utillib_print_indent(FILE *file, size_t nchar, int ch) {
     fputc(ch, file);
   }
 }
+
 /* returns a local static char buffer */
 char *utillib_static_buf(void) {
   static char static_buf[UTILLIB_STATIC_BUF_SIZE];
@@ -28,8 +29,4 @@ char const *utillib_static_sprintf(char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   return utillib_static_vsprintf(fmt, ap);
-}
-
-char const *utillib_int_str(void *X) {
-  return utillib_static_sprintf("%ld", (long)X);
 }

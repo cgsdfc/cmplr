@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "error.h"
 #include "print.h"
+#include "test.h"
 #include "unordered_map.h"
 #include <stdio.h>
 
@@ -42,14 +43,15 @@ static void test_unordered_map(void) {
   utillib_unordered_map_destroy(&map);
 }
 
-static void test_vector(void) {
-  const int N = 4;
-  utillib_vector v;
-  utillib_vector_init(&v);
-  for (int i = 0; i < N; ++i) {
-    utillib_vector_push_back(&v, i);
-  }
-  utillib_vector_print(&v, utillib_int_str);
-  utillib_vector_destroy(&v);
+UTILLIB_TEST(test_1) {}
+UTILLIB_TEST(test_2) {}
+UTILLIB_TEST(test_3) {}
+
+int main(int argc, char **argv) {
+  UTILLIB_TEST_BEGIN(group_1)
+  UTILLIB_TEST_ELEM(test_1)
+  UTILLIB_TEST_ELEM(test_2)
+  UTILLIB_TEST_ELEM(test_3)
+  UTILLIB_TEST_END(group_1)
+  UTILLIB_TEST_RUN_ALL(argc, argv);
 }
-int main() { test_vector(); }

@@ -31,14 +31,36 @@ static utillib_slist *make_slist(void) {
   utillib_die("NOMEM in make_slist");
 }
 
-static void destroy_slist(utillib_slist *list) {
-  UTILLIB_SLIST_FOREACH(utillib_pair_t *, data, list) { free(data); }
-  utillib_slist_destroy(list);
-  free(list);
+static void push_free(utillib_unordered_map *self, utillib_pair_t *pair) {
+  utillib_pair_t **head = &self->un_free;
+  UTILLIB_PAIR_SECOND(pair) = *head;
+  *head = pair;
 }
 
-static utillib_pair_t *make_pair(utillib_key_t key, utillib_value_t value) {
-  utillib_pair_t *pair = malloc(sizeof *pair);
+void utillib_unordered_map_clear(utillib_unordered_map *self) {
+  UTILLIB_VECTOR_FOREACH(utillib_slist *, list, &self->un_bucket) {
+    while (!utillib_slist_empty(list)) {
+      utillib_pair_t *pair = utillib_slist_front(list);
+      utillib_slist_pop_front(list);
+      push_free(self, pair);
+    }
+  }
+}
+
+utillib_pair_t *pop_free(utillib_unordered_map *self) {
+  utillib_pair_t *pair = self->un_free;
+  self->un_free = UTILLIB_PAIR_SECOND(pair);
+  return self->un_free;
+}
+
+static utillib_pair_t *make_pair(utillib_unordered_map *self, utillib_key_t key,
+                                 utillib_value_t value) {
+  utillib_pair_t *pair;
+  if (self->un_free) {
+    pair = pop_free(self);
+  } else {
+    pair = malloc(sizeof *pair);
+  }
   if (pair) {
     UTILLIB_PAIR_FIRST(pair) = key;
     UTILLIB_PAIR_SECOND(pair) = value;
@@ -98,14 +120,25 @@ void utillib_unordered_map_init_from_array(utillib_unordered_map *self,
     utillib_unordered_map_insert(self, p);
   }
 }
-
-void utillib_unordered_map_destroy(utillib_unordered_map *self) {
-  size_t nbucket = utillib_vector_size(&(self->un_bucket));
-  for (int i = 0; i < nbucket; ++i) {
-    utillib_slist *list = utillib_vector_at(&(self->un_bucket), i);
-    destroy_slist(list);
+static void destroy_free(utillib_unordered_map *self) {
+  while (self->un_free) {
+    utillib_pair_t *p = self->un_free;
+    self->un_free = UTILLIB_PAIR_SECOND(p);
+    free(p);
   }
-  utillib_vector_destroy(&(self->un_bucket));
+}
+
+static void destroy_bucket(utillib_unordered_map *self) {
+  UTILLIB_VECTOR_FOREACH(utillib_slist *, list, &self->un_bucket) {
+    utillib_slist_destroy(list);
+    free(list);
+  }
+  utillib_vector_destroy(&self->un_bucket);
+}
+void utillib_unordered_map_destroy(utillib_unordered_map *self) {
+  utillib_unordered_map_clear(self);
+  destroy_free(self);
+  destroy_bucket(self);
 }
 
 static utillib_pair_t *linear_search_list(utillib_unordered_map *self,
@@ -131,10 +164,10 @@ static int find_impl(utillib_unordered_map *self, utillib_key_t key,
   size_t hashv = do_hash(self, key);
   utillib_slist *list = utillib_vector_at(&(self->un_bucket), hashv);
   utillib_pair_t *pair = linear_search_list(self, list, key, pos);
-  if (retv && pair) {
+  if (retv) {
     *retv = pair;
   }
-  if (plist && pair) {
+  if (plist) {
     *plist = list;
   }
   switch (mode) {
@@ -144,7 +177,7 @@ static int find_impl(utillib_unordered_map *self, utillib_key_t key,
     if (pair) {
       return KEY_EXISTS;
     }
-    pair = make_pair(key, value);
+    pair = make_pair(self, key, value);
     utillib_slist_push_front(list, pair);
     ++(self->un_size);
     return KEY_INSERTED;

@@ -7,13 +7,20 @@
 #define CYAN "36"
 #define WHITE "37"
 
-#define COLOR_FORMAT ("%s \e[1;%sm%s\e[0m")
-#define MK_COLOR_STRING(c, s) ("\e[1;" c "m" s "\e[0m")
-#define GREEN_CARET MK_COLOR_STRING(GREEN, "^")
-#define RED_ERROR MK_COLOR_STRING(RED, "error:")
-#define RED_FATAL MK_COLOR_STRING(RED, "fatal:")
-#define RED_ICE MK_COLOR_STRING(RED, "internal compiler error:")
-#define PURPLE_WARNING MK_COLOR_STRING(PURPLE, "warning:")
-#define CYAN_NOTE MK_COLOR_STRING(CYAN, "note:")
+/** \macro COLOR_FORMAT_BOLD
+ * Decorates a "%s" format string with COLOR
+ */
+#define COLOR_FORMAT_BOLD(COLOR) "%s \e[1;" COLOR "m%s\e[0m"
+/** \macro COLOR_STRING_BOLD
+ * Decorates a string literal with COLOR
+ */
+#define COLOR_STRING_BOLD(c, s) "\e[1;" c "m" s "\e[0m"
+
+/**
+ * \macro
+ * The unbold version of the above macros
+ */
+#define COLOR_FORMAT_UNBOLD(COLOR) "%s \e[0;" COLOR "m%s\e[0m"
+#define COLOR_STRING_UNBOLD(c, s) "\e[0;" c "m" s "\e[0m"
 
 #endif

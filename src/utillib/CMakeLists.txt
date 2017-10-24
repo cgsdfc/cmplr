@@ -1,8 +1,8 @@
 set(CMAKE_C_FLAGS "-g3")
 include_directories(${CMAKE_SOURCE_DIR})
 set(UTILLIB_SOURCE
+  ./test.c
   ./print.c
-  ./cli.c
   ./equal.c
   ./hash.c
   ./unordered_map.c
@@ -22,3 +22,7 @@ add_executable(utillib_test
 target_link_libraries(utillib_test
   utillib
 )
+enable_testing()
+
+add_executable(utillib_test_argp ./test/argp.c)
+target_link_libraries(utillib_test_argp utillib)

@@ -1,3 +1,4 @@
+/* -*- mode: C -*-  */
 #define _BSD_SOURCE
 #include "scanner.h"
 #include "token.h"
@@ -5,6 +6,20 @@
 #include <scanner/match.h>
 #include <string.h>
 #include <utillib/error.h>
+/**
+ * \file prep/scanner.c
+ * \breif Scanner implementation of the preprocessor.
+ * Based on libscanner, plugin matcher functions of preprocessor.
+ */
+
+/**
+ * \function prep_getc
+ * Get char from scanner_input_buf while deleting
+ * backslash newline sequence.
+ *
+ * \param self The scanner_input_buf.
+ * \return A char or EOF.
+ */
 
 static int prep_getc(scanner_input_buf *self) {
   int c;
@@ -18,6 +33,13 @@ static int prep_getc(scanner_input_buf *self) {
   return c;
 }
 
+/** \function prep_scanner_match_sharp
+ * Matches a `#' character at the beginning of a line.
+ *
+ * \para scan the scanner that does the matching.
+ * \return SCANNER_MATCHED if matched else SCANNER_UNMATCHED.
+ */
+
 static int prep_scanner_match_sharp(scanner_base_t *scan) {
   int c;
   if (scanner_input_buf_begin_of_line(SCANNER_CHAR_BUF(scan))) {
@@ -28,6 +50,13 @@ static int prep_scanner_match_sharp(scanner_base_t *scan) {
   }
   return SCANNER_UNMATCHED;
 }
+
+/**
+ * \function get_match_entry
+ * Returns the matcher function array of the preprocessor.
+ * \param void.
+ * \return Pointer to const static matcher array.
+ */
 
 static scanner_match_entry_t const *get_match_entry(void) {
   SCANNER_MATCH_ENTRY_BEGIN(parser_match)
@@ -41,24 +70,47 @@ static scanner_match_entry_t const *get_match_entry(void) {
   SCANNER_MATCH_ENTRY_END(parser_match)
   return parser_match;
 }
+
+/**
+ * \function push_error
+ * Push an Error into the error stack kept by self.
+ * \param self The preprocessor scanner.
+ * \param msg An error message.
+ * \return void
+ */
+
 static void push_error(prep_scanner_t *self, char const *msg) {
   utillib_vector_push_back(
       self->psp_err,
-      scanner_input_buf_make_error(&(self->psp_buf), ERROR_LV_ERROR, msg));
+      scanner_input_buf_make_error(&self->psp_buf, ERROR_LV_ERROR, msg));
 }
+
+/** \function prep_scanner_init
+ * Initializes a preprocessor scanner.
+ * \param self The preprocessor scanner.
+ * \param file The stream to read from.
+ * \param filename The name of the opened file.
+ * \return void.
+ */
 
 void prep_scanner_init(prep_scanner_t *self, FILE *file, char const *filename,
                        utillib_vector *err) {
-  scanner_input_buf_init(&(self->psp_buf), file, filename);
-  scanner_base_init(&(self->psp_scan), &(self->psp_buf), prep_getc,
+  scanner_input_buf_init(&self->psp_buf, file, filename);
+  scanner_base_init(&self->psp_scan, &self->psp_buf, prep_getc,
                     get_match_entry());
   self->psp_err = err;
 }
 
+/** \function prep_scanner_yylex
+ * Wraps the scanner_yylex and add error handling.
+ * \param self The preprocessor scanner.
+ * \return Code for token or a character.
+ */
+
 int prep_scanner_yylex(prep_scanner_t *self) {
   int r;
-  scanner_base_t *scan = &(self->psp_scan);
-  scanner_input_buf *buf = &(self->psp_buf);
+  scanner_base_t *scan = &self->psp_scan;
+  scanner_input_buf *buf = &self->psp_buf;
   switch (r = scanner_yylex(scan)) {
   case SCANNER_ERROR:
     switch (r = scanner_get_errc(scan)) {
@@ -75,22 +127,36 @@ int prep_scanner_yylex(prep_scanner_t *self) {
       push_error(self, "nested or unterminated comment");
       return PREP_ERR;
     default:
-      assert(false);
+      utillib_unreachable("prep_scanner_yylex: default:");
     }
   case SCANNER_EOF: // EOF
     return PREP_EOF;
   case SCANNER_MATCHED:
     return scanner_get_val(scan);
   default:
-    assert(false);
+    utillib_unreachable("prep_scanner_yylex: default:");
   }
 }
 
+/**
+ * \function prep_scanner_destroy
+ * Close the stream and free up memory.
+ * \param prep_scanner_t
+ * \return void
+ */
+
 void prep_scanner_destroy(prep_scanner_t *self) {
-  scanner_input_buf_destroy(&(self->psp_buf));
-  scanner_base_destroy(&(self->psp_scan));
+  scanner_input_buf_destroy(&self->psp_buf);
+  scanner_base_destroy(&self->psp_scan);
 }
 
+/**
+ * \function prep_scanner_get_text
+ * Back up the string returned by scanner_get_text.
+ * \param prep_scanner_t.
+ * \return the string of the token.
+ */
+
 char const *prep_scanner_get_text(prep_scanner_t *self) {
-  return strdup(scanner_get_text(&(self->psp_scan)));
+  return scanner_get_text(&self->psp_scan);
 }

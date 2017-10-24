@@ -21,15 +21,15 @@ int scanner_getchar(scanner_base_t *self) {
 }
 
 static void str_clear(scanner_base_t *self) {
-  utillib_string_clear(&(self->sc_str));
+  utillib_string_clear(&self->sc_str);
 }
 
 /* scanner_t constructor */
 void scanner_init(scanner_t *self, FILE *file, char const *filename,
                   scanner_match_entry_t const *match) {
   // default scanner_t
-  scanner_input_buf_init(&(self->sc_buf), file, filename);
-  scanner_base_init(&(self->sc_base), &(self->sc_buf), scanner_input_buf_getc,
+  scanner_input_buf_init(&self->sc_buf, file, filename);
+  scanner_base_init(&self->sc_base, &self->sc_buf, scanner_input_buf_getc,
                     match);
 }
 
@@ -37,7 +37,7 @@ void scanner_init(scanner_t *self, FILE *file, char const *filename,
 void scanner_base_init(scanner_base_t *self, scanner_input_buf *buf,
                        scanner_getc_func_t *getc,
                        scanner_match_entry_t const *match) {
-  utillib_string_init(&(self->sc_str));
+  utillib_string_init(&self->sc_str);
   self->sc_val = 0;
   self->sc_text = NULL;
   self->sc_buf = buf;
@@ -47,48 +47,61 @@ void scanner_base_init(scanner_base_t *self, scanner_input_buf *buf,
 
 /* scanner_t destructor */
 void scanner_destroy(scanner_t *self) {
-  scanner_input_buf_destroy(&(self->sc_buf));
-  scanner_base_destroy(&(self->sc_base));
+  scanner_input_buf_destroy(&self->sc_buf);
+  scanner_base_destroy(&self->sc_base);
 }
 /* scanner_base_t destructor */
 void scanner_base_destroy(scanner_base_t *self) {
-  utillib_string_destroy(&(self->sc_str));
+  utillib_string_destroy(&self->sc_str);
 }
 /* appending internal str */
 int scanner_getc(scanner_base_t *self) {
   int c = scanner_getchar(self);
-  utillib_string_append(&(self->sc_str), c);
+  utillib_string_append(&self->sc_str, c);
   return c;
 }
 
 /* erasing internal str */
 int scanner_ungetc(scanner_base_t *self, int c) {
   int ch = scanner_ungetchar(self, c);
-  utillib_string_erase_last(&(self->sc_str));
+  utillib_string_erase_last(&self->sc_str);
   return ch;
 }
 
 /* unget the currently collected char */
 void scanner_ungets(scanner_base_t *self) {
-  char const *s = utillib_string_c_str(&(self->sc_str));
+  char const *s = utillib_string_c_str(&self->sc_str);
   while (*s) {
     scanner_ungetc(self, *s);
     ++s;
   }
 }
 
-/* try to match the input characters with the functions */
-/* in self->sc_match. if one match ever succeeded, it */
-/* returns SCANNER_MATCHED. otherwise, it returns SCANNER_UNMATCHED. */
-/* if one of the match functions returns SCANNER_ERROR, it reports */
-/* it as it. */
+/**
+ * \function try_match
+ * Try to match the input characters with the function pointers
+ * in self->sc_match.
+ * \return If one match ever succeeded, it sets self->sc_st to
+ * point to a read-only buffer, sets self->sc_val to the code and returns
+ * SCANNER_MATCHED.
+ * Specially, if the scanner_match_any_char returns SCANNER_CHAR, it will assume
+ * the character has been put into the self->sc_val and does as about.
+ * If none of the functions return SCANNER_MATCHED, it returns
+ * SCANNER_UNMATCHED.
+ * If one of the match functions returns SCANNER_ERROR, it reports
+ * it as it.
+*/
+
 static int try_match(scanner_base_t *self) {
   scanner_match_entry_t const *match;
   for (match = self->sc_match; match->scm_func != NULL; ++match) {
     int r;
     switch (r = match->scm_func(self)) {
+    case SCANNER_CHAR:
+      self->sc_text = utillib_string_c_str(&self->sc_str);
+      return SCANNER_MATCHED;
     case SCANNER_MATCHED:
-      self->sc_text = utillib_string_c_str(&(self->sc_str));
+      self->sc_text = utillib_string_c_str(&self->sc_str);
       self->sc_val = match->scm_val;
       return r;
     case SCANNER_UNMATCHED:
@@ -98,6 +111,10 @@ static int try_match(scanner_base_t *self) {
       return r;
     }
   }
+  // since match_func will not consume any char
+  // if it does not match(even the trouble char)
+  // so we eat that char here;
+  scanner_getchar(self);
   return SCANNER_ERROR;
 }
 int scanner_yylex(scanner_base_t *self) {

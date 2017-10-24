@@ -7,6 +7,7 @@ typedef char const *(utillib_tostring_func_t)(void *);
 void utillib_print_indent(FILE *, size_t, int);
 char *utillib_static_buf(void);
 char const *utillib_static_vsprintf(char const *fmt, va_list ap);
-char const *utillib_static_sprintf(char const *fmt, ...);
+char const *utillib_static_sprintf(char const *fmt, ...)
+    __attribute__((__format__(__printf__, 1, 2)));
 char const *utillib_int_str(void *);
 #endif // UTILLIB_PRINT_H

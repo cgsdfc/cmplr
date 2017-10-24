@@ -15,4 +15,5 @@ void prep_scanner_init(prep_scanner_t *, FILE *, char const *,
                        utillib_vector *);
 int prep_scanner_yylex(prep_scanner_t *);
 void prep_scanner_destroy(prep_scanner_t *);
+char const *prep_scanner_get_text(prep_scanner_t *);
 #endif // PREP_SCANNER_H

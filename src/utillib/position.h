@@ -13,5 +13,4 @@ typedef struct utillib_position {
 #define UTILLIB_POS_COLUMN(p) UTILLIB_POS_COL(p)
 #define UTILLIB_POS_LINENO(p) UTILLIB_POS_ROW(p)
 
-utillib_position const *utillib_position_current(void);
 #endif // LEXER_POSITION

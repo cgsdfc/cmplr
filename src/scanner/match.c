@@ -173,5 +173,5 @@ int scanner_skip_space(scanner_input_buf *self) {
 
 int scanner_match_any_char(scanner_base_t *self) {
   self->sc_val = scanner_getc(self);
-  return SCANNER_MATCHED;
+  return SCANNER_CHAR;
 }

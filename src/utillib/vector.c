@@ -56,10 +56,12 @@ void *utillib_vector_back(utillib_vector *self) {
   assert(utillib_vector_size(self) > 0);
   return *(self->end - 1);
 }
+
 void utillib_vector_set(utillib_vector *self, size_t pos, void *data) {
   assert(pos < utillib_vector_size(self));
   self->begin[pos] = data;
 }
+
 size_t utillib_vector_capacity(utillib_vector *self) {
   return self->stor_end - self->begin;
 }
@@ -68,11 +70,4 @@ void utillib_vector_reserve(utillib_vector *self, size_t new_cap) {
   if (utillib_vector_capacity(self) < new_cap) {
     do_realloc(self, new_cap);
   }
-}
-
-void utillib_vector_print(utillib_vector *self,
-                          utillib_tostring_func_t *tostring) {
-  putchar('[');
-  UTILLIB_VECTOR_FOREACH(size_t, X, self) { printf("%s, ", tostring(X)); }
-  puts("]\n");
 }

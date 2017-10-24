@@ -62,4 +62,5 @@ bool utillib_unordered_map_empty(utillib_unordered_map *);
 double utillib_unordered_map_load_factor(utillib_unordered_map *);
 void utillib_unordered_map_set_max_load_factor(utillib_unordered_map *, double);
 void utillib_unordered_map_rehash(utillib_unordered_map *, size_t);
+void utillib_unordered_map_clear(utillib_unordered_map *);
 #endif // UTILLIB_UNORDERED_MAP_H

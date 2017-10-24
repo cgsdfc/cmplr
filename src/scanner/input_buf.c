@@ -191,7 +191,6 @@ bool scanner_input_buf_begin_of_line(scanner_input_buf *self) {
 
 utillib_error *scanner_input_buf_make_errorV(scanner_input_buf *self, int lv,
                                              char const *fmt, va_list ap) {
-  // TODO: make it in utillib
   char const *str = utillib_static_vsprintf(fmt, ap);
   utillib_error *err =
       utillib_make_error(lv, scanner_input_buf_current_pos(self), strdup(str));
