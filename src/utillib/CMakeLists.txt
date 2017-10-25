@@ -1,6 +1,8 @@
 set(CMAKE_C_FLAGS "-g3")
 include_directories(${CMAKE_SOURCE_DIR})
 set(UTILLIB_SOURCE
+  ./logging.c
+  ./strref.c
   ./test.c
   ./print.c
   ./equal.c
@@ -26,3 +28,6 @@ enable_testing()
 
 add_executable(utillib_test_argp ./test/argp.c)
 target_link_libraries(utillib_test_argp utillib)
+
+add_executable(utillib_test_logging ./test/logging.c)
+target_link_libraries(utillib_test_logging utillib)

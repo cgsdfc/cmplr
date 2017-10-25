@@ -6,6 +6,8 @@
 #include <scanner/match.h>
 #include <string.h>
 #include <utillib/error.h>
+#include <utillib/logging.h>
+
 /**
  * \file prep/scanner.c
  * \breif Scanner implementation of the preprocessor.
@@ -127,14 +129,16 @@ int prep_scanner_yylex(prep_scanner_t *self) {
       push_error(self, "nested or unterminated comment");
       return PREP_ERR;
     default:
-      utillib_unreachable("prep_scanner_yylex: default:");
+      UTILLIB_UNREACHABLE("prep_scanner_yylex:");
     }
   case SCANNER_EOF: // EOF
+    UTILLIB_LOG(DEBUG, "End of File hit");
     return PREP_EOF;
   case SCANNER_MATCHED:
+    UTILLIB_LOG(DEBUG, "Maches");
     return scanner_get_val(scan);
   default:
-    utillib_unreachable("prep_scanner_yylex: default:");
+    UTILLIB_UNREACHABLE("prep_scanner_yylex:");
   }
 }
 

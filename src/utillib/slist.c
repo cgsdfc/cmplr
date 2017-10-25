@@ -92,3 +92,24 @@ size_t utillib_slist_size(utillib_slist *self) {
   }
   return i;
 }
+
+void utillib_slist_iterator_init_null(utillib_slist_iterator *self) {
+  self->iter_node = NULL;
+}
+
+void utillib_slist_iterator_init(utillib_slist_iterator *self,
+                                 utillib_slist *cont) {
+  self->iter_node = cont->sl_tail;
+}
+
+bool utillib_slist_iterator_has_next(utillib_slist_iterator *self) {
+  return NULL != self->iter_node;
+}
+
+void utillib_slist_iterator_next(utillib_slist_iterator *self) {
+  self->iter_node = UTILLIB_SLIST_NODE_NEXT(self->iter_node);
+}
+
+void *utillib_slist_iterator_get(utillib_slist_iterator *self) {
+  return UTILLIB_SLIST_NODE_DATA(self->iter_node);
+}

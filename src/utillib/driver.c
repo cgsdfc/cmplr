@@ -47,11 +47,8 @@ UTILLIB_TEST(test_1) {}
 UTILLIB_TEST(test_2) {}
 UTILLIB_TEST(test_3) {}
 
-int main(int argc, char **argv) {
-  UTILLIB_TEST_BEGIN(group_1)
-  UTILLIB_TEST_ELEM(test_1)
-  UTILLIB_TEST_ELEM(test_2)
-  UTILLIB_TEST_ELEM(test_3)
-  UTILLIB_TEST_END(group_1)
-  UTILLIB_TEST_RUN_ALL(argc, argv);
-}
+UTILLIB_TEST_BEGIN(group_1)
+UTILLIB_TEST_ELEM(test_1)
+UTILLIB_TEST_ELEM(test_2)
+UTILLIB_TEST_ELEM(test_3)
+UTILLIB_TEST_END(group_1)

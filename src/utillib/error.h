@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-#define COLOR_STRING(C, S) COLOR_STRING_UNBOLD(C, S)
+#define COLOR_STRING(C, S) COLOR_STRING_BOLD(C, S)
 #define GREEN_CARET COLOR_STRING(GREEN, "^")
 #define RED_ERROR COLOR_STRING(RED, "error:")
 #define RED_FATAL COLOR_STRING(RED, "fatal:")

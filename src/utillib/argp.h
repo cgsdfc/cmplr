@@ -17,10 +17,14 @@ typedef struct argp_state utillib_argp_state;
 #define UTILLIB_ARGP_STATIC_ARGP static_argp
 #define UTILLIB_ARGP_STATIC_OPTIONS static_argp_options
 #define UTILLIB_ARGP_STATIC_PARSER static_argp_parser
-#define UTILLIB_ARGP_PROGRAM_VERSION(VERSION) (argp_program_version=(VERSION));
-#define UTILLIB_ARGP_PROGRAM_BUG_ADDRESS(ADDRESS) (argp_program_bug_address=(ADDRESS));
+#define UTILLIB_ARGP_PROGRAM_VERSION(VERSION)                                  \
+  (argp_program_version = (VERSION));
+#define UTILLIB_ARGP_PROGRAM_BUG_ADDRESS(ADDRESS)                              \
+  (argp_program_bug_address = (ADDRESS));
 
 #define UTILLIB_ARGP_OPTION_BEGIN()                                            \
+  static utillib_argp_error_t UTILLIB_ARGP_STATIC_PARSER(                      \
+      int, char *, utillib_argp_state *);                                      \
   static const utillib_argp_option UTILLIB_ARGP_STATIC_OPTIONS[] = {
 
 #define UTILLIB_ARGP_OPTION_ELEM(NAME, KEY, ARG, DOC)                          \
@@ -35,11 +39,11 @@ typedef struct argp_state utillib_argp_state;
   static const utillib_argp UTILLIB_ARGP_STATIC_ARGP = {                       \
       .parser = UTILLIB_ARGP_STATIC_PARSER,                                    \
       .options = (UTILLIB_ARGP_STATIC_OPTIONS),                                \
-      .args_doc = (ARG_DOC),                                                    \
+      .args_doc = (ARG_DOC),                                                   \
       .doc = (DOC)};
 
 #define UTILLIB_ARGP_PARSE(ARGC, ARGV, INPUT)                                  \
-  argp_parse(&UTILLIB_ARGP_STATIC_ARGP, ARGC, ARGV, 0,0, INPUT)
+  argp_parse(&UTILLIB_ARGP_STATIC_ARGP, ARGC, ARGV, 0, 0, INPUT)
 
 /* access to argp_state structure */
 #define UTILLIB_ARGP_STATE_INPUT(S) ((S)->input)

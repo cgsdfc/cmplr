@@ -14,6 +14,8 @@ static const char *GREEN_OK = COLOR_STRING(GREEN, "[       OK ]");
 static const char *RED_SUCK = COLOR_STRING(RED, "[ BAD      ]");
 static const char *GREEN_PASS = COLOR_STRING(GREEN, "[  PASSED  ]");
 static const char *RED_FAILED = COLOR_STRING(RED, "[  FAILED  ]");
+__attribute__((__weak__)) void utillib_test_global_setup(void) {}
+__attribute__((__weak__)) void utillib_test_global_teardown(void) {}
 
 UTILLIB_ARGP_OPTION_BEGIN()
 UTILLIB_ARGP_OPTION_ELEM("--include-test", 'I', "FUNC",
@@ -21,6 +23,7 @@ UTILLIB_ARGP_OPTION_ELEM("--include-test", 'I', "FUNC",
 UTILLIB_ARGP_OPTION_ELEM("--exclude-test", 'E', "FUNC",
                          "each -EFUNC excludes a test function")
 UTILLIB_ARGP_OPTION_END()
+UTILLIB_ARGP_OPTION_REGISTER(NULL, "utillib_test a light test runner")
 
 static void utillib_test_env_destroy(utillib_test_env_t *self) {
   utillib_unordered_map_destroy(&self->tst_cases_map);
@@ -39,8 +42,8 @@ static void set_mode(utillib_test_env_t *self, char *test_name, int mode) {
   test->tst_mode = mode;
 }
 
-static utillib_argp_error_t utillib_test_parser(int key, char *arg,
-                                                utillib_argp_state *state) {
+static utillib_argp_error_t
+UTILLIB_ARGP_STATIC_PARSER(int key, char *arg, utillib_argp_state *state) {
   utillib_test_env_t *self = UTILLIB_ARGP_STATE_INPUT(state);
   switch (key) {
   case 'I':
@@ -70,6 +73,7 @@ static void print_global_setup(utillib_test_env_t *self) {
   fprintf(stderr, "Running %s from %s\n", self->tst_case_name,
           self->tst_filename);
   fprintf(stderr, "%s Global test environment setup.\n", GREEN_BANG);
+  utillib_test_global_setup();
 }
 
 static void report_test_status(utillib_test_env_t *self, char const *bang,
@@ -89,6 +93,7 @@ static void print_global_teardown(utillib_test_env_t *self) {
   fprintf(stderr, "%s Global test environment teardown.\n", GREEN_BANG);
   fprintf(stderr, "Run %lu tests, pass %lu, failed. %lu\n", self->tst_ntests,
           self->tst_nfailed, self->tst_nsucc);
+  utillib_test_global_teardown();
 }
 
 static void run_single_test(utillib_test_env_t *self,
@@ -140,7 +145,7 @@ static void fill_test_torun(utillib_test_env_t *self) {
 }
 
 int utillib_test_main(utillib_test_env_t *self, int argc, char **argv) {
-  test_argp_parse(self, argc, argv);
+  UTILLIB_ARGP_PARSE(argc, argv, self);
   fill_test_torun(self);
   print_global_setup(self);
   run_all_test(self);

@@ -120,6 +120,17 @@ void utillib_unordered_map_init_from_array(utillib_unordered_map *self,
     utillib_unordered_map_insert(self, p);
   }
 }
+
+static void destroy_free_owning(utillib_unordered_map *self,
+                                utillib_destroy_func_t *destroy) {
+  while (self->un_free) {
+    utillib_pair_t *p = self->un_free;
+    self->un_free = UTILLIB_PAIR_SECOND(p);
+    destroy(p);
+    free(p);
+  }
+}
+
 static void destroy_free(utillib_unordered_map *self) {
   while (self->un_free) {
     utillib_pair_t *p = self->un_free;
@@ -135,6 +146,14 @@ static void destroy_bucket(utillib_unordered_map *self) {
   }
   utillib_vector_destroy(&self->un_bucket);
 }
+
+void utillib_unordered_map_destroy_owning(utillib_unordered_map *self,
+                                          utillib_destroy_func_t *destroy) {
+  utillib_unordered_map_clear(self);
+  destroy_free_owning(self, destroy);
+  destroy_bucket(self);
+}
+
 void utillib_unordered_map_destroy(utillib_unordered_map *self) {
   utillib_unordered_map_clear(self);
   destroy_free(self);
@@ -266,4 +285,42 @@ double utillib_unordered_map_max_load_factor(utillib_unordered_map *self) {
 void utillib_unordered_map_set_max_load_factor(utillib_unordered_map *self,
                                                double max_lf) {
   self->un_max_lf = max_lf;
+}
+
+static void iter_skip_empty_slot(utillib_unordered_map_iterator *self) {
+  for (; utillib_vector_iterator_has_next(&self->iter_slot);
+       utillib_vector_iterator_next(&self->iter_slot)) {
+    utillib_slist *list = utillib_vector_iterator_get(&self->iter_slot);
+    if (!utillib_slist_empty(list)) {
+      return;
+    }
+  }
+}
+
+void utillib_unordered_map_iterator_init(utillib_unordered_map_iterator *self,
+                                         utillib_unordered_map *cont) {
+  utillib_vector_iterator_init(&self->iter_slot, &cont->un_bucket);
+  utillib_slist_iterator_init(&self->iter_node,
+                              utillib_vector_front(&cont->un_bucket));
+}
+
+bool utillib_unordered_map_iterator_has_next(
+    utillib_unordered_map_iterator *self) {
+  iter_skip_empty_slot(self);
+  return utillib_vector_iterator_has_next(&self->iter_slot);
+}
+
+void utillib_unordered_map_iterator_next(utillib_unordered_map_iterator *self) {
+  if (utillib_slist_iterator_has_next(&self->iter_node)) {
+    utillib_slist_iterator_next(&self->iter_node);
+    return;
+  }
+  utillib_vector_iterator_next(&self->iter_slot);
+  utillib_slist_iterator_init(&self->iter_node,
+                              utillib_vector_iterator_get(&self->iter_slot));
+}
+
+utillib_pair_t *
+utillib_unordered_map_iterator_get(utillib_unordered_map_iterator *self) {
+  return utillib_slist_iterator_get(&self->iter_node);
 }

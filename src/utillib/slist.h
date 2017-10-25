@@ -2,14 +2,15 @@
 #define UTILLIB_SLIST_H
 #include <stdbool.h>
 #include <stddef.h>
+#define UTILLIB_SLIST_HAS_NEXT(N) ((N) != NULL)
 #define UTILLIB_SLIST_NODE_DATA(N) ((N)->data)
 #define UTILLIB_SLIST_NODE_NEXT(N) ((N)->next)
 #define UTILLIB_SLIST_HEAD(L) ((L)->sl_tail)
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
-  for (utillib_slist_node *_p = (L)->sl_tail; _p != NULL && ((X) = _p->data);  \
-       _p = _p->next)
+  for (utillib_slist_node *_p = (L)->sl_tail;                                  \
+       _p != NULL && (((X) = _p->data) || 0); _p = _p->next)
 
 typedef struct utillib_slist_node {
   struct utillib_slist_node *next;
@@ -20,6 +21,16 @@ typedef struct utillib_slist {
   struct utillib_slist_node *sl_free;
   struct utillib_slist_node *sl_tail;
 } utillib_slist;
+
+typedef struct utillib_slist_iterator {
+  struct utillib_slist_node *iter_node;
+} utillib_slist_iterator;
+
+void utillib_slist_iterator_init_null(utillib_slist_iterator *);
+void utillib_slist_iterator_init(utillib_slist_iterator *, utillib_slist *);
+bool utillib_slist_iterator_has_next(utillib_slist_iterator *);
+void utillib_slist_iterator_next(utillib_slist_iterator *);
+void *utillib_slist_iterator_get(utillib_slist_iterator *);
 
 void utillib_slist_init(utillib_slist *);
 void utillib_slist_destroy(utillib_slist *);

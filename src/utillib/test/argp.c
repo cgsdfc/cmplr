@@ -32,10 +32,9 @@ UTILLIB_ARGP_OPTION_REGISTER(
     "test the utillib/argp.h"
 )
 
-UTILLIB_ARGP_PROGRAM_VERSO
 
 int main(int argc, char **argv) {
-  test_arg_t arg;
+  test_arg_t arg={0};
   UTILLIB_ARGP_PARSE(argc, argv, &arg);
   printf("--bar=%s, --foo=%s\n", arg.bar_arg, arg.foo_arg);
 }

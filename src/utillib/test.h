@@ -16,8 +16,14 @@
  * If none of these options were given, it runs all the tests.
  */
 
+/* define these to override default setup and teardown behaviour */
+#define UTILLIB_TEST_GLOBAL_SETUP() void utillib_test_global_setup()
+#define UTILLIB_TEST_GLOBAL_TEARDOWN() void utillib_test_global_teardown()
+
 #define UTILLIB_TEST(NAME) static void NAME(utillib_test_env_t *self)
-#define UTILLIB_TEST_BEGIN(NAME) static utillib_test_entry_t NAME[] = {
+#define UTILLIB_TEST_BEGIN(NAME)                                               \
+  int main(int ARGC, char **ARGV) {                                            \
+  static utillib_test_entry_t NAME[] = {
 #define UTILLIB_TEST_ELEM(FUNC)                                                \
   {.tst_func = (FUNC), .tst_func_name = #FUNC, .tst_mode = RUN_ALL},
 #define UTILLIB_TEST_END(NAME)                                                 \
@@ -26,9 +32,9 @@
   ;                                                                            \
   static utillib_test_env_t static_test_env = {                                \
       .tst_cases = (NAME), .tst_case_name = #NAME, .tst_filename = __FILE__};  \
-  utillib_test_env_init(&static_test_env);
-#define UTILLIB_TEST_RUN_ALL(ARGC, ARGV)                                       \
-  return utillib_test_main(&static_test_env, ARGC, ARGV);
+  utillib_test_env_init(&static_test_env);                                     \
+  return utillib_test_main(&static_test_env, ARGC, ARGV);                      \
+  }
 
 #define UTILLIB_ASSERT(EXPR)                                                   \
   do {                                                                         \

@@ -23,8 +23,7 @@ static void save_line_offset(scanner_input_buf *self) {
   size_t cur_offset =
       (size_t)utillib_vector_at(&(self->line_offset), self->row - 1);
   cur_offset += self->col + 1; // for the \n char
-  utillib_vector_push_back(&(self->line_offset),
-                           (utillib_vector_elem_t)cur_offset);
+  utillib_vector_push_back(&(self->line_offset), (utillib_element_t)cur_offset);
 }
 
 /* do the fseek based on line_offset and return the line */
@@ -82,7 +81,7 @@ void scanner_input_buf_init(scanner_input_buf *self, FILE *file,
   utillib_vector_init(&(self->line_offset));
   utillib_vector_reserve(&(self->line_offset), init_line_capacity);
   // the line_offset of line 1 is zero.
-  utillib_vector_push_back(&(self->line_offset), (utillib_vector_elem_t)0);
+  utillib_vector_push_back(&(self->line_offset), (utillib_element_t)0);
 }
 
 /* destructor */
