@@ -65,22 +65,25 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
 
 #define UTILLIB_TEST_DECLARE(NAME) utillib_test_env_t *NAME(void);
 
-#define UTILLIB_TEST_RUN_ALL_ARG(ARGC, ARGV, ...)                                  \
+#define UTILLIB_TEST_RUN_ALL_ARG(ARGC, ARGV, ...)                              \
   do {                                                                         \
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
-    utillib_test_suite_init(&static_suite, ## __VA_ARGS__, NULL);               \
+    utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
     return utillib_test_suite_run_all(&static_suite);                          \
   } while (0)
 
-#define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0,0, __VA_ARGS__)
+#define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
 
-/**
- * \macro UTILLIB_TEST_GLOBAL_SETUP
- * Defines global setup function to be called before
- * the whole test suite is run.
- */
-#define UTILLIB_TEST_GLOBAL_SETUP() void utillib_test_global_setup()
-#define UTILLIB_TEST_GLOBAL_TEARDOWN() void utillib_test_global_teardown()
+UTILLIB_ENUM_BEGIN(utillib_test_property_t)
+UTILLIB_ENUM_ELEM(UT_FIXTURE)
+UTILLIB_ENUM_ELEM(UT_SETUP)
+UTILLIB_ENUM_ELEM(UT_TEARDOWN)
+UTILLIB_ENUM_END(utillib_test_property_t)
+
+#define UTILLIB_TEST_PROPERTIES(...)                                           \
+  utillib_test_properties(&static_test_env, __VA_ARGS__, NULL, NULL);
+
+#define FIXTURE utillib_test_fixture
 
 /**
  * \macro UTILLIB_TEST
@@ -88,7 +91,9 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * \param NAME The name of the test function.
  */
 
-#define UTILLIB_TEST(NAME) static void NAME(utillib_test_entry_t *self)
+#define UTILLIB_TEST(NAME)                                                     \
+  static void NAME(utillib_test_entry_t *self,                                 \
+                   utillib_test_fixture_t FIXTURE)
 
 /**
  * \macro UTILLIB_TEST_BEGIN
@@ -101,13 +106,14 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * to global scope and pretty much the same benefit of using singleton.
  * You get the pointer to the variable via a function call.
  */
+#define UTILLIB_TEST_DEFINE(NAME) utillib_test_env_t *NAME(void)
+
 #define UTILLIB_TEST_BEGIN(NAME)                                               \
-  utillib_test_env_t *NAME(void) {                                             \
   static utillib_test_entry_t static_test_entries[] = {
 
 /**
  * \macro UTILLIB_TEST_END
- * Initilizes the `static_test_entries' and returns it.
+ * Initilizes the `static_test_entries'.
  */
 
 #define UTILLIB_TEST_END(NAME)                                                 \
@@ -115,9 +121,9 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
   }                                                                            \
   ;                                                                            \
   static utillib_test_env_t static_test_env = {                                \
-      .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__}; \
-  return &static_test_env;                                                     \
-  }
+      .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__};
+
+#define UTILLIB_TEST_RETURN(NAME) return &static_test_env;
 
 /**
  * \macro UTILLIB_TEST_ENTRY
@@ -127,24 +133,24 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * \param STATUS whether to skip or to run this function.
  */
 
-#define UTILLIB_TEST_ENTRY(FUNC, STATUS)                                 \
-  {.func = (FUNC), .func_name = #FUNC, .status = (STATUS), },
+#define UTILLIB_TEST_ENTRY(FUNC, STATUS)                                       \
+  {                                                                            \
+      .func = (FUNC), .func_name = #FUNC, .status = (STATUS),                  \
+  },
 
 /**
  * \macro UTILLIB_TEST_RUN
  * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_RUN.
  */
 
-#define UTILLIB_TEST_RUN(FUNC)                                           \
-  UTILLIB_TEST_ENTRY(FUNC,UT_STATUS_RUN)
+#define UTILLIB_TEST_RUN(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_RUN)
 
 /**
  * \macro UTILLIB_TEST_SKIP
  * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_SKIP.
  */
 
-#define UTILLIB_TEST_SKIP(FUNC)                                          \
-  UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_SKIP)
+#define UTILLIB_TEST_SKIP(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_SKIP)
 
 /**
  * \macro UTILLIB_INIT_PRED
@@ -281,8 +287,6 @@ typedef struct utillib_test_entry_t {
  */
 
 typedef struct utillib_test_env_t {
-  /* The current activated test */
-  utillib_test_entry_t *cur_test;
   /* A null-terminated array of `utillib_test_entry_t' */
   utillib_test_entry_t *cases;
   /* The name of file where this `utillib_test_env_t' was defined. */
@@ -299,6 +303,9 @@ typedef struct utillib_test_env_t {
   size_t nfailure;
   /* The number of golden tests that turned green */
   size_t nsuccess;
+  /* The fixture associated with this env */
+  utillib_test_fixture_t fixture;
+  utillib_test_fixfunc_t *setup_func, *teardown_func;
 } utillib_test_env_t;
 
 /**
@@ -312,15 +319,16 @@ typedef struct utillib_test_env_t {
  */
 
 typedef struct utillib_test_suite_t {
-  char const * filename;
+  char const *filename;
   utillib_vector tests;
 } utillib_test_suite_t;
 
 void utillib_test_predicate_init(utillib_test_predicate_t *, bool, size_t,
-    char const *, int);
+                                 char const *, int);
 bool utillib_test_predicate(utillib_test_entry_t *, utillib_test_predicate_t *);
 
 void utillib_test_suite_init(utillib_test_suite_t *, ...);
 int utillib_test_suite_run_all(utillib_test_suite_t *);
+void utillib_test_properties(utillib_test_env_t *, ... );
 
 #endif // UTILLIB_TEST_H

@@ -42,10 +42,12 @@ typedef bool(utillib_equal_func_t)(utillib_key_t, utillib_key_t);
 typedef struct utillib_test_predicate_t utillib_test_predicate_t;
 typedef struct utillib_test_entry_t utillib_test_entry_t;
 typedef struct utillib_test_env_t utillib_test_env_t;
+typedef void *utillib_test_fixture_t;
 
 /* Defined by client as a single test */
-typedef void(utillib_test_func_t)(utillib_test_entry_t *);
-
+typedef void(utillib_test_func_t)(utillib_test_entry_t *,
+                                  utillib_test_fixture_t);
+typedef void(utillib_test_fixfunc_t)(utillib_test_fixture_t);
 /* Returns an registered `utillib_test_entry_t' */
 typedef utillib_test_env_t *(utillib_test_getenv_func_t)(void);
 

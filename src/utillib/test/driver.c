@@ -8,8 +8,6 @@ UTILLIB_TEST_DECLARE(Utillib_Slist);
 
 int main() {
   UTILLIB_TEST_RUN_ALL(
-      Utillib_Test,
-      Utillib_Vector,
-      Utillib_Slist
+      Utillib_Vector
   );
 }

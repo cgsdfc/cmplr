@@ -166,13 +166,23 @@ static void status_output(char const *status_str, char const *fmt, ...) {
 }
 
 static void case_status_output(char const *status_str,
-                               utillib_test_env_t *env) {
-  status_output(status_str, "%s.%s",
-      env->case_name, env->cur_test->func_name);
+                               utillib_test_entry_t *entry) {
+  status_output(status_str, "%s", entry->func_name);
 }
 
 static void filename_status_output(char const *filename) {
   fprintf(stderr, "file:`%s'\n", filename);
+}
+
+static void utillib_test_case(utillib_test_entry_t *self,
+                              utillib_test_env_t *env) {
+  if (env->setup_func) {
+    env->setup_func(env->fixture);
+  }
+  self->func(self, env->fixture);
+  if (env->teardown_func) {
+    env->teardown_func(env->fixture);
+  }
 }
 
 /**
@@ -192,26 +202,26 @@ static int utillib_test_run_test(utillib_test_entry_t *self,
   case UT_STATUS_RUN:
     ++env->nrun;
     /* displays a status bar */
-    case_status_output(GREEN_RUN, env);
-    self->func(self);
+    case_status_output(GREEN_RUN, self);
+    utillib_test_case(self, env);
     if (0 ==
         self->abort_failure + self->assert_failure + self->expect_failure) {
       ++env->nsuccess;
       self->succeeded = true;
       /* displays a status bar */
-      case_status_output(GREEN_OK, env);
+      case_status_output(GREEN_OK, self);
       return US_SUCCESS;
     }
     ++env->nfailure;
     self->succeeded = false;
     /* displays a status bar */
-    case_status_output(RED_BAD, env);
+    case_status_output(RED_BAD, self);
     if (self->abort_failure) {
       return US_ABORT;
     }
     return US_ASSERT;
   case UT_STATUS_SKIP:
-    case_status_output(WHITE_SKIP, env);
+    case_status_output(WHITE_SKIP, self);
     ++env->nskipped;
     return US_SUCCESS;
   }
@@ -233,16 +243,10 @@ static void utillib_test_teardown(utillib_test_env_t *self) {
   status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
 }
 
-static void utillib_test_abort(utillib_test_env_t *self) {
-  status_output(RED_DASH, "Abort at `%s'", self->cur_test->func_name);
-}
-
 int utillib_test_run_suite(utillib_test_env_t *self) {
   utillib_test_setup(self);
   for (utillib_test_entry_t *test = self->cases; test->func != NULL; ++test) {
-    self->cur_test = test;
     if (US_ABORT == utillib_test_run_test(test, self)) {
-      utillib_test_abort(self);
       break;
     }
   }
@@ -267,7 +271,9 @@ static void utillib_test_suite_output_json(utillib_test_suite_t *self) {}
  */
 
 void utillib_test_suite_init(utillib_test_suite_t *self, ...) {
+  static const size_t init_capacity=8;
   utillib_vector_init(&self->tests);
+  utillib_vector_reserve(&self->tests, init_capacity);
   va_list ap;
   va_start(ap, self);
   while (true) {
@@ -284,7 +290,7 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self) {
   size_t test_failure = 0;
   size_t test_suites = utillib_vector_size(&self->tests);
   filename_status_output(self->filename);
-  status_output(GREEN_BANG, "%lu test suites found...", test_suites);
+  status_output(GREEN_BANG, "%lu test suites found.", test_suites);
   status_output(GREEN_BANG, "Global testing environment sets up.");
   fputs("\n", stderr);
   UTILLIB_VECTOR_FOREACH(utillib_test_env_t *, env, &self->tests) {
@@ -295,3 +301,41 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self) {
   status_output(GREEN_BANG, "Global testing environment tears down.");
   return test_failure;
 }
+
+
+/**
+ * \function utillib_test_properties
+ * Parses and sets a series of test properties.
+ */
+
+void utillib_test_properties(utillib_test_env_t *self, ...) {
+  static bool called;
+  if (called) { return; }
+  va_list ap;
+  va_start(ap, self);
+  while (true) {
+    utillib_test_property_t property=va_arg(ap, utillib_test_property_t);
+    void * data=va_arg(ap, void*);
+    if (!property && !data) {
+      break;
+    }
+    switch (property) {
+      case UT_FIXTURE:
+        self->fixture=data;
+        break;
+      case UT_SETUP:
+        self->setup_func=data;
+        break;
+      case UT_TEARDOWN:
+        self->teardown_func=data;
+        break;
+      default:
+        fprintf(stderr,"In file:`%s'\n", self->filename);
+        fprintf(stderr, "\tUnrecognized property\n");
+        break;
+    }
+  }
+  called=true;
+  va_end(ap);
+}
+
