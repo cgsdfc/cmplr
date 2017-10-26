@@ -6,7 +6,7 @@ UTILLIB_TEST(vector_init) {
   utillib_vector_init(&vector);
 }
 
-UTILLIB_TEST_BEGIN(vector)
-UTILLIB_TEST_ELEM(vector_init)
-UTILLIB_TEST_END(vector)
+UTILLIB_TEST_BEGIN(Utillib_Vector)
+UTILLIB_TEST_RUN(vector_init)
+UTILLIB_TEST_END(Utillib_Vector)
 

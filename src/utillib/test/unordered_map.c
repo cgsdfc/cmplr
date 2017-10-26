@@ -1,9 +1,5 @@
-#define _GNU_SOURCE
-#include "error.h"
-#include "print.h"
-#include "test.h"
-#include "unordered_map.h"
-#include <stdio.h>
+#include <utillib/unordered_map.h>
+#include <utillib/test.h>
 
 static void test_unordered_map(void) {
   utillib_unordered_map map;
@@ -42,13 +38,3 @@ static void test_unordered_map(void) {
          utillib_unordered_map_load_factor(&map));
   utillib_unordered_map_destroy(&map);
 }
-
-UTILLIB_TEST(test_1) {}
-UTILLIB_TEST(test_2) {}
-UTILLIB_TEST(test_3) {}
-
-UTILLIB_TEST_BEGIN(group_1)
-UTILLIB_TEST_ELEM(test_1)
-UTILLIB_TEST_ELEM(test_2)
-UTILLIB_TEST_ELEM(test_3)
-UTILLIB_TEST_END(group_1)

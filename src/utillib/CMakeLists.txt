@@ -18,16 +18,24 @@ add_library(utillib
   ${UTILLIB_SOURCE}
 )
 
-add_executable(utillib_test
-  ./driver.c
+set(UTILLIB_TEST_SOURCE 
+  ./test/test.c
+  ./test/slist.c
+  ./test/argp.c
+  ./test/vector.c
+  ./test/strref.c
+  ./test/logging.c
 )
+add_library(utillib_test_lib
+  ${UTILLIB_TEST_SOURCE}
+)
+
+add_executable(utillib_test 
+  ./test/driver.c
+)
+
 target_link_libraries(utillib_test
+  utillib_test_lib
   utillib
 )
-enable_testing()
 
-add_executable(utillib_test_argp ./test/argp.c)
-target_link_libraries(utillib_test_argp utillib)
-
-add_executable(utillib_test_logging ./test/logging.c)
-target_link_libraries(utillib_test_logging utillib)

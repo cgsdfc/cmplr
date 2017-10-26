@@ -1,13 +1,18 @@
 #ifndef UTILLIB_LOGING_H
 #define UTILLIB_LOGING_H
+#include "argp.h"
 #include "enum.h"
 #include "strref.h"
 #include "typedef.h"
 #include "unordered_map.h"
 #include <assert.h>
-#include "argp.h"
-#define UTILLIB_LOGGING_OPTIONS_STDERR_THRESHOLD(KEY)  UTILLIB_ARGP_OPTIOIN_ELEM("stderr-threshlod", KEY, "LEVEL", "the lowest severity level of loggings that go to stderr")
-#define UTILLIB_LOGGING_OPTIONS_LOGDIR(KEY)  UTILLIB_ARGP_OPTION_ELEM("log-dir", KEY, "the directory that loggings will go instead of `/tmp'")
+#define UTILLIB_LOGGING_OPTIONS_STDERR_THRESHOLD(KEY)                          \
+  UTILLIB_ARGP_OPTIOIN_ELEM(                                                   \
+      "stderr-threshlod", KEY, "LEVEL",                                        \
+      "the lowest severity level of loggings that go to stderr")
+#define UTILLIB_LOGGING_OPTIONS_LOGDIR(KEY)                                    \
+  UTILLIB_ARGP_OPTION_ELEM(                                                    \
+      "log-dir", KEY, "the directory that loggings will go instead of `/tmp'")
 
 UTILLIB_ENUM_BEGIN(logging_level_t)
 UTILLIB_ENUM_ELEM(DEBUG)
@@ -32,7 +37,7 @@ typedef struct utillib_logging_msg_t {
 
 typedef struct utillib_logging_core_t {
   /* the directory to put the logging instead of '/tmp' */
-  char const * lco_logdir;
+  char const *lco_logdir;
   /* the lowest severity level of logmsg that can go to stderr */
   int lco_stderr_threshold;
   /* the `FILE' that different severity levels of logmsg go to */
@@ -48,7 +53,7 @@ typedef struct utillib_logging_core_t {
   /* the object to be cleanupped by `lco_cleanup' */
   void *lco_toclean;
   /* the freelist of the utillib_logging_msg_t */
-  utillib_logging_msg_t * lco_free;
+  utillib_logging_msg_t *lco_free;
 } utillib_logging_core_t;
 
 #define UTILLIB_UNREACHABLE(MSG)                                               \
@@ -58,13 +63,15 @@ typedef struct utillib_logging_core_t {
   } while (0)
 
 #define UTILLIB_LOG(LEVEL, FMT, ...)                                           \
-  utillib_logging_logmsg((LEVEL), __FILE__, __func__, __LINE__, (FMT), ##__VA_ARGS__);
+  utillib_logging_logmsg((LEVEL), __FILE__, __func__, __LINE__, (FMT),         \
+                         ##__VA_ARGS__);
 
-void utillib_logging_init(const char*);
+void utillib_logging_init(const char *);
 void utillib_logging_destroy(void);
-void utillib_logging_set_cleanup(void*, utillib_destroy_func_t*);
-void utillib_logging_logmsg(int, const char *, const char *, size_t, const char *, ...);
+void utillib_logging_set_cleanup(void *, utillib_destroy_func_t *);
+void utillib_logging_logmsg(int, const char *, const char *, size_t,
+                            const char *, ...);
 void utillib_logging_set_stderr_threshold(int);
-void utillib_logging_set_logdir(const char * );
+void utillib_logging_set_logdir(const char *);
 
 #endif // UTILLIB_LOGING_H
