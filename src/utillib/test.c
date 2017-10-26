@@ -65,6 +65,7 @@
 #include "test.h"
 #include "color.h"  // for COLOR_STRING_UNBOLD
 #include <stdarg.h> // for va_list
+#include <time.h>  // for time
 #define COLOR_STRING(C, S) COLOR_STRING_UNBOLD(C, S)
 
 /**
@@ -167,7 +168,7 @@ static void status_output(char const *status_str, char const *fmt, ...) {
 
 static void case_status_output(char const *status_str,
                                utillib_test_entry_t *entry) {
-  status_output(status_str, "%s", entry->func_name);
+  status_output(status_str, "%s (%lds).", entry->func_name, entry->duration);
 }
 
 static void filename_status_output(char const *filename) {
@@ -176,10 +177,14 @@ static void filename_status_output(char const *filename) {
 
 static void utillib_test_case(utillib_test_entry_t *self,
                               utillib_test_env_t *env) {
+  time_t begin, end;
   if (env->setup_func) {
     env->setup_func(env->fixture);
   }
+  time(&begin); 
   self->func(self, env->fixture);
+  time(&end);
+  self->duration=end-begin;
   if (env->teardown_func) {
     env->teardown_func(env->fixture);
   }
@@ -200,10 +205,11 @@ static int utillib_test_run_test(utillib_test_entry_t *self,
   ++env->ntests;
   switch (self->status) {
   case UT_STATUS_RUN:
-    ++env->nrun;
     /* displays a status bar */
     case_status_output(GREEN_RUN, self);
     utillib_test_case(self, env);
+    ++env->nrun;
+    env->total_duration+=self->duration;
     if (0 ==
         self->abort_failure + self->assert_failure + self->expect_failure) {
       ++env->nsuccess;

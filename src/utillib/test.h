@@ -24,7 +24,7 @@
 #include "typedef.h"
 #include "unordered_map.h"
 #include <stdbool.h>
-
+#define UTILLIB_TEST_CONST(NAME, VALUE) static const size_t NAME=( VALUE );
 /**
  * \enum utillib_test_suite_t
  * Describe the status of a test: run it or skip it.
@@ -276,6 +276,8 @@ typedef struct utillib_test_entry_t {
   size_t abort_failure;
   /* Flag indicating whether this test finished without any failure */
   bool succeeded;
+  /* Time in seconds spent in this test */
+  time_t duration;
 } utillib_test_entry_t;
 
 /**
@@ -306,6 +308,8 @@ typedef struct utillib_test_env_t {
   /* The fixture associated with this env */
   utillib_test_fixture_t fixture;
   utillib_test_fixfunc_t *setup_func, *teardown_func;
+  /* The sum of seconds spent in each test that was run */
+  time_t total_duration;
 } utillib_test_env_t;
 
 /**
