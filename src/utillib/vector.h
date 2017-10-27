@@ -48,7 +48,7 @@
 #define UTILLIB_VECTOR_FOREACH(T, X, V)                                        \
   T X;                                                                         \
   for (utillib_element_pointer_t _begin = (V)->begin, _end = (V)->end;         \
-       _begin != _end && ((X = *_begin) || 1); ++_begin)
+       _begin != _end && ((X = (T) *_begin) || 1); ++_begin)
 
 /** \brief the element of utillib_vector is generic pointer */
 typedef struct utillib_vector {
@@ -77,6 +77,7 @@ void utillib_vector_destroy_owning(utillib_vector *, utillib_destroy_func_t *);
 
 /** \brief observer */
 size_t utillib_vector_size(utillib_vector *);
+size_t utillib_vector_capacity(utillib_vector*);
 bool utillib_vector_empty(utillib_vector *);
 utillib_element_t utillib_vector_at(utillib_vector *, size_t);
 utillib_element_t utillib_vector_back(utillib_vector *);

@@ -24,48 +24,77 @@
  * in utillib/test.h.
  * \usage How to use it to do unit test.
  * Supposed we have a file called vector.c that
- * defines a vector in the common sense. Here is
- * how you can write the tests:
+ * defines a vector. Here is how you can write the tests:
  * <code>
- * In test.c
- * UTILLIB_SETUP() {
- *   utillib_vector_init(UTILLIB_TEST_FIXTURE);
- *  }
- * UTILLIB_TEARDOWN() {
- *   utillib_vector_destroy(UTILLIB_TEST_FIXTURE);
- * }
+ * // test_vector.c
+ * #include "your_headers"
+ * #include <utillib/test.h>
+ *
  * UTILLIB_TEST(InitialToBeEmpty) {
- *   utillib_vector * vector=UTILLIB_TEST_FIXTURE;
+ *   // get the fixture.
+ *   utillib_vector * vector=FIXTURE;
  *   UTILLIB_TEST_ASSERT(0 == utillib_vector_size(vector) &&
- * utillib_vector_empty(vector));
+ *   utillib_vector_empty(vector));
  * }
  *
  * UTILLIB_TEST(size) {
+ *  // use `UT_FIXTURE' to access the fixture.
  *  ...
  * }
- * UTILLIB_TEST_BEGIN(Utillib_Vector)
- * UTILLIB_TEST_RUN(InitialToBeEmpty, "vector should be empty immediately after
- * calling `utillib_vector_init'")
- * UTILLIB_TEST_RUN(...)
- * UTILLIB_TEST_END(Utillib_Vector)
  *
- * // If you want to build `Utillib_Vector' as a part of bigger
- * // test suite, you should give it a header with a
- * `UTILLIB_TEST_DECLARE(Utillib_Vector)'
- * // along with other helper functions.
- * // Otherwise, you can just use the `UTILLIB_TEST_RUN_ALL(argc, argv)'
- * // in the `main' to turn it into a stand-alone test case.
+ * static void SetUp(utillib_vector *fixture) {
+ *   ...
+ * }
+ *
+ * static void TearDown(utillib_vector *fixture) {
+ *   ...
+ * }
+ *
+ * UTILLIB_TEST_DEFINE(Utillib_Vector) {
+ *    static utillib_vector fixture;
+ *    // Registers our tests.
+ *    UTILLIB_TEST_BEGIN(Utillib_Vector)
+ *      UTILLIB_TEST_RUN(InitialToBeEmpty)
+ *      UTILLIB_TEST_RUN(...)
+ *      // more tests...
+ *    UTILLIB_TEST_END(Utillib_Vector)
+ *
+ *    // Requires to use fixture.
+ *    // You have the freedom to give them
+ *    // more descriptive names.
+ *    UTILLIB_TEST_FIXTURE(&fixture, SetUp, TearDown);
+ *    // Must be the last statement in our definition.
+ *    UTILLIB_TEST_RETURN();
+ * }
+ *
+ * int main(void) {
+ *  UTILLIB_TEST_RUN_ALL(Utillib_Vector);
+ * }
  * </code>
- * <code>
- * In test.h
- * UTILLIB_TEST_DECLARE(Utillib_Vector);
  *
+ * That's all. You are now set with your `Utillib_Vector' test and ready
+ * to compile and run it. And some possible output may be:
+ *
+ * file:`test_vector.c'
+ * [==========] 1 test suites found.
+ * [==========] Global testing environment sets up.
+ *
+ * file:`test_vector.c'
+ * [==========] Test suite `Utillib_Vector' sets up.
+ * [  SKIPPED ] vector_init (0s).
+ * [ RUN      ] push_back (0s).
+ * [       OK ] push_back (0s).
+ * [----------] Summary: Total 2 tests, Run 1, Skipped 1.
+ * [----------] Summary: Run 1 tests, Passed 1, Failed 0.
+ * [==========] Test suite `Utillib_Vector' tears down.
+ *
+ * [==========] Global testing environment tears down.
  */
 
 #include "test.h"
 #include "color.h"  // for COLOR_STRING_UNBOLD
 #include <stdarg.h> // for va_list
-#include <time.h>  // for time
+#include <time.h>   // for time
 #define COLOR_STRING(C, S) COLOR_STRING_UNBOLD(C, S)
 
 /**
@@ -181,10 +210,10 @@ static void utillib_test_case(utillib_test_entry_t *self,
   if (env->setup_func) {
     env->setup_func(env->fixture);
   }
-  time(&begin); 
+  time(&begin);
   self->func(self, env->fixture);
   time(&end);
-  self->duration=end-begin;
+  self->duration = end - begin;
   if (env->teardown_func) {
     env->teardown_func(env->fixture);
   }
@@ -209,7 +238,7 @@ static int utillib_test_run_test(utillib_test_entry_t *self,
     case_status_output(GREEN_RUN, self);
     utillib_test_case(self, env);
     ++env->nrun;
-    env->total_duration+=self->duration;
+    env->total_duration += self->duration;
     if (0 ==
         self->abort_failure + self->assert_failure + self->expect_failure) {
       ++env->nsuccess;
@@ -277,7 +306,7 @@ static void utillib_test_suite_output_json(utillib_test_suite_t *self) {}
  */
 
 void utillib_test_suite_init(utillib_test_suite_t *self, ...) {
-  static const size_t init_capacity=8;
+  static const size_t init_capacity = 8;
   utillib_vector_init(&self->tests);
   utillib_vector_reserve(&self->tests, init_capacity);
   va_list ap;
@@ -308,40 +337,27 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self) {
   return test_failure;
 }
 
+void utillib_test_env_set_fixture(utillib_test_env_t *self, utillib_test_fixture_t fixture,
+                                  utillib_test_fixfunc_t * setup,
+                                  utillib_test_fixfunc_t *teardown){
+  self->fixture=fixture;
+  self->setup_func=setup;
+  self->teardown_func=teardown;
+}
 
-/**
- * \function utillib_test_properties
- * Parses and sets a series of test properties.
- */
+utillib_test_dummy_t * utillib_test_dummy(void){
+  static utillib_test_dummy_t static_dummy;
+  return &static_dummy;
+}
 
-void utillib_test_properties(utillib_test_env_t *self, ...) {
-  static bool called;
-  if (called) { return; }
+void utillib_test_message(utillib_test_entry_t *self, size_t line, char const *fmt, ...) {
+  fprintf(stderr, "In `%s':%lu:\n", self->func_name, line);
   va_list ap;
-  va_start(ap, self);
-  while (true) {
-    utillib_test_property_t property=va_arg(ap, utillib_test_property_t);
-    void * data=va_arg(ap, void*);
-    if (!property && !data) {
-      break;
-    }
-    switch (property) {
-      case UT_FIXTURE:
-        self->fixture=data;
-        break;
-      case UT_SETUP:
-        self->setup_func=data;
-        break;
-      case UT_TEARDOWN:
-        self->teardown_func=data;
-        break;
-      default:
-        fprintf(stderr,"In file:`%s'\n", self->filename);
-        fprintf(stderr, "\tUnrecognized property\n");
-        break;
-    }
-  }
-  called=true;
+  va_start(ap, fmt);
+  fputc('\t', stderr);
+  vfprintf(stderr, fmt, ap);
+  fputc('\n', stderr);
   va_end(ap);
 }
+
 

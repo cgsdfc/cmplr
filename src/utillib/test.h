@@ -20,11 +20,86 @@
 */
 #ifndef UTILLIB_TEST_H
 #define UTILLIB_TEST_H
+
+/**
+ * \file utillib/test.h
+ * A light weight testing framework inspired by GTest.
+ * <para> This framework closely follows the style of GTest and wants
+ * those who are already familiar to the compactness of GTest feel home. It
+ * provides
+ * a way to define test cases in a per-function basic and rich assertions,
+ * comparation macros to check against pre/post conditions. What's more,
+ * it groups tests around the unit of code under test(UUT) and supports
+ * runnig multiple UUT all together.
+ * </para>
+ * <para> However, several restrictions exist to distinguish it from GTest
+ * due to language limitation. They are:
+ *
+ * 1. No automactically registered tests. You have to register those tests
+ * under the unit by yourselves via the macros `UTILLIB_TEST_DEFINE',
+ * `UTILLIB_TEST_BEGIN',
+ * `UTILLIB_TEST_RUN/SKIP' and so on. This is due to the lack of static
+ * construction and
+ * my unwillingness to use `__attribute__((__constructor__))'.
+ *
+ * 2. Without the support of template, the output of assertion failure is less
+ * comprehensive
+ * as it will only show you the text representation of the expression as
+ * ASSERT(3) without
+ * their values. For the same reason, you cannot stream arbitrary data into an
+ * assertion to let
+ * them shown when they failed.
+ *
+ * 3. About fixture, it does provide a way to use fixture in a sense of local
+ * static variable.
+ * That means you can put common initializing and destruction code in 2 places:
+ * `setup' and `teardown'
+ * related to exactly one global object. It sounds pretty dangerous, but in
+ * fact, a properly initialized
+ * object should validate all the operations on it and a proper destruction
+ * should release any resource
+ * it is holding making it prepared for a next initialization. Any well defined
+ * code can satify the above
+ * requirements and their author can free themselves from constantly writing
+ * initializing and destruction
+ * code. Therefore, simply call `UTILLIB_TEST_FIXTURE' can register a `setup' to
+ * be called before the entry
+ * of every test function and a `teardown' to be called after the exit of every
+ * test function.
+ * This deviates from GTest which creates a fresh object as fixture every time
+ * your test is run.
+ *
+ * 4. It does not provide the features not documented in this file, such as dead
+ * test.
+ *
+ * </para>
+ * <para>
+ * Future work: Maybe it is useful to generate different formats(json, xml,
+ * html) of output based on
+ * the test results, but this would necessarily make the code longer and take
+ * much memory(writing files,
+ * recording every assertion failures).
+ * It may also be nice if a GUI based runner is implemented.
+ */
+
 #include "enum.h"
 #include "typedef.h"
-#include "unordered_map.h"
 #include <stdbool.h>
-#define UTILLIB_TEST_CONST(NAME, VALUE) static const size_t NAME=( VALUE );
+#include "vector.h"
+#include <time.h> // for time_t
+
+/**
+ * \macro UTILLIB_TEST_SETUP
+ */
+#define UTILLIB_TEST_SET_UP() static void utillib_test_setup(utillib_test_fixture_t UT_FIXTURE)
+#define UTILLIB_TEST_TEAR_DOWN() static void utillib_test_teardown(utillib_test_fixture_t UT_FIXTURE)
+
+/**
+ * \macro UTILLIB_TEST_CONST
+ * Defines a constant scalar.
+ */
+#define UTILLIB_TEST_CONST(NAME, VALUE) static const size_t NAME = (VALUE);
+
 /**
  * \enum utillib_test_suite_t
  * Describe the status of a test: run it or skip it.
@@ -61,9 +136,22 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * Declares a function through which the test group
  * of a certain module can be initialized and obtained.
  * \param NAME the name of the function.
+ * Use this in your header when your tests split multiple
+ * files and the file containing `main' needs a declaraton.
  */
 
 #define UTILLIB_TEST_DECLARE(NAME) utillib_test_env_t *NAME(void);
+
+/**
+ * \macro UTILLIB_TEST_RUN_ALL_ARG
+ * Initilizes the test suite with the all the tests to run
+ * and run them. Passed in command line arguments.
+ * It should be called exactly once.
+ * No checking is done.
+ * \param ARGC argc.
+ * \param ARGV argv.
+ * \param ... The tests function pointers.
+ */
 
 #define UTILLIB_TEST_RUN_ALL_ARG(ARGC, ARGV, ...)                              \
   do {                                                                         \
@@ -72,18 +160,30 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     return utillib_test_suite_run_all(&static_suite);                          \
   } while (0)
 
+/**
+ * \macro UTILLIB_TEST_RUN_ALL
+ * Same as above but takes no command line arguments.
+ * And uses their defaults.
+ */
+
 #define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
 
-UTILLIB_ENUM_BEGIN(utillib_test_property_t)
-UTILLIB_ENUM_ELEM(UT_FIXTURE)
-UTILLIB_ENUM_ELEM(UT_SETUP)
-UTILLIB_ENUM_ELEM(UT_TEARDOWN)
-UTILLIB_ENUM_END(utillib_test_property_t)
+/**
+ * \macro UTILLIB_TEST_FIXTURE
+ * Requires that fixture is in use.
+ * Registers it into the `static_test_env'.
+ */
 
-#define UTILLIB_TEST_PROPERTIES(...)                                           \
-  utillib_test_properties(&static_test_env, __VA_ARGS__, NULL, NULL);
+#define UTILLIB_TEST_FIXTURE(FIXTURE)                         \
+  utillib_test_env_set_fixture(&static_test_env, (FIXTURE), (utillib_test_setup),           \
+                               (utillib_test_teardown));
 
-#define FIXTURE utillib_test_fixture
+/**
+ * \macro UT_FIXTURE
+ * The identifier of the possibily defined fixture.
+ * Use it only when you defined `UTILLIB_TEST_FIXTURE' properly.
+ */
+#define UT_FIXTURE fixture
 
 /**
  * \macro UTILLIB_TEST
@@ -93,27 +193,31 @@ UTILLIB_ENUM_END(utillib_test_property_t)
 
 #define UTILLIB_TEST(NAME)                                                     \
   static void NAME(utillib_test_entry_t *self,                                 \
-                   utillib_test_fixture_t FIXTURE)
+                   utillib_test_fixture_t UT_FIXTURE)
 
 /**
- * \macro UTILLIB_TEST_BEGIN
- * Begins to register a group of test functions under
- * the common name `NAME'.
- * It actually defined a function that returns
- * a static `utillib_test_env_t'.
- * A major benefit of these function-wrapped local static definition
+ * \macro UTILLIB_TEST_DEFINE
+ * Defines a function whose purpose is to register a group of
+ * test functions under the common name `NAME'.
+ *
+ * Side node: A major benefit of these function-wrapped local static definition
  * of variable is that you can avoid exposing details of the variable
  * to global scope and pretty much the same benefit of using singleton.
  * You get the pointer to the variable via a function call.
  */
 #define UTILLIB_TEST_DEFINE(NAME) utillib_test_env_t *NAME(void)
 
+/**
+ * \macro UTILLIB_TEST_BEGIN
+ * Defines a static array of `utillib_test_entry_t'.
+ */
 #define UTILLIB_TEST_BEGIN(NAME)                                               \
   static utillib_test_entry_t static_test_entries[] = {
 
 /**
  * \macro UTILLIB_TEST_END
- * Initilizes the `static_test_entries'.
+ * Ends the static `utillib_test_entry_t' array and
+ * Defines a static `utillib_test_env_t' to hold it.
  */
 
 #define UTILLIB_TEST_END(NAME)                                                 \
@@ -123,6 +227,12 @@ UTILLIB_ENUM_END(utillib_test_property_t)
   static utillib_test_env_t static_test_env = {                                \
       .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__};
 
+/*
+ * \macro UTILLIB_TEST_RETURN
+ * Returns the wrapped static `static_test_env'.
+ * Must be the last statement of the `UTILLIB_TEST_DEFINE'
+ * function body.
+ */
 #define UTILLIB_TEST_RETURN(NAME) return &static_test_env;
 
 /**
@@ -155,7 +265,7 @@ UTILLIB_ENUM_END(utillib_test_property_t)
 /**
  * \macro UTILLIB_INIT_PRED
  * Initilizes a `utillib_test_predicate_t' with all its fields.
- * Since we cannot use initializer with runtime variables, we
+ * Since we cannot use brace-initializing with runtime variables, we
  * call `utillib_test_predicate_init' here.
  * \param PRED The predicate to be initialized.
  * \param EXPR The expression to evaluated to yeild the `result' field.
@@ -166,6 +276,13 @@ UTILLIB_ENUM_END(utillib_test_property_t)
 
 #define UTILLIB_INIT_PRED(PRED, EXPR, MSG, SEVERITY)                           \
   utillib_test_predicate_init(PRED, EXPR, __LINE__, MSG, SEVERITY)
+
+/**
+ * \macro UTILLIB_TEST_MESSAGE
+ * Prints a message to stderr with line number, function name and newline.
+ */
+
+#define UTILLIB_TEST_MESSAGE(FMT, ...) utillib_test_message(self, __LINE__, (FMT), ## __VA_ARGS__);
 
 /**
  * \macro UTILLIB_TEST_ASSERT
@@ -214,6 +331,14 @@ UTILLIB_ENUM_END(utillib_test_property_t)
     return;                                                                    \
   } while (0)
 
+/**
+ * Convenient macros for different comparation operators
+ */
+
+#define UTILLIB_TEST_EXPECT_TRUE(LHS) UTILLIB_TEST_EXPECT(LHS)
+
+#define UTILLIB_TEST_EXPECT_FALSE(LHS) UTILLIB_TEST_EXPECT(!(LHS))
+
 #define UTILLIB_TEST_EXPECT_EQ(LHS, RHS) UTILLIB_TEST_EXPECT(LHS == RHS)
 
 #define UTILLIB_TEST_EXPECT_NE(LHS, RHS) UTILLIB_TEST_EXPECT(LHS != RHS)
@@ -225,6 +350,13 @@ UTILLIB_ENUM_END(utillib_test_property_t)
 #define UTILLIB_TEST_EXPECT_LT(LHS, RHS) UTILLIB_TEST_EXPECT(LHS < RHS)
 
 #define UTILLIB_TEST_EXPECT_GT(LHS, RHS) UTILLIB_TEST_EXPECT(LHS > RHS)
+
+/**
+ * Assetions.
+ */
+#define UTILLIB_TEST_ASSERT_TRUE(LHS) UTILLIB_TEST_ASSERT(LHS)
+
+#define UTILLIB_TEST_ASSERT_FALSE(LHS) UTILLIB_TEST_ASSERT(!(LHS))
 
 #define UTILLIB_TEST_ASSERT_EQ(LHS, RHS) UTILLIB_TEST_ASSERT(LHS == RHS)
 
@@ -241,7 +373,7 @@ UTILLIB_ENUM_END(utillib_test_property_t)
 /**
  * \struct utillib_test_predicate_t
  * Helps to detect failures from predicates called within test functions
- * and display them prettily.
+ * and pretty display them.
  */
 
 typedef struct utillib_test_predicate_t {
@@ -270,7 +402,6 @@ typedef struct utillib_test_entry_t {
   int status;
   /* Counters of Expects failure */
   size_t expect_failure;
-
   /* Should be zero or one */
   size_t assert_failure;
   size_t abort_failure;
@@ -327,12 +458,46 @@ typedef struct utillib_test_suite_t {
   utillib_vector tests;
 } utillib_test_suite_t;
 
+/**
+ * \struct utillib_test_dummy_t
+ * A place holder when the content of the element 
+ * is not a matter.
+ */
+typedef struct utillib_test_dummy_t {} utillib_test_dummy_t;
+
+/**
+ * Initilizes a predicate.
+ */
 void utillib_test_predicate_init(utillib_test_predicate_t *, bool, size_t,
                                  char const *, int);
+/**
+ * Do pass-or-fail on a predicate.
+ */
 bool utillib_test_predicate(utillib_test_entry_t *, utillib_test_predicate_t *);
 
+/**
+ * Initilizes a test suite.
+ */
 void utillib_test_suite_init(utillib_test_suite_t *, ...);
-int utillib_test_suite_run_all(utillib_test_suite_t *);
-void utillib_test_properties(utillib_test_env_t *, ... );
 
+/**
+ * Runs all the test suites.
+ */
+int utillib_test_suite_run_all(utillib_test_suite_t *);
+
+/**
+ * Sets fixture for this utillib_test_env_t.
+ */
+void utillib_test_env_set_fixture(utillib_test_env_t *, utillib_test_fixture_t,
+                                  utillib_test_fixfunc_t *,
+                                  utillib_test_fixfunc_t *);
+/**
+ * Returns a static `utillib_test_dummy_t'.
+ */
+utillib_test_dummy_t * utillib_test_dummy(void);
+
+/**
+ * Prints a message to stderr.
+ */
+void utillib_test_message(utillib_test_entry_t *, size_t , char const *, ...) ;
 #endif // UTILLIB_TEST_H

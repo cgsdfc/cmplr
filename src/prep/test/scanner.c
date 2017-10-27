@@ -18,11 +18,12 @@
    02110-1301 USA
 
 */
-#ifndef SCANNER_TYPEDEF_H
-#define SCANNER_TYPEDEF_H
-struct scanner_base_t;
-struct scanner_input_buf;
+#include <utillib/test.h>
+#include <prep/scanner.h>
 
-typedef int(scanner_match_func_t)(struct scanner_base_t *);
-typedef int(scanner_getc_func_t)(struct scanner_input_buf *);
-#endif // SCANNER_TYPEDEF_H
+UTILLIB_TEST_DEFINE(Prep_Scanner) {
+  UTILLIB_TEST_BEGIN(Prep_Scanner)
+  UTILLIB_TEST_END(Prep_Scanner)
+  UTILLIB_TEST_RETURN()
+}
+
