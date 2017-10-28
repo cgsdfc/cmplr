@@ -23,14 +23,17 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+/* Common typedef */
+typedef void(utillib_destroy_func_t)(void *);
+typedef void *utillib_element_t;
+typedef utillib_element_t *utillib_element_pointer_t;
+
 /* Utllib.Vector */
 typedef struct utillib_vector utillib_vector;
 /* Utillib.Slist */
 typedef struct utillib_slist utillib_slist;
-
-typedef void(utillib_destroy_func_t)(void *);
-typedef void *utillib_element_t;
-typedef utillib_element_t *utillib_element_pointer_t;
+/* Utllib.String */
+typedef struct utillib_string utillib_string;
 
 /* Utillib.Unordered_map */
 typedef void const *utillib_key_t;

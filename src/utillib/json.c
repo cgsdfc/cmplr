@@ -18,12 +18,11 @@
    02110-1301 USA
 
 */
-#define _BSD_SOURCE
 #include "json.h"
 #include "pair.h"
 #include "print.h" // for utillib_static_sprintf
 #include "string.h"
-#include <stdarg.h>
+#include <stdarg.h> // for va_list
 #include <stdlib.h> // for free
 #include <string.h>
 /**

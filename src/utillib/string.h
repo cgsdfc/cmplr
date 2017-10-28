@@ -31,6 +31,10 @@
 
 /**
  * \struct utillib_string
+ * \invariant size+1 <= capacity if size!=0
+ * else size == capacity == 0.
+ * \invariant size == strlen(c_str) if 
+ * c_str!=NULL else size == 0.
  */
 
 typedef struct utillib_string {
@@ -54,6 +58,7 @@ void utillib_string_destroy(utillib_string *);
 
 /* observer */
 size_t utillib_string_size(utillib_string *);
+size_t utillib_string_capacity(utillib_string *);
 bool utillib_string_empty(utillib_string *);
 char const *utillib_string_c_str(utillib_string *);
 bool utillib_string_richcmp(utillib_string *, utillib_string *, string_cmpop);

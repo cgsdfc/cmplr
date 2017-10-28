@@ -26,6 +26,7 @@
  * C and JSON format.
  */
 
+#include <stdarg.h> // for va_list
 #include "enum.h"
 #include "string.h"
 #include "typedef.h"
@@ -95,10 +96,11 @@ typedef struct utillib_json_value_t {
   /* Takes value from `utillib_json_kind_t'. */
   int kind;
   union {
+    /* `bool' */
     bool as_bool;
-    /* Effective when kind == `UT_JSON_REAL' */
+    /* `double' */
     double as_double;
-    /* Effective when kind == `UT_JSON_INTEGER' */
+    /* `long' */
     long as_long;
     /**
      * kind:`UT_JSON_ARRAY' && as_ptr:`utillib_json_array_t'.

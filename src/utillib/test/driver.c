@@ -26,11 +26,13 @@ UTILLIB_TEST_DECLARE(Utillib_Test);
 UTILLIB_TEST_DECLARE(Utillib_Vector);
 UTILLIB_TEST_DECLARE(Utillib_Slist);
 UTILLIB_TEST_DECLARE(Utillib_String);
+UTILLIB_TEST_DECLARE(Utillib_JSON);
 
 int main() {
   UTILLIB_TEST_RUN_ALL(
       /* Utillib_Vector, */
-      /* Utillib_Test */
-      Utillib_String
+      /* Utillib_Test, */
+      /* Utillib_String */
+      Utillib_JSON
   );
 }

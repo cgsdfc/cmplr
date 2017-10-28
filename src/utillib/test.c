@@ -151,7 +151,7 @@ void utillib_test_predicate_init(utillib_test_predicate_t *self, bool result,
 static void predicate_output(utillib_test_entry_t *self,
                              utillib_test_predicate_t *predicate) {
   fprintf(stderr, "In `%s':%lu:\n", self->func_name, predicate->line);
-  fprintf(stderr, "\t%s:`%s'.\n",
+  fprintf(stderr, "\t%s: `%s'.\n",
           utillib_test_severity_t_tostring(predicate->severity),
           predicate->expr_str);
 }
@@ -413,14 +413,14 @@ utillib_test_dummy_t *utillib_test_dummy(void) {
  * \function utillib_test_message
  * Prints a message to notify the user.
  */
-void utillib_test_message(utillib_test_entry_t *self, size_t line,
+void utillib_test_message(char const *func_name, size_t line,
                           char const *fmt, ...) {
-  fprintf(stderr, "In `%s':%lu:\n", self->func_name, line);
+  fprintf(stderr, "In `%s':%lu:\n", func_name, line);
   va_list ap;
   va_start(ap, fmt);
   fputs("\tMessage: ", stderr);
   vfprintf(stderr, fmt, ap);
-  fputc('\n', stderr);
+  fputs(".\n", stderr);
   va_end(ap);
 }
 

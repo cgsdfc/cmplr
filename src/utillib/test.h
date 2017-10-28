@@ -20,6 +20,8 @@
 */
 #ifndef UTILLIB_TEST_H
 #define UTILLIB_TEST_H
+#define UTILLIB_TEST_VERSION_STRING "0.0.1"
+#define UTILLIB_TEST_VERSION        UTILLIB_VERSION_CAT(0,0,1)
 
 /**
  * \file utillib/test.h
@@ -107,6 +109,12 @@
 #define UTILLIB_TEST_CONST(NAME, VALUE) static const size_t NAME = (VALUE);
 
 /**
+ * \macro UTILLIB_TEST_STR
+ * Defines a const C string.
+ */
+#define UTILLIB_TEST_STR(NAME, VALUE)  static const char * NAME = VALUE;
+
+/**
  * \enum utillib_test_suite_t
  * Describe the status of a test: run it or skip it.
  * \value UT_STATUS_SKIP Skip this test.
@@ -173,6 +181,20 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  */
 
 #define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
+
+/**
+ * \macro UTILLIB_TEST_AUX
+ * Defines a helper function for common testing logic.
+ * Thanks to `__VA_ARGS__', this function can take
+ * whatever arguments it likes.
+ */
+#define UTILLIB_TEST_AUX(NAME, ...) static void NAME(utillib_test_entry_t *self, ## __VA_ARGS__)
+
+/*
+ * \macro UTILLIB_TEST_AUX_INVOKE
+ * For calling helpers defined by `UTILLIB_TEST_AUX'.
+ */
+#define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(self, ## __VA_ARGS__);
 
 /**
  * \macro UTILLIB_TEST_FIXTURE
@@ -290,7 +312,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  */
 
 #define UTILLIB_TEST_MESSAGE(FMT, ...)                                         \
-  utillib_test_message(self, __LINE__, (FMT), ##__VA_ARGS__);
+  utillib_test_message(__func__, __LINE__, (FMT), ##__VA_ARGS__);
 
 /**
  * \macro UTILLIB_TEST_ASSERT
@@ -377,6 +399,15 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
 #define UTILLIB_TEST_ASSERT_LT(LHS, RHS) UTILLIB_TEST_ASSERT(LHS < RHS)
 
 #define UTILLIB_TEST_ASSERT_GT(LHS, RHS) UTILLIB_TEST_ASSERT(LHS > RHS)
+
+/**
+ * String comparation.
+ */
+#define UTILLIB_TEST_ASSERT_STREQ(LHS, RHS) UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) == 0)
+#define UTILLIB_TEST_ASSERT_STRNE(LHS, RHS) UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) != 0)
+
+#define UTILLIB_TEST_EXPECT_STREQ(LHS, RHS) UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) == 0)
+#define UTILLIB_TEST_EXPECT_STRNE(LHS, RHS) UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) != 0)
 
 /**
  * \struct utillib_test_predicate_t
@@ -510,5 +541,5 @@ utillib_test_dummy_t *utillib_test_dummy(void);
 /**
  * Prints a message to stderr.
  */
-void utillib_test_message(utillib_test_entry_t *, size_t, char const *, ...);
+void utillib_test_message(char const* , size_t, char const *, ...);
 #endif // UTILLIB_TEST_H

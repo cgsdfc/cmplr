@@ -19,8 +19,6 @@
 
 */
 #include <utillib/test.h>
-#define UTILLIB_TEST_VERSION_STRING ("0.0.1")
-#define UTILLIB_TEST_VERSION        UTILLIB_VERSION_CAT(0,0,1)
 
 /**
  * \file utillib/test.c
@@ -102,6 +100,13 @@ UTILLIB_TEST(should_be_skip_by_abort) {
   UTILLIB_TEST_ASSERT(false && "should not reach here");
 }
 
+UTILLIB_TEST_SET_UP() {
+  puts("setup function called");
+}
+UTILLIB_TEST_TEAR_DOWN() {
+  puts("tear down function called");
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Test) {
   UTILLIB_TEST_BEGIN(Utillib_Test)
   UTILLIB_TEST_RUN(message)
@@ -114,6 +119,8 @@ UTILLIB_TEST_DEFINE(Utillib_Test) {
   UTILLIB_TEST_RUN(abort_failed)
   UTILLIB_TEST_RUN(should_be_skip_by_abort)
   UTILLIB_TEST_END(Utillib_Test)
+  struct test_fixture {};
+  UTILLIB_TEST_FIXTURE(struct test_fixture);
   UTILLIB_TEST_RETURN(Utillib_Test)
 }
 

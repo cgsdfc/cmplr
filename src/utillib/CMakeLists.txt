@@ -18,6 +18,7 @@ add_library(utillib
 )
 
 add_library(utillib_test_lib
+  ./test/json.c
   ./test/string.c
   ./test/test.c
   ./test/slist.c
