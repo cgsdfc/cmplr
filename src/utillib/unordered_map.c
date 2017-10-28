@@ -78,15 +78,11 @@ static utillib_pair_t *make_pair(utillib_unordered_map *self, utillib_key_t key,
   utillib_pair_t *pair;
   if (self->un_free) {
     pair = pop_free(self);
-  } else {
-    pair = malloc(sizeof *pair);
-  }
-  if (pair) {
     UTILLIB_PAIR_FIRST(pair) = key;
     UTILLIB_PAIR_SECOND(pair) = value;
     return pair;
   }
-  utillib_die("NOMEM in make_pair");
+  return utillib_make_pair(key, value);
 }
 
 static void push_back_bucket(utillib_unordered_map *self, size_t nbucket) {

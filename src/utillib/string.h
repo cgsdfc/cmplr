@@ -21,30 +21,49 @@
 #ifndef UTILLIB_STRING_H
 #define UTILLIB_STRING_H
 #define UTILLIB_C_STR(S) ((S)->c_str)
-#include <stdbool.h>
-#include <stddef.h>
+#include "enum.h"
+#include <stdbool.h> // for bool
+#include <stddef.h>  // for size_t
+
+/**
+ * \file utillib/string.h
+ */
+
+/**
+ * \struct utillib_string
+ */
 
 typedef struct utillib_string {
   char *c_str;
   size_t size, capacity;
 } utillib_string;
 
-typedef enum string_cmpop {
-  STRING_EQ,
-  STRING_GE,
-  STRING_GT,
-  STRING_NE,
-  STRING_LE,
-  STRING_LT,
-} string_cmpop;
+UTILLIB_ENUM_BEGIN(string_cmpop)
+UTILLIB_ENUM_ELEM(STRING_EQ)
+UTILLIB_ENUM_ELEM(STRING_GE)
+UTILLIB_ENUM_ELEM(STRING_GT)
+UTILLIB_ENUM_ELEM(STRING_NE)
+UTILLIB_ENUM_ELEM(STRING_LE)
+UTILLIB_ENUM_ELEM(STRING_LT)
+UTILLIB_ENUM_END(string_cmpop)
 
+/* constructor destructor */
+void utillib_string_init(utillib_string *);
+void utillib_string_init_c_str(utillib_string *, char const*);
+void utillib_string_destroy(utillib_string *);
+
+/* observer */
+size_t utillib_string_size(utillib_string *);
+bool utillib_string_empty(utillib_string *);
+char const *utillib_string_c_str(utillib_string *);
+bool utillib_string_richcmp(utillib_string *, utillib_string *, string_cmpop);
+
+/* modifier */
 void utillib_string_clear(utillib_string *);
 void utillib_string_erase_last(utillib_string *);
-char const *utillib_string_c_str(struct utillib_string *);
-size_t utillib_string_size(struct utillib_string *);
-bool utillib_string_empty(struct utillib_string *);
-int utillib_string_init(struct utillib_string *);
-int utillib_string_append(struct utillib_string *, char);
-void utillib_string_destroy(struct utillib_string *);
-bool utillib_string_richcmp(utillib_string *, utillib_string *, string_cmpop);
+void utillib_string_replace_last(utillib_string *, char);
+void utillib_string_reserve(utillib_string *, size_t);
+void utillib_string_append(utillib_string *, char const *);
+void utillib_string_append_char(utillib_string *, char);
+
 #endif // UTILLIB_STRING_H

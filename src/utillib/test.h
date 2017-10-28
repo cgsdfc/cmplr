@@ -176,12 +176,13 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
 
 /**
  * \macro UTILLIB_TEST_FIXTURE
- * Requires that fixture is in use.
- * Registers it into the `static_test_env'.
+ * Requires to use fixture.
+ * \param TYPE The type of the fixture.
  */
 
-#define UTILLIB_TEST_FIXTURE(FIXTURE)                                          \
-  utillib_test_env_set_fixture(&static_test_env, (FIXTURE),                    \
+#define UTILLIB_TEST_FIXTURE(TYPE)                                          \
+  static TYPE UT_FIXTURE;\
+  utillib_test_env_set_fixture(&static_test_env, &UT_FIXTURE,                    \
                                (utillib_test_setup), (utillib_test_teardown));
 
 /**

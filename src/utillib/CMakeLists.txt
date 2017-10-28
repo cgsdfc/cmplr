@@ -1,6 +1,7 @@
-set(CMAKE_C_FLAGS "-g3")
+set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
-set(UTILLIB_SOURCE
+add_library(utillib
+  ./pair.c
   ./json.c
   ./logging.c
   ./strref.c
@@ -15,20 +16,15 @@ set(UTILLIB_SOURCE
   ./vector.c
   ./string.c
 )
-add_library(utillib
-  ${UTILLIB_SOURCE}
-)
 
-set(UTILLIB_TEST_SOURCE 
+add_library(utillib_test_lib
+  ./test/string.c
   ./test/test.c
   ./test/slist.c
   ./test/argp.c
   ./test/vector.c
   ./test/strref.c
   ./test/logging.c
-)
-add_library(utillib_test_lib
-  ${UTILLIB_TEST_SOURCE}
 )
 
 add_executable(utillib_test 

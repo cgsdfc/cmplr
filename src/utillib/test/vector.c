@@ -141,6 +141,6 @@ UTILLIB_TEST_DEFINE(Utillib_Vector) {
   UTILLIB_TEST_RUN(reserve)
   UTILLIB_TEST_END(Utillib_Vector)
 
-  UTILLIB_TEST_FIXTURE(&static_vector);
+  UTILLIB_TEST_FIXTURE(utillib_vector);
   UTILLIB_TEST_RETURN()
 }

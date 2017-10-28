@@ -26,19 +26,13 @@
  */
 
 #include "enum.h"
+#include "pair.h"
 #include "slist.h"
 #include "typedef.h"
 #include "vector.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
-#define UTILLIB_PAIR_FIRST(P) ((P)->up_first)
-#define UTILLIB_PAIR_SECOND(P) ((P)->up_second)
-
-typedef struct utillib_pair_t {
-  void const *up_first;
-  void *up_second;
-} utillib_pair_t;
 
 UTILLIB_ENUM_BEGIN(utillib_unordered_map_retval_t)
 // for mode find_only

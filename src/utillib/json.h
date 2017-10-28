@@ -27,8 +27,8 @@
  */
 
 #include "enum.h"
+#include "string.h"
 #include "typedef.h"
-#include "unordered_map.h"
 #include "vector.h"
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
   utillib_json_value_t *NAME(void *, size_t);
@@ -75,7 +75,7 @@ typedef struct utillib_json_array_desc_t {
  */
 
 typedef struct utillib_json_object_t {
-  utillib_unordered_map members;
+  utillib_vector members;
 } utillib_json_object_t;
 
 /**
@@ -118,6 +118,7 @@ utillib_json_value_t *utillib_json_value_createV(int, va_list);
 void utillib_json_value_destroy(utillib_json_value_t *);
 utillib_json_value_t *utillib_json_null_create(void *, size_t);
 utillib_json_value_t *utillib_json_null_array_create(void *, size_t);
+void utillib_json_tostring(utillib_json_value_t *, utillib_string *);
 
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)

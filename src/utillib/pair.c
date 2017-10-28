@@ -1,36 +1,34 @@
-/* 
+/*
    Cmplr Library
    Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
-   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
    02110-1301 USA
 
 */
-#define _GNU_SOURCE
-#include <utillib/test.h>
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
+#include "pair.h"
+#include <stdlib.h> // for malloc
+                    /**
+                     * \file utillib/pair.c
+                     * Provides `utillib_make_pair'.
+                     */
 
-int main() {
-  UTILLIB_TEST_RUN_ALL(
-      /* Utillib_Vector, */
-      /* Utillib_Test */
-      Utillib_String
-  );
+utillib_pair_t *utillib_make_pair(utillib_key_t key, utillib_value_t value) {
+  utillib_pair_t *pair = malloc(sizeof *pair);
+  UTILLIB_PAIR_FIRST(pair) = key;
+  UTILLIB_PAIR_SECOND(pair) = value;
+  return pair;
 }

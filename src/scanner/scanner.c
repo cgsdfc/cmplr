@@ -77,7 +77,7 @@ void scanner_base_destroy(scanner_base_t *self) {
 /* appending internal str */
 int scanner_getc(scanner_base_t *self) {
   int c = scanner_getchar(self);
-  utillib_string_append(&self->sc_str, c);
+  utillib_string_append_char(&self->sc_str, c);
   return c;
 }
 
