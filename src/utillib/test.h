@@ -48,7 +48,10 @@
  * ASSERT(3) without
  * their values. For the same reason, you cannot stream arbitrary data into an
  * assertion to let
- * them shown when they failed.
+ * them shown when they failed. However, you can use the `boolean condition &&
+ * "your message to show if failed"' convention to force a string to show up
+ * together
+ * with the condition.
  *
  * 3. About fixture, it does provide a way to use fixture in a sense of local
  * static variable.
@@ -84,15 +87,18 @@
 
 #include "enum.h"
 #include "typedef.h"
-#include <stdbool.h>
 #include "vector.h"
-#include <time.h> // for time_t
+#include <stdbool.h>
+#include <stdio.h> // for FILE*
+#include <time.h>  // for time_t
 
 /**
  * \macro UTILLIB_TEST_SETUP
  */
-#define UTILLIB_TEST_SET_UP() static void utillib_test_setup(utillib_test_fixture_t UT_FIXTURE)
-#define UTILLIB_TEST_TEAR_DOWN() static void utillib_test_teardown(utillib_test_fixture_t UT_FIXTURE)
+#define UTILLIB_TEST_SET_UP()                                                  \
+  static void utillib_test_setup(utillib_test_fixture_t UT_FIXTURE)
+#define UTILLIB_TEST_TEAR_DOWN()                                               \
+  static void utillib_test_teardown(utillib_test_fixture_t UT_FIXTURE)
 
 /**
  * \macro UTILLIB_TEST_CONST
@@ -158,7 +164,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
     return utillib_test_suite_run_all(&static_suite);                          \
-  } while (0)
+  } while (0);
 
 /**
  * \macro UTILLIB_TEST_RUN_ALL
@@ -174,9 +180,9 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * Registers it into the `static_test_env'.
  */
 
-#define UTILLIB_TEST_FIXTURE(FIXTURE)                         \
-  utillib_test_env_set_fixture(&static_test_env, (FIXTURE), (utillib_test_setup),           \
-                               (utillib_test_teardown));
+#define UTILLIB_TEST_FIXTURE(FIXTURE)                                          \
+  utillib_test_env_set_fixture(&static_test_env, (FIXTURE),                    \
+                               (utillib_test_setup), (utillib_test_teardown));
 
 /**
  * \macro UT_FIXTURE
@@ -282,7 +288,8 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * Prints a message to stderr with line number, function name and newline.
  */
 
-#define UTILLIB_TEST_MESSAGE(FMT, ...) utillib_test_message(self, __LINE__, (FMT), ## __VA_ARGS__);
+#define UTILLIB_TEST_MESSAGE(FMT, ...)                                         \
+  utillib_test_message(self, __LINE__, (FMT), ##__VA_ARGS__);
 
 /**
  * \macro UTILLIB_TEST_ASSERT
@@ -302,7 +309,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
       break;                                                                   \
     }                                                                          \
     return;                                                                    \
-  } while (0)
+  } while (0);
 
 /**
  * \macro UTILLIB_TEST_EXPECT
@@ -315,7 +322,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     utillib_test_predicate_t predicate;                                        \
     UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                   \
     (void)utillib_test_predicate(self, &predicate);                            \
-  } while (0)
+  } while (0);
 
 /**
  * \macro UTILLIB_TEST_ABORT
@@ -329,7 +336,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     UTILLIB_INIT_PRED(&predicate, false, (MSG), US_ABORT);                     \
     utillib_test_predicate(self, &predicate);                                  \
     return;                                                                    \
-  } while (0)
+  } while (0);
 
 /**
  * Convenient macros for different comparation operators
@@ -456,14 +463,17 @@ typedef struct utillib_test_env_t {
 typedef struct utillib_test_suite_t {
   char const *filename;
   utillib_vector tests;
+  FILE *xml_output;
+  FILE *json_output;
 } utillib_test_suite_t;
 
 /**
  * \struct utillib_test_dummy_t
- * A place holder when the content of the element 
+ * A place holder when the content of the element
  * is not a matter.
  */
-typedef struct utillib_test_dummy_t {} utillib_test_dummy_t;
+typedef struct utillib_test_dummy_t {
+} utillib_test_dummy_t;
 
 /**
  * Initilizes a predicate.
@@ -494,10 +504,10 @@ void utillib_test_env_set_fixture(utillib_test_env_t *, utillib_test_fixture_t,
 /**
  * Returns a static `utillib_test_dummy_t'.
  */
-utillib_test_dummy_t * utillib_test_dummy(void);
+utillib_test_dummy_t *utillib_test_dummy(void);
 
 /**
  * Prints a message to stderr.
  */
-void utillib_test_message(utillib_test_entry_t *, size_t , char const *, ...) ;
+void utillib_test_message(utillib_test_entry_t *, size_t, char const *, ...);
 #endif // UTILLIB_TEST_H

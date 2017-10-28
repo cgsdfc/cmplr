@@ -20,14 +20,37 @@
 */
 #ifndef UTILLIB_PRINT_H
 #define UTILLIB_PRINT_H
+#include "typedef.h"
 #include <stdarg.h> // for va_list
+#include <stddef.h> // for offsetof
 #include <stdio.h>
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
-typedef char const *(utillib_tostring_func_t)(void *);
+
 void utillib_print_indent(FILE *, size_t, int);
 char *utillib_static_buf(void);
 char const *utillib_static_vsprintf(char const *fmt, va_list ap);
 char const *utillib_static_sprintf(char const *fmt, ...)
     __attribute__((__format__(__printf__, 1, 2)));
 char const *utillib_int_str(void *);
+
+typedef struct utillib_printer {
+  FILE *file;
+  size_t indent;
+} utillib_printer;
+
+/**
+ * Utillib.Print.Json.
+ */
+
+typedef struct utillib_field_entry_t {
+  char const *field_name;
+  size_t field_offset;
+  size_t field_size;
+} utillib_field_entry_t;
+
+typedef struct utillib_struct_desc_t {
+  utillib_field_entry_t *fields;
+  char const *name;
+} utillib_struct_desc_t;
+
 #endif // UTILLIB_PRINT_H

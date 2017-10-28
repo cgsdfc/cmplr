@@ -51,4 +51,15 @@ typedef void(utillib_test_fixfunc_t)(utillib_test_fixture_t);
 /* Returns an registered `utillib_test_entry_t' */
 typedef utillib_test_env_t *(utillib_test_getenv_func_t)(void);
 
+/* Utillib.Print */
+typedef struct utillib_printer utillib_printer;
+typedef char const *(utillib_print_tostring_func_t)(utillib_element_t);
+
+/* Utillib.JSON */
+typedef struct utillib_json_value_t utillib_json_value_t;
+typedef struct utillib_json_object_t utillib_json_object_t;
+typedef struct utillib_json_array_t utillib_json_array_t;
+typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void *,
+                                                                 size_t);
+
 #endif // UTILLIB_TYPEDEF_H

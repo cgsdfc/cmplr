@@ -1,6 +1,7 @@
 set(CMAKE_C_FLAGS "-g3")
 include_directories(${CMAKE_SOURCE_DIR})
 set(UTILLIB_SOURCE
+  ./json.c
   ./logging.c
   ./strref.c
   ./test.c

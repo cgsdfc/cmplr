@@ -50,3 +50,33 @@ char const *utillib_static_sprintf(char const *fmt, ...) {
   va_start(ap, fmt);
   return utillib_static_vsprintf(fmt, ap);
 }
+
+/* void utillib_print_json_init(utillib_printer *self, FILE *file) { */
+/*   self->file = file; */
+/*   self->indent = 0; */
+/* } */
+
+/* void utillib_print_json_array(utillib_printer *self, */
+/*                               utillib_print_tostring_func_t *tostring, */
+/*                               utillib_element_pointer_t begin, */
+/*                               utillib_element_pointer_t end) { */
+/*   fputc('[', self->file) for (; begin != end; ++begin) { */
+/*     fputs(tostring(*begin), self->file); */
+/*     if (begin == end - 1) { */
+/*       break; */
+/*     } */
+/*     fputc(',', self->file); */
+/*   } */
+/*   fputc(']', self->file); */
+/*   ; */
+/* } */
+
+/* void utillib_print_json_object(utillib_printer *self, */
+/*                                utillib_print_tostring_func_t *tostring, */
+/*                                utillib_element_t object) { */
+/*   fputc('{', self->file); */
+/*   // TODO: parse the string returned by tostring to allow better */
+/*   // format */
+/*   fputs(tostring(object)); */
+/*   fputc('}', self->file); */
+/* } */

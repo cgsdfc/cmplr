@@ -185,6 +185,11 @@ bool utillib_test_predicate(utillib_test_entry_t *self,
   return false;
 }
 
+/**
+ * \function status_output
+ * Prints one line to stderr with a status bar.
+ */
+
 static void status_output(char const *status_str, char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
@@ -195,15 +200,28 @@ static void status_output(char const *status_str, char const *fmt, ...) {
   va_end(ap);
 }
 
+/**
+ * \function case_status_output
+ * Prints the name of the test with a status bar.
+ */
 static void case_status_output(char const *status_str,
                                utillib_test_entry_t *entry) {
   status_output(status_str, "%s (%lds).", entry->func_name, entry->duration);
 }
 
+/**
+ * \function filename_status_output
+ * Informs the user with a filename.
+ */
 static void filename_status_output(char const *filename) {
   fprintf(stderr, "file:`%s'\n", filename);
 }
 
+/**
+ * \function utillib_test_case
+ * Invokes the function pointer in self, possibily after
+ * calling its setup and does teardown after it.
+ */
 static void utillib_test_case(utillib_test_entry_t *self,
                               utillib_test_env_t *env) {
   time_t begin, end;
@@ -231,13 +249,13 @@ static void utillib_test_case(utillib_test_entry_t *self,
 
 static int utillib_test_run_test(utillib_test_entry_t *self,
                                  utillib_test_env_t *env) {
-  ++env->ntests;
   switch (self->status) {
   case UT_STATUS_RUN:
     /* displays a status bar */
     case_status_output(GREEN_RUN, self);
     utillib_test_case(self, env);
     ++env->nrun;
+    ++env->ntests;
     env->total_duration += self->duration;
     if (0 ==
         self->abort_failure + self->assert_failure + self->expect_failure) {
@@ -258,15 +276,25 @@ static int utillib_test_run_test(utillib_test_entry_t *self,
   case UT_STATUS_SKIP:
     case_status_output(WHITE_SKIP, self);
     ++env->nskipped;
+    ++env->ntests;
     return US_SUCCESS;
   }
 }
 
+/**
+ * \function utillib_test_setup
+ * Starts running a test suite by printing its name and
+ * the file where it was defined.
+ */
 static void utillib_test_setup(utillib_test_env_t *self) {
   filename_status_output(self->filename);
   status_output(GREEN_BANG, "Test suite `%s' sets up.", self->case_name);
 }
 
+/**
+ * \function utillib_test_summary
+ * Displays statistics of a test suite after its execution reached end.
+ */
 static void utillib_test_summary(utillib_test_env_t *self) {
   status_output(GREEN_DASH, "Summary: Total %lu tests, Run %lu, Skipped %lu.",
                 self->ntests, self->nrun, self->nskipped);
@@ -274,10 +302,20 @@ static void utillib_test_summary(utillib_test_env_t *self) {
                 self->nrun, self->nsuccess, self->nfailure);
 }
 
+/**
+ * \function utillib_test_teardown
+ * Informs the user that all the test suites were run.
+ */
 static void utillib_test_teardown(utillib_test_env_t *self) {
   status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
 }
 
+/**
+ * \function utillib_test_run_suite
+ * Controls the whole process of a test suite:
+ * runs all its tests and stops at the first abort.
+ * Returns the number of failed tests.
+ */
 int utillib_test_run_suite(utillib_test_env_t *self) {
   utillib_test_setup(self);
   for (utillib_test_entry_t *test = self->cases; test->func != NULL; ++test) {
@@ -290,13 +328,19 @@ int utillib_test_run_suite(utillib_test_env_t *self) {
   return self->nfailure;
 }
 
+/**
+ * \function utillib_test_suite_destroy
+ * Destructor of `utillib_test_suite_t'.
+ */
 static void utillib_test_suite_destroy(utillib_test_suite_t *self) {
   utillib_vector_destroy(&self->tests);
+  if (self->xml_output) {
+    fclose(self->xml_output);
+  }
+  if (self->json_output) {
+    fclose(self->json_output);
+  }
 }
-
-static void utillib_test_suite_output_xml(utillib_test_suite_t *self) {}
-
-static void utillib_test_suite_output_json(utillib_test_suite_t *self) {}
 
 /**
  * \function utillib_test_suite_init
@@ -321,6 +365,10 @@ void utillib_test_suite_init(utillib_test_suite_t *self, ...) {
   }
 }
 
+/**
+ * \function utillib_test_suite_run_all
+ * Runs all the tests and Returns the number of failed tests.
+ */
 int utillib_test_suite_run_all(utillib_test_suite_t *self) {
   size_t test_failure = 0;
   size_t test_suites = utillib_vector_size(&self->tests);
@@ -337,27 +385,65 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self) {
   return test_failure;
 }
 
-void utillib_test_env_set_fixture(utillib_test_env_t *self, utillib_test_fixture_t fixture,
-                                  utillib_test_fixfunc_t * setup,
-                                  utillib_test_fixfunc_t *teardown){
-  self->fixture=fixture;
-  self->setup_func=setup;
-  self->teardown_func=teardown;
+/**
+ * \function utillib_test_env_set_fixture
+ * Sets fixture, setup and teardown for the test suite.
+ * Do not call it directly or more than once.
+ * Call it via `UTILLIB_TEST_FIXTURE'.
+ */
+void utillib_test_env_set_fixture(utillib_test_env_t *self,
+                                  utillib_test_fixture_t fixture,
+                                  utillib_test_fixfunc_t *setup,
+                                  utillib_test_fixfunc_t *teardown) {
+  self->fixture = fixture;
+  self->setup_func = setup;
+  self->teardown_func = teardown;
 }
 
-utillib_test_dummy_t * utillib_test_dummy(void){
+/**
+ * \function utillib_test_dummy
+ * Returns a pointer to a dummy object as a place holder for testing.
+ */
+utillib_test_dummy_t *utillib_test_dummy(void) {
   static utillib_test_dummy_t static_dummy;
   return &static_dummy;
 }
 
-void utillib_test_message(utillib_test_entry_t *self, size_t line, char const *fmt, ...) {
+/**
+ * \function utillib_test_message
+ * Prints a message to notify the user.
+ */
+void utillib_test_message(utillib_test_entry_t *self, size_t line,
+                          char const *fmt, ...) {
   fprintf(stderr, "In `%s':%lu:\n", self->func_name, line);
   va_list ap;
   va_start(ap, fmt);
-  fputc('\t', stderr);
+  fputs("\tMessage: ", stderr);
   vfprintf(stderr, fmt, ap);
   fputc('\n', stderr);
   va_end(ap);
 }
 
+/* static void utillib_test_suite_output_xml(utillib_test_suite_t *self) { */
+/*   fprintf(self->xml_output, */
+/*           "<-- XML generated by Utillib.Test. Version %s -->\n", */
+/*           UTILLIB_TEST_VERSION_STRING); */
+/* } */
 
+/* static char const *utillib_test_entry_tostring(utillib_test_entry_t *self) {
+ */
+/*   return utillib_static_sprintf("%s:%s", self->func_name, */
+/*                                 self->succeeded ? "PASSED" : "FAILED"); */
+/* } */
+
+/* static void utillib_test_env_tostring(utillib_test_env_t *self) { */
+/*   return utillib_static_sprintf("%s:%s %s:%s", "file", self->filename, */
+/* } */
+
+/* static void test_suite_object_print(utillib_test_suite_t *self) {} */
+
+/* static void utillib_test_suite_output_json(utillib_test_suite_t *self) { */
+/*   utillib_printer json; */
+/*   utillib_printer_init(&json, self->json_output); */
+/*   utillib_print_json_object(&json, test_suite_object_print, self); */
+/* } */
