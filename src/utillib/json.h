@@ -26,11 +26,22 @@
  * C and JSON format.
  */
 
-#include <stdarg.h> // for va_list
 #include "enum.h"
 #include "string.h"
 #include "typedef.h"
 #include "vector.h"
+#include <stdarg.h> // for va_list
+#define UTILLIB_JSON_OBJECT_FILED_BEGIN(NAME)                                  \
+  static const utillib_json_object_field_t NAME[] = {
+#define UTILLIB_JSON_OBJECT_FILED_END(NAME)                                    \
+  { 0 }                                                                        \
+  }                                                                            \
+  ;
+#define UTILLIB_JSON_OBJECT_FILED_ELEM(STRUCT, KEY, FIELD, FUNC)               \
+  {.create_func = (FUNC),                                                      \
+   .key = (KEY),                                                               \
+   .offset = offsetof(STRUCT, FIELD),                                          \
+   .size = sizeof((STRUCT *)NULL)->FIELD},
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
   utillib_json_value_t *NAME(void *, size_t);
 

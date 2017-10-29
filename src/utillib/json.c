@@ -48,8 +48,7 @@ static void json_object_register(utillib_json_object_t *self, char *base,
                                  const utillib_json_object_field_t *fields) {
   for (const utillib_json_object_field_t *field = fields;
        field->create_func != NULL; ++field) {
-    base += field->offset;
-    utillib_value_t value = field->create_func(base, field->size);
+    utillib_json_value_t * value = field->create_func(base+field->offset, field->size);
     utillib_pair_t *mem = utillib_make_pair(field->key, value);
     utillib_vector_push_back(&self->members, mem);
   }
@@ -62,8 +61,9 @@ static void json_array_register(utillib_json_array_t *self, char *base,
                                 size_t size,
                                 const utillib_json_array_desc_t *desc) {
   size_t offset = 0;
-  for (; offset < size; offset += desc->elemsz) {
-    utillib_json_value_t *elem = desc->create_func(base + offset, desc->elemsz);
+  for (; offset < size; ++offset) {
+    utillib_json_value_t *elem =
+        desc->create_func(base + offset * desc->elemsz, desc->elemsz);
     utillib_vector_push_back(&self->elements, elem);
   }
 }
@@ -179,19 +179,23 @@ UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_bool_create, as_bool, bool,
                                         UT_JSON_BOOL)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_long_create, as_long, long,
                                         UT_JSON_LONG)
+UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_string_create, as_ptr,
+                                        char const *, UT_JSON_STRING)
 
-/**
- * \function utillib_json_string_create
- * A C string is in fact a pointer to some data in .text section
- * and the current implementation does not `strdup' it.
- */
-utillib_json_value_t *utillib_json_string_create(void *base, size_t not_used) {
-  return json_value_create_ptr(UT_JSON_STRING, base);
-}
+/* ** */
+/*  * \function utillib_json_string_create */
+/*  * A C string is in fact a pointer to some data in .text section */
+/*  * and the current implementation does not `strdup' it. */
+/*  *1/ */
+/* utillib_json_value_t *utillib_json_string_create(void *base, size_t not_used)
+ * { */
+/*   return json_value_create_ptr(UT_JSON_STRING, base); */
+/* } */
 
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_real, double)
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_bool, bool)
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_long, long)
+UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_string, char const *)
 
 /**
  * \function utillib_json_null_array_create
@@ -374,7 +378,8 @@ static void json_value_tostring(utillib_json_value_t *self,
     utillib_string_append(string, "null");
     return;
   case UT_JSON_STRING:
-    utillib_string_append(string, (char const *)self->as_ptr);
+    str = utillib_static_sprintf("\"%s\"", (char const *)self->as_ptr);
+    utillib_string_append(string, str);
     return;
   case UT_JSON_ARRAY:
     json_array_tostring(self->as_ptr, string);

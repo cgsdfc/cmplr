@@ -12,24 +12,6 @@ typedef struct utillib_struct_desc_t {
   char const *name;
 } utillib_struct_desc_t;
 
-typedef struct utillib_json_object_t {
-  utillib_struct_desc_t *desc;
-  utillib_vector members;
-} utillib_json_object_t;
-
-typedef struct utillib_json_array_t {
-  utillib_vector elements;
-} utillib_json_array_t;
-
-typedef struct utillib_json_value_t {
-  int kind;
-  union {
-    as_real;
-    as_ptr;
-    as_int;
-  } value;
-} utillib_json_value_t;
-
 typedef struct Employee {
   char const *Name;
   size_t ID;
@@ -42,7 +24,7 @@ typedef struct Employee {
 #define UTFT(STRUCT, FIELD)                                                    \
   {.field_name = #FIELD,                                                       \
    .field_offset = offsetof(STRUCT, FIELD),                                    \
-   .field_size = sizeof get_field_size->FIELD},
+   .field_size = sizeof((STRUCT *)NULL)->FIELD},
 #define UT_END(STRUCT)                                                         \
   { 0 }                                                                        \
   }                                                                            \

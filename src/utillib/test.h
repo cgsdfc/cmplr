@@ -21,7 +21,7 @@
 #ifndef UTILLIB_TEST_H
 #define UTILLIB_TEST_H
 #define UTILLIB_TEST_VERSION_STRING "0.0.1"
-#define UTILLIB_TEST_VERSION        UTILLIB_VERSION_CAT(0,0,1)
+#define UTILLIB_TEST_VERSION UTILLIB_VERSION_CAT(0, 0, 1)
 
 /**
  * \file utillib/test.h
@@ -91,8 +91,9 @@
 #include "typedef.h"
 #include "vector.h"
 #include <stdbool.h>
-#include <stdio.h> // for FILE*
-#include <time.h>  // for time_t
+#include <stdio.h>  // for FILE*
+#include <string.h> // for strcmp
+#include <time.h>   // for time_t
 
 /**
  * \macro UTILLIB_TEST_SETUP
@@ -112,7 +113,7 @@
  * \macro UTILLIB_TEST_STR
  * Defines a const C string.
  */
-#define UTILLIB_TEST_STR(NAME, VALUE)  static const char * NAME = VALUE;
+#define UTILLIB_TEST_STR(NAME, VALUE) static const char *NAME = VALUE;
 
 /**
  * \enum utillib_test_suite_t
@@ -183,18 +184,24 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
 #define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
 
 /**
+ * \macro UTILLIB_TEST_LEN
+ * Shortcut for getting the length of a constant array.
+ */
+#define UTILLIB_TEST_LEN(ARRAY) ((sizeof ARRAY) / (sizeof ARRAY[0]))
+/**
  * \macro UTILLIB_TEST_AUX
  * Defines a helper function for common testing logic.
  * Thanks to `__VA_ARGS__', this function can take
  * whatever arguments it likes.
  */
-#define UTILLIB_TEST_AUX(NAME, ...) static void NAME(utillib_test_entry_t *self, ## __VA_ARGS__)
+#define UTILLIB_TEST_AUX(NAME, ...)                                            \
+  static void NAME(utillib_test_entry_t *self, ##__VA_ARGS__)
 
 /*
  * \macro UTILLIB_TEST_AUX_INVOKE
  * For calling helpers defined by `UTILLIB_TEST_AUX'.
  */
-#define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(self, ## __VA_ARGS__);
+#define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(self, ##__VA_ARGS__);
 
 /**
  * \macro UTILLIB_TEST_FIXTURE
@@ -202,9 +209,9 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * \param TYPE The type of the fixture.
  */
 
-#define UTILLIB_TEST_FIXTURE(TYPE)                                          \
-  static TYPE UT_FIXTURE;\
-  utillib_test_env_set_fixture(&static_test_env, &UT_FIXTURE,                    \
+#define UTILLIB_TEST_FIXTURE(TYPE)                                             \
+  static TYPE UT_FIXTURE;                                                      \
+  utillib_test_env_set_fixture(&static_test_env, &UT_FIXTURE,                  \
                                (utillib_test_setup), (utillib_test_teardown));
 
 /**
@@ -403,11 +410,15 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
 /**
  * String comparation.
  */
-#define UTILLIB_TEST_ASSERT_STREQ(LHS, RHS) UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) == 0)
-#define UTILLIB_TEST_ASSERT_STRNE(LHS, RHS) UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) != 0)
+#define UTILLIB_TEST_ASSERT_STREQ(LHS, RHS)                                    \
+  UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) == 0)
+#define UTILLIB_TEST_ASSERT_STRNE(LHS, RHS)                                    \
+  UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) != 0)
 
-#define UTILLIB_TEST_EXPECT_STREQ(LHS, RHS) UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) == 0)
-#define UTILLIB_TEST_EXPECT_STRNE(LHS, RHS) UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) != 0)
+#define UTILLIB_TEST_EXPECT_STREQ(LHS, RHS)                                    \
+  UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) == 0)
+#define UTILLIB_TEST_EXPECT_STRNE(LHS, RHS)                                    \
+  UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) != 0)
 
 /**
  * \struct utillib_test_predicate_t
@@ -541,5 +552,5 @@ utillib_test_dummy_t *utillib_test_dummy(void);
 /**
  * Prints a message to stderr.
  */
-void utillib_test_message(char const* , size_t, char const *, ...);
+void utillib_test_message(char const *, size_t, char const *, ...);
 #endif // UTILLIB_TEST_H

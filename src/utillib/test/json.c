@@ -21,6 +21,11 @@
 #include <utillib/json.h>
 #include <utillib/test.h>
 
+/**
+ * \function tostring_helper
+ * Since it destroys the passed-in val,
+ * it must be called in the end of the testing logic.
+ */
 UTILLIB_TEST_AUX(tostring_helper, utillib_json_value_t *val) {
   utillib_string s;
   utillib_string_init(&s);
@@ -40,23 +45,88 @@ UTILLIB_TEST(json_real_create) {
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 UTILLIB_TEST(json_bool_create) {
-  bool b=true;
-  utillib_json_value_t * val=utillib_json_bool_create(&b,0);
-  UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_BOOL);
-  UTILLIB_TEST_ASSERT_EQ(val->as_bool, b);
-  UTILLIB_TEST_AUX_INVOKE(tostring_helper,val);
+  for (int i=0;i<2;++i) {
+    bool b=i;
+    utillib_json_value_t * val=utillib_json_bool_create(&b,0);
+    UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_BOOL);
+    UTILLIB_TEST_ASSERT_EQ(val->as_bool, b);
+    UTILLIB_TEST_AUX_INVOKE(tostring_helper,val);
+  }
+}
+UTILLIB_TEST(json_long_create) {
+  long longs[]={ 0, 0x001, 0x003, -100, 100, 0127 };
+  size_t LEN=UTILLIB_TEST_LEN(longs); 
+
+  for (int i=0;i<LEN;++i) {
+    utillib_json_value_t *val=utillib_json_long_create(&longs[i], 0);
+    UTILLIB_TEST_ASSERT_EQ(longs[i], val->as_long);
+    UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_LONG);
+    UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+  }
 
 }
-UTILLIB_TEST(json_long_create) {}
-UTILLIB_TEST(json_string_create) {}
-UTILLIB_TEST(json_real_array_create){}
-UTILLIB_TEST(json_bool_array_create){}
-UTILLIB_TEST(json_long_array_create){}
-UTILLIB_TEST(json_string_array_create) {}
+UTILLIB_TEST(json_string_create) {
+  char const * strings[]={ "C++", "C", "Java", "Python", "PHP", "Ruby", "Perl", "Go" };
+  size_t LEN=UTILLIB_TEST_LEN(strings);
+  
+  for (int i=0;i<LEN;++i) {
+    utillib_json_value_t *val=utillib_json_string_create(&strings[i], 0);
+    UTILLIB_TEST_ASSERT_STREQ(strings[i], val->as_ptr);
+    UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_STRING);
+    UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+  }
+
+}
+UTILLIB_TEST(json_real_array_create){
+  double reals[] = { 3.1, 3.14, 3.149, 3.1492, 3.14926 };
+  size_t LEN=UTILLIB_TEST_LEN(reals);
+  utillib_json_value_t *val=utillib_json_real_array_create(reals, LEN);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
+UTILLIB_TEST(json_bool_array_create){
+  bool bools[]={true,true,false,false};
+  size_t LEN=UTILLIB_TEST_LEN(bools);
+  utillib_json_value_t *val = utillib_json_bool_array_create(bools, LEN);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
+
+UTILLIB_TEST(json_long_array_create){
+  long longs[] = { 1, 2, 3, 4 };
+  size_t LEN=UTILLIB_TEST_LEN(longs);
+  utillib_json_value_t *val=utillib_json_long_array_create(longs, LEN);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
+UTILLIB_TEST(json_string_array_create) {
+  char const * strings[]={ "C++", "C", "Java", "Python", "PHP", "Ruby", "Perl", "Go" };
+  size_t LEN=UTILLIB_TEST_LEN(strings);
+  utillib_json_value_t *val=utillib_json_string_array_create(strings, LEN);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
 UTILLIB_TEST(json_value_create) {}
 UTILLIB_TEST(json_value_createV) {}
 UTILLIB_TEST(json_array_create) {}
-UTILLIB_TEST(json_object_create) {}
+
+UTILLIB_TEST_AUX(array_create_helper) {
+
+
+}
+
+UTILLIB_TEST(json_object_create) {
+  typedef struct Student {
+    long id;
+    char const *name;
+    double gpa;
+  } Student;
+  UTILLIB_JSON_OBJECT_FILED_BEGIN(Student_Object)
+  UTILLIB_JSON_OBJECT_FILED_ELEM(Student, "ID", id, utillib_json_long_create)
+  UTILLIB_JSON_OBJECT_FILED_ELEM(Student, "Name", name, utillib_json_string_create)
+  UTILLIB_JSON_OBJECT_FILED_ELEM(Student, "GPA", gpa, utillib_json_real_create)
+  UTILLIB_JSON_OBJECT_FILED_END(Student_Object)
+  Student John={ .id=12, .name="John", .gpa=2.70 };
+  utillib_json_value_t * val=utillib_json_object_create(&John, sizeof John, Student_Object);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+
+}
 UTILLIB_TEST(json_value_destroy) {}
 UTILLIB_TEST(json_null_create) {}
 UTILLIB_TEST(json_null_array_create) {}

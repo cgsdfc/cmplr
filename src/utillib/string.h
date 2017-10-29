@@ -33,7 +33,7 @@
  * \struct utillib_string
  * \invariant size+1 <= capacity if size!=0
  * else size == capacity == 0.
- * \invariant size == strlen(c_str) if 
+ * \invariant size == strlen(c_str) if
  * c_str!=NULL else size == 0.
  */
 
@@ -53,7 +53,7 @@ UTILLIB_ENUM_END(string_cmpop)
 
 /* constructor destructor */
 void utillib_string_init(utillib_string *);
-void utillib_string_init_c_str(utillib_string *, char const*);
+void utillib_string_init_c_str(utillib_string *, char const *);
 void utillib_string_destroy(utillib_string *);
 
 /* observer */

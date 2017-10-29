@@ -413,8 +413,8 @@ utillib_test_dummy_t *utillib_test_dummy(void) {
  * \function utillib_test_message
  * Prints a message to notify the user.
  */
-void utillib_test_message(char const *func_name, size_t line,
-                          char const *fmt, ...) {
+void utillib_test_message(char const *func_name, size_t line, char const *fmt,
+                          ...) {
   fprintf(stderr, "In `%s':%lu:\n", func_name, line);
   va_list ap;
   va_start(ap, fmt);
