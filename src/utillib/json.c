@@ -48,7 +48,8 @@ static void json_object_register(utillib_json_object_t *self, char *base,
                                  const utillib_json_object_field_t *fields) {
   for (const utillib_json_object_field_t *field = fields;
        field->create_func != NULL; ++field) {
-    utillib_json_value_t * value = field->create_func(base+field->offset, field->size);
+    utillib_json_value_t *value =
+        field->create_func(base + field->offset, field->size);
     utillib_pair_t *mem = utillib_make_pair(field->key, value);
     utillib_vector_push_back(&self->members, mem);
   }
@@ -130,9 +131,14 @@ void utillib_json_value_destroy(utillib_json_value_t *self) {
   switch (self->kind) {
   case UT_JSON_ARRAY:
     json_array_destroy(self->as_ptr);
+    free(self);
     return;
   case UT_JSON_OBJECT:
     json_object_destroy(self->as_ptr);
+    free(self);
+    return;
+  case UT_JSON_NULL:
+    /* static */
     return;
   default:
     free(self);
@@ -179,18 +185,8 @@ UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_bool_create, as_bool, bool,
                                         UT_JSON_BOOL)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_long_create, as_long, long,
                                         UT_JSON_LONG)
-UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_string_create, as_ptr,
+UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_string_create, as_str,
                                         char const *, UT_JSON_STRING)
-
-/* ** */
-/*  * \function utillib_json_string_create */
-/*  * A C string is in fact a pointer to some data in .text section */
-/*  * and the current implementation does not `strdup' it. */
-/*  *1/ */
-/* utillib_json_value_t *utillib_json_string_create(void *base, size_t not_used)
- * { */
-/*   return json_value_create_ptr(UT_JSON_STRING, base); */
-/* } */
 
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_real, double)
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_bool, bool)
@@ -199,15 +195,27 @@ UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_string, char const *)
 
 /**
  * \function utillib_json_null_array_create
- * Maps a C array of pointers to an array of JSON null.
+ * Map anything to a JSON array of `null'.
+ * \param base Not used. Can even be `NULL'.
+ * \param offset The number of `null' in the array to create.
  */
-UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_null, void *)
+/* UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_null, void *) */
+utillib_json_value_t *utillib_json_null_array_create(void *not_used,
+                                                     size_t offset) {
+  utillib_json_array_t *self = malloc(sizeof *self);
+  utillib_vector_init(&self->elements);
+  for (size_t i = 0; i < offset; ++i) {
+    utillib_vector_push_back(&self->elements,
+                             utillib_json_null_create(NULL, 0));
+  }
+  return json_value_create_ptr(UT_JSON_ARRAY, self);
+}
 
 /**
  * \variable static_json_null
  */
 
-static utillib_json_value_t static_json_null;
+static utillib_json_value_t static_json_null = {.kind = UT_JSON_NULL};
 /**
  * \function utillib_json_null_create
  */
@@ -227,6 +235,21 @@ utillib_json_object_create(void *data, size_t offset,
   utillib_json_object_t *self = malloc(sizeof *self);
   json_object_init(self, data, offset, fields);
   return json_value_create_ptr(UT_JSON_OBJECT, self);
+}
+
+/**
+ * \function utillib_json_object_pointer_create
+ * Replacement of `utillib_json_object_create' when the first argument
+ * is not a pointer to a struct but a pointer to pointer to struct.
+ * \param pointer Points to another pointer that points to a struct.
+ * \param offset Not used since the size of a pointer is known.
+ * \param fields Forward to `utillib_json_object_create'.
+ */
+utillib_json_value_t *
+utillib_json_object_pointer_create(void *data, size_t offset,
+                                   const utillib_json_object_field_t *fields) {
+  void *pointee = *(void **)data;
+  return utillib_json_object_create(pointee, offset, fields);
 }
 
 /**
@@ -289,7 +312,7 @@ utillib_json_value_t *utillib_json_value_createV(int kind, va_list ap) {
     data = va_arg(ap, double *);
     return utillib_json_real_create(data, 0);
   case UT_JSON_STRING:
-    data = va_arg(ap, void *);
+    data = va_arg(ap, char const**);
     return utillib_json_string_create(data, 0);
   case UT_JSON_OBJECT:
     data = va_arg(ap, void *);
@@ -378,7 +401,7 @@ static void json_value_tostring(utillib_json_value_t *self,
     utillib_string_append(string, "null");
     return;
   case UT_JSON_STRING:
-    str = utillib_static_sprintf("\"%s\"", (char const *)self->as_ptr);
+    str = utillib_static_sprintf("\"%s\"", (char const *)self->as_str);
     utillib_string_append(string, str);
     return;
   case UT_JSON_ARRAY:

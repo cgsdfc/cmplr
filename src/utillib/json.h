@@ -31,17 +31,42 @@
 #include "typedef.h"
 #include "vector.h"
 #include <stdarg.h> // for va_list
+
+/**
+ * \macro UTILLIB_JSON_OBJECT_FILED_BEGIN
+ * Begins to define an array of `utillib_json_object_field_t'.
+ * The variable is static storage.
+ */
 #define UTILLIB_JSON_OBJECT_FILED_BEGIN(NAME)                                  \
   static const utillib_json_object_field_t NAME[] = {
 #define UTILLIB_JSON_OBJECT_FILED_END(NAME)                                    \
   { 0 }                                                                        \
   }                                                                            \
   ;
+
+/**
+ * \macro UTILLIB_JSON_OBJECT_FILED_ELEM
+ * Initializer for `utillib_json_object_field_t'.
+ * \param STRUCT The identifier as the name of the struct.
+ * \param KEY A string literal to name this field. It is not
+ * necessarily the name of the field.
+ * \param FIELD The identifier as the name of the field.
+ * \param FUNC A function pointer that should create a `utillib_json_value_t'
+ * when passed in the base address and offset of this field.
+ */
 #define UTILLIB_JSON_OBJECT_FILED_ELEM(STRUCT, KEY, FIELD, FUNC)               \
   {.create_func = (FUNC),                                                      \
    .key = (KEY),                                                               \
    .offset = offsetof(STRUCT, FIELD),                                          \
    .size = sizeof((STRUCT *)NULL)->FIELD},
+
+#define UTILLIB_JSON_ARRAY_DESC(NAME, ELEMSZ, FUNC)                            \
+  static const utillib_json_array_desc_t NAME = {.create_func = (FUNC),        \
+                                                 .elemsz = (ELEMSZ)};
+/**
+ * \macro UTILLIB_JSON_CREATE_FUNC_DECLARE
+ * Shortcut for declaring creating function.
+ */
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
   utillib_json_value_t *NAME(void *, size_t);
 
@@ -107,16 +132,13 @@ typedef struct utillib_json_value_t {
   /* Takes value from `utillib_json_kind_t'. */
   int kind;
   union {
-    /* `bool' */
     bool as_bool;
-    /* `double' */
     double as_double;
-    /* `long' */
     long as_long;
+    char const *as_str;
     /**
      * kind:`UT_JSON_ARRAY' && as_ptr:`utillib_json_array_t'.
      * kind:`UT_JSON_OBJECT' && as_ptr:`utillib_json_object_t'.
-     * kind:`UT_JSON_STRING' && as_ptr:`char const*'.
      */
     void *as_ptr;
   };
@@ -124,6 +146,9 @@ typedef struct utillib_json_value_t {
 
 utillib_json_value_t *
 utillib_json_object_create(void *, size_t, const utillib_json_object_field_t *);
+utillib_json_value_t *
+utillib_json_object_pointer_create(void *, size_t,
+                                   const utillib_json_object_field_t *);
 utillib_json_value_t *
 utillib_json_array_create(void *, size_t, const utillib_json_array_desc_t *);
 utillib_json_value_t *utillib_json_value_create(int, ...);

@@ -149,7 +149,8 @@ void utillib_vector_destroy(utillib_vector *self) { free(self->begin); }
 
 void utillib_vector_destroy_owning(utillib_vector *self,
                                    utillib_destroy_func_t *destroy) {
-  UTILLIB_VECTOR_FOREACH(void *, elem, self) { destroy(elem); }
+  UTILLIB_VECTOR_FOREACH(void *, elem, self) { destroy(elem); } 
+  free(self->begin);
 }
 
 /**
