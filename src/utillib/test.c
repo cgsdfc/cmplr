@@ -81,10 +81,10 @@
  */
 
 #include "test.h"
-#include "json.h" 
-#include "color.h"  // for COLOR_STRING_UNBOLD
-#include "print.h" 
 #include "argp.h"
+#include "color.h" // for COLOR_STRING_UNBOLD
+#include "json.h"
+#include "print.h"
 #include <stdarg.h> // for va_list
 #include <time.h>   // for time
 #define COLOR_STRING(C, S) COLOR_STRING_UNBOLD(C, S)
@@ -93,20 +93,21 @@
  * Argp options.
  */
 UTILLIB_ARGP_OPTION_BEGIN()
-  UTILLIB_ARGP_OPTION_ELEM("json", 'j', "FILE", "Writes the test result to a JSON file.")
+UTILLIB_ARGP_OPTION_ELEM("json", 'j', "FILE",
+                         "Writes the test result to a JSON file.")
 UTILLIB_ARGP_OPTION_END()
 
 UTILLIB_ARGP_OPTION_REGISTER(NULL, "Utillib.Test Runner")
 
-static utillib_argp_error_t 
-UTILLIB_ARGP_STATIC_PARSER (int key, char * text, utillib_argp_state *state) {
-  utillib_test_suite_t *self=UTILLIB_ARGP_STATE_INPUT(state);
+static utillib_argp_error_t
+UTILLIB_ARGP_STATIC_PARSER(int key, char *text, utillib_argp_state *state) {
+  utillib_test_suite_t *self = UTILLIB_ARGP_STATE_INPUT(state);
   switch (key) {
-    case 'j':
-      self->json_output=text;
-      return 0;
-    default:
-      return ARGP_ERR_UNKNOWN;
+  case 'j':
+    self->json_output = text;
+    return 0;
+  default:
+    return ARGP_ERR_UNKNOWN;
   }
 }
 
@@ -416,62 +417,154 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
   va_end(ap);
 }
 
-static utillib_json_value_t * 
-status_string_create(void *base, size_t offset) {
-  int status=*(int*) base;
-  char const *str=utillib_test_status_t_tostring(status);
-  return utillib_json_string_create((void*) str, 0);
+/**
+ * \function json_status_string_create
+ * Creates JSON value from `utillib_test_suite_t' enum
+ * using the enum tostring function.
+ * \param base Pointer to the `status' field of `utillib_test_entry_t'.
+ * \param offset No used.
+ */
+static utillib_json_value_t *json_status_string_create(void *base,
+                                                       size_t offset) {
+  int status = *(int *)base;
+  char const *str = utillib_test_status_t_tostring(status);
+  return utillib_json_string_create(&str, 0);
 }
 
+/**
+ * \variable TestEntry_Fields
+ * Description about the `utillib_test_entry_t'
+ * when used in a `utillib_json_object_t'.
+ * It depends on `json_status_string_create'.
+ */
 UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEntry_Fields)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "test_name", func_name, utillib_json_string_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "status", status, status_string_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "succeeded", succeeded, utillib_json_bool_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "test_name", func_name,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "status", status,
+                               json_status_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "succeeded", succeeded,
+                               utillib_json_bool_create)
 UTILLIB_JSON_OBJECT_FILED_END(TestEntry_Fields)
 
-static utillib_json_value_t *
-json_test_entry_create(void *base, size_t offset) {
+/**
+ * \function json_test_entry_create
+ * Creates JSON value from `utillib_test_entry_t'.
+ * Wraps `TestEntry_Fields' in.
+ * It depends on `TestEntry_Fields'.
+ */
+static utillib_json_value_t *json_test_entry_create(void *base, size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
-UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEnv_Fields)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "filename", filename, utillib_json_string_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "case_name", case_name, utillib_json_string_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_tests", ntests, utillib_json_long_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_run", nrun, utillib_json_long_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_skipped", nskipped, utillib_json_long_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_passed", nsuccess, utillib_json_long_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_failed", nfailure, utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FILED_END(TestEnv_Fields)
+/**
+ * \variable TestEntry_ArrayDesc
+ * Description about `utillib_test_entry_t' when used in
+ * a `utillib_json_array_t'.
+ * It depends on `json_test_entry_create'.
+ */
+UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(utillib_test_entry_t),
+                        json_test_entry_create);
+
+/**
+ * \function json_test_entry_array_pointer_create
+ * Creates the JSON array of `utillib_test_entry_t'
+ * from the fields `ntests' and `cases' of a
+ * `utillib_test_env_t' struct.
+ * \param base Pointer to the `cases' field of the
+ * `utillib_test_env_t' struct.
+ * \param offset Useless.
+ * It depends on `TestEntry_ArrayDesc'.
+ */
 
 static utillib_json_value_t *
-json_test_env_create(void *base, size_t offset) {
+json_test_entry_array_pointer_create(void *base, size_t offset) {
+  size_t offsetof_base = offsetof(utillib_test_env_t, cases);
+  size_t offsetof_size = offsetof(utillib_test_env_t, ntests);
+  /* hack out the address of the field `ntests' from 2 offsets */
+  void *psize = (char *)base - offsetof_base + offsetof_size;
+  /* cast and deref to get the pointed-to `cases' and `ntests' fields. */
+  return utillib_json_array_pointer_create(*(void **)base, *(size_t *)psize,
+                                           &TestEntry_ArrayDesc);
+}
+
+/**
+ * \variable TestEnv_Fields
+ * Description of `utillib_test_env_t' when used in `utillib_json_object_t'.
+ * The tricky part of it is the `tests' field which is a pointer to an array
+ * of `utillib_test_entry_t's. With the `ntests' recording the size of this
+ * array, we can use `utillib_json_array_pointer_create' to create the JSON
+ * array out of this C array in form of a `base, size' pair.
+ */
+UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEnv_Fields)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "filename", filename,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "case_name", case_name,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_tests", ntests,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_run", nrun,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_skipped", nskipped,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_passed", nsuccess,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_failed", nfailure,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "tests", cases,
+                               json_test_entry_array_pointer_create)
+UTILLIB_JSON_OBJECT_FILED_END(TestEnv_Fields)
+
+/**
+ * \function json_test_env_create
+ * Wraps `TestEnv_Fields'.
+ */
+static utillib_json_value_t *json_test_env_create(void *base, size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 
-static utillib_json_value_t *
-json_test_suite_test_create(void *base, size_t offset) {
-  return utillib_json_array_create_from_vector(base, offset, json_test_env_create);
+/**
+ * \function json_test_suite_test_create
+ * Creates a JSON array out of a `utillib_vector' of `utillib_test_env_t's.
+ * \param base Points to a `utillib_vector'.
+ * \param offset Useless.
+ */
+static utillib_json_value_t *json_test_suite_test_create(void *base,
+                                                         size_t offset) {
+  return utillib_json_array_create_from_vector(base, offset,
+                                               json_test_env_create);
 }
 
+/**
+ * \variable TestSuite_Fields
+ * Description for `utillib_test_suite_t' when used
+ * in `utillib_json_object_t'.
+ */
 UTILLIB_JSON_OBJECT_FILED_BEGIN(TestSuite_Fields)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "filename", filename, utillib_json_string_create)
-  UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "tests", tests, json_test_suite_test_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "filename", filename,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "tests", tests,
+                               json_test_suite_test_create)
 UTILLIB_JSON_OBJECT_FILED_END(TestSuite_Fields)
 
+/**
+ * \function test_suite_print_json
+ * Implements output to JSON format.
+ */
 static void test_suite_print_json(utillib_test_suite_t *self) {
   if (!self->json_output) {
+    /* no output requirement */
     return;
   }
-  FILE *file=fopen(self->json_output, "w");
+  FILE *file = fopen(self->json_output, "w");
   if (!file) {
-    status_output(RED_DASH, "warning: `%s': No such file or directory",
-        self->json_output);
+    status_output(RED_DASH, "warning: `%s': %s", strerror(errno),
+                  self->json_output);
     return;
   }
   utillib_printer_t print;
   utillib_printer_init(&print, file, 4);
-  utillib_json_value_t *val=utillib_json_object_create(self, sizeof *self, TestSuite_Fields);
+  utillib_json_value_t *val =
+      utillib_json_object_create(self, sizeof *self, TestSuite_Fields);
   utillib_json_pretty_print(val, &print);
   utillib_json_value_destroy(val);
   fclose(file);
@@ -481,8 +574,8 @@ static void test_suite_print_json(utillib_test_suite_t *self) {
  * \function utillib_test_suite_run_all
  * Runs all the tests and Returns the number of failed tests.
  */
-int utillib_test_suite_run_all(utillib_test_suite_t *self, 
-    int argc, char ** argv) {
+int utillib_test_suite_run_all(utillib_test_suite_t *self, int argc,
+                               char **argv) {
   UTILLIB_ARGP_PARSE(argc, argv, self);
   size_t test_failure = 0;
   size_t test_suites = utillib_vector_size(&self->tests);
@@ -498,4 +591,3 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self,
   test_suite_print_json(self);
   return test_failure;
 }
-

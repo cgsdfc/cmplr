@@ -237,6 +237,107 @@ UTILLIB_TEST(json_ndarray) {
 
 }
 
+typedef struct Boolean_Array {
+  bool * barr;
+  size_t size;
+} Boolean_Array;
+
+UTILLIB_TEST(json_array_pointer) {
+  bool bools[]={false, true, false};
+  UTILLIB_TEST_CONST(LEN, UTILLIB_TEST_LEN(bools));
+  Boolean_Array ba;
+  ba.barr=bools;
+  ba.size=LEN;
+  size_t offsetof_size=offsetof(Boolean_Array, size);
+  size_t offsetof_base=offsetof(Boolean_Array, barr);
+  void * psize=(char*) &ba.barr - offsetof_base + offsetof_size;
+}
+
+static utillib_json_value_t *status_string_create(void *base, size_t offset) {
+  int status = *(int *)base;
+  char const *str = utillib_test_status_t_tostring(status);
+  return utillib_json_string_create(&str, 0);
+}
+
+UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEntry_Fields)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "test_name", func_name,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "status", status,
+                               status_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "succeeded", succeeded,
+                               utillib_json_bool_create)
+UTILLIB_JSON_OBJECT_FILED_END(TestEntry_Fields)
+
+static utillib_json_value_t *json_test_entry_create(void *base, size_t offset) {
+  return utillib_json_object_create(base, offset, TestEntry_Fields);
+}
+
+UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(utillib_test_entry_t),
+                        json_test_entry_create);
+
+/**
+ * \function json_test_entry_array_pointer_create
+ * Creates the JSON array of `utillib_test_entry_t'
+ * from the fields `ntests' and `cases' of a
+ * `utillib_test_env_t' struct.
+ * \param base Pointer to the `cases' field of the
+ * `utillib_test_env_t' struct.
+ * \param offset Useless.
+ */
+
+static utillib_json_value_t *
+json_test_entry_array_pointer_create(void *base, size_t offset) {
+  size_t offsetof_base = offsetof(utillib_test_env_t, cases);
+  size_t offsetof_size = offsetof(utillib_test_env_t, ntests);
+  /* hack out the address of the field `ntests' from 2 offsets */
+  void *psize = (char *)base - offsetof_base + offsetof_size;
+  return utillib_json_array_pointer_create(*(void**) base, *(size_t *)psize,
+                                           &TestEntry_ArrayDesc);
+}
+
+UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEnv_Fields)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "filename", filename,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "case_name", case_name,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_tests", ntests,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_run", nrun,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_skipped", nskipped,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_passed", nsuccess,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_failed", nfailure,
+                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "tests", cases,
+                               json_test_entry_array_pointer_create)
+UTILLIB_JSON_OBJECT_FILED_END(TestEnv_Fields)
+
+static utillib_json_value_t *json_test_env_create(void *base, size_t offset) {
+  return utillib_json_object_create(base, offset, TestEnv_Fields);
+}
+
+static utillib_json_value_t *json_test_suite_test_create(void *base,
+                                                         size_t offset) {
+  return utillib_json_array_create_from_vector(base, offset,
+                                               json_test_env_create);
+}
+
+UTILLIB_JSON_OBJECT_FILED_BEGIN(TestSuite_Fields)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "filename", filename,
+                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "tests", tests,
+                               json_test_suite_test_create)
+UTILLIB_JSON_OBJECT_FILED_END(TestSuite_Fields)
+
+UTILLIB_TEST(test_entry_create) {
+  utillib_test_entry_t entry={ .func_name="func_name", .assert_failure=1,
+    .expect_failure=3, .abort_failure=1, .succeeded=false };
+  utillib_json_value_t *val=utillib_json_object_create(&entry, sizeof entry,
+      TestEntry_Fields);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
 UTILLIB_TEST(json_object_pointer) {
 
 
@@ -252,6 +353,7 @@ UTILLIB_TEST(json_value_destroy) {
 
 UTILLIB_TEST_DEFINE(Utillib_JSON) {
   UTILLIB_TEST_BEGIN(Utillib_JSON)
+  UTILLIB_TEST_RUN(test_entry_create)
   UTILLIB_TEST_RUN(json_real_create) 
   UTILLIB_TEST_RUN(json_bool_create) 
   UTILLIB_TEST_RUN(json_long_create) 

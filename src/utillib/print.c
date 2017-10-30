@@ -54,56 +54,77 @@ char const *utillib_static_sprintf(char const *fmt, ...) {
  * It should be in [0, 6).
  */
 void utillib_printer_init(utillib_printer_t *self, FILE *file, size_t npad) {
-  static const char * static_padstr[]={ "  ", " ", "  ", "   ", "    ", "     "};
-  self->file=file;
-  self->level=0;
-  self->padstr=static_padstr[npad];
+  static const char *static_padstr[] = {"  ",  " ",    "  ",
+                                        "   ", "    ", "     "};
+  self->file = file;
+  self->level = 0;
+  self->padstr = static_padstr[npad];
 }
 
+/**
+ * \function printer_indent
+ * First increases the indentation and then
+ * pads spaces.
+ */
 static void printer_indent(utillib_printer_t *self) {
-  size_t lv=++self->level;
+  size_t lv = ++self->level;
   while (lv--) {
     fputs(self->padstr, self->file);
   }
 }
+/**
+ * \function printer_unindent
+ * First decreases the indentation and then
+ * pads spaces.
+ */
 static void printer_unindent(utillib_printer_t *self) {
-  size_t lv=--self->level;
-  while (lv--) {
-    fputs(self->padstr, self->file);
-  }
-}
-static void printer_padding(utillib_printer_t *self) {
-  size_t lv=self->level;
+  size_t lv = --self->level;
   while (lv--) {
     fputs(self->padstr, self->file);
   }
 }
 
+/**
+ * \function printer_padding
+ * Pads spaces without changing the indentation.
+ */
+static void printer_padding(utillib_printer_t *self) {
+  size_t lv = self->level;
+  while (lv--) {
+    fputs(self->padstr, self->file);
+  }
+}
+
+/**
+ * \function utillib_printer_print_json
+ * Prettily prints the JSON data to file with proper indentation.
+ * \param str Assumed to be in JSON.
+ */
 void utillib_printer_print_json(utillib_printer_t *self, char const *str) {
-  FILE *file=self->file;
+  FILE *file = self->file;
   for (; *str; ++str) {
     switch (*str) {
-      case '{':
-      case '[':
-        fprintf(file, "%c\n", *str);
-        printer_indent(self);
-        break;
-      case ':':
-        fputs(": ", file);
-        break;
-      case ',':
-        fputs(",\n", file);
-        printer_padding(self);
-        break;
-      case ']':
-      case '}':
-        fputc('\n', file);
-        printer_unindent(self);
-        fputc(*str, file);
-        break;
-      default:
-        fputc(*str, file);
-        break;
+    case '{':
+    case '[':
+      fprintf(file, "%c\n", *str);
+      printer_indent(self);
+      break;
+    case ':':
+      fputs(": ", file);
+      break;
+    case ',':
+      fputs(",\n", file);
+      printer_padding(self);
+      break;
+    case ']':
+    case '}':
+      fputc('\n', file);
+      printer_unindent(self);
+      fputc(*str, file);
+      break;
+    default:
+      fputc(*str, file);
+      break;
     }
   }
   fputc('\n', file);

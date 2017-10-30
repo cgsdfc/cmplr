@@ -50,7 +50,8 @@ UTILLIB_ETAB_END(utillib_json_kind_t)
 /**
  * \function json_object_register
  */
-static void json_object_register(utillib_json_object_t *self, char *base, size_t not_used,
+static void json_object_register(utillib_json_object_t *self, char *base,
+                                 size_t not_used,
                                  const utillib_json_object_field_t *fields) {
   for (const utillib_json_object_field_t *field = fields;
        field->create_func != NULL; ++field) {
@@ -72,9 +73,8 @@ static void json_object_register(utillib_json_object_t *self, char *base, size_t
 static void json_array_register(utillib_json_array_t *self, char *base,
                                 size_t size,
                                 const utillib_json_array_desc_t *desc) {
-  for (size_t offset=0; offset<size; offset+=desc->elemsz) {
-    utillib_json_value_t *elem =
-        desc->create_func(base + offset, desc->elemsz);
+  for (size_t offset = 0; offset < size; offset += desc->elemsz) {
+    utillib_json_value_t *elem = desc->create_func(base + offset, desc->elemsz);
     utillib_vector_push_back(&self->elements, elem);
   }
 }
@@ -178,10 +178,10 @@ static utillib_json_value_t *json_value_create_ptr(int kind, void *data) {
  * Generates a `utillib_json_<primary>_array_create' function.
  */
 #define UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(ABBR_NAME, ELEM_TYEP)    \
-  utillib_json_value_t *ABBR_NAME##_array_create(void *base, size_t size) {  \
+  utillib_json_value_t *ABBR_NAME##_array_create(void *base, size_t size) {    \
     const static utillib_json_array_desc_t static_desc = {                     \
         .elemsz = sizeof(ELEM_TYEP), .create_func = ABBR_NAME##_create};       \
-    return utillib_json_array_create(base, size, &static_desc);              \
+    return utillib_json_array_create(base, size, &static_desc);                \
   }
 
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_real_create, as_double,
@@ -204,7 +204,7 @@ UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_string, char const *)
  * \param base Not used. Can even be `NULL'.
  * \param size The number of `null' in the array to create.
  * Notes that the `size' parameter here has different meaning
- * from the more general `utillib_json_array_create'. 
+ * from the more general `utillib_json_array_create'.
  * As if sizeof null == 1.
  */
 /* UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_null, void *) */
@@ -256,6 +256,22 @@ utillib_json_object_pointer_create(void *data, size_t size,
 }
 
 /**
+ * \function utillib_json_array_pointer_create
+ * Replacement of `utillib_json_array_create' when the C array under considered
+ * is expressed as a pointer to that array and a `size' variable of the the
+ * number
+ * of elements of the array.
+ * \param pointer The pointer to the C array.
+ * \size The number of elements of the C array.
+ * \desc The description about the elements.
+ */
+utillib_json_value_t *
+utillib_json_array_pointer_create(void *data, size_t size,
+                                  const utillib_json_array_desc_t *desc) {
+  return utillib_json_array_create(data, size * desc->elemsz, desc);
+}
+
+/**
  * \function utillib_json_array_create
  */
 
@@ -284,7 +300,7 @@ utillib_json_array_create(void *data, size_t size,
  * C structure data or array base address, and size is actually the size of it
  * (if it is
  * a struct, use `sizeof *base'). Or if it is an array, `size' is
- * 
+ *
  * The `desc' is a piece of meta data about `base' and `size' which
  * guides how to interprete the data. In case of JSON object, you need
  * to write a null-terminated array of `utillib_json_object_field_t'
@@ -316,7 +332,7 @@ utillib_json_value_t *utillib_json_value_createV(int kind, va_list ap) {
     data = va_arg(ap, double *);
     return utillib_json_real_create(data, 0);
   case UT_JSON_STRING:
-    data = va_arg(ap, char const**);
+    data = va_arg(ap, char const **);
     return utillib_json_string_create(data, 0);
   case UT_JSON_OBJECT:
     data = va_arg(ap, void *);
@@ -425,16 +441,13 @@ void utillib_json_tostring(utillib_json_value_t *self, utillib_string *str) {
  * \function utillib_json_array_create_from_vector
  */
 
-utillib_json_value_t *
-utillib_json_array_create_from_vector(void *vec, size_t not_used,
-    utillib_json_value_create_func_t  *create_func) {
-  utillib_vector *self=vec;
-  utillib_json_array_t *array=malloc(sizeof *array);
+utillib_json_value_t *utillib_json_array_create_from_vector(
+    void *vec, size_t not_used, utillib_json_value_create_func_t *create_func) {
+  utillib_vector *self = vec;
+  utillib_json_array_t *array = malloc(sizeof *array);
   json_array_init(array);
-  for (utillib_element_pointer_t
-      p=self->begin;
-      p!=self->end; ++p) {
-    utillib_json_value_t *val=create_func(*p, sizeof *p);
+  for (utillib_element_pointer_t p = self->begin; p != self->end; ++p) {
+    utillib_json_value_t *val = create_func(*p, sizeof *p);
     utillib_vector_push_back(&array->elements, val);
   }
   return json_value_create_ptr(UT_JSON_ARRAY, array);
@@ -445,12 +458,11 @@ utillib_json_array_create_from_vector(void *vec, size_t not_used,
  * Convenient function combining `utillib_json_tostring'
  * and `utillib_printer_print_json'.
  */
-void utillib_json_pretty_print(utillib_json_value_t *self, utillib_printer_t *printer) {
+void utillib_json_pretty_print(utillib_json_value_t *self,
+                               utillib_printer_t *printer) {
   utillib_string json;
   utillib_string_init(&json);
   utillib_json_tostring(self, &json);
-  utillib_printer_print_json(printer, 
-      utillib_string_c_str(&json));
+  utillib_printer_print_json(printer, utillib_string_c_str(&json));
   utillib_string_destroy(&json);
 }
-

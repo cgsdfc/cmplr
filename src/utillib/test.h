@@ -172,9 +172,9 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
   do {                                                                         \
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
-    size_t rc=utillib_test_suite_run_all(&static_suite, (ARGC), (ARGV));                          \
-    utillib_test_suite_destroy(&static_suite);\
-    return rc;\
+    size_t rc = utillib_test_suite_run_all(&static_suite, (ARGC), (ARGV));     \
+    utillib_test_suite_destroy(&static_suite);                                 \
+    return rc;                                                                 \
   } while (0);
 
 /**
@@ -541,7 +541,7 @@ void utillib_test_suite_destroy(utillib_test_suite_t *);
 /**
  * Runs all the test suites.
  */
-int utillib_test_suite_run_all(utillib_test_suite_t *, int , char ** );
+int utillib_test_suite_run_all(utillib_test_suite_t *, int, char **);
 
 /**
  * Sets fixture for this utillib_test_env_t.

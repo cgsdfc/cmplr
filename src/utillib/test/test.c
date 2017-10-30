@@ -19,6 +19,7 @@
 
 */
 #include <utillib/test.h>
+#include <utillib/json.h>
 
 /**
  * \file utillib/test.c
@@ -106,6 +107,7 @@ UTILLIB_TEST_SET_UP() {
 UTILLIB_TEST_TEAR_DOWN() {
   puts("tear down function called");
 }
+
 
 UTILLIB_TEST_DEFINE(Utillib_Test) {
   UTILLIB_TEST_BEGIN(Utillib_Test)

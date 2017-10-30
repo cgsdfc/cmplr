@@ -36,10 +36,10 @@ char const *utillib_int_str(void *);
 typedef struct utillib_printer_t {
   FILE *file;
   size_t level;
-  char const * padstr;
+  char const *padstr;
 } utillib_printer_t;
 
-void utillib_printer_init(utillib_printer_t *, FILE*, size_t);
-void utillib_printer_print_json(utillib_printer_t  *, char const *);
+void utillib_printer_init(utillib_printer_t *, FILE *, size_t);
+void utillib_printer_print_json(utillib_printer_t *, char const *);
 
 #endif // UTILLIB_PRINT_H

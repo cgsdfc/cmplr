@@ -30,9 +30,9 @@ UTILLIB_TEST_DECLARE(Utillib_JSON);
 
 int main(int argc, char ** argv) {
   UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Vector, */
-      Utillib_Test
+      Utillib_Vector,
+      Utillib_Test,
       /* Utillib_String */
-      /* Utillib_JSON */
+      Utillib_JSON
   );
 }
