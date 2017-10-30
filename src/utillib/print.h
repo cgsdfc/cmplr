@@ -33,24 +33,13 @@ char const *utillib_static_sprintf(char const *fmt, ...)
     __attribute__((__format__(__printf__, 1, 2)));
 char const *utillib_int_str(void *);
 
-typedef struct utillib_printer {
+typedef struct utillib_printer_t {
   FILE *file;
-  size_t indent;
-} utillib_printer;
+  size_t level;
+  char const * padstr;
+} utillib_printer_t;
 
-/**
- * Utillib.Print.Json.
- */
-
-typedef struct utillib_field_entry_t {
-  char const *field_name;
-  size_t field_offset;
-  size_t field_size;
-} utillib_field_entry_t;
-
-typedef struct utillib_struct_desc_t {
-  utillib_field_entry_t *fields;
-  char const *name;
-} utillib_struct_desc_t;
+void utillib_printer_init(utillib_printer_t *, FILE*, size_t);
+void utillib_printer_print_json(utillib_printer_t  *, char const *);
 
 #endif // UTILLIB_PRINT_H

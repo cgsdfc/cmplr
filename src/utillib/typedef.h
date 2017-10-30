@@ -55,7 +55,7 @@ typedef void(utillib_test_fixfunc_t)(utillib_test_fixture_t);
 typedef utillib_test_env_t *(utillib_test_getenv_func_t)(void);
 
 /* Utillib.Print */
-typedef struct utillib_printer utillib_printer;
+typedef struct utillib_printer_t utillib_printer_t;
 typedef char const *(utillib_print_tostring_func_t)(utillib_element_t);
 
 /* Utillib.JSON */

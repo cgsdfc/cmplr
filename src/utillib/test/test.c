@@ -74,13 +74,13 @@ UTILLIB_TEST(expect_failed) {
 
 UTILLIB_TEST(should_be_skip) {}
 
-/** \test statistics_corect
+/** \test statistics_correct
  * Must be called at the end of all tests
  * and before `abort_failed' to check 
  * for correct statistics.
 */
 
-UTILLIB_TEST(statistics_corect) {
+UTILLIB_TEST(statistics_correct) {
   // sort of reflection.
   utillib_test_env_t * env=Utillib_Test();
   UTILLIB_TEST_ASSERT_EQ(env->nrun+env->nskipped, env->ntests);
@@ -115,7 +115,7 @@ UTILLIB_TEST_DEFINE(Utillib_Test) {
   UTILLIB_TEST_RUN(expect_passed)
   UTILLIB_TEST_RUN(expect_failed)
   UTILLIB_TEST_SKIP(should_be_skip)
-  UTILLIB_TEST_RUN(statistics_corect)
+  UTILLIB_TEST_RUN(statistics_correct)
   UTILLIB_TEST_RUN(abort_failed)
   UTILLIB_TEST_RUN(should_be_skip_by_abort)
   UTILLIB_TEST_END(Utillib_Test)

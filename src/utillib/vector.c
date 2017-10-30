@@ -294,3 +294,4 @@ utillib_element_t utillib_vector_iterator_get(utillib_vector_iterator *self) {
 void utillib_vector_iterator_next(utillib_vector_iterator *self) {
   ++self->iter_begin;
 }
+

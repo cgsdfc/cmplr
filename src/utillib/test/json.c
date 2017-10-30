@@ -109,27 +109,23 @@ UTILLIB_TEST(json_string_create) {
 }
 UTILLIB_TEST(json_real_array_create){
   double reals[] = { 3.1, 3.14, 3.149, 3.1492, 3.14926 };
-  size_t LEN=UTILLIB_TEST_LEN(reals);
-  utillib_json_value_t *val=utillib_json_real_array_create(reals, LEN);
+  utillib_json_value_t *val=utillib_json_real_array_create(reals, sizeof reals);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 UTILLIB_TEST(json_bool_array_create){
   bool bools[]={true,true,false,false};
-  size_t LEN=UTILLIB_TEST_LEN(bools);
-  utillib_json_value_t *val = utillib_json_bool_array_create(bools, LEN);
+  utillib_json_value_t *val = utillib_json_bool_array_create(bools, sizeof bools);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
 UTILLIB_TEST(json_long_array_create){
   long longs[] = { 1, 2, 3, 4 };
-  size_t LEN=UTILLIB_TEST_LEN(longs);
-  utillib_json_value_t *val=utillib_json_long_array_create(longs, LEN);
+  utillib_json_value_t *val=utillib_json_long_array_create(longs, sizeof longs);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 UTILLIB_TEST(json_string_array_create) {
   char const * strings[]={ "C++", "C", "Java", "Python", "PHP", "Ruby", "Perl", "Go" };
-  size_t LEN=UTILLIB_TEST_LEN(strings);
-  utillib_json_value_t *val=utillib_json_string_array_create(strings, LEN);
+  utillib_json_value_t *val=utillib_json_string_array_create(strings, sizeof strings);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
@@ -180,7 +176,7 @@ UTILLIB_JSON_ARRAY_DESC(Student_Desc, sizeof (Student), Student_Create);
 
 UTILLIB_TEST(json_array_create) {
   utillib_json_value_t * val=utillib_json_array_create(students, 
-      UTILLIB_TEST_LEN(students),
+      sizeof students,
       &Student_Desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
@@ -204,14 +200,47 @@ UTILLIB_TEST(json_value_create) {
   utillib_json_value_destroy(val);
   // Using `students'.
   
-  val=utillib_json_value_create(UT_JSON_ARRAY, students, UTILLIB_TEST_LEN(students), &Student_Desc);
+  val=utillib_json_value_create(UT_JSON_ARRAY, students, sizeof students, &Student_Desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 
   val=utillib_json_value_create(UT_JSON_OBJECT, &John, sizeof John, Student_Fields);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 
 }
-UTILLIB_TEST(json_value_createV) {}
+
+UTILLIB_TEST(json_array_in_object) {
+  typedef struct Real_Array {
+    double array[5];
+    long size;
+  } Real_Array;
+  UTILLIB_JSON_OBJECT_FILED_BEGIN(Real_Array_Fields)
+  UTILLIB_JSON_OBJECT_FILED_ELEM(Real_Array, "array", array, utillib_json_real_array_create)
+  UTILLIB_JSON_OBJECT_FILED_ELEM(Real_Array, "size", size, utillib_json_long_create)
+  UTILLIB_JSON_OBJECT_FILED_END(Real_Array_Fields)
+
+  Real_Array reals={{ 0, 1,2,3,4},5};
+  utillib_json_value_t *val=utillib_json_object_create(&reals, sizeof reals, Real_Array_Fields);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+}
+
+UTILLIB_JSON_ARRAY_DESC(long_array2_desc, sizeof (long[2]), utillib_json_long_array_create);
+utillib_json_value_t * json_long_array2_create(void *base, size_t size) {
+  return utillib_json_array_create(base, size, &long_array2_desc);
+}
+
+UTILLIB_TEST(json_ndarray) {
+  long array2[][2]={ 
+    { 0, 1 }, { 1, 0 }
+  };
+  utillib_json_value_t *val=json_long_array2_create(array2, sizeof array2);
+  UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
+
+}
+
+UTILLIB_TEST(json_object_pointer) {
+
+
+}
 
 UTILLIB_TEST(json_tostring) {
 
@@ -232,14 +261,15 @@ UTILLIB_TEST_DEFINE(Utillib_JSON) {
   UTILLIB_TEST_RUN(json_long_array_create)
   UTILLIB_TEST_RUN(json_string_array_create) 
   UTILLIB_TEST_RUN(json_value_create) 
-  UTILLIB_TEST_RUN(json_value_createV) 
   UTILLIB_TEST_RUN(json_array_create) 
   UTILLIB_TEST_RUN(json_object_create) 
   UTILLIB_TEST_RUN(json_object_create_nested_object) 
   UTILLIB_TEST_RUN(json_value_destroy) 
   UTILLIB_TEST_RUN(json_null_create) 
+  UTILLIB_TEST_RUN(json_array_in_object)
   UTILLIB_TEST_RUN(json_null_array_create) 
   UTILLIB_TEST_RUN(json_tostring) 
+  UTILLIB_TEST_RUN(json_ndarray)
   UTILLIB_TEST_END(Utillib_JSON)
   UTILLIB_TEST_RETURN(Utillib_JSON)
 }

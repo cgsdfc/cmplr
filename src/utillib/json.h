@@ -30,6 +30,7 @@
 #include "string.h"
 #include "typedef.h"
 #include "vector.h"
+#include <stdio.h>
 #include <stdarg.h> // for va_list
 
 /**
@@ -156,7 +157,9 @@ utillib_json_value_t *utillib_json_value_createV(int, va_list);
 void utillib_json_value_destroy(utillib_json_value_t *);
 utillib_json_value_t *utillib_json_null_create(void *, size_t);
 utillib_json_value_t *utillib_json_null_array_create(void *, size_t);
+utillib_json_value_t *utillib_json_array_create_from_vector(void *, size_t, utillib_json_value_create_func_t*);
 void utillib_json_tostring(utillib_json_value_t *, utillib_string *);
+void utillib_json_pretty_print(utillib_json_value_t*, utillib_printer_t*);
 
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)
@@ -167,5 +170,6 @@ UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_array_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_array_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_array_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_array_create)
+
 
 #endif // UTILLIB_JSON_H

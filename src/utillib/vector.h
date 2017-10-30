@@ -89,4 +89,5 @@ void utillib_vector_pop_back(utillib_vector *);
 void utillib_vector_reserve(utillib_vector *, size_t);
 void utillib_vector_set(utillib_vector *, size_t, utillib_element_t);
 void utillib_vector_clear(utillib_vector *);
+
 #endif // UTILLIB_VECTOR_H
