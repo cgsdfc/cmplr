@@ -31,7 +31,8 @@ typedef struct argp utillib_argp;
 typedef struct argp_option utillib_argp_option;
 typedef argp_parser_t utillib_argp_parser_t;
 typedef struct argp_child utillib_argp_child;
-typedef char *(*utillib_help_filter)(int key, const char *text, void *input);
+typedef char *(*utillib_help_filter) (int key, const char *text,
+				      void *input);
 typedef error_t utillib_argp_error_t;
 typedef struct argp_state utillib_argp_state;
 #define UTILLIB_ARGP_STATIC_ARGP static_argp
@@ -68,4 +69,4 @@ typedef struct argp_state utillib_argp_state;
 /* access to argp_state structure */
 #define UTILLIB_ARGP_STATE_INPUT(S) ((S)->input)
 
-#endif // UTILLIB_ARGP_H
+#endif				// UTILLIB_ARGP_H

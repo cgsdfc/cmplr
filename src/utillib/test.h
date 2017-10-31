@@ -91,9 +91,9 @@
 #include "typedef.h"
 #include "vector.h"
 #include <stdbool.h>
-#include <stdio.h>  // for FILE*
-#include <string.h> // for strcmp
-#include <time.h>   // for time_t
+#include <stdio.h>		// for FILE*
+#include <string.h>		// for strcmp
+#include <time.h>		// for time_t
 
 /**
  * \macro UTILLIB_TEST_SETUP
@@ -123,9 +123,9 @@
  */
 
 UTILLIB_ENUM_BEGIN(utillib_test_status_t)
-UTILLIB_ENUM_ELEM(UT_STATUS_SKIP)
-UTILLIB_ENUM_ELEM(UT_STATUS_RUN)
-UTILLIB_ENUM_END(utillib_test_status_t)
+    UTILLIB_ENUM_ELEM(UT_STATUS_SKIP)
+    UTILLIB_ENUM_ELEM(UT_STATUS_RUN)
+    UTILLIB_ENUM_END(utillib_test_status_t)
 
 /**
  * \enum utillib_test_severity_t
@@ -138,13 +138,12 @@ UTILLIB_ENUM_END(utillib_test_status_t)
  * \value US_ABORT if failed, aborts the current group
  * of test functions and goes on to next group.
  */
-
-UTILLIB_ENUM_BEGIN(utillib_test_severity_t)
-UTILLIB_ENUM_ELEM(US_SUCCESS)
-UTILLIB_ENUM_ELEM(US_EXPECT)
-UTILLIB_ENUM_ELEM(US_ASSERT)
-UTILLIB_ENUM_ELEM(US_ABORT)
-UTILLIB_ENUM_END(utillib_test_severity_t)
+    UTILLIB_ENUM_BEGIN(utillib_test_severity_t)
+    UTILLIB_ENUM_ELEM(US_SUCCESS)
+    UTILLIB_ENUM_ELEM(US_EXPECT)
+    UTILLIB_ENUM_ELEM(US_ASSERT)
+    UTILLIB_ENUM_ELEM(US_ABORT)
+    UTILLIB_ENUM_END(utillib_test_severity_t)
 
 /**
  * \macro UTILLIB_TEST_DECLARE
@@ -154,9 +153,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * Use this in your header when your tests split multiple
  * files and the file containing `main' needs a declaraton.
  */
-
 #define UTILLIB_TEST_DECLARE(NAME) utillib_test_env_t *NAME(void);
-
 /**
  * \macro UTILLIB_TEST_RUN_ALL_ARG
  * Initilizes the test suite with the all the tests to run
@@ -167,7 +164,6 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * \param ARGV argv.
  * \param ... The tests function pointers.
  */
-
 #define UTILLIB_TEST_RUN_ALL_ARG(ARGC, ARGV, ...)                              \
   do {                                                                         \
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
@@ -176,15 +172,12 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     utillib_test_suite_destroy(&static_suite);                                 \
     return rc;                                                                 \
   } while (0);
-
 /**
  * \macro UTILLIB_TEST_RUN_ALL
  * Same as above but takes no command line arguments.
  * And uses their defaults.
  */
-
 #define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
-
 /**
  * \macro UTILLIB_TEST_LEN
  * Shortcut for getting the length of a constant array.
@@ -198,41 +191,34 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  */
 #define UTILLIB_TEST_AUX(NAME, ...)                                            \
   static void NAME(utillib_test_entry_t *self, ##__VA_ARGS__)
-
 /*
  * \macro UTILLIB_TEST_AUX_INVOKE
  * For calling helpers defined by `UTILLIB_TEST_AUX'.
  */
 #define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(self, ##__VA_ARGS__);
-
 /**
  * \macro UTILLIB_TEST_FIXTURE
  * Requires to use fixture.
  * \param TYPE The type of the fixture.
  */
-
 #define UTILLIB_TEST_FIXTURE(TYPE)                                             \
   static TYPE UT_FIXTURE;                                                      \
   utillib_test_env_set_fixture(&static_test_env, &UT_FIXTURE,                  \
                                (utillib_test_setup), (utillib_test_teardown));
-
 /**
  * \macro UT_FIXTURE
  * The identifier of the possibily defined fixture.
  * Use it only when you defined `UTILLIB_TEST_FIXTURE' properly.
  */
 #define UT_FIXTURE fixture
-
 /**
  * \macro UTILLIB_TEST
  * Defines a single test function with the fix signature.
  * \param NAME The name of the test function.
  */
-
 #define UTILLIB_TEST(NAME)                                                     \
   static void NAME(utillib_test_entry_t *self,                                 \
                    utillib_test_fixture_t UT_FIXTURE)
-
 /**
  * \macro UTILLIB_TEST_DEFINE
  * Defines a function whose purpose is to register a group of
@@ -244,27 +230,23 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * You get the pointer to the variable via a function call.
  */
 #define UTILLIB_TEST_DEFINE(NAME) utillib_test_env_t *NAME(void)
-
 /**
  * \macro UTILLIB_TEST_BEGIN
  * Defines a static array of `utillib_test_entry_t'.
  */
 #define UTILLIB_TEST_BEGIN(NAME)                                               \
   static utillib_test_entry_t static_test_entries[] = {
-
 /**
  * \macro UTILLIB_TEST_END
  * Ends the static `utillib_test_entry_t' array and
  * Defines a static `utillib_test_env_t' to hold it.
  */
-
 #define UTILLIB_TEST_END(NAME)                                                 \
   { 0 }                                                                        \
   }                                                                            \
   ;                                                                            \
   static utillib_test_env_t static_test_env = {                                \
       .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__};
-
 /*
  * \macro UTILLIB_TEST_RETURN
  * Returns the wrapped static `static_test_env'.
@@ -272,7 +254,6 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * function body.
  */
 #define UTILLIB_TEST_RETURN(NAME) return &static_test_env;
-
 /**
  * \macro UTILLIB_TEST_ENTRY
  * Initilizer of a `utillib_test_entry_t' structure.
@@ -280,26 +261,20 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * Only valid C identifier is acceptable.
  * \param STATUS whether to skip or to run this function.
  */
-
 #define UTILLIB_TEST_ENTRY(FUNC, STATUS)                                       \
   {                                                                            \
       .func = (FUNC), .func_name = #FUNC, .status = (STATUS),                  \
   },
-
 /**
  * \macro UTILLIB_TEST_RUN
  * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_RUN.
  */
-
 #define UTILLIB_TEST_RUN(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_RUN)
-
 /**
  * \macro UTILLIB_TEST_SKIP
  * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_SKIP.
  */
-
 #define UTILLIB_TEST_SKIP(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_SKIP)
-
 /**
  * \macro UTILLIB_INIT_PRED
  * Initilizes a `utillib_test_predicate_t' with all its fields.
@@ -311,18 +286,14 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * \param SEVERITY The level of this failure which may change the control
  * flow of testing. It also has effect on the message displayed.
  */
-
 #define UTILLIB_INIT_PRED(PRED, EXPR, MSG, SEVERITY)                           \
   utillib_test_predicate_init(PRED, EXPR, __LINE__, MSG, SEVERITY)
-
 /**
  * \macro UTILLIB_TEST_MESSAGE
  * Prints a message to stderr with line number, function name and newline.
  */
-
 #define UTILLIB_TEST_MESSAGE(FMT, ...)                                         \
   utillib_test_message(__func__, __LINE__, (FMT), ##__VA_ARGS__);
-
 /**
  * \macro UTILLIB_TEST_ASSERT
  * Assert `EXPR' to be true or prints `Assertion Failed...'
@@ -332,7 +303,6 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
  * a test function defined with `UTILLIB_TEST' since they require the
  * `self' pointer to the running `utillib_test_entry_t' object.
  */
-
 #define UTILLIB_TEST_ASSERT(EXPR)                                              \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
@@ -342,26 +312,22 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     }                                                                          \
     return;                                                                    \
   } while (0);
-
 /**
  * \macro UTILLIB_TEST_EXPECT
  * Expects `EXPR' to be true or prints `Expected...'
  * and continues with the current test.
  */
-
 #define UTILLIB_TEST_EXPECT(EXPR)                                              \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
     UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                   \
     (void)utillib_test_predicate(self, &predicate);                            \
   } while (0);
-
 /**
  * \macro UTILLIB_TEST_ABORT
  * Aborts the current test and the rest of tests in the same group.
  * This is used when a fatal error was detected such as short of memory.
  */
-
 #define UTILLIB_TEST_ABORT(MSG)                                                \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
@@ -369,46 +335,28 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
     utillib_test_predicate(self, &predicate);                                  \
     return;                                                                    \
   } while (0);
-
 /**
  * Convenient macros for different comparation operators
  */
-
 #define UTILLIB_TEST_EXPECT_TRUE(LHS) UTILLIB_TEST_EXPECT(LHS)
-
 #define UTILLIB_TEST_EXPECT_FALSE(LHS) UTILLIB_TEST_EXPECT(!(LHS))
-
 #define UTILLIB_TEST_EXPECT_EQ(LHS, RHS) UTILLIB_TEST_EXPECT(LHS == RHS)
-
 #define UTILLIB_TEST_EXPECT_NE(LHS, RHS) UTILLIB_TEST_EXPECT(LHS != RHS)
-
 #define UTILLIB_TEST_EXPECT_GE(LHS, RHS) UTILLIB_TEST_EXPECT(LHS >= RHS)
-
 #define UTILLIB_TEST_EXPECT_LE(LHS, RHS) UTILLIB_TEST_EXPECT(LHS <= RHS)
-
 #define UTILLIB_TEST_EXPECT_LT(LHS, RHS) UTILLIB_TEST_EXPECT(LHS < RHS)
-
 #define UTILLIB_TEST_EXPECT_GT(LHS, RHS) UTILLIB_TEST_EXPECT(LHS > RHS)
-
 /**
  * Assetions.
  */
 #define UTILLIB_TEST_ASSERT_TRUE(LHS) UTILLIB_TEST_ASSERT(LHS)
-
 #define UTILLIB_TEST_ASSERT_FALSE(LHS) UTILLIB_TEST_ASSERT(!(LHS))
-
 #define UTILLIB_TEST_ASSERT_EQ(LHS, RHS) UTILLIB_TEST_ASSERT(LHS == RHS)
-
 #define UTILLIB_TEST_ASSERT_NE(LHS, RHS) UTILLIB_TEST_ASSERT(LHS != RHS)
-
 #define UTILLIB_TEST_ASSERT_GE(LHS, RHS) UTILLIB_TEST_ASSERT(LHS >= RHS)
-
 #define UTILLIB_TEST_ASSERT_LE(LHS, RHS) UTILLIB_TEST_ASSERT(LHS <= RHS)
-
 #define UTILLIB_TEST_ASSERT_LT(LHS, RHS) UTILLIB_TEST_ASSERT(LHS < RHS)
-
 #define UTILLIB_TEST_ASSERT_GT(LHS, RHS) UTILLIB_TEST_ASSERT(LHS > RHS)
-
 /**
  * String comparation.
  */
@@ -416,27 +364,24 @@ UTILLIB_ENUM_END(utillib_test_severity_t)
   UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) == 0)
 #define UTILLIB_TEST_ASSERT_STRNE(LHS, RHS)                                    \
   UTILLIB_TEST_ASSERT(strcmp((LHS), (RHS)) != 0)
-
 #define UTILLIB_TEST_EXPECT_STREQ(LHS, RHS)                                    \
   UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) == 0)
 #define UTILLIB_TEST_EXPECT_STRNE(LHS, RHS)                                    \
   UTILLIB_TEST_EXPECT(strcmp((LHS), (RHS)) != 0)
-
 /**
  * \struct utillib_test_predicate_t
  * Helps to detect failures from predicates called within test functions
  * and pretty display them.
  */
-
 typedef struct utillib_test_predicate_t {
-  /* Records the result evaluated from predicate expression */
-  bool result;
-  /* The source line on which the predicate was invoked */
-  size_t line;
-  /* A string representation of the predicate expression */
-  char const *expr_str;
-  /* The severity of the failure if happened */
-  int severity;
+	/* Records the result evaluated from predicate expression */
+	bool result;
+	/* The source line on which the predicate was invoked */
+	size_t line;
+	/* A string representation of the predicate expression */
+	char const *expr_str;
+	/* The severity of the failure if happened */
+	int severity;
 } utillib_test_predicate_t;
 
 /**
@@ -447,20 +392,20 @@ typedef struct utillib_test_predicate_t {
  */
 
 typedef struct utillib_test_entry_t {
-  /* Function pointer to this test */
-  utillib_test_func_t *func;
-  /* Name of the test function */
-  char const *func_name;
-  int status;
-  /* Counters of Expects failure */
-  size_t expect_failure;
-  /* Should be zero or one */
-  size_t assert_failure;
-  size_t abort_failure;
-  /* Flag indicating whether this test finished without any failure */
-  bool succeeded;
-  /* Time in seconds spent in this test */
-  time_t duration;
+	/* Function pointer to this test */
+	utillib_test_func_t *func;
+	/* Name of the test function */
+	char const *func_name;
+	int status;
+	/* Counters of Expects failure */
+	size_t expect_failure;
+	/* Should be zero or one */
+	size_t assert_failure;
+	size_t abort_failure;
+	/* Flag indicating whether this test finished without any failure */
+	bool succeeded;
+	/* Time in seconds spent in this test */
+	time_t duration;
 } utillib_test_entry_t;
 
 /**
@@ -472,27 +417,27 @@ typedef struct utillib_test_entry_t {
  */
 
 typedef struct utillib_test_env_t {
-  /* A null-terminated array of `utillib_test_entry_t' */
-  utillib_test_entry_t *cases;
-  /* The name of file where this `utillib_test_env_t' was defined. */
-  char const *filename;
-  /* The module name for which these tests were written for */
-  char const *case_name;
-  /* The total number of `utillib_test_entry_t' in the array */
-  size_t ntests;
-  /* The number of tests that were skipped. */
-  size_t nskipped;
-  /* The number of tests that were run */
-  size_t nrun;
-  /* The number of tests that failed due any predicate failure */
-  size_t nfailure;
-  /* The number of golden tests that turned green */
-  size_t nsuccess;
-  /* The fixture associated with this env */
-  utillib_test_fixture_t fixture;
-  utillib_test_fixfunc_t *setup_func, *teardown_func;
-  /* The sum of seconds spent in each test that was run */
-  time_t total_duration;
+	/* A null-terminated array of `utillib_test_entry_t' */
+	utillib_test_entry_t *cases;
+	/* The name of file where this `utillib_test_env_t' was defined. */
+	char const *filename;
+	/* The module name for which these tests were written for */
+	char const *case_name;
+	/* The total number of `utillib_test_entry_t' in the array */
+	size_t ntests;
+	/* The number of tests that were skipped. */
+	size_t nskipped;
+	/* The number of tests that were run */
+	size_t nrun;
+	/* The number of tests that failed due any predicate failure */
+	size_t nfailure;
+	/* The number of golden tests that turned green */
+	size_t nsuccess;
+	/* The fixture associated with this env */
+	utillib_test_fixture_t fixture;
+	utillib_test_fixfunc_t *setup_func, *teardown_func;
+	/* The sum of seconds spent in each test that was run */
+	time_t total_duration;
 } utillib_test_env_t;
 
 /**
@@ -506,9 +451,9 @@ typedef struct utillib_test_env_t {
  */
 
 typedef struct utillib_test_suite_t {
-  char const *filename;
-  utillib_vector tests;
-  char const *json_output;
+	char const *filename;
+	utillib_vector tests;
+	char const *json_output;
 } utillib_test_suite_t;
 
 /**
@@ -523,11 +468,12 @@ typedef struct utillib_test_dummy_t {
  * Initilizes a predicate.
  */
 void utillib_test_predicate_init(utillib_test_predicate_t *, bool, size_t,
-                                 char const *, int);
+				 char const *, int);
 /**
  * Do pass-or-fail on a predicate.
  */
-bool utillib_test_predicate(utillib_test_entry_t *, utillib_test_predicate_t *);
+bool utillib_test_predicate(utillib_test_entry_t *,
+			    utillib_test_predicate_t *);
 
 /**
  * Initilizes a test suite.
@@ -546,9 +492,10 @@ int utillib_test_suite_run_all(utillib_test_suite_t *, int, char **);
 /**
  * Sets fixture for this utillib_test_env_t.
  */
-void utillib_test_env_set_fixture(utillib_test_env_t *, utillib_test_fixture_t,
-                                  utillib_test_fixfunc_t *,
-                                  utillib_test_fixfunc_t *);
+void utillib_test_env_set_fixture(utillib_test_env_t *,
+				  utillib_test_fixture_t,
+				  utillib_test_fixfunc_t *,
+				  utillib_test_fixfunc_t *);
 /**
  * Returns a static `utillib_test_dummy_t'.
  */
@@ -558,4 +505,4 @@ utillib_test_dummy_t *utillib_test_dummy(void);
  * Prints a message to stderr.
  */
 void utillib_test_message(char const *, size_t, char const *, ...);
-#endif // UTILLIB_TEST_H
+#endif				// UTILLIB_TEST_H

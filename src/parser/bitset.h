@@ -10,16 +10,16 @@
 #define BITSET_STORAGE_TO_SIZE(storage) ((storage)*BITSET_SIZEOF_IMPL)
 
 typedef struct bitset {
-  unsigned *m_impl;
-  size_t m_storage_size;
+	unsigned *m_impl;
+	size_t m_storage_size;
 } bitset;
 
 bitset *create_bitset(int size);
-void init_bitset(bitset *self, int size);
-bool test_bitset(bitset *self, size_t pos);
-void set_bitset(bitset *self, size_t pos);
-void unset_bitset(bitset *self, size_t pos);
-void union_bitset_inplace(bitset *self, bitset *other);
-void bitset_copy(bitset *self, bitset *other);
+void init_bitset(bitset * self, int size);
+bool test_bitset(bitset * self, size_t pos);
+void set_bitset(bitset * self, size_t pos);
+void unset_bitset(bitset * self, size_t pos);
+void union_bitset_inplace(bitset * self, bitset * other);
+void bitset_copy(bitset * self, bitset * other);
 
 #endif

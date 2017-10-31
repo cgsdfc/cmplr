@@ -5,4 +5,4 @@
 SCANNER_MATCH_RESERVED_DECL(prep_match_directive);
 SCANNER_MATCH_RESERVED_DECL(prep_match_predefined_macro);
 
-#endif // PREP_LEXER_H
+#endif				// PREP_LEXER_H

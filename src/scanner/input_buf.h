@@ -20,10 +20,10 @@
 */
 #ifndef SCANNER_INPUT_BUF_H
 #define SCANNER_INPUT_BUF_H
-#include <stdarg.h>           // for va_list
-#include <utillib/error.h>    // for utillib_error
-#include <utillib/position.h> // for utillib_position
-#include <utillib/vector.h>   // for utillib_vector
+#include <stdarg.h>		// for va_list
+#include <utillib/error.h>	// for utillib_error
+#include <utillib/position.h>	// for utillib_position
+#include <utillib/vector.h>	// for utillib_vector
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -33,12 +33,12 @@
 #define SCANNER_PATH_MAX 1024
 
 typedef struct scanner_input_buf {
-  /* for getting lines from file */
-  utillib_vector line_offset;
-  const char *filename;
-  FILE *file;
-  size_t col;
-  size_t row;
+	/* for getting lines from file */
+	utillib_vector line_offset;
+	const char *filename;
+	FILE *file;
+	size_t col;
+	size_t row;
 } scanner_input_buf;
 
 /* constructor, destructor */
@@ -63,8 +63,8 @@ void scanner_input_buf_pretty_perror(scanner_input_buf *, utillib_error *);
 /* other utility */
 bool scanner_input_buf_begin_of_line(scanner_input_buf *);
 utillib_error *scanner_input_buf_make_error(scanner_input_buf *, int,
-                                            char const *, ...);
+					    char const *, ...);
 utillib_error *scanner_input_buf_make_errorV(scanner_input_buf *, int,
-                                             char const *, va_list);
+					     char const *, va_list);
 
-#endif // SCANNER_INPUT_BUF_H
+#endif				// SCANNER_INPUT_BUF_H

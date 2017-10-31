@@ -27,7 +27,7 @@ void init_easy(void);
 void init_simple(void);
 void init_quick(grammar *);
 
-bool is_nullable(grammar *gr, int nonterm);
-int get_num_terminal(grammar *gr);
+bool is_nullable(grammar * gr, int nonterm);
+int get_num_terminal(grammar * gr);
 
 #endif

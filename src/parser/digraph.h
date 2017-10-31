@@ -13,17 +13,17 @@ extern const char *name[];
 #endif
 
 typedef struct digraph_struct {
-  int m_stack_array[DIGRAPH_BUFSIZ];
-  int m_stack_top;
+	int m_stack_array[DIGRAPH_BUFSIZ];
+	int m_stack_top;
 
-  int m_index_map[DIGRAPH_BUFSIZ];
+	int m_index_map[DIGRAPH_BUFSIZ];
 
-  int m_relation[DIGRAPH_BUFSIZ][DIGRAPH_BUFSIZ];
-  int m_dimension;
-  int m_edges;
+	int m_relation[DIGRAPH_BUFSIZ][DIGRAPH_BUFSIZ];
+	int m_dimension;
+	int m_edges;
 
-  void *m_data[DIGRAPH_BUFSIZ];
-  int m_nonterm_tran2node[DIGRAPH_BUFSIZ][DIGRAPH_BUFSIZ];
+	void *m_data[DIGRAPH_BUFSIZ];
+	int m_nonterm_tran2node[DIGRAPH_BUFSIZ][DIGRAPH_BUFSIZ];
 
 } digraph_struct;
 

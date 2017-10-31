@@ -1,7 +1,7 @@
 /* token.h */
 #ifndef TOKEN_H
 #define TOKEN_H 1
-#include "lexer/position.h" // for position
+#include "lexer/position.h"	// for position
 #include <assert.h>
 #include <ctype.h>
 #include <stdbool.h>
@@ -18,23 +18,23 @@
 // TODO: remove man and len fields
 // use char *
 typedef struct token {
-  int type;
-  position begin;
-  char *string;
-  int len;
-  int max;
+	int type;
+	position begin;
+	char *string;
+	int len;
+	int max;
 
 } token;
 
-int collect_char(token *tk, char ch);
-int alloc_buffer(token *tk, position *begin);
-int accept_char(token *tk, char ch);
-int accept_operator(token *tk, char ch);
-int accept_identifier(token *tk, char ch);
-int accept_float(token *tk, char ch);
-int accept_integer(token *tk, char ch);
-int accept_punctuation(token *tk, char ch);
-int accept_string(token *tk, char ch);
+int collect_char(token * tk, char ch);
+int alloc_buffer(token * tk, position * begin);
+int accept_char(token * tk, char ch);
+int accept_operator(token * tk, char ch);
+int accept_identifier(token * tk, char ch);
+int accept_float(token * tk, char ch);
+int accept_integer(token * tk, char ch);
+int accept_punctuation(token * tk, char ch);
+int accept_string(token * tk, char ch);
 char *format_token(token *);
 void destroy_token(token *);
 

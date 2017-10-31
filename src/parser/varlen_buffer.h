@@ -21,14 +21,14 @@
 #define VARLEN_BUFFER_SZ (sizeof(int) * 16)
 
 typedef struct varlen_block {
-  int size;
-  void *mem;
-  struct varlen_block *next;
+	int size;
+	void *mem;
+	struct varlen_block *next;
 } varlen_block;
 
 typedef struct varlen_buffer {
-  varlen_block *curblk;
-  int nblk;
+	varlen_block *curblk;
+	int nblk;
 } varlen_buffer;
 
 #endif

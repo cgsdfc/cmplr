@@ -70,4 +70,4 @@ STMT_IS_FUNC_DECLARE(exprstmt);
 // ;
 // stmt_node;
 STMT_IS_FUNC_DECLARE(statement);
-#endif // RECURSIVE_STMT_H
+#endif				// RECURSIVE_STMT_H

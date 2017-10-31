@@ -21,17 +21,20 @@
 #include "hash.h"
 #include <string.h>
 
-static size_t utillib_charp_hash_impl_simple(char const *str) {
-  return strlen(str);
+static size_t utillib_charp_hash_impl_simple(char const *str)
+{
+	return strlen(str);
 }
 
-static size_t charp_hash_length_relative(char const *str) {
-  size_t len = strlen(str);
-  size_t sum = str[0] + str[len - 1];
-  sum += len << 4;
-  return sum;
+static size_t charp_hash_length_relative(char const *str)
+{
+	size_t len = strlen(str);
+	size_t sum = str[0] + str[len - 1];
+	sum += len << 4;
+	return sum;
 }
 
-size_t utillib_charp_hash(char const *str) {
-  return charp_hash_length_relative(str);
+size_t utillib_charp_hash(char const *str)
+{
+	return charp_hash_length_relative(str);
 }

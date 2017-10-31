@@ -26,9 +26,9 @@
 
 struct scanner_base_t;
 typedef struct scanner_token {
-  char *str;
-  int type;
-  utillib_position pos;
+	char *str;
+	int type;
+	utillib_position pos;
 } scanner_token;
 
 scanner_token *scanner_make_token(struct scanner_base_t *);

@@ -25,8 +25,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <utillib/enum.h>
-#include <utillib/string.h>        // for utillib_string
-#include <utillib/unordered_map.h> // utillib_pair_t, utillib_unordered_map
+#include <utillib/string.h>	// for utillib_string
+#include <utillib/unordered_map.h>	// utillib_pair_t, utillib_unordered_map
 
 /* create a table for scanner to match against */
 #define SCANNER_MATCH_ENTRY_BEGIN(NAME)                                        \
@@ -56,53 +56,53 @@
 
 /* value return from scanner_yylex */
 UTILLIB_ENUM_BEGIN(scanner_retval_t)
-UTILLIB_ENUM_ELEM(SCANNER_MATCHED)
+    UTILLIB_ENUM_ELEM(SCANNER_MATCHED)
 /* for match_any_char to return */
-UTILLIB_ENUM_ELEM(SCANNER_CHAR)
-UTILLIB_ENUM_ELEM(SCANNER_ERROR)
-UTILLIB_ENUM_ELEM(SCANNER_EOF)
-UTILLIB_ENUM_ELEM(SCANNER_UNMATCHED)
-UTILLIB_ENUM_END(scanner_retval_t)
+    UTILLIB_ENUM_ELEM(SCANNER_CHAR)
+    UTILLIB_ENUM_ELEM(SCANNER_ERROR)
+    UTILLIB_ENUM_ELEM(SCANNER_EOF)
+    UTILLIB_ENUM_ELEM(SCANNER_UNMATCHED)
+    UTILLIB_ENUM_END(scanner_retval_t)
 
 typedef struct scanner_match_entry_t {
-  /* the function used to mached this token */
-  scanner_match_func_t *scm_func;
-  /* the value indicating variety of the token */
-  int scm_val;
+	/* the function used to mached this token */
+	scanner_match_func_t *scm_func;
+	/* the value indicating variety of the token */
+	int scm_val;
 } scanner_match_entry_t;
 
 typedef struct scanner_base_t {
-  /* the underlying buffer providing single char functions */
-  scanner_input_buf *sc_buf;
+	/* the underlying buffer providing single char functions */
+	scanner_input_buf *sc_buf;
 
-  /* the function pointer provids a little flexibility to filter */
-  /* the char return by the input_buf */
-  scanner_getc_func_t *sc_getc;
+	/* the function pointer provids a little flexibility to filter */
+	/* the char return by the input_buf */
+	scanner_getc_func_t *sc_getc;
 
-  /* match functions */
-  scanner_match_entry_t const *sc_match;
+	/* match functions */
+	scanner_match_entry_t const *sc_match;
 
-  /* internal buffer */
-  utillib_string sc_str;
+	/* internal buffer */
+	utillib_string sc_str;
 
-  /* the text of the matched token */
-  char const *sc_text;
+	/* the text of the matched token */
+	char const *sc_text;
 
-  /* the code of the matched token */
-  int sc_val;
+	/* the code of the matched token */
+	int sc_val;
 } scanner_base_t;
 
 typedef struct scanner_t {
-  scanner_base_t sc_base;
-  scanner_input_buf sc_buf;
+	scanner_base_t sc_base;
+	scanner_input_buf sc_buf;
 } scanner_t;
 
 /* constructor destructor */
 void scanner_base_init(scanner_base_t *, scanner_input_buf *,
-                       scanner_getc_func_t *getc,
-                       scanner_match_entry_t const *);
+		       scanner_getc_func_t * getc,
+		       scanner_match_entry_t const *);
 void scanner_init(scanner_t *, FILE *, char const *,
-                  scanner_match_entry_t const *);
+		  scanner_match_entry_t const *);
 void scanner_base_destroy(scanner_base_t *);
 void scanner_destroy(scanner_t *);
 

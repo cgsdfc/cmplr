@@ -29,4 +29,4 @@ EXPR_IS_FUNC_DECLARE(constant);
 EXPR_IS_FUNC_DECLARE(in_parenthesis);
 EXPR_IS_FUNC_DECLARE(optional_constant);
 EXPR_IS_FUNC_DECLARE(optional_expr);
-#endif // RECUSIVE_EXPR_H
+#endif				// RECUSIVE_EXPR_H

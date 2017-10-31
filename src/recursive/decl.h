@@ -18,4 +18,4 @@ DECL_IS_FUNC_DECLARE(typename_);
 DECL_IS_FUNC_DECLARE(typename_in_parenthesis);
 DECL_IS_FUNC_DECLARE(optional_comma);
 DECL_IS_FUNC_DECLARE(assign);
-#endif // RECURSIVE_DECL_H
+#endif				// RECURSIVE_DECL_H

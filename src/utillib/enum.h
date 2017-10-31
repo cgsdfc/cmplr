@@ -20,7 +20,7 @@
 */
 #ifndef UTILLIB_ENUM
 #define UTILLIB_ENUM
-#include <stdio.h> // for FILE*
+#include <stdio.h>		// for FILE*
 // ENUM
 #define UTILLIB_ETAB_TOSTRING(NAME) const char *NAME##_tostring(int tag)
 #define UTILLIB_ENUM_ELEM(TAG) TAG,
@@ -91,9 +91,9 @@
 #define UTILLIB_ETAB_ELEM(NAME) UTILLIB_ETAB_ELEM_IMPL(NAME)
 
 #define UTILLIB_ENUM_CONST(NAME, VALUE) NAME = (VALUE),
-typedef const char *(utillib_enum_tostring_function)(int);
+typedef const char *(utillib_enum_tostring_function) (int);
 void utillib_print_enum_range(FILE *, utillib_enum_tostring_function *,
-                              const char *, int, int);
+			      const char *, int, int);
 void utillib_print_enum(utillib_enum_tostring_function *, int);
 
-#endif // UTILLIB_ENUM
+#endif				// UTILLIB_ENUM

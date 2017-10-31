@@ -2,19 +2,19 @@
 #include <stdio.h>
 
 typedef struct utillib_field_entry_t {
-  char const *field_name;
-  size_t field_offset;
-  size_t field_size;
+	char const *field_name;
+	size_t field_offset;
+	size_t field_size;
 } utillib_field_entry_t;
 
 typedef struct utillib_struct_desc_t {
-  utillib_field_entry_t *fields;
-  char const *name;
+	utillib_field_entry_t *fields;
+	char const *name;
 } utillib_struct_desc_t;
 
 typedef struct Employee {
-  char const *Name;
-  size_t ID;
+	char const *Name;
+	size_t ID;
 } Employee;
 
 #define UT_BEGIN(STRUCT)                                                       \
@@ -35,16 +35,21 @@ typedef struct Employee {
   }
 
 UT_BEGIN(Employee)
-UTFT(Employee, Name)
-UTFT(Employee, ID)
-UT_END(Employee)
+    UTFT(Employee, Name)
+    UTFT(Employee, ID)
+    UT_END(Employee)
 
-void utillib_struct_desc_print(utillib_struct_desc_t *self) {
-  printf("struct `%s'\n", self->name);
-  for (utillib_field_entry_t *p = self->fields; p->field_name != NULL; ++p) {
-    printf("field `%s', offset `%lu', size `%lu'\n", p->field_name,
-           p->field_offset, p->field_size);
-  }
+void utillib_struct_desc_print(utillib_struct_desc_t * self)
+{
+	printf("struct `%s'\n", self->name);
+	for (utillib_field_entry_t * p = self->fields;
+	     p->field_name != NULL; ++p) {
+		printf("field `%s', offset `%lu', size `%lu'\n",
+		       p->field_name, p->field_offset, p->field_size);
+	}
 }
 
-int main() { utillib_struct_desc_print(Employee_desc()); }
+int main()
+{
+	utillib_struct_desc_print(Employee_desc());
+}
