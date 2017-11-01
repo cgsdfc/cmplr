@@ -47,12 +47,16 @@ typedef struct prep_macro_entry_t {
 	};
 } prep_macro_entry_t;
 
-typedef struct prep_macro_inst_t {
-	int kind;
-	union {
-		utillib_vector as_function;
-		char const *as_plainstr;
-	};
-} prep_macro_inst_t;
+typedef struct prep_macro_expasion_t {
+  int kind;
+  union {
+    char const * as_plainstr;
+    void * as_function;
+  };
+} prep_macro_expasion_t;
+
+typedef struct prep_macro_expasion_func_t {
+  utillib_vector body;
+} prep_macro_expasion_func_t;
 
 #endif				// PREP_MACRO_H
