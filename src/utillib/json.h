@@ -34,19 +34,19 @@
 #include <stdio.h>
 
 /**
- * \macro UTILLIB_JSON_OBJECT_FILED_BEGIN
+ * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
  * Begins to define an array of `utillib_json_object_field_t'.
  * The variable is static storage.
  */
-#define UTILLIB_JSON_OBJECT_FILED_BEGIN(NAME)                                  \
+#define UTILLIB_JSON_OBJECT_FIELD_BEGIN(NAME)                                  \
   static const utillib_json_object_field_t NAME[] = {
-#define UTILLIB_JSON_OBJECT_FILED_END(NAME)                                    \
+#define UTILLIB_JSON_OBJECT_FIELD_END(NAME)                                    \
   { 0 }                                                                        \
   }                                                                            \
   ;
 
 /**
- * \macro UTILLIB_JSON_OBJECT_FILED_ELEM
+ * \macro UTILLIB_JSON_OBJECT_FIELD_ELEM
  * Initializer for `utillib_json_object_field_t'.
  * \param STRUCT The identifier as the name of the struct.
  * \param KEY A string literal to name this field. It is not
@@ -55,7 +55,7 @@
  * \param FUNC A function pointer that should create a `utillib_json_value_t'
  * when passed in the base address and offset of this field.
  */
-#define UTILLIB_JSON_OBJECT_FILED_ELEM(STRUCT, KEY, FIELD, FUNC)               \
+#define UTILLIB_JSON_OBJECT_FIELD_ELEM(STRUCT, KEY, FIELD, FUNC)               \
   {.create_func = (FUNC),                                                      \
    .key = (KEY),                                                               \
    .offset = offsetof(STRUCT, FIELD),                                          \
@@ -171,7 +171,7 @@ utillib_json_value_t *utillib_json_array_pointer_create(void *, size_t,
 							*);
 void utillib_json_tostring(utillib_json_value_t *, utillib_string *);
 void utillib_json_pretty_print(utillib_json_value_t *,
-			       utillib_printer_t *);
+			       FILE*);
 
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)

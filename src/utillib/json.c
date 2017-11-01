@@ -506,11 +506,13 @@ utillib_json_value_t *utillib_json_array_create_from_vector(void *vec,
  * and `utillib_printer_print_json'.
  */
 void utillib_json_pretty_print(utillib_json_value_t * self,
-			       utillib_printer_t * printer)
+    FILE * file)
 {
 	utillib_string json;
 	utillib_string_init(&json);
+        utillib_printer_t  print;
+        utillib_printer_init(&print, file, 2);
 	utillib_json_tostring(self, &json);
-	utillib_printer_print_json(printer, utillib_string_c_str(&json));
+	utillib_printer_print_json(&print, utillib_string_c_str(&json));
 	utillib_string_destroy(&json);
 }

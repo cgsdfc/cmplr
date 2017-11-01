@@ -37,3 +37,5 @@ target_link_libraries(utillib_test
   utillib
 )
 
+link_libraries(utillib)
+add_executable(example-json example/json.c)

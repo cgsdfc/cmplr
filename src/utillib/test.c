@@ -463,14 +463,14 @@ static utillib_json_value_t *json_status_string_create(void *base,
  * when used in a `utillib_json_object_t'.
  * It depends on `json_status_string_create'.
  */
-UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEntry_Fields)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "test_name",
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEntry_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "test_name",
 			       func_name, utillib_json_string_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "status", status,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "status", status,
 			       json_status_string_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_entry_t, "succeeded",
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "succeeded",
 			       succeeded, utillib_json_bool_create)
-    UTILLIB_JSON_OBJECT_FILED_END(TestEntry_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
 
 /**
  * \function json_test_entry_create
@@ -527,24 +527,24 @@ static utillib_json_value_t *json_test_entry_array_pointer_create(void
  * array, we can use `utillib_json_array_pointer_create' to create the JSON
  * array out of this C array in form of a `base, size' pair.
  */
-UTILLIB_JSON_OBJECT_FILED_BEGIN(TestEnv_Fields)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "filename", filename,
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEnv_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "filename", filename,
 			       utillib_json_string_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "case_name", case_name,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "case_name", case_name,
 			       utillib_json_string_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_tests", ntests,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_tests", ntests,
 			       utillib_json_long_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_run", nrun,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_run", nrun,
 			       utillib_json_long_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_skipped",
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_skipped",
 			       nskipped, utillib_json_long_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_passed",
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_passed",
 			       nsuccess, utillib_json_long_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "number_failed",
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_failed",
 			       nfailure, utillib_json_long_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_env_t, "tests", cases,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "tests", cases,
 			       json_test_entry_array_pointer_create)
-    UTILLIB_JSON_OBJECT_FILED_END(TestEnv_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
 
 /**
  * \function json_test_env_create
@@ -574,12 +574,12 @@ static utillib_json_value_t *json_test_suite_test_create(void *base,
  * Description for `utillib_test_suite_t' when used
  * in `utillib_json_object_t'.
  */
-UTILLIB_JSON_OBJECT_FILED_BEGIN(TestSuite_Fields)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "filename", filename,
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestSuite_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_suite_t, "filename", filename,
 			       utillib_json_string_create)
-    UTILLIB_JSON_OBJECT_FILED_ELEM(utillib_test_suite_t, "tests", tests,
+    UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_suite_t, "tests", tests,
 			       json_test_suite_test_create)
-    UTILLIB_JSON_OBJECT_FILED_END(TestSuite_Fields)
+    UTILLIB_JSON_OBJECT_FIELD_END(TestSuite_Fields)
 
 /**
  * \function test_suite_print_json
@@ -597,12 +597,10 @@ static void test_suite_print_json(utillib_test_suite_t * self)
 			      strerror(errno), self->json_output);
 		return;
 	}
-	utillib_printer_t print;
-	utillib_printer_init(&print, file, 4);
 	utillib_json_value_t *val =
 	    utillib_json_object_create(self, sizeof *self,
 				       TestSuite_Fields);
-	utillib_json_pretty_print(val, &print);
+	utillib_json_pretty_print(val, file);
 	utillib_json_value_destroy(val);
 	fclose(file);
 }
