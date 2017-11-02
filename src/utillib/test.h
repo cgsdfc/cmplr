@@ -20,8 +20,6 @@
 */
 #ifndef UTILLIB_TEST_H
 #define UTILLIB_TEST_H
-#define UTILLIB_TEST_VERSION_STRING "0.0.1"
-#define UTILLIB_TEST_VERSION UTILLIB_VERSION_CAT(0, 0, 1)
 
 /**
  * \file utillib/test.h

@@ -81,12 +81,13 @@
  */
 
 #include "test.h"
-#include "argp.h"
+#include "flags.h"
 #include "color.h"		// for COLOR_STRING_UNBOLD
 #include "json.h"
 #include "print.h"
 #include <stdarg.h>		// for va_list
 #include <time.h>		// for time
+#include <string.h>
 #define COLOR_STRING(C, S) COLOR_STRING_UNBOLD(C, S)
 
 /**

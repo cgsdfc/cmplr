@@ -1,0 +1,194 @@
+,
+{
+[
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/pair.c.o   -c /home/cgsdfc/cmplr/src/utillib/pair.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/pair.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/json.c.o   -c /home/cgsdfc/cmplr/src/utillib/json.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/json.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/logging.c.o   -c /home/cgsdfc/cmplr/src/utillib/logging.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/logging.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/strref.c.o   -c /home/cgsdfc/cmplr/src/utillib/strref.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/strref.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/test.c.o   -c /home/cgsdfc/cmplr/src/utillib/test.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/print.c.o   -c /home/cgsdfc/cmplr/src/utillib/print.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/print.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/equal.c.o   -c /home/cgsdfc/cmplr/src/utillib/equal.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/equal.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/hash.c.o   -c /home/cgsdfc/cmplr/src/utillib/hash.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/hash.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/unordered_map.c.o   -c /home/cgsdfc/cmplr/src/utillib/unordered_map.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/unordered_map.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/error.c.o   -c /home/cgsdfc/cmplr/src/utillib/error.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/error.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/enum.c.o   -c /home/cgsdfc/cmplr/src/utillib/enum.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/enum.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/slist.c.o   -c /home/cgsdfc/cmplr/src/utillib/slist.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/slist.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/vector.c.o   -c /home/cgsdfc/cmplr/src/utillib/vector.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/vector.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib.dir/string.c.o   -c /home/cgsdfc/cmplr/src/utillib/string.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/string.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/json.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/json.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/json.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/string.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/string.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/string.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/test.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/test.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/test.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/slist.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/slist.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/slist.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/argp.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/argp.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/argp.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/vector.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/vector.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/vector.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/strref.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/strref.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/strref.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test_lib.dir/test/logging.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/logging.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/logging.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/example-json.dir/example/json.c.o   -c /home/cgsdfc/cmplr/src/utillib/example/json.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/example/json.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/utillib",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/utillib_test.dir/test/driver.c.o   -c /home/cgsdfc/cmplr/src/utillib/test/driver.c",
+  "file": "/home/cgsdfc/cmplr/src/utillib/test/driver.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/prep",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/prep_test_lib.dir/test/scanner.c.o   -c /home/cgsdfc/cmplr/src/prep/test/scanner.c",
+  "file": "/home/cgsdfc/cmplr/src/prep/test/scanner.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/prep",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/prep_test_lib.dir/test/parser.c.o   -c /home/cgsdfc/cmplr/src/prep/test/parser.c",
+  "file": "/home/cgsdfc/cmplr/src/prep/test/parser.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/prep",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/prep.dir/parser.c.o   -c /home/cgsdfc/cmplr/src/prep/parser.c",
+  "file": "/home/cgsdfc/cmplr/src/prep/parser.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/prep",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/prep.dir/scanner.c.o   -c /home/cgsdfc/cmplr/src/prep/scanner.c",
+  "file": "/home/cgsdfc/cmplr/src/prep/scanner.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/prep",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/prep_test.dir/test/driver.c.o   -c /home/cgsdfc/cmplr/src/prep/test/driver.c",
+  "file": "/home/cgsdfc/cmplr/src/prep/test/driver.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner.dir/token.c.o   -c /home/cgsdfc/cmplr/src/scanner/token.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/token.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner.dir/scanner.c.o   -c /home/cgsdfc/cmplr/src/scanner/scanner.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/scanner.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner.dir/input_buf.c.o   -c /home/cgsdfc/cmplr/src/scanner/input_buf.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/input_buf.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner.dir/match.c.o   -c /home/cgsdfc/cmplr/src/scanner/match.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/match.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner_test_lib.dir/test/token.c.o   -c /home/cgsdfc/cmplr/src/scanner/test/token.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/test/token.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner_test_lib.dir/test/scanner.c.o   -c /home/cgsdfc/cmplr/src/scanner/test/scanner.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/test/scanner.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner_test_lib.dir/test/input_buf.c.o   -c /home/cgsdfc/cmplr/src/scanner/test/input_buf.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/test/input_buf.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner_test_lib.dir/test/match.c.o   -c /home/cgsdfc/cmplr/src/scanner/test/match.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/test/match.c"
+},
+{
+  "directory": "/home/cgsdfc/cmplr/debug/scanner",
+  "command": "/usr/bin/cc   -I/home/cgsdfc/cmplr/src  -g3 -std=c99   -o CMakeFiles/scanner_test.dir/test/driver.c.o   -c /home/cgsdfc/cmplr/src/scanner/test/driver.c",
+  "file": "/home/cgsdfc/cmplr/src/scanner/test/driver.c"
+}
+]
