@@ -27,9 +27,11 @@ UTILLIB_TEST_DECLARE(Utillib_Vector);
 UTILLIB_TEST_DECLARE(Utillib_Slist);
 UTILLIB_TEST_DECLARE(Utillib_String);
 UTILLIB_TEST_DECLARE(Utillib_JSON);
+UTILLIB_TEST_DECLARE(Utillib_Hash);
 
 int main(int argc, char ** argv) {
   UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
+			   Utillib_Hash,
       Utillib_Vector,
       Utillib_Test,
       /* Utillib_String */

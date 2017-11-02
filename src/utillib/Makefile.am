@@ -41,6 +41,7 @@ include_HEADERS = flags.h \
 
 check_LTLIBRARIES=libutillib_test.la
 libutillib_test_la_SOURCES= test/json.c \
+			    test/hash.c \
 			    test/test.c \
 			    test/vector.c \
 			    test/string.c
@@ -48,4 +49,3 @@ libutillib_test_la_SOURCES= test/json.c \
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c
 utillib_test_LDADD=libutillib.la libutillib_test.la
-TESTS = $(check_PROGRAMS)

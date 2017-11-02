@@ -17,3 +17,9 @@ debug
 c-source
 *.pdf
 resource/
+*.lo
+.libs
+.deps
+Makefile
+Makefile.in
+
