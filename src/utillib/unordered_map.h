@@ -59,8 +59,8 @@ typedef struct utillib_unordered_map {
 } utillib_unordered_map;
 
 typedef struct utillib_unordered_map_iterator {
-	utillib_vector_iterator iter_slot;
-	utillib_slist_iterator iter_node;
+	struct utillib_vector_iterator iter_slot;
+	struct utillib_slist_iterator iter_node;
 } utillib_unordered_map_iterator;
 
 /* utillib_unordered_map_iterator */

@@ -1,9 +1,9 @@
-#define _BSD_SOURCE
 #include "error.h"
 #include "color.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#define _BSD_SOURCE
 #include <string.h>
 
 UTILLIB_ETAB_BEGIN(utillib_error_lv)
