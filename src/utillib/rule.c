@@ -18,28 +18,15 @@
    02110-1301 USA
 
 */
+#include "rule.h"
 
-#define _GNU_SOURCE
-#include <utillib/test.h>
+struct utillib_rule utillib_rule_null;
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
+void utillib_rule_index_init(struct utillib_rule_index * self, 
+    struct utillib_symbol const * symbols,
+    struct utillib_rule_literal const * rule_literals)
+{
 
-int main(int argc, char ** argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-			   /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      Utillib_Rule,
-      Utillib_Symbol
-  );
+
 }
+

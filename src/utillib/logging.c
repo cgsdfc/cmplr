@@ -89,7 +89,7 @@ static void core_destroy(utillib_logging_core_t * self)
 
 static utillib_logging_msg_t *core_make_logging_msg(utillib_logging_core_t
 						    * core,
-						    logging_level_t level,
+						    enum logging_level_t level,
 						    char const *file,
 						    char const *func,
 						    size_t line,

@@ -187,7 +187,7 @@ bool utillib_string_empty(utillib_string * self)
  * Returns yes if `self' and `t' satisfy the relation `op'.
  */
 bool utillib_string_richcmp(utillib_string * self, utillib_string * t,
-			    string_cmpop op)
+    enum string_cmpop op)
 {
 #define UTILLIB_STR_CMP(self, T, OP)                                           \
   (strcmp(UTILLIB_C_STR(self), UTILLIB_C_STR(T)) OP 0)

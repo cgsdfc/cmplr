@@ -326,3 +326,22 @@ void utillib_vector_iterator_next(struct utillib_vector_iterator * self)
 {
 	++self->iter_begin;
 }
+
+bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, utillib_equal_func_t *eq)
+{
+  UTILLIB_VECTOR_FOREACH(utillib_element_t , elem, self) {
+    if (eq(elem, data)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void utillib_vector_back_insert(struct utillib_vector *self, struct utillib_vector *other)
+{
+  size_t new_cap=utillib_vector_size(self) + utillib_vector_size(other);
+  utillib_vector_reserve(self, new_cap);
+  UTILLIB_VECTOR_FOREACH(utillib_element_t , elem, other) {
+    utillib_vector_push_back(self, elem);
+  }
+}

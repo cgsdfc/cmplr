@@ -30,7 +30,7 @@
  * and storage tail for resizing.
  */
 
-#include "typedef.h"		// for utillib_element_pointer_t, utillib_element_t
+#include "types.h"		// for utillib_element_pointer_t, utillib_element_t
 #include <stdbool.h>		// for bool
 #include <stddef.h>		// size_t
 
@@ -84,6 +84,7 @@ bool utillib_vector_empty(struct utillib_vector *);
 utillib_element_t utillib_vector_at(struct utillib_vector *, size_t);
 utillib_element_t utillib_vector_back(struct utillib_vector *);
 utillib_element_t utillib_vector_front(struct utillib_vector *);
+bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, utillib_equal_func_t *eq);
 
 /** \brief modifier */
 void utillib_vector_push_back(struct utillib_vector *, utillib_element_t);
@@ -91,5 +92,6 @@ void utillib_vector_pop_back(struct utillib_vector *);
 void utillib_vector_reserve(struct utillib_vector *, size_t);
 void utillib_vector_set(struct utillib_vector *, size_t, utillib_element_t);
 void utillib_vector_clear(struct utillib_vector *);
+void utillib_vector_back_insert(struct utillib_vector *self, struct utillib_vector *other);
 
 #endif				// UTILLIB_VECTOR_H

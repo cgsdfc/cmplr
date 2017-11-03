@@ -37,7 +37,7 @@
 
 static utillib_json_value_t static_json_null = {.kind = UT_JSON_NULL };
 
-        UTILLIB_ETAB_BEGIN(utillib_json_kind_t)
+UTILLIB_ETAB_BEGIN(utillib_json_kind_t)
         UTILLIB_ETAB_ELEM(UT_JSON_REAL)
         UTILLIB_ETAB_ELEM(UT_JSON_OBJECT)
         UTILLIB_ETAB_ELEM(UT_JSON_ARRAY)
@@ -201,6 +201,12 @@ UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_real_create,
                 as_double, double, UT_JSON_REAL)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_bool_create, as_bool,
                 bool, UT_JSON_BOOL)
+UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_size_t_create, as_size_t,
+                size_t,
+                UT_JSON_SIZE_T)
+UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_int_create, as_int,
+                int,
+                UT_JSON_INT)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_long_create, as_long,
                 long,
                 UT_JSON_LONG)
@@ -215,6 +221,10 @@ UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_long,
 UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_string,
                 char const *)
 
+UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_size_t,
+                size_t)
+UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_int,
+               int) 
         /**
          * \function utillib_json_null_array_create
          * Map anything to a JSON array of `null'.
@@ -443,6 +453,14 @@ static void json_value_tostring(utillib_json_value_t * self,
 {
         char const *str;
         switch (self->kind) {
+                case UT_JSON_INT:
+                  str=utillib_static_sprintf("%d", self->as_int);
+                  utillib_string_append(string, str);
+                  return;
+                case UT_JSON_SIZE_T:
+                  str=utillib_static_sprintf("%lu", self->as_size_t);
+                  utillib_string_append(string, str);
+                  return;
                 case UT_JSON_REAL:
                         str = utillib_static_sprintf("%lf", self->as_double);
                         utillib_string_append(string, str);

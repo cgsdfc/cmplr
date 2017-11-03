@@ -62,7 +62,7 @@ size_t utillib_string_capacity(utillib_string *);
 bool utillib_string_empty(utillib_string *);
 char const *utillib_string_c_str(utillib_string *);
 bool utillib_string_richcmp(utillib_string *, utillib_string *,
-			    string_cmpop);
+			    enum string_cmpop);
 
 /* modifier */
 void utillib_string_clear(utillib_string *);

@@ -25,7 +25,7 @@
 #define UTILLIB_ETAB_TOSTRING(NAME) const char *NAME##_tostring(int tag)
 #define UTILLIB_ENUM_ELEM(TAG) TAG,
 #define UTILLIB_ENUM_ELEM_INIT(TAG, VAL) TAG = (VAL),
-#define UTILLIB_ENUM_BEGIN(NAME) typedef enum NAME {
+#define UTILLIB_ENUM_BEGIN(NAME) enum NAME {
 #define UTILLIB_ENUM_END(NAME)                                                 \
   NAME##_N                                                                     \
   }                                                                            \

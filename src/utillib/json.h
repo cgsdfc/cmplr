@@ -28,7 +28,7 @@
 
 #include "enum.h"
 #include "string.h"
-#include "typedef.h"
+#include "types.h"
 #include "vector.h"
 #include <stdarg.h>		// for va_list
 #include <stdio.h>
@@ -36,10 +36,9 @@
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
  * Begins to define an array of `utillib_json_object_field_t'.
- * The variable is static storage.
  */
 #define UTILLIB_JSON_OBJECT_FIELD_BEGIN(NAME)                                  \
-  static const utillib_json_object_field_t NAME[] = {
+ static const utillib_json_object_field_t NAME[] = {
 #define UTILLIB_JSON_OBJECT_FIELD_END(NAME)                                    \
   { 0 }                                                                        \
   }                                                                            \
@@ -84,8 +83,10 @@ UTILLIB_ENUM_BEGIN(utillib_json_kind_t)
     UTILLIB_ENUM_ELEM(UT_JSON_BOOL)
     UTILLIB_ENUM_ELEM(UT_JSON_NULL)
     UTILLIB_ENUM_ELEM(UT_JSON_LONG)
+    UTILLIB_ENUM_ELEM(UT_JSON_SIZE_T)
+    UTILLIB_ENUM_ELEM(UT_JSON_INT)
     UTILLIB_ENUM_ELEM(UT_JSON_STRING)
-    UTILLIB_ENUM_END(utillib_json_kind_t)
+UTILLIB_ENUM_END(utillib_json_kind_t)
 
 /**
  * \struct utillib_json_object_field_t
@@ -137,6 +138,8 @@ typedef struct utillib_json_value_t {
 		double as_double;
 		long as_long;
 		char const *as_str;
+    int as_int;
+    size_t as_size_t;
     /**
      * kind:`UT_JSON_ARRAY' && as_ptr:`utillib_json_array_t'.
      * kind:`UT_JSON_OBJECT' && as_ptr:`utillib_json_object_t'.
@@ -177,9 +180,13 @@ UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_create)
+    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_create)
+    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_create)
 
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_array_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_array_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_array_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_array_create)
+    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_array_create)
+    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_array_create)
 #endif				// UTILLIB_JSON_H

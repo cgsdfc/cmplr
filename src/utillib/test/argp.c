@@ -1,4 +1,4 @@
-#include <utillib/argp.h>
+#include <utillib/flags.h>
 typedef struct test_arg_t{
   char const * foo_arg;
   char const * bar_arg;

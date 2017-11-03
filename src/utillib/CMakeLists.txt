@@ -1,6 +1,8 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./symbol.c
+  ./rule.c
   ./pair.c
   ./json.c
   ./logging.c
@@ -18,6 +20,9 @@ add_library(utillib
 )
 
 add_library(utillib_test_lib
+  ./test/hash.c
+  ./test/symbol.c
+  ./test/rule.c
   ./test/json.c
   ./test/hash.c
   ./test/string.c

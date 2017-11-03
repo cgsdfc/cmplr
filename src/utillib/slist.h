@@ -27,7 +27,7 @@
  * A single-linked forward list. Suitable for fast
  * insertion/remove at the front.
  */
-#include "typedef.h"
+#include "types.h"
 #include <stdbool.h>		// for bool
 #include <stddef.h>		// for size_t
 #define UTILLIB_SLIST_HAS_NEXT(N) ((N) != NULL)

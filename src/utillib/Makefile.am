@@ -1,8 +1,10 @@
-AM_CPPFLAGS=-I$(srcdir)/../
+AM_CPPFLAGS=-I$(srcdir)/../ -g3
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = enum.c \
+												symbol.c \
+												rule.c \
 			equal.c \
 			error.c \
 			hash.c \
@@ -19,6 +21,7 @@ libutillib_la_SOURCES = enum.c \
 			vector.c 
 
 include_HEADERS = flags.h \
+									symbol.h \
 		  color.h \
 		  enum.h \
 		  equal.h \
@@ -33,7 +36,7 @@ include_HEADERS = flags.h \
 		  string.h \
 		  strref.h \
 		  test.h \
-		  typedef.h \
+		  types.h \
 		  union.h \
 		  unordered_map.h \
 		  utillib.h \
@@ -41,6 +44,8 @@ include_HEADERS = flags.h \
 
 check_LTLIBRARIES=libutillib_test.la
 libutillib_test_la_SOURCES= test/json.c \
+														test/rule.c \
+														test/symbol.c \
 			    test/hash.c \
 			    test/test.c \
 			    test/vector.c \
@@ -49,3 +54,8 @@ libutillib_test_la_SOURCES= test/json.c \
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c
 utillib_test_LDADD=libutillib.la libutillib_test.la
+
+noinst_PROGRAMS=example_json
+
+example_json_SOURCES=example/json.c
+example_json_LDADD=-lutillib

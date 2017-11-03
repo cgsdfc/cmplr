@@ -28,7 +28,7 @@
 #include "enum.h"
 #include "pair.h"
 #include "slist.h"
-#include "typedef.h"
+#include "types.h"
 #include "vector.h"
 #include <stdbool.h>
 #include <stddef.h>

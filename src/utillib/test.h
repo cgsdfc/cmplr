@@ -86,7 +86,7 @@
  */
 
 #include "enum.h"
-#include "typedef.h"
+#include "types.h"
 #include "vector.h"
 #include <stdbool.h>
 #include <stdio.h>		// for FILE*

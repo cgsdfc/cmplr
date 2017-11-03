@@ -3,7 +3,7 @@
 #include "argp.h"
 #include "enum.h"
 #include "strref.h"
-#include "typedef.h"
+#include "types.h"
 #include "unordered_map.h"
 #include <assert.h>
 #define UTILLIB_LOGGING_OPTIONS_STDERR_THRESHOLD(KEY)                          \
@@ -24,7 +24,7 @@ UTILLIB_ENUM_BEGIN(logging_level_t)
 
 typedef struct utillib_logging_msg_t {
 	/* severity level */
-	logging_level_t lmsg_lv;
+	enum logging_level_t lmsg_lv;
 	/* arbitrary descriptive message */
 	char *lmsg_msg;
 	/* refcnt __FILE__ str */
