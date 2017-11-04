@@ -1,6 +1,7 @@
 #define _BSD_SOURCE
 #include "strref.h"
 #include "types.h"
+#include "unordered_op.h"
 #include <string.h>
 
 /**
@@ -10,7 +11,7 @@
  * \return void.
  */
 
-static void free_str_in_pair(utillib_pair_t * pair)
+static void free_str_in_pair(struct utillib_pair_t * pair)
 {
 	free((utillib_element_t) UTILLIB_PAIR_FIRST(pair));
 }
@@ -21,10 +22,10 @@ static void free_str_in_pair(utillib_pair_t * pair)
  * \param self.
  */
 
-void utillib_strref_init(utillib_strref * self)
+void utillib_strref_init(struct utillib_strref * self)
 {
 	utillib_unordered_map_init(&self->strref_map,
-				   utillib_unordered_map_const_charp_ft());
+      utillib_unordered_op_get_c_str());
 }
 
 /**
@@ -36,9 +37,9 @@ void utillib_strref_init(utillib_strref * self)
  * not necessarily has the same address as `str'.
  */
 
-char const *utillib_strref_incr(utillib_strref * self, char const *str)
+char const *utillib_strref_incr(struct utillib_strref * self, char const *str)
 {
-	utillib_pair_t *pair =
+	struct utillib_pair_t *pair =
 	    utillib_unordered_map_find(&self->strref_map, str);
 	if (pair) {
 		size_t cur_refcnt = (size_t) UTILLIB_PAIR_SECOND(pair);
@@ -61,9 +62,9 @@ char const *utillib_strref_incr(utillib_strref * self, char const *str)
  * \return void.
  */
 
-void utillib_strref_decr(utillib_strref * self, char const *str)
+void utillib_strref_decr(struct utillib_strref * self, char const *str)
 {
-	utillib_pair_t *pair =
+	struct utillib_pair_t *pair =
 	    utillib_unordered_map_find(&self->strref_map, str);
 	if (pair) {
 		size_t cur_refcnt = (size_t) UTILLIB_PAIR_SECOND(pair);
@@ -85,9 +86,9 @@ void utillib_strref_decr(utillib_strref * self, char const *str)
  * no bigger than the maximum of size_t is returned.
  */
 
-size_t utillib_strref_getcnt(utillib_strref * self, char const *str)
+size_t utillib_strref_getcnt(struct utillib_strref * self, char const *str)
 {
-	utillib_pair_t *pair =
+	struct utillib_pair_t *pair =
 	    utillib_unordered_map_find(&self->strref_map, str);
 	if (!pair) {
 		return 0;
@@ -102,7 +103,7 @@ size_t utillib_strref_getcnt(utillib_strref * self, char const *str)
  * \param self.
  * return void.
  */
-void utillib_strref_destroy(utillib_strref * self)
+void utillib_strref_destroy(struct utillib_strref * self)
 {
 	utillib_unordered_map_destroy_owning(&self->strref_map,
 					     (utillib_destroy_func_t *)

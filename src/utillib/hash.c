@@ -21,12 +21,12 @@
 #include "hash.h"
 #include <string.h>
 
-static size_t utillib_charp_hash_impl_simple(char const *str)
+static size_t hash_c_str_len(char const *str)
 {
 	return strlen(str);
 }
 
-static size_t charp_hash_length_relative(char const *str)
+static size_t hash_c_str_length(char const *str)
 {
 	size_t len = strlen(str);
 	size_t sum = str[0] + str[len - 1];
@@ -34,7 +34,11 @@ static size_t charp_hash_length_relative(char const *str)
 	return sum;
 }
 
-size_t utillib_charp_hash(char const *str)
+size_t utillib_hash_c_str(char const *str)
 {
-	return charp_hash_length_relative(str);
+	return hash_c_str_length(str);
+}
+
+size_t utillib_hash_int(int const* i) {
+  return *i;
 }

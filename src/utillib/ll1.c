@@ -21,7 +21,7 @@ void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self)
 {
 }
 
-void utillib_ll1_maker_init(struct utillib_ll1_maker *self, 
+void utillib_ll1_builder_init(struct utillib_ll1_builder *self, 
    struct utillib_symbol const * symbols,
    struct utillib_rule const * rules) 
 {
@@ -42,7 +42,7 @@ void utillib_ll1_maker_init(struct utillib_ll1_maker *self,
   }
 }
 
-static void ll1_maker_first_sets_terminal_init(struct utillib_ll1_maker *self) 
+static void ll1_builder_first_sets_terminal_init(struct utillib_ll1_builder *self) 
 {
   for (size_t i=0, size=utillib_vector_size(&self->symbols);i<size;++i) {
     struct utillib_symbol const * symbol=&self->symbols[i];
@@ -54,12 +54,12 @@ static void ll1_maker_first_sets_terminal_init(struct utillib_ll1_maker *self)
 }
 
 
-static void ll1_maker_first_sets_loop(struct utillib_ll1_maker *self)
+static void ll1_builder_first_sets_loop(struct utillib_ll1_builder *self)
 {
 
 }
 
-static void ll1_maker_make_table(struct utillib_ll1_maker *self)
+static void ll1_builder_make_table(struct utillib_ll1_builder *self)
 {
   for (struct utillib_rule const * rule=self->productions;
       UTILLIB_RULE_LHS(rule) != NULL; ++rule) {

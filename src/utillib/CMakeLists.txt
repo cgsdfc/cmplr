@@ -1,6 +1,9 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./bitset.c
+  ./unordered_op.c
+# ./ll1.c
   ./symbol.c
   ./rule.c
   ./pair.c
@@ -20,6 +23,8 @@ add_library(utillib
 )
 
 add_library(utillib_test_lib
+  ./test/bitset.c
+# ./test/ll1.c
   ./test/hash.c
   ./test/symbol.c
   ./test/rule.c

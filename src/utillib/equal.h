@@ -21,5 +21,6 @@
 #ifndef UTILLIB_EQUAL_H
 #define UTILLIB_EQUAL_H
 #include <stdbool.h>
-bool utillib_charp_equal(char const *, char const *);
+bool utillib_equal_c_str(char const *lhs, char const *rhs);
+bool utillib_equal_int(int const * i0, int const * i1);
 #endif				// UTILLIB_EQUAL_H

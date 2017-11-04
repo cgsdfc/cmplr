@@ -39,16 +39,17 @@ UTILLIB_RULE_BEGIN(test_rules)
   UTILLIB_RULE_ELEM(SYM_F, SYM_LP, SYM_E, SYM_RP)
 UTILLIB_RULE_END(test_rules)
 
-UTILLIB_TEST(demo) {
+UTILLIB_TEST(rule_index_init) {
   struct utillib_rule_index index;
   utillib_rule_index_init(&index, test_symbols, test_rules);
+  utillib_rule_index_destroy(&index);
 
 
 }
 
 UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_BEGIN(Utillib_Rule)
-    UTILLIB_TEST_RUN(demo)
+    UTILLIB_TEST_RUN(rule_index_init)
   UTILLIB_TEST_END(Utillib_Rule)
   UTILLIB_TEST_RETURN(Utillib_Rule)
 }

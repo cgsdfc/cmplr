@@ -31,6 +31,7 @@ UTILLIB_TEST_DECLARE(Utillib_JSON);
 UTILLIB_TEST_DECLARE(Utillib_Hash);
 UTILLIB_TEST_DECLARE(Utillib_Rule);
 UTILLIB_TEST_DECLARE(Utillib_Symbol);
+UTILLIB_TEST_DECLARE(Utillib_Bitset);
 
 int main(int argc, char ** argv) {
   UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
@@ -39,7 +40,8 @@ int main(int argc, char ** argv) {
       /* Utillib_Test, */
       /* Utillib_String, */
       /* Utillib_JSON, */
-      Utillib_Rule,
-      Utillib_Symbol
+      /* Utillib_Rule, */
+      /* Utillib_Symbol */
+      Utillib_Bitset
   );
 }

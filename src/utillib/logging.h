@@ -45,9 +45,9 @@ typedef struct utillib_logging_core_t {
 	/* the name of the logging program */
 	char const *lco_prog;
 	/* the reference counted strings */
-	utillib_strref lco_strref;
+	struct utillib_strref lco_strref;
 	/* the collection of all the logmsg */
-	utillib_vector lco_msgs;
+	struct utillib_vector lco_msgs;
 	/* the cleanup function to call when `FATAL' was logged */
 	utillib_destroy_func_t *lco_cleanup;
 	/* the object to be cleanupped by `lco_cleanup' */

@@ -47,6 +47,13 @@ utillib_json_value_t * utillib_symbol_json_object_pointer_create(void *data, siz
   return utillib_json_object_pointer_create(data, offset, Symbol_Fields);
 }
 
+UTILLIB_JSON_ARRAY_DESC(Symbol_ArrayDesc, sizeof (struct utillib_symbol), utillib_symbol_json_object_create);
+
+utillib_json_value_t * utillib_symbol_json_array_create(void *base, size_t offset)
+{
+  return utillib_json_array_create(base, offset, &Symbol_ArrayDesc);
+}
+
 struct utillib_symbol utillib_symbol_eof={
   /* following the convention that EOF is zero in bison */
   .value=UT_SYM_EOF,

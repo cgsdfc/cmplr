@@ -22,13 +22,13 @@
  * </para>
  */
 
-typedef struct utillib_strref {
-	utillib_unordered_map strref_map;
-} utillib_strref;
+struct utillib_strref {
+	struct utillib_unordered_map strref_map;
+} ;
 
-void utillib_strref_init(utillib_strref *);
-char const *utillib_strref_incr(utillib_strref *, char const *);
-void utillib_strref_decr(utillib_strref *, char const *);
-void utillib_strref_destroy(utillib_strref *);
-size_t utillib_strref_getcnt(utillib_strref *, char const *);
+void utillib_strref_init(struct utillib_strref *);
+char const *utillib_strref_incr(struct utillib_strref *, char const *);
+void utillib_strref_decr(struct utillib_strref *, char const *);
+void utillib_strref_destroy(struct utillib_strref *);
+size_t utillib_strref_getcnt(struct utillib_strref *, char const *);
 #endif				// UTILLIB_STRREF_H
