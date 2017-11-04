@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = enum.c \
+												unordered_op.c
 												bitset.c \
 												symbol.c \
 												rule.c \
@@ -56,9 +57,4 @@ libutillib_test_la_SOURCES= test/json.c \
 
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c
-utillib_test_LDADD=libutillib.la libutillib_test.la
-
-noinst_PROGRAMS=example_json
-
-example_json_SOURCES=example/json.c
-example_json_LDADD=-lutillib
+utillib_test_LDADD=-lutillib -lutillib_test

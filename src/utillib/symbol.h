@@ -50,5 +50,6 @@ extern struct utillib_symbol utillib_symbol_error;
 utillib_json_value_t * utillib_symbol_json_object_create(void *data, size_t offset);
 utillib_json_value_t * utillib_symbol_json_object_pointer_create(void *data, size_t offset);
 utillib_json_value_t * utillib_symbol_json_array_create(void *base, size_t offset);
+utillib_json_value_t * utillib_symbol_json_array_create_from_vector(void *base, size_t offset);
 
 #endif // UTILLIB_SYMBOL_H

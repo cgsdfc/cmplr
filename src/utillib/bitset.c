@@ -77,6 +77,10 @@ void utillib_bitset_reset(struct utillib_bitset*self, size_t pos)
   self->bits[bit_index(pos, self)] &= ~(1 << bit_offset(pos, self));
 }
 
+/**
+ * \function utillib_bitset_json_array_create
+ * Implements JSON format interface.
+ */
 utillib_json_value_t * utillib_bitset_json_array_create(void *base, size_t offset)
 {
   struct utillib_bitset *self=base;

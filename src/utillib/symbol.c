@@ -54,6 +54,11 @@ utillib_json_value_t * utillib_symbol_json_array_create(void *base, size_t offse
   return utillib_json_array_create(base, offset, &Symbol_ArrayDesc);
 }
 
+utillib_json_value_t * utillib_symbol_json_array_create_from_vector(void *base, size_t offset)
+{
+  return utillib_json_array_create_from_vector(base, offset, utillib_symbol_json_object_create);
+}
+
 struct utillib_symbol utillib_symbol_eof={
   /* following the convention that EOF is zero in bison */
   .value=UT_SYM_EOF,

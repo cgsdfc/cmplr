@@ -103,6 +103,9 @@ size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, s
   return value-self->min_terminal;
 }
 
+/**
+ * Implements JSON format interface.
+ */
 static utillib_json_value_t * rule_RHS_json_array_create_from_vector(void *base, size_t offset)
 {
   return utillib_json_array_create_from_vector(base, offset, utillib_symbol_json_object_create);
@@ -124,6 +127,10 @@ static utillib_json_value_t * rule_index_rule_json_array_create_from_vector(void
 }
 
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(RuleIndex_Fields)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "min-terminals-value", min_terminal, utillib_json_size_t_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "min-non-terminals-value", min_non_terminal, utillib_json_size_t_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "terminal-symbols", terminals, utillib_symbol_json_array_create_from_vector)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "non-terminal-symbols", non_terminals, utillib_symbol_json_array_create_from_vector)
   UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,  rule_index_rule_json_array_create_from_vector)
 UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields)
 

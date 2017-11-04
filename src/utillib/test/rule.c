@@ -1,59 +1,33 @@
-#include <utillib/rule.h>
 #include <utillib/test.h>
-#include <utillib/symbol.h>
-UTILLIB_TEST_CONST(terminals_size, 5);
-UTILLIB_TEST_CONST(non_terminals_size, 5);
-UTILLIB_TEST_CONST(rules_size,8);
+#include "symbol_rule.h"
 
-UTILLIB_ENUM_BEGIN(test_symbol_kind)
-  UTILLIB_ENUM_ELEM_INIT(SYM_E, 1)
-  UTILLIB_ENUM_ELEM(SYM_EP)
-  UTILLIB_ENUM_ELEM(SYM_T)
-  UTILLIB_ENUM_ELEM(SYM_TP)
-  UTILLIB_ENUM_ELEM(SYM_F)
-  UTILLIB_ENUM_ELEM(SYM_I)
-  UTILLIB_ENUM_ELEM(SYM_LP)
-  UTILLIB_ENUM_ELEM(SYM_RP)
-  UTILLIB_ENUM_ELEM(SYM_PLUS)
-  UTILLIB_ENUM_ELEM(SYM_MUL)
-UTILLIB_ENUM_END(test_symbol_kind)
 
-UTILLIB_SYMBOL_BEGIN(test_symbols)
-  UTILLIB_SYMBOL_NON_TERMINAL(SYM_E)
-  UTILLIB_SYMBOL_NON_TERMINAL(SYM_EP)
-  UTILLIB_SYMBOL_NON_TERMINAL(SYM_T)
-  UTILLIB_SYMBOL_NON_TERMINAL(SYM_TP)
-  UTILLIB_SYMBOL_NON_TERMINAL(SYM_F)
-  UTILLIB_SYMBOL_TERMINAL(SYM_I)
-  UTILLIB_SYMBOL_TERMINAL(SYM_LP)
-  UTILLIB_SYMBOL_TERMINAL(SYM_RP)
-  UTILLIB_SYMBOL_TERMINAL(SYM_PLUS)
-  UTILLIB_SYMBOL_TERMINAL(SYM_MUL)
-UTILLIB_SYMBOL_END(test_symbols)
-
-UTILLIB_RULE_BEGIN(test_rules)
-  UTILLIB_RULE_ELEM(SYM_E, SYM_T, SYM_EP)
-  UTILLIB_RULE_ELEM(SYM_EP, SYM_PLUS, SYM_T, SYM_EP)
-  UTILLIB_RULE_ELEM(SYM_EP, UT_SYM_EPS)
-  UTILLIB_RULE_ELEM(SYM_T, SYM_F, SYM_TP)
-  UTILLIB_RULE_ELEM(SYM_TP, SYM_MUL, SYM_F, SYM_TP)
-  UTILLIB_RULE_ELEM(SYM_TP, UT_SYM_EPS)
-  UTILLIB_RULE_ELEM(SYM_F, SYM_I)
-  UTILLIB_RULE_ELEM(SYM_F, SYM_LP, SYM_E, SYM_RP)
-UTILLIB_RULE_END(test_rules)
+UTILLIB_TEST_SET_UP() {
+  utillib_rule_index_init(UT_FIXTURE, test_symbols, test_rules);
+}
+UTILLIB_TEST_TEAR_DOWN() {
+  utillib_rule_index_destroy(UT_FIXTURE);
+}
 
 UTILLIB_TEST(rule_index_init) {
-  struct utillib_rule_index index;
-  utillib_rule_index_init(&index, test_symbols, test_rules);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_terminals_size(&index), terminals_size);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(&index), non_terminals_size);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(&index), rules_size);
+  struct utillib_rule_index * index=UT_FIXTURE;
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_terminals_size(index), terminals_size);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(index), non_terminals_size);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), rules_size);
+}
+
+UTILLIB_TEST(rule_index_json) {
+  utillib_json_value_t *val=utillib_rule_index_json_object_create(UT_FIXTURE, 0);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
 }
 
 UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_BEGIN(Utillib_Rule)
     UTILLIB_TEST_RUN(rule_index_init)
+    UTILLIB_TEST_RUN( rule_index_json )
   UTILLIB_TEST_END(Utillib_Rule)
+  UTILLIB_TEST_FIXTURE(struct utillib_rule_index)
   UTILLIB_TEST_RETURN(Utillib_Rule)
 }
 
