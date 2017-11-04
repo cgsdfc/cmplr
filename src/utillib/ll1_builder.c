@@ -2,6 +2,12 @@
 #include "equal.h" // for utillib_equal_bool
 #include <stdlib.h>
 
+#define utillib_ll1_set_union(A, B) (utillib_bitset_union(&(A)->bitset, &(B)->bitset))
+#define utillib_ll1_set_insert(A, V) (utillib_bitset_set(&(A)->bitset, (V)))
+#define utillib_ll1_set_contains(A, V) (utillib_bitset_test(&(A)->bitset, (V)))
+#define utillib_ll1_set_flag(A) ((A)->flag)
+
+
 UTILLIB_ETAB_BEGIN(utillib_ll1_error_kind)
   UTILLIB_ETAB_ELEM_INIT(UT_LL1_OK, "Success")
   UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENOTLL1, "Input is not LL(1)")
@@ -11,6 +17,12 @@ UTILLIB_ETAB_END(utillib_ll1_error_kind);
  * Private interfaces
  */
 
+/**
+ * \function ll1_set_create
+ * Creates a `utillib_ll1_set' with no terminal symbol
+ * and no epsilon special symbol.
+ * \param N The number of all the symbols.
+ */
 static struct utillib_ll1_set * ll1_set_create(size_t N) {
   struct utillib_ll1_set * self=malloc( sizeof *self);
   self->flag=false;
@@ -23,6 +35,27 @@ static void ll1_set_destroy(struct utillib_ll1_set * self) {
   free(self);
 }
 
+/**
+ * \function ll1_builder_FIRST_get
+ * Helper to get the `FIRST' for a particular non-terminal
+ * symbol.
+ */
+static struct utillib_ll1_set * 
+ll1_builder_FIRST_get(struct utillib_ll1_builder * self,
+    struct utillib_symbol const * symbol)
+{
+  return utillib_vector_at(&self->FIRST,
+      utillib_rule_index_non_terminal_index(self->rule_index,
+        utillib_symbol_value(symbol)));
+}
+
+/**
+ * \function ll1_builder_FIRST_partial_eval
+ * Does a partial evaluation of the intermedia first set
+ * before incremental evaluation.
+ * For any rule having the form `X := aA' where `a' is a terminal 
+ * symbol, add `a' to the intermedia first set of `X'.
+ */
 static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self)
 {
   struct utillib_rule_index const *rule_index=self->rule_index;
@@ -30,126 +63,244 @@ static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self)
   struct utillib_symbol const * LHS;
   struct utillib_symbol const * FIRST;
   struct utillib_ll1_set * FIRST_SET;
+
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     LHS=utillib_rule_lhs(rule);
+    size_t LHS_value=utillib_symbol_value(LHS);
+    /* Each `RHS' has a least one element */
     FIRST=utillib_vector_at(utillib_rule_rhs(rule), 0);
     if (utillib_symbol_kind(FIRST) == UT_SYMBOL_TERMINAL) {
-      size_t index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(LHS));
+      size_t index=utillib_rule_index_non_terminal_index(rule_index, LHS_value);
       FIRST_SET=utillib_vector_at(&self->FIRST, index);
       utillib_bitset_set(&FIRST_SET->bitset, utillib_symbol_value(FIRST));
     }
   }
 }
 
+/**
+ * \ll1_builder_FIRST_increamental
+ * Makes an incremental update to the intermedia first sets.
+ * Visits the symbols on the right hand side sequentially while
+ * merging their `FIRST's into that of the left hand side symbol and 
+ * stops at the first occurrence of a terminal symbol or a non-terminal
+ * symbol whose `FIRST' does not contain `epsilon'.
+ * If the whole sequence contains exclusively non-terminal symbols with
+ * `epsilon' inside their `FIRST's, the `FIRST' of the LHS symbol will
+ * also contains `epsilon'.
+ * \return Whether any changes took place in this incremental evaluation.
+ */
 static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self)
 {
   bool changed=false;
+  /* Will be `true' if all the symbols on the right hand side has `epsilon' in */
+  /* their `FIRST's. */
+  bool last_eps;
   struct utillib_rule_index const *rule_index;
   struct utillib_vector const * rules_vector=utillib_rule_index_rules(rule_index);
+
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const*, rule, rules_vector) {
-    struct utillib_vector const * RHS=utillib_rule_rhs(rule);
     struct utillib_symbol const * LHS=utillib_rule_lhs(rule);
+    struct utillib_vector const * RHS=utillib_rule_rhs(rule);
+    size_t LHS_index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(LHS));
+    struct utillib_ll1_set * LHS_FIRST=utillib_vector_at(&self->FIRST, LHS_index);
     UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, RHS) {
-      if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) 
+      size_t RHS_value=utillib_symbol_value(symbol);
+      if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) {
+        if (!utillib_ll1_set_contains(LHS_FIRST, RHS_value)) {
+          utillib_ll1_set_insert(LHS_FIRST, utillib_symbol_value(symbol));
+          changed=true;
+        }
+        last_eps=false;
+        /* Traversal ends with terminal symbol */
         break;
-      size_t to_set_index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(LHS));
-      struct utillib_ll1_set * from_set=utillib_vector_at(&self->FIRST, 
-          utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(symbol)));
-      struct utillib_ll1_set * to_set=utillib_vector_at(&self->FIRST, to_set_index);
-      changed=utillib_bitset_union(&to_set->bitset, &from_set->bitset);
+      } 
+      size_t RHS_index=utillib_rule_index_non_terminal_index(rule_index, RHS_value);
+      struct utillib_ll1_set * RHS_FIRST=utillib_vector_at(&self->FIRST, RHS_index);
+      changed=utillib_ll1_set_union(LHS_FIRST, RHS_FIRST);
+      if (!(last_eps=utillib_ll1_set_flag(RHS_FIRST))) {
+        /* Traversal ends with non-terminal symbol without `epsilon'. */
+        break;
+      }
     }
   }
   return changed;
 }
 
+/**
+ * \function ll1_builder_FIRST_finalize
+ * Similar to `ll1_builder_FIRST_increamental', goes through 
+ * the right hand side symbols of a rule to evaluate the `FIRST'
+ * of each rule.
+ * However, it does not return boolean value to indicate changes.
+ * This is needed to be run only once to fill the `self->FIRST_RULE'
+ * field which means `FIRST sets for all the rules'.
+ */
 static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self)
 {
   struct utillib_rule_index const *rule_index=self->rule_index;
+  size_t rules_size=utillib_rule_index_rules_size(rule_index);
   bool last_eps;
-  for (size_t rule_id =0, size=utillib_rule_index_rules_size(rule_index);
-      rule_id < size; ++rule_id) {
+  /* This loop needs to loop over all the rules and their `FIRST's so */
+  /* indices are needed instead of elements */
+  for (size_t rule_id =0; rule_id < rules_size; ++rule_id) {
     struct utillib_rule const * rule=utillib_rule_index_rule_at(rule_index, rule_id);
     struct utillib_ll1_set * FIRST=utillib_vector_at(&self->FIRST_RULE, rule_id);
     struct utillib_vector const * RHS=utillib_rule_rhs(rule);
     UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, RHS) {
+      size_t RHS_value=utillib_symbol_value(symbol);
       if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) {
-        utillib_bitset_set(&FIRST->bitset, utillib_symbol_value(symbol));
+        utillib_ll1_set_insert(FIRST, RHS_value);
         last_eps=false;
         break;
-      } else {
-        size_t index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(symbol));
-        struct utillib_ll1_set const * RHS_FIRST=utillib_vector_at(&self->FIRST, index);
-        utillib_bitset_union(&FIRST->bitset, &RHS_FIRST->bitset);
-        last_eps=utillib_symbol_value(symbol) == UT_SYM_EPS;
+      } 
+      size_t RHS_index=utillib_rule_index_non_terminal_index(rule_index, RHS_value);
+      struct utillib_ll1_set const * RHS_FIRST=utillib_vector_at(&self->FIRST, RHS_index);
+      utillib_ll1_set_union(FIRST, RHS_FIRST);
+      if (!(last_eps=RHS_FIRST->flag)) {
+          break;
       }
     }
     FIRST->flag=last_eps;
-  } 
+  }
 }
+
+/**
+ * \function ll1_builder_FOLLOW_form_correct
+ * Helper to judge whether the right hand side of the rule is in the form required
+ * by FOLLOW evaluation, i.e., `aBb', where `a' can be nothing.
+ */
+static bool ll1_builder_FOLLOW_form_correct(struct utillib_vector const * RHS)
+{
+  size_t RHS_size;
+  if ((RHS_size=utillib_vector_size(RHS)) < 2) 
+    return false;
+  struct utillib_symbol const * PREV=utillib_vector_at(RHS, RHS_size-2);
+  if (utillib_symbol_kind(PREV) == UT_SYMBOL_TERMINAL)
+    return false;
+  return true;
+}
+
+/**
+ * \function ll1_builder_FOLLOW_get
+ * Helper to get the `FOLLOW' for a particular non-terminal
+ * symbol.
+ */
+static struct utillib_ll1_set * 
+ll1_builder_FOLLOW_get(struct utillib_ll1_builder * self,
+    struct utillib_symbol const * symbol)
+{
+  return utillib_vector_at(&self->FOLLOW,
+      utillib_rule_index_non_terminal_index(self->rule_index,
+        utillib_symbol_value(symbol)));
+}
+
+/**
+ * \function ll1_builder_FOLLOW_partial_eval
+ * Partial-evaluates the `FOLLOW's of all the non-terminal symbols.
+ * First, Simply adds the special `end-of-input' symbol into the `FOLLOW'
+ * of the special TOP symbol which starts the whole grammar.
+ * Second, for all the rules of the form `A := aBb', if `b' is not `epsilon',
+ * and `B' is a non-terminal symbol,
+ * adds all the symbols in `First(b)' excluding `epsilon' into `FOLLOW(B)'.
+ * Since `FIRST' is known now, this evaluation can be done in partial evaluation.
+ * 
+ */
 
 static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self)
 {
   struct utillib_rule_index const *rule_index=self->rule_index;
-  struct utillib_ll1_set * FOLLOW_SET;
+  struct utillib_vector const * rules_vector=utillib_rule_index_rules(rule_index);
+  struct utillib_symbol const * TOP_symbol=utillib_rule_index_top_symbol(rule_index);
+  size_t TOP_value=utillib_symbol_value(TOP_symbol);
+  size_t TOP_index=utillib_rule_index_non_terminal_index(rule_index, TOP_value);
+  struct utillib_ll1_set * TOP_FOLLOW=utillib_vector_at(&self->FOLLOW, TOP_index);
+  utillib_bitset_set(&TOP_FOLLOW->bitset, UT_SYM_EOF);
 
-  FOLLOW_SET=utillib_vector_at(&self->FOLLOW, 
-      utillib_rule_index_non_terminal_index(rule_index, 
-        utillib_symbol_value(utillib_rule_index_top_symbol(rule_index))));
-  utillib_bitset_set(&FOLLOW_SET->bitset, utillib_symbol_value(UTILLIB_SYMBOL_EOF));
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
+    struct utillib_vector const * RHS=utillib_rule_rhs(rule);
+    /* The form of rule does not match */
+    if (!ll1_builder_FOLLOW_form_correct(RHS))
+      continue;
+    size_t RHS_size=utillib_vector_size(RHS);
+    struct utillib_symbol const * PREV=utillib_vector_at(RHS, RHS_size-2);
+    struct utillib_symbol const * LAST=utillib_vector_back(RHS);
+    size_t LAST_value=utillib_symbol_value(LAST);
+    /* The `b' symbol is `epsilon' */
+    if (LAST_value == UT_SYM_EPS)
+      continue;
+    struct utillib_ll1_set * PREV_FOLLOW=ll1_builder_FOLLOW_get(self, PREV);
+    if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
+      utillib_bitset_set(&PREV_FOLLOW->bitset, LAST_value);
+      continue;
+    }
+    struct utillib_ll1_set const * LAST_FIRST=ll1_builder_FIRST_get(self, LAST);
+    utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
+  }
 }
+
+/**
+ * \function ll1_builder_FOLLOW_last_epsilon
+ * Helper to judge whether the last symbol of a rule
+ * has anything to do with `epsilon'.
+ * \param LAST A symbol at the last of a `RHS'.
+ * \return True if `LAST' is directly `epsilon'
+ * or a non-terminal symbol whose `FIRST' contains
+ * `epsilon'.
+ */
+static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
+    struct utillib_symbol const * LAST) 
+{
+  size_t LAST_value=utillib_symbol_value(LAST);
+  if (LAST_value == UT_SYM_EPS)
+    return true;
+  if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL)
+    return false;
+  struct utillib_ll1_set const * LAST_FIRST=ll1_builder_FIRST_get(self, LAST);
+  if (utillib_ll1_set_flag(LAST_FIRST))
+    return true;
+  return false;
+}
+
+/**
+ * \function ll1_builder_FOLLOW_incremental
+ * Based on the following algorithm:
+ * If the rule has form `A := aBb' and `b' satisfies
+ * `ll1_builder_FOLLOW_last_epsilon' implying `epsilon'
+ * can be derived from `b', then what follows `A' can
+ * also follows `B'.
+ * Thus, we merge `FOLLOW' for `A' into that of `B'.
+ */
 
 static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self)
 {
   struct utillib_rule_index const *rule_index=self->rule_index;
   struct utillib_vector const * rules_vector = utillib_rule_index_rules(rule_index);
-  struct utillib_symbol const * LAST;
-  struct utillib_symbol const* LHS;
-  struct utillib_symbol const* symbol;
-  struct utillib_vector const * RHS;
   struct utillib_ll1_set * FIRST_SET;
-  struct utillib_ll1_set * FOLLOW_SET;
   size_t size;
-  int LAST_value;
-  int LHS_value;
   bool changed=false;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
-    LAST=utillib_vector_back(utillib_rule_rhs(rule));
-    LHS=utillib_rule_lhs(rule);
-    LHS_value=utillib_symbol_value(LHS);
-    RHS=utillib_rule_rhs(rule);
-    size_t index=utillib_rule_index_non_terminal_index(rule_index,
-        utillib_symbol_value(LHS));
-    FOLLOW_SET=utillib_vector_at(&self->FOLLOW, index);
-    LAST_value=utillib_symbol_value(LAST);
-    if (LAST_value == UT_SYM_EPS) {
-      if (!FOLLOW_SET->flag) {
-        FOLLOW_SET->flag=true;
-        changed=true;
-      }
-    } else if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
-      if (!utillib_bitset_test(&FOLLOW_SET->bitset, LAST_value)) {
-          utillib_bitset_set(&FOLLOW_SET->bitset, LAST_value);
-          changed=true;
-      }
-    } else { /* non_terminal */
-      FIRST_SET=utillib_vector_at(&self->FIRST,
-          utillib_rule_index_non_terminal_index(rule_index, LAST_value));
-      changed=utillib_bitset_union(&FOLLOW_SET->bitset, &FIRST_SET->bitset);
-      if (FIRST_SET->flag && (size=utillib_vector_size(RHS)) > 1
-          && utillib_symbol_kind(symbol=utillib_vector_at(RHS, size-2)) 
-          == UT_SYMBOL_NON_TERMINAL) {
-        FOLLOW_SET=utillib_vector_at(&self->FOLLOW,
-            utillib_rule_index_non_terminal_index(rule_index, LHS_value));
-        struct utillib_ll1_set * FOLLOW2=utillib_vector_at(&self->FOLLOW,
-            utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(symbol)));
-        changed=utillib_bitset_union(&FOLLOW2->bitset, &FOLLOW_SET->bitset);
-      }
-    }
+    struct utillib_vector const * RHS=utillib_rule_rhs(rule);
+    struct utillib_symbol const* LHS=utillib_rule_lhs(rule);
+    /* The form of rule does not match */
+    if (!ll1_builder_FOLLOW_form_correct(RHS))
+      continue;
+    struct utillib_symbol const * LAST=utillib_vector_back(RHS);
+    if (!ll1_builder_FOLLOW_last_epsilon(self, LAST))
+      continue;
+    struct utillib_ll1_set const * LHS_FOLLOW=ll1_builder_FOLLOW_get(self, LHS);
+    struct utillib_ll1_set * LAST_FOLLOW=ll1_builder_FOLLOW_get(self, LAST);
+    changed=utillib_ll1_set_union(LAST_FOLLOW, LHS_FOLLOW);
   }
   return changed;
 }
 
+/**
+ * \function ll1_builder_fixed_point_loop
+ * It is a helper to perform fixed-pointed evaluation
+ * carried by 2 input arguments namely `partail_eval'
+ * and `incremental'.
+ */
 static void ll1_builder_fixed_point_loop(struct utillib_ll1_builder *self,
     void ( * partail_eval ) (struct utillib_ll1_builder *),
     bool ( * incremental ) (struct utillib_ll1_builder *))
@@ -160,16 +311,20 @@ static void ll1_builder_fixed_point_loop(struct utillib_ll1_builder *self,
     ;
 }
 
+/**
+ * \function ll1_builder_build_FIRST_FOLLOW
+ * Performs all the set-evaluations in one step.
+ */
 static void ll1_builder_build_FIRST_FOLLOW(struct utillib_ll1_builder *self)
 {
   ll1_builder_fixed_point_loop(self, 
       ll1_builder_FIRST_partial_eval,
       ll1_builder_FIRST_increamental
-    );
+      );
   ll1_builder_fixed_point_loop(self,
       ll1_builder_FOLLOW_partial_eval,
       ll1_builder_FOLLOW_incremental
-    );
+      );
   ll1_builder_FIRST_finalize(self);
 }
 
@@ -233,16 +388,16 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
     LHS=utillib_rule_lhs(rule);
     size_t LHS_index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(LHS));
     for (size_t symbol_id=0; symbol_id<symbols_size; ++symbol_id) {
-      if (utillib_bitset_test(&FIRST->bitset, symbol_id)) {
-         utillib_vector2_set(table, 
-             LHS_index, utillib_rule_index_terminal_index(rule_index, symbol_id),
-             (utillib_element_t) rule);
+      if (utillib_ll1_set_contains(FIRST, symbol_id)) {
+        utillib_vector2_set(table, 
+            LHS_index, utillib_rule_index_terminal_index(rule_index, symbol_id),
+            (utillib_element_t) rule);
       }
     }
     if (FIRST->flag) {
       FOLLOW=utillib_vector_at(&self->FOLLOW, LHS_index);
       for (size_t symbol_id=0; symbol_id<symbols_size; ++symbol_id) {
-        if (utillib_bitset_test(&FOLLOW->bitset, symbol_id)) {
+        if (utillib_ll1_set_contains(FOLLOW, symbol_id)) {
           utillib_vector2_set(table,
               LHS_index, utillib_rule_index_terminal_index(rule_index, symbol_id), 
               (utillib_element_t) UTILLIB_RULE_NULL);
