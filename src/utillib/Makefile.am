@@ -39,7 +39,6 @@ include_HEADERS = flags.h \
 									strref.h \
 									test.h \
 									types.h \
-									union.h \
 									unordered_map.h \
 									unordered_op.h \
 									bitset.h \

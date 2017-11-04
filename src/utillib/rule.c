@@ -103,6 +103,11 @@ size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, s
   return value-self->min_terminal;
 }
 
+struct utillib_symbol * utillib_rule_index_top_symbol(struct utillib_rule_index const*self)
+{
+  return utillib_vector_front(&self->non_terminals);
+}
+
 /**
  * Implements JSON format interface.
  */

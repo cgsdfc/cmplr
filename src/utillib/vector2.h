@@ -18,32 +18,20 @@
    02110-1301 USA
 
 */
+#ifndef UTILLIB_VECTOR2_H
+#define UTILLIB_VECTOR2_H
+#include "types.h"
+#include <stddef.h>
 
-#define _GNU_SOURCE
-#include <utillib/test.h>
+struct utillib_vector2 {
+  utillib_element_t * array;
+  size_t nrow;
+  size_t ncol;
+};
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
+void utillib_vector2_init(struct utillib_vector2*, size_t, size_t);
+utillib_element_t utillib_vector2_at(struct utillib_vector2 *, size_t, size_t);
+utillib_element_t utillib_vector2_set(struct utillib_vector2 *, size_t, size_t, utillib_element_t);
+void utillib_vector2_destroy(struct utillib_vector2 *);
 
-int main(int argc, char ** argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule, */
-      Utillib_LL1Builder
-      /* Utillib_Symbol */
-      /* Utillib_Bitset */
-  );
-}
+#endif 

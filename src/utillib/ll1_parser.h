@@ -18,32 +18,24 @@
    02110-1301 USA
 
 */
+#ifndef UTILLIB_LL1_PARSER_H
+#define UTILLIB_LL1_PARSER_H
+#include "slist.h"
+#include "rule.h"
+#include "vector2.h"
 
-#define _GNU_SOURCE
-#include <utillib/test.h>
+/**
+ * \struct utillib_ll1_parser
+ * Parser for the LL(1) grammar.
+ * Handles the runtime parsing of input.
+ */
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
+struct utillib_ll1_parser {
+ struct utillib_slist symbol_stack;
+ struct utillib_slist tree_stack;
+ struct utillib_slist error_stack;
+ struct utillib_rule_index const* rule_index;
+ struct utillib_vector2 const* table;
+};
 
-int main(int argc, char ** argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule, */
-      Utillib_LL1Builder
-      /* Utillib_Symbol */
-      /* Utillib_Bitset */
-  );
-}
+#endif // UTILLIB_LL1_PARSER_H

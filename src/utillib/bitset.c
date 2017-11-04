@@ -54,7 +54,7 @@ void utillib_bitset_destroy(struct utillib_bitset*self)
  * \function utillib_bitset_test
  * Tests membership of element at `pos' against the bitset.
  */
-bool utillib_bitset_test(struct utillib_bitset*self, size_t pos)
+bool utillib_bitset_test(struct utillib_bitset const*self, size_t pos)
 {
   return self->bits[bit_index(pos, self)] & (1 << bit_offset(pos, self));
 }
@@ -75,6 +75,24 @@ void utillib_bitset_set(struct utillib_bitset*self, size_t pos)
 void utillib_bitset_reset(struct utillib_bitset*self, size_t pos)
 {
   self->bits[bit_index(pos, self)] &= ~(1 << bit_offset(pos, self));
+}
+
+/**
+ * \function utillib_bitset_union
+ * Puts all the bits of `other' into `self'.
+ * \return Whether the content of `self' was different
+ * from before the union was done.
+ */
+bool utillib_bitset_union(struct utillib_bitset *self, struct utillib_bitset const * other)
+{
+  bool changed=false;
+  for (size_t i=0; i< self->size; ++i) {
+    size_t prev=self->bits[i];
+    self->bits[i] |= other->bits[i];
+    if (prev != self->bits[i])
+      changed=true;
+  }
+  return changed;
 }
 
 /**

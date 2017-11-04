@@ -54,6 +54,7 @@ struct utillib_rule_index {
   struct utillib_vector rules;
   struct utillib_vector terminals;
   struct utillib_vector non_terminals;
+  size_t * index;
   size_t min_terminal;
   size_t min_non_terminal;
 };
@@ -79,5 +80,9 @@ size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, s
   (utillib_vector_size(&(self)->rules))
 #define utillib_rule_index_rules(self) \
   (&(self)->rules)
+#define utillib_rule_index_rule_at(self, rule_id) \
+  (utillib_vector_at(&(self)->rules, (rule_id)))
+
+struct utillib_symbol * utillib_rule_index_top_symbol(struct utillib_rule_index const*self);
 
 #endif // UTILLIB_RULE_H

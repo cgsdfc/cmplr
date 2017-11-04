@@ -25,6 +25,42 @@
 #include <string.h>		// memset
 
 /**
+ * \function push_back_aux
+ * Does an insertion at the end of self regardless of
+ * its capacity.
+ * \param self.
+ * \param x the element to push back.
+ * \return void.
+ */
+
+static void push_back_aux(struct utillib_vector * self, utillib_element_t x)
+{
+	*(self->end)++ = x;
+}
+
+
+/**
+ * \function do_realloc
+ * Does a reallocation to ensure that self has capacity `new_cap'
+ * and its elements are unchanged.
+ * \param new_cap the new capacity to satisfy.
+ * \return void.
+ */
+
+static void do_realloc(struct utillib_vector * self, size_t new_cap)
+{
+	size_t size = utillib_vector_size(self);
+	utillib_element_pointer_t newspace =
+	    realloc(self->begin, sizeof *newspace * new_cap);
+	if (newspace) {
+		self->begin = newspace;
+		self->end = size + self->begin;
+		self->stor_end = self->begin + new_cap;
+		return;
+	}
+	utillib_die("utillib_vector: realloc failed");
+}
+/**
  * \function clear_self
  * Clear the memory of self to zero.
  * \param self.
@@ -34,6 +70,16 @@
 static void clear_self(struct utillib_vector * self)
 {
 	memset(self, 0, sizeof *self);
+}
+
+void utillib_vector_init_fill(struct utillib_vector *self, size_t N, utillib_element_t data)
+{
+  utillib_element_t * begin=malloc(N * sizeof *begin);
+  self->begin=begin;
+  self->end=begin+N;
+  for (self->stor_end=begin; self->stor_end!=self->end; ++self->stor_end) {
+    *self->stor_end=data;
+  }
 }
 
 /**
@@ -87,41 +133,7 @@ utillib_element_t utillib_vector_at(struct utillib_vector const* self, size_t po
 	return self->begin[pos];
 }
 
-/**
- * \function do_realloc
- * Does a reallocation to ensure that self has capacity `new_cap'
- * and its elements are unchanged.
- * \param new_cap the new capacity to satisfy.
- * \return void.
- */
 
-static void do_realloc(struct utillib_vector * self, size_t new_cap)
-{
-	size_t size = utillib_vector_size(self);
-	utillib_element_pointer_t newspace =
-	    realloc(self->begin, sizeof *newspace * new_cap);
-	if (newspace) {
-		self->begin = newspace;
-		self->end = size + self->begin;
-		self->stor_end = self->begin + new_cap;
-		return;
-	}
-	utillib_die("utillib_vector: realloc failed");
-}
-
-/**
- * \function push_back_aux
- * Does an insertion at the end of self regardless of
- * its capacity.
- * \param self.
- * \param x the element to push back.
- * \return void.
- */
-
-static void push_back_aux(struct utillib_vector * self, utillib_element_t x)
-{
-	*(self->end)++ = x;
-}
 
 /**
  * \function utillib_vector_push_back
@@ -179,7 +191,7 @@ void utillib_vector_destroy_owning(struct utillib_vector * self,
  * \return the element at the front.
  */
 
-utillib_element_t utillib_vector_front(struct utillib_vector * self)
+utillib_element_t utillib_vector_front(struct utillib_vector const* self)
 {
 	return self->begin[0];
 }
@@ -206,7 +218,7 @@ void utillib_vector_pop_back(struct utillib_vector * self)
  * \return the element at the back.
  */
 
-utillib_element_t utillib_vector_back(struct utillib_vector * self)
+utillib_element_t utillib_vector_back(struct utillib_vector const* self)
 {
 	assert(utillib_vector_size(self) > 0);
 	return *(self->end - 1);

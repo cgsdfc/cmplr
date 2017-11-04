@@ -30,3 +30,9 @@ bool utillib_equal_int(int const * i0, int const * i1)
 {
   return *(int*) i0 == *(int*) i1;
 }
+
+bool utillib_equal_bool(bool const *b0, bool const *b1)
+{
+  return *(bool*) b0 == *(bool*) b1;
+}
+

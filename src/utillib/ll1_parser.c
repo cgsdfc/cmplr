@@ -18,32 +18,21 @@
    02110-1301 USA
 
 */
+#include "ll1_parser.h"
 
-#define _GNU_SOURCE
-#include <utillib/test.h>
-
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
-
-int main(int argc, char ** argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule, */
-      Utillib_LL1Builder
-      /* Utillib_Symbol */
-      /* Utillib_Bitset */
-  );
+void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
+    struct utillib_rule_index const * rule_index,
+    struct utillib_vector2 const * table)
+{
+  utillib_slist_init(&self->symbol_stack);
+  utillib_slist_init(&self->tree_stack);
+  utillib_slist_init(&self->error_stack);
+  self->table=table;
+  self->rule_index=rule_index;
 }
+
+void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self)
+{
+
+}
+
