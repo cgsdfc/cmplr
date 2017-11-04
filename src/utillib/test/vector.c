@@ -117,12 +117,12 @@ UTILLIB_TEST(reserve) {}
 
 UTILLIB_TEST(foreach) {
   int N=100;
-  int i=0;
+  size_t i=0;
   for (i=0;i<N;++i) {
     utillib_vector_push_back(UT_FIXTURE, (utillib_element_t) i);
   }
   i=0;
-  UTILLIB_VECTOR_FOREACH(int, elem, (utillib_vector*) UT_FIXTURE) {
+  UTILLIB_VECTOR_FOREACH(size_t , elem, (utillib_vector*) UT_FIXTURE) {
     UTILLIB_TEST_ASSERT_EQ(elem, i);
     i++;
   }

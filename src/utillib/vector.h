@@ -78,10 +78,10 @@ void utillib_vector_destroy_owning(struct utillib_vector *,
 				   utillib_destroy_func_t *);
 
 /** \brief observer */
-size_t utillib_vector_size(struct utillib_vector *);
+size_t utillib_vector_size(struct utillib_vector const*);
 size_t utillib_vector_capacity(struct utillib_vector *);
 bool utillib_vector_empty(struct utillib_vector *);
-utillib_element_t utillib_vector_at(struct utillib_vector *, size_t);
+utillib_element_t utillib_vector_at(struct utillib_vector const*, size_t);
 utillib_element_t utillib_vector_back(struct utillib_vector *);
 utillib_element_t utillib_vector_front(struct utillib_vector *);
 bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, utillib_equal_func_t *eq);

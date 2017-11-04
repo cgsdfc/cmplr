@@ -1,6 +1,9 @@
 #include <utillib/rule.h>
 #include <utillib/test.h>
 #include <utillib/symbol.h>
+UTILLIB_TEST_CONST(terminals_size, 5);
+UTILLIB_TEST_CONST(non_terminals_size, 5);
+UTILLIB_TEST_CONST(rules_size,8);
 
 UTILLIB_ENUM_BEGIN(test_symbol_kind)
   UTILLIB_ENUM_ELEM_INIT(SYM_E, 1)
@@ -42,9 +45,9 @@ UTILLIB_RULE_END(test_rules)
 UTILLIB_TEST(rule_index_init) {
   struct utillib_rule_index index;
   utillib_rule_index_init(&index, test_symbols, test_rules);
-  utillib_rule_index_destroy(&index);
-
-
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_terminals_size(&index), terminals_size);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(&index), non_terminals_size);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(&index), rules_size);
 }
 
 UTILLIB_TEST_DEFINE(Utillib_Rule) {

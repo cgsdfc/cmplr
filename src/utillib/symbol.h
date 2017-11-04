@@ -2,8 +2,9 @@
 #define UTILLIB_SYMBOL_H
 #include "enum.h"
 #include "json.h"
-#define UTILLIB_SYMBOL_NAME(SYM) ((SYM)->name)
-#define UTILLIB_SYMBOL_KIND(SYM) ((SYM)->kind)
+#define utillib_symbol_name(SYM) ((SYM)->name)
+#define utillib_symbol_kind(SYM) ((SYM)->kind)
+#define utillib_symbol_value(SYM) ((SYM)->value)
 
 #define UTILLIB_SYMBOL_EOF (&utillib_symbol_eof)
 #define UTILLIB_SYMBOL_ERR  (&utillib_symbol_error)

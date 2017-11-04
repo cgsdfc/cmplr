@@ -24,6 +24,8 @@
 #include <stddef.h>		// size_t
 #include <stdbool.h> // bool
 #include "json.h"
+#define UTILLIB_BITSET_SET_FOREACH(ELEM, N, BITSET) \
+  for (size_t ELEM=0; ELEM < (N);
 
 /**
  * \struct utillib_bitset
@@ -42,6 +44,7 @@ struct utillib_bitset {
   size_t size;
 };
 
+struct utillib_bitset * utillib_bitset_create(size_t N);
 void utillib_bitset_init(struct utillib_bitset*self, size_t N);
 void utillib_bitset_destroy(struct utillib_bitset*self);
 bool utillib_bitset_test(struct utillib_bitset*self, size_t pos);

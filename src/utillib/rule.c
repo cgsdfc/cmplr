@@ -20,6 +20,8 @@
 */
 #include "rule.h"
 #include <stdlib.h> // malloc
+#include <limits.h> // ULONG_MAX
+
 struct utillib_rule utillib_rule_null;
 
 static struct utillib_rule * rule_index_rule_create (
@@ -28,11 +30,53 @@ static struct utillib_rule * rule_index_rule_create (
 {
   struct utillib_rule * self=malloc(sizeof *self);
   utillib_vector_init(&self->RHS);
-  self->LHS=&symbols[rule_literal->LHS_LIT];
+  int LHS_LIT=rule_literal->LHS_LIT;
+  self->LHS=&symbols[LHS_LIT];
   for (int const *pi=rule_literal->RHS_LIT; *pi != UT_SYM_NULL; ++pi) {
-    utillib_vector_push_back(&self->RHS, (utillib_element_t) &symbols[*pi]);
+    struct utillib_symbol const * symbol;
+    if (*pi == UT_SYM_EPS)
+      symbol=UTILLIB_SYMBOL_EPS;
+    else
+      symbol=&symbols[*pi];
+    utillib_vector_push_back(&self->RHS, (utillib_element_t) symbol);
   }
   return self;
+}
+
+void utillib_rule_index_init(struct utillib_rule_index * self, 
+    struct utillib_symbol const * symbols,
+    struct utillib_rule_literal const * rule_literals)
+{
+  int value;
+  size_t * pvalue;
+  struct utillib_vector * pvector;
+
+  utillib_vector_init(&self->rules);
+  utillib_vector_init(&self->terminals);
+  utillib_vector_init(&self->non_terminals);
+  self->min_non_terminal=ULONG_MAX;
+  self->min_terminal=ULONG_MAX;
+
+  for (struct utillib_rule_literal const * rule_literal=rule_literals;
+      rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
+    struct utillib_rule * rule=rule_index_rule_create(symbols, rule_literal);
+    utillib_vector_push_back(&self->rules, rule);
+  }
+  /* Since `EOF' always takes the "zero" place, we start from "1" */
+  for (struct utillib_symbol const * symbol=symbols+1;
+      utillib_symbol_name(symbol) != NULL; ++symbol) {
+      value=utillib_symbol_value(symbol);
+    if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) {
+      pvalue=&self->min_terminal;
+      pvector=&self->terminals;
+    } else {
+      pvalue=&self->min_non_terminal;
+      pvector=&self->non_terminals;
+    }
+    if (value < *pvalue)
+      *pvalue=value;
+    utillib_vector_push_back(pvector, (utillib_element_t) symbol);
+  }
 }
 
 static void rule_index_rule_destroy(struct utillib_rule *self)
@@ -41,34 +85,50 @@ static void rule_index_rule_destroy(struct utillib_rule *self)
   free(self);
 }
 
-void utillib_rule_index_init(struct utillib_rule_index * self, 
-    struct utillib_symbol const * symbols,
-    struct utillib_rule_literal const * rule_literals)
-{
-  utillib_vector_init(&self->rules);
-  utillib_vector_init(&self->terminals);
-  utillib_vector_init(&self->non_terminals);
-
-  for (struct utillib_rule_literal const * rule_literal=rule_literals;
-      rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
-    struct utillib_rule * rule=rule_index_rule_create(symbols, rule_literal);
-    utillib_vector_push_back(&self->rules, rule);
-  }
-  for (struct utillib_symbol const * symbol=symbols;
-      UTILLIB_SYMBOL_NAME(symbol) != NULL; ++symbol) {
-    if (UTILLIB_SYMBOL_KIND(symbol) == UT_SYMBOL_TERMINAL) {
-      utillib_vector_push_back(&self->terminals, (utillib_element_t) symbol);
-    } else {
-      utillib_vector_push_back(&self->non_terminals, (utillib_element_t) symbol);
-    }
-  }
-}
-
 void utillib_rule_index_destroy(struct utillib_rule_index *self) {
   utillib_vector_destroy(&self->terminals);
   utillib_vector_destroy(&self->non_terminals);
   utillib_vector_destroy_owning(&self->rules, (utillib_destroy_func_t *)
       rule_index_rule_destroy);
 
+}
+
+size_t utillib_rule_index_non_terminal_index(struct utillib_rule_index const*self, size_t value)
+{
+  return value-self->min_non_terminal;
+}
+
+size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, size_t value)
+{
+  return value-self->min_terminal;
+}
+
+static utillib_json_value_t * rule_RHS_json_array_create_from_vector(void *base, size_t offset)
+{
+  return utillib_json_array_create_from_vector(base, offset, utillib_symbol_json_object_create);
+}
+
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(Rule_Fields)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule, "left-hand-side",LHS,  utillib_symbol_json_object_pointer_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule, "right-hand-side", RHS, rule_RHS_json_array_create_from_vector)
+UTILLIB_JSON_OBJECT_FIELD_END(Rule_Fields)
+
+utillib_json_value_t * utillib_rule_json_object_create(void * base, size_t offset)
+{
+  return utillib_json_object_create(base, offset, Rule_Fields);
+}
+
+static utillib_json_value_t * rule_index_rule_json_array_create_from_vector(void *base, size_t offset)
+{
+  return utillib_json_array_create_from_vector(base, offset, utillib_rule_json_object_create);
+}
+
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(RuleIndex_Fields)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,  rule_index_rule_json_array_create_from_vector)
+UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields)
+
+utillib_json_value_t * utillib_rule_index_json_object_create(void *base, size_t offset)
+{
+  return utillib_json_object_create(base, offset, RuleIndex_Fields);
 }
 

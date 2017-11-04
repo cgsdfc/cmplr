@@ -40,8 +40,8 @@ int main(int argc, char ** argv) {
       /* Utillib_Test, */
       /* Utillib_String, */
       /* Utillib_JSON, */
-      /* Utillib_Rule, */
+      Utillib_Rule
       /* Utillib_Symbol */
-      Utillib_Bitset
+      /* Utillib_Bitset */
   );
 }

@@ -3,7 +3,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
   ./bitset.c
   ./unordered_op.c
-# ./ll1.c
+  ./ll1.c
   ./symbol.c
   ./rule.c
   ./pair.c

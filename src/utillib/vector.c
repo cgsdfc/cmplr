@@ -67,7 +67,7 @@ void utillib_vector_init(struct utillib_vector * self)
  * \return size of self.
  */
 
-size_t utillib_vector_size(struct utillib_vector * self)
+size_t utillib_vector_size(struct utillib_vector const* self)
 {
 	return self->end - self->begin;
 }
@@ -81,7 +81,7 @@ size_t utillib_vector_size(struct utillib_vector * self)
  * \return the element at `pos'.
  */
 
-utillib_element_t utillib_vector_at(struct utillib_vector * self, size_t pos)
+utillib_element_t utillib_vector_at(struct utillib_vector const* self, size_t pos)
 {
 	assert(pos < utillib_vector_size(self));
 	return self->begin[pos];

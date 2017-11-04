@@ -84,3 +84,10 @@ utillib_json_value_t * utillib_bitset_json_array_create(void *base, size_t offse
   return utillib_json_array_pointer_create(self->bits, self->size, &Bitset_ArrayDesc);
 }
 
+struct utillib_bitset * utillib_bitset_create(size_t N)
+{
+  struct utillib_bitset *self=malloc(sizeof *self);
+  utillib_bitset_init(self, N);
+  return self;
+}
+

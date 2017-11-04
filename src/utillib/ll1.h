@@ -3,16 +3,25 @@
 #include "vector.h"
 #include "enum.h"
 #include "rule.h"
+#include "bitset.h"
+
+/**
+ * \struct utillib_ll1_set
+ * A set used for both `FIRST_SET' and `FOLLOW_SET'.
+ */
+struct utillib_ll1_set {
+  /* whether contains special symbol like `epsilon' or `eof'. */
+  bool flag;
+  struct utillib_bitset bitset;
+};
 
 /**
  * \struct utillib_ll1_builder
  * Builder of the LL(1) parser table.
  */
 struct utillib_ll1_builder {
-  struct utillib_ll1_first_set first_sets;
-  struct utillib_ll1_first_set first_sets_p;
-  struct utillib_vector follow_sets;
-  struct utillib_rule_index * rule_index;
+  struct utillib_rule_index const* rule_index;
+  struct utillib_vector FIRST;
 };
 
 /**
@@ -23,7 +32,7 @@ struct utillib_ll1_builder {
 
 struct utillib_ll1_parser {
  struct utillib_vector stack;
- struct const utillib_rule * table;
+ struct utillib_rule const * table;
  struct utillib_abstract_scanner *scanner;
  void * client_data;
 };

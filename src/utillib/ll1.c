@@ -1,82 +1,40 @@
 #include "ll1.h"
+#include <stdlib.h>
 
-void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
-    struct utillib_ll1_parser_table * table)
-{
-  utillib_vector_init(&self->stack);
-  utillib_vector_push_back(&self->stack, UTILLIB_SYMBOL_EOF);
-  self->table=table;
+static struct utillib_ll1_set * ll1_set_create(size_t N) {
+  struct utillib_ll1_set * self=malloc( sizeof *self);
+  self->flag=false;
+  utillib_bitset_init(&self->bitset, N);
+  return self;
 }
 
-int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, struct utillib_abstract_scanner * scanner)
-{
-  while (true) {
-    int sym=utillib_abstract_scanner_get_current_symbol(scan);
-
-  }
-
-}
-
-void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) 
-{
+static void ll1_set_destroy(struct utillib_ll1_set * self) {
+  utillib_bitset_destroy(&self->bitset);
+  free(self);
 }
 
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self, 
-   struct utillib_symbol const * symbols,
-   struct utillib_rule const * rules) 
+    struct utillib_rule_index const * rule_index)
 {
-  utillib_vector_init(&self->first_sets);
-  utillib_vector_init(&self->follow_sets);
-  utillib_vector_init(&self->ll1_rules);
-  size_t max_value=0;
-  for (struct utillib_rule const * rule=rules; UTILLIB_RULE_LHS(rule)!=NULL;++rule) {
-    utillib_vector_push_back(&self->ll1_rules, rule);
-    struct utillib_symbol const * LHS=UTILLIB_RULE_LHS(rule);
-    if (LHS->value > max_value) 
-      max_value=LHS->value;
-    for (struct utillib_symbol const * symbol=UTILLIB_RULE_RHS(rule);
-        symbol!=NULL; ++symbol) {
-      if (symbol->value > max_value)
-        max_value=symbol->value;
-    }
-  }
+  self->rule_index=rule_index;
 }
 
-static void ll1_builder_first_sets_terminal_init(struct utillib_ll1_builder *self) 
+static void ll1_builder_FIRST_init(struct utillib_ll1_builder *self) 
 {
-  for (size_t i=0, size=utillib_vector_size(&self->symbols);i<size;++i) {
-    struct utillib_symbol const * symbol=&self->symbols[i];
-    if (symbol->kind == UT_SYMBOL_TERMINAL) {
-      struct utillib_vector * first_set=utillib_vector_at(&self->first_sets, i);
-      utillib_vector_push_back(first_set, symbol);
+  struct utillib_vector const * rules_vector = utillib_rule_index_rules(self->rule_index);
+  struct utillib_symbol const * LHS;
+  struct utillib_symbol const * FIRST;
+  struct utillib_ll1_set * FIRST_SET;
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
+    LHS=utillib_rule_lhs(rule);
+    FIRST=utillib_vector_at(utillib_rule_rhs(rule), 0);
+    if (utillib_symbol_kind(FIRST) == UT_SYMBOL_TERMINAL) {
+      size_t index=utillib_rule_index_non_terminal_index(self->rule_index,
+          utillib_symbol_value(LHS));
+      FIRST_SET=utillib_vector_at(&self->FIRST, index);
+      utillib_bitset_set(&FIRST_SET->bitset, utillib_symbol_value(FIRST));
     }
   }
 }
 
 
-static void ll1_builder_first_sets_loop(struct utillib_ll1_builder *self)
-{
-
-}
-
-static void ll1_builder_make_table(struct utillib_ll1_builder *self)
-{
-  for (struct utillib_rule const * rule=self->productions;
-      UTILLIB_RULE_LHS(rule) != NULL; ++rule) {
-    size_t index=rule-self->productions;
-    struct utillib_vector  const * first_set=
-      utillib_vector_at(&self->first_sets_p, index);
-    UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, first_set) {
-      struct utillib_symbol const * LHS=UTILLIB_RULE_LHS(rule);
-      if (terminal == UTILLIB_SYMBOL_EPSILON) {
-        struct utillib_vector const * follow_set=
-          utillib_vector_at(&self->follow_sets, index);
-        UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, follow_set) {
-          self->table[LHS->value][symbol->value]=UTILLIB_RULE_NULL;
-        }
-        continue;
-      }
-      self->table[LHS->value][symbol->value]=rule;
-    }
-  }
-}
