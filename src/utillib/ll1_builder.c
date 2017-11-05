@@ -84,21 +84,47 @@ static void ll1_builder_SET_print(struct utillib_ll1_builder * self, int kind)
  * Private interfaces
  */
 
+void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size)
+{
+  self->flag = false;
+  utillib_bitset_init(&self->bitset, symbols_size);
+}
+
+
+bool utillib_ll1_set_union(struct utillib_ll1_set *self, struct utillib_ll1_set const * other)
+{
+  return utillib_bitset_union(&self->bitset, &other->bitset);
+}
+
+void utillib_ll1_set_insert(struct utillib_ll1_set *self, size_t value)
+{
+  utillib_bitset_set(&self->bitset, value);
+}
+
+bool utillib_ll1_set_contains(struct utillib_ll1_set const*self, size_t value)
+{
+  return utillib_bitset_test(&self->bitset, value);
+}
+
+bool utillib_ll1_set_equal(struct utillib_ll1_set const*self,struct utillib_ll1_set const*other)
+{
+  return self->flag == other->flag && utillib_bitset_equal(&self->bitset, &other->bitset);
+}
+
 /**
  * \function ll1_set_create
  * Creates a `utillib_ll1_set' with no terminal symbol
  * and no epsilon special symbol.
- * \param N The number of all the symbols.
+ * \param symbols_size The number of all the symbols.
  */
-static struct utillib_ll1_set *ll1_set_create(size_t N) {
+static struct utillib_ll1_set *ll1_set_create(size_t symbols_size) {
   struct utillib_ll1_set *self = malloc(sizeof *self);
-  self->flag = false;
-  utillib_bitset_init(&self->bitset, N);
+  utillib_ll1_set_init(self, symbols_size);
   return self;
 }
 
 static void ll1_set_destroy(struct utillib_ll1_set *self) {
-  utillib_bitset_destroy(&self->bitset);
+  utillib_ll1_set_destroy(self);
   free(self);
 }
 
@@ -166,12 +192,13 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
-    size_t LHS_index = utillib_rule_index_non_terminal_index(
-        rule_index, utillib_symbol_value(LHS));
-    struct utillib_ll1_set *LHS_FIRST =
-        utillib_vector_at(&self->FIRST, LHS_index);
+    struct utillib_ll1_set *LHS_FIRST = ll1_builder_FIRST_get(self, LHS);
     UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, RHS) {
       size_t RHS_value = utillib_symbol_value(symbol);
+      if (RHS_value == UT_SYM_EPS) {
+        last_eps=true;
+        continue;
+      }
       if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) {
         if (!utillib_ll1_set_contains(LHS_FIRST, RHS_value)) {
           utillib_ll1_set_insert(LHS_FIRST, utillib_symbol_value(symbol));
@@ -190,6 +217,10 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self) {
         /* Traversal ends with non-terminal symbol without `epsilon'. */
         break;
       }
+    }
+    if (last_eps && !utillib_ll1_set_flag(LHS_FIRST)) {
+      utillib_ll1_set_flag(LHS_FIRST) = true;
+      changed=true;
     }
   }
   return changed;
@@ -218,15 +249,17 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
     UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, RHS) {
       size_t RHS_value = utillib_symbol_value(symbol);
+      if (RHS_value == UT_SYM_EPS) {
+        last_eps=true;
+        continue;
+      }
       if (utillib_symbol_kind(symbol) == UT_SYMBOL_TERMINAL) {
         utillib_ll1_set_insert(FIRST, RHS_value);
         last_eps = false;
         break;
       }
-      size_t RHS_index =
-          utillib_rule_index_non_terminal_index(rule_index, RHS_value);
       struct utillib_ll1_set const *RHS_FIRST =
-          utillib_vector_at(&self->FIRST, RHS_index);
+      ll1_builder_FIRST_get(self, symbol);
       utillib_ll1_set_union(FIRST, RHS_FIRST);
       if (!(last_eps = RHS_FIRST->flag)) {
         break;
@@ -422,7 +455,7 @@ void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
   size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
   size_t terminals_size = utillib_rule_index_terminals_size(rule_index);
   /* Since our symbol starts from one. */
-  size_t symbols_size = non_terminals_size + terminals_size + 1;
+  size_t symbols_size = utillib_rule_index_symbols_size(rule_index);
   size_t rules_size = utillib_rule_index_rules_size(rule_index);
 
   utillib_vector_reserve(&self->FIRST, non_terminals_size);

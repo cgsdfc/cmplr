@@ -30,11 +30,10 @@ UTILLIB_ENUM_BEGIN(utillib_ll1_error_kind)
 UTILLIB_ENUM_ELEM(UT_LL1_OK)
 UTILLIB_ENUM_ELEM(UT_LL1_ENOTLL1)
 UTILLIB_ENUM_END(utillib_ll1_error_kind)
-#define utillib_ll1_set_union(A, B)                                            \
-  utillib_bitset_union(&(A)->bitset, &(B)->bitset)
-#define utillib_ll1_set_insert(A, V) utillib_bitset_set(&(A)->bitset, (V))
-#define utillib_ll1_set_contains(A, V) utillib_bitset_test(&(A)->bitset, (V))
+
 #define utillib_ll1_set_flag(A) ((A)->flag)
+#define utillib_ll1_set_destroy(A) utillib_bitset_destroy(&(A)->bitset)
+
 /**
  * \struct utillib_ll1_set
  * A set used for both `FIRST_SET' and `FOLLOW_SET'.
@@ -73,6 +72,12 @@ struct utillib_ll1_builder {
   struct utillib_vector errors;
 };
 
+void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
+bool utillib_ll1_set_union(struct utillib_ll1_set *self, struct utillib_ll1_set const * other);
+void utillib_ll1_set_insert(struct utillib_ll1_set *self, size_t value);
+bool utillib_ll1_set_contains(struct utillib_ll1_set const*self, size_t value);
+bool utillib_ll1_set_equal(struct utillib_ll1_set const*self,struct utillib_ll1_set const*other);
+
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
                               struct utillib_rule_index const *rule_index);
 void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self);
@@ -80,5 +85,5 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table);
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
 utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset);
-
+void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
 #endif // UTILLIB_LL1_BUILDER_H

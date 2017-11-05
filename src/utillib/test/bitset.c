@@ -98,7 +98,8 @@ UTILLIB_TEST(bitset_equal) {
     utillib_bitset_set(&b0, i);
     utillib_bitset_set(&b1, i);
   }
-  UTILLIB_TEST_ASSERT(utillib_bitset_equal(&b0, &b1));
+  UTILLIB_TEST_EXPECT(utillib_bitset_equal(&b0, &b1));
+  UTILLIB_TEST_AUX_INVOKE(bitset_destroy2, &b0, &b1);
 }
 
 UTILLIB_TEST(bitset_is_interset) {
@@ -111,7 +112,8 @@ UTILLIB_TEST(bitset_is_interset) {
      else
        utillib_bitset_set(&b1, i);
   }
-  UTILLIB_TEST_ASSERT_FALSE(utillib_bitset_is_intersect(&b0, &b1));
+  UTILLIB_TEST_EXPECT_FALSE(utillib_bitset_is_intersect(&b0, &b1));
+  UTILLIB_TEST_AUX_INVOKE(bitset_destroy2, &b0, &b1);
 }
   
 UTILLIB_TEST_DEFINE(Utillib_Bitset) {

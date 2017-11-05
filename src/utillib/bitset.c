@@ -22,6 +22,8 @@
 #include "json.h"
 #include <stdlib.h>
 #include <string.h> // memcmp
+#include <assert.h>
+
 /**
  * \function utillib_bitset_init
  * Initilizes a bitset with enough memory
@@ -48,12 +50,14 @@ void utillib_bitset_destroy(struct utillib_bitset *self) {
 
 #define bit_index(pos, self) ((pos) / sizeof (self)->bits[0])
 #define bit_offset(pos, self) ((pos) % sizeof (self)->bits[0])
+#define bitset_index_check(pos, self)  assert (pos < self->N && "Index out of range")
 
 /**
  * \function utillib_bitset_test
  * Tests membership of element at `pos' against the bitset.
  */
 bool utillib_bitset_test(struct utillib_bitset const *self, size_t pos) {
+  bitset_index_check(pos, self);
   return self->bits[bit_index(pos, self)] & (1 << bit_offset(pos, self));
 }
 
@@ -62,6 +66,7 @@ bool utillib_bitset_test(struct utillib_bitset const *self, size_t pos) {
  * Marks that element at `pos' belongs to the bitset.
  */
 void utillib_bitset_set(struct utillib_bitset *self, size_t pos) {
+  bitset_index_check(pos, self);
   self->bits[bit_index(pos, self)] |= (1 << bit_offset(pos, self));
 }
 
@@ -70,6 +75,7 @@ void utillib_bitset_set(struct utillib_bitset *self, size_t pos) {
  * Erases element from the bitset.
  */
 void utillib_bitset_reset(struct utillib_bitset *self, size_t pos) {
+  bitset_index_check(pos, self);
   self->bits[bit_index(pos, self)] &= ~(1 << bit_offset(pos, self));
 }
 

@@ -37,15 +37,15 @@ UTILLIB_TEST_DECLARE(Utillib_Print);
 
 int main(int argc, char **argv) {
   UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule */
-      /* Utillib_Symbol */
+      Utillib_Hash,
+      Utillib_Vector,
+      Utillib_Test,
+      Utillib_String,
+      Utillib_JSON,
+      Utillib_Rule,
+      Utillib_Symbol,
+      Utillib_Bitset,
+      Utillib_Print,
       Utillib_LL1Builder
-      /* Utillib_Bitset, */
-      /* Utillib_Print */
       );
 }
