@@ -48,6 +48,7 @@ struct utillib_rule_literal {
 };
 
 struct utillib_rule {
+  size_t id;
   struct utillib_symbol const *LHS;
   utillib_vector RHS;
 };
@@ -67,6 +68,10 @@ struct utillib_rule_index {
   struct utillib_vector non_terminals;
   size_t min_terminal;
   size_t min_non_terminal;
+  size_t terminals_size;
+  size_t non_terminals_size;
+  size_t symbols_size;
+  size_t rules_size;
   size_t *index;
 };
 
@@ -89,20 +94,28 @@ size_t utillib_rule_index_terminal_index(struct utillib_rule_index const *self,
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
 
-#define utillib_rule_rhs(RULE) (&(RULE)->RHS)
-#define utillib_rule_lhs(RULE) ((RULE)->LHS)
+#define utillib_rule_rhs(self) (&(self)->RHS)
+#define utillib_rule_lhs(self) ((self)->LHS)
+
 #define utillib_rule_index_terminals_size(self)                                \
-  (utillib_vector_size(&(self)->terminals))
+  ((self)->terminals_size)
 #define utillib_rule_index_non_terminals_size(self)                            \
-  (utillib_vector_size(&(self)->non_terminals))
+  ((self)->non_terminals_size)
 #define utillib_rule_index_rules_size(self)                                    \
-  (utillib_vector_size(&(self)->rules))
+  ((self)->rules_size)
+#define utillib_rule_index_symbols_size(self) \
+  ((self)->symbols_size)
+
 #define utillib_rule_index_rules(self) (&(self)->rules)
+#define utillib_rule_index_non_terminals(self) \
+  (&(self)->non_terminals)
+#define utillib_rule_index_terminals(self) (&(self)->terminals)
+
+
 #define utillib_rule_index_rule_at(self, rule_id)                              \
   (utillib_vector_at(&(self)->rules, (rule_id)))
 #define utillib_rule_index_symbol_at(self, symbol_id)                          \
   (&((self)->symbols[symbol_id]))
-#define utillib_rule_index_non_terminals(self) \
-  (&(self)->non_terminals)
+
 
 #endif // UTILLIB_RULE_H

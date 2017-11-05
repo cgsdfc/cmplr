@@ -105,13 +105,13 @@
  * \macro UTILLIB_TEST_CONST
  * Defines a constant scalar.
  */
-#define UTILLIB_TEST_CONST(NAME, VALUE) const size_t NAME = (VALUE);
+#define UTILLIB_TEST_CONST(NAME, VALUE) static const size_t NAME = (VALUE);
 
 /**
  * \macro UTILLIB_TEST_STR
  * Defines a const C string.
  */
-#define UTILLIB_TEST_STR(NAME, VALUE) const char *NAME = VALUE;
+#define UTILLIB_TEST_STR(NAME, VALUE) static const char *NAME = VALUE;
 
 /**
  * \enum utillib_test_suite_t

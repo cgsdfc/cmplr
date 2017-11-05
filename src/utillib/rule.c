@@ -98,6 +98,10 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
       *pvalue = value;
     utillib_vector_push_back(pvector, (utillib_element_t)symbol);
   }
+  self->non_terminals_size=utillib_vector_size(&self->non_terminals);
+  self->terminals_size=utillib_vector_size(&self->terminals);
+  self->rules_size=utillib_vector_size(&self->rules);
+  self->symbols_size=self->non_terminals_size+self->terminals_size+1;
 }
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self) {
