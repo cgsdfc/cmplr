@@ -70,6 +70,7 @@
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
   utillib_json_value_t *NAME(void *, size_t);
 
+
 /**
  * \enum utillib_json_kind_t
  * Type field of `utillib_json_value_t'.
@@ -189,4 +190,8 @@ UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_array_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_array_create)
     UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_array_create)
+void  utillib_json_array_push_back(utillib_json_value_t * self, utillib_json_value_t *  value);
+void  utillib_json_object_push_back(utillib_json_value_t *self, char const * key,utillib_json_value_t * value);
+utillib_json_value_t * utillib_json_object_create_empty(void);
+utillib_json_value_t * utillib_json_array_create_empty(void);
 #endif				// UTILLIB_JSON_H

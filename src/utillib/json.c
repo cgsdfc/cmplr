@@ -25,6 +25,8 @@
 #include <stdarg.h>		// for va_list
 #include <stdlib.h>		// for free
 #include <string.h>
+#include <assert.h>
+
 /**
  * \file utillib/json.c
  * Provides mapping between C structure and JSON
@@ -516,6 +518,46 @@ utillib_json_value_t *utillib_json_array_create_from_vector(void *vec,
                 utillib_vector_push_back(&array->elements, val);
         }
         return json_value_create_ptr(UT_JSON_ARRAY, array);
+}
+
+utillib_json_value_t * utillib_json_array_create_empty(void)
+{
+  utillib_json_array_t *self=malloc(sizeof *self);
+  json_array_init(self);
+  return json_value_create_ptr(UT_JSON_ARRAY, self);
+}
+
+
+utillib_json_value_t * utillib_json_object_create_empty(void)
+{
+  utillib_json_object_t *self=malloc(sizeof *self);
+  json_object_init(self);
+  return json_value_create_ptr(UT_JSON_OBJECT, self);
+}
+
+/**
+ * Provides a way to allow client to create 
+ * JSON arrays and objects by manually adding
+ * elements and members, which may helps them to
+ * interprete the C data differently (not as the
+ * contents of C struct or C array).
+ * \param self Should be returned by either 
+ * `utillib_json_array_create_empty' or
+ * `utillib_json_object_create_empty'.
+ */
+
+void  utillib_json_array_push_back(utillib_json_value_t * self, utillib_json_value_t *  value) 
+{
+  assert (self->kind == UT_JSON_ARRAY);
+  struct utillib_json_array_t * array=self->as_ptr;
+  utillib_vector_push_back(&array->elements, value);
+}
+
+void  utillib_json_object_push_back(utillib_json_value_t *self, char const * key,utillib_json_value_t * value) 
+{
+  assert (self->kind == UT_JSON_OBJECT);
+  struct utillib_json_object_t *object=self->as_ptr;
+  utillib_vector_push_back(&object->members, utillib_make_pair(key, value));
 }
 
 /**

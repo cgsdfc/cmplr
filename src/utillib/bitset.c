@@ -95,16 +95,34 @@ bool utillib_bitset_union(struct utillib_bitset *self, struct utillib_bitset con
   return changed;
 }
 
-/**
- * \function utillib_bitset_json_array_create
+/*
  * Implements JSON format interface.
  */
-utillib_json_value_t * utillib_bitset_json_array_create(void *base, size_t offset)
+
+/**
+ * \function utillib_bitset_json_array_create_rawbits
+ * Dumps the bitset in rawbits.
+ */
+utillib_json_value_t * utillib_bitset_json_array_create_rawbits(void *base, size_t offset)
 {
   struct utillib_bitset *self=base;
   UTILLIB_JSON_ARRAY_DESC(Bitset_ArrayDesc, sizeof *self->bits, utillib_json_size_t_create);
   return utillib_json_array_pointer_create(self->bits, self->size, &Bitset_ArrayDesc);
 }
+
+utillib_json_value_t * utillib_bitset_json_array_create_elements(void *base, size_t offset)
+{
+  struct utillib_bitset const *self=base;
+  utillib_json_value_t * array=utillib_json_array_create_empty();
+  for (size_t i=0; i<offset; ++i) {
+    if (utillib_bitset_test(self, i)) {
+      utillib_json_array_push_back(array, 
+          utillib_json_size_t_create(&i, sizeof i));
+    }
+  }
+  return array;
+}
+
 
 struct utillib_bitset * utillib_bitset_create(size_t N)
 {

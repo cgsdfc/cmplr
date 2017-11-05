@@ -13,9 +13,13 @@ UTILLIB_TEST_TEAR_DOWN() {
 
 UTILLIB_TEST(ll1_builder_init) {
  utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
-
 }
-UTILLIB_TEST(ll1_builder_build_table) {}
+
+UTILLIB_TEST(ll1_builder_build_table) {
+ utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
+ struct  utillib_vector2 table;
+ utillib_ll1_builder_build_table(UT_FIXTURE, &table);
+}
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)

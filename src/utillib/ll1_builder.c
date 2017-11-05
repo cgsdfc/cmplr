@@ -60,19 +60,14 @@ static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self)
 {
   struct utillib_rule_index const *rule_index=self->rule_index;
   struct utillib_vector const * rules_vector = utillib_rule_index_rules(rule_index);
-  struct utillib_symbol const * LHS;
-  struct utillib_symbol const * FIRST;
-  struct utillib_ll1_set * FIRST_SET;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
-    LHS=utillib_rule_lhs(rule);
-    size_t LHS_value=utillib_symbol_value(LHS);
+    struct utillib_symbol const * LHS=utillib_rule_lhs(rule);
     /* Each `RHS' has a least one element */
-    FIRST=utillib_vector_at(utillib_rule_rhs(rule), 0);
+    struct utillib_symbol const * FIRST=utillib_vector_at(utillib_rule_rhs(rule), 0);
     if (utillib_symbol_kind(FIRST) == UT_SYMBOL_TERMINAL) {
-      size_t index=utillib_rule_index_non_terminal_index(rule_index, LHS_value);
-      FIRST_SET=utillib_vector_at(&self->FIRST, index);
-      utillib_bitset_set(&FIRST_SET->bitset, utillib_symbol_value(FIRST));
+      struct utillib_ll1_set * LHS_FIRST=ll1_builder_FIRST_get(self, LHS);
+      utillib_ll1_set_insert(LHS_FIRST, utillib_symbol_value(FIRST));
     }
   }
 }
@@ -95,7 +90,7 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self)
   /* Will be `true' if all the symbols on the right hand side has `epsilon' in */
   /* their `FIRST's. */
   bool last_eps;
-  struct utillib_rule_index const *rule_index;
+  struct utillib_rule_index const *rule_index=self->rule_index;
   struct utillib_vector const * rules_vector=utillib_rule_index_rules(rule_index);
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const*, rule, rules_vector) {
@@ -288,9 +283,11 @@ static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self)
     struct utillib_symbol const * LAST=utillib_vector_back(RHS);
     if (!ll1_builder_FOLLOW_last_epsilon(self, LAST))
       continue;
+    size_t RHS_size=utillib_vector_size(RHS);
     struct utillib_ll1_set const * LHS_FOLLOW=ll1_builder_FOLLOW_get(self, LHS);
-    struct utillib_ll1_set * LAST_FOLLOW=ll1_builder_FOLLOW_get(self, LAST);
-    changed=utillib_ll1_set_union(LAST_FOLLOW, LHS_FOLLOW);
+    struct utillib_symbol const * PREV=utillib_vector_at(RHS, RHS_size-2);
+    struct utillib_ll1_set * PREV_FOLLOW=ll1_builder_FOLLOW_get(self, PREV);
+    changed=utillib_ll1_set_union(PREV_FOLLOW, LHS_FOLLOW);
   }
   return changed;
 }
@@ -305,7 +302,6 @@ static void ll1_builder_fixed_point_loop(struct utillib_ll1_builder *self,
     void ( * partail_eval ) (struct utillib_ll1_builder *),
     bool ( * incremental ) (struct utillib_ll1_builder *))
 {
-  size_t size=utillib_rule_index_non_terminals_size(self->rule_index);
   partail_eval(self);
   while(incremental(self))
     ;
@@ -332,6 +328,10 @@ static void ll1_builder_build_FIRST_FOLLOW(struct utillib_ll1_builder *self)
  * Public interfaces
  */
 
+/**
+ * \function utillib_ll1_builder_init
+ * Builds the sets.
+ */
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
     struct utillib_rule_index const * rule_index)
 {
@@ -360,6 +360,9 @@ void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
   ll1_builder_build_FIRST_FOLLOW(self);
 }
 
+/**
+ * \function utillib_ll1_builder_destroy
+ */
 void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self)
 {
   utillib_vector_destroy_owning(&self->FIRST, (utillib_destroy_func_t*) ll1_set_destroy);
@@ -368,14 +371,22 @@ void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self)
   utillib_vector_destroy(&self->errors);
 }
 
+/**
+ * \function utillib_ll1_builder_build_table
+ * Builds the LL(1) table according to FIRST and FOLLOW sets.
+ * For all the rules, if the FIRST of it contains terminal symbol
+ * `a', then there will be an entry `M[a][LHS]=rule' in the table.
+ * Also, if FIRST contains `epsilon', then for all the `b' in FOLLOW,
+ * there will be an entry `M[b][LHS]=LHS := epsilon' in the table.
+ * Any entry not filled in the above ways will be `NULL' to indicate
+ * error.
+ * \param table The table to be filled in.
+ */
 void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
     struct utillib_vector2 * table)
 {
-  struct utillib_ll1_set const *FIRST;
-  struct utillib_ll1_set const *FOLLOW;
-  struct utillib_rule const * rule;
-  struct utillib_symbol const * LHS;
   struct utillib_rule_index const * rule_index=self->rule_index;
+  struct utillib_vector const * rules_vector = utillib_rule_index_rules(rule_index);
   size_t non_terminals_size=utillib_rule_index_non_terminals_size(rule_index);
   size_t terminals_size=utillib_rule_index_terminals_size(rule_index);
   size_t symbols_size=non_terminals_size+terminals_size;
@@ -383,23 +394,22 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
 
   for (size_t rule_id=0, size=utillib_rule_index_rules_size(rule_index);
       rule_id < size; ++ rule_id) {
-    FIRST=utillib_vector_at(&self->FIRST_RULE, rule_id);
-    rule=utillib_vector_at(utillib_rule_index_rules(rule_index), rule_id);
-    LHS=utillib_rule_lhs(rule);
+    struct utillib_ll1_set const * FIRST=utillib_vector_at(&self->FIRST_RULE, rule_id);
+    struct utillib_rule const * rule=utillib_vector_at(rules_vector, rule_id);
+    struct utillib_symbol const * LHS=utillib_rule_lhs(rule);
     size_t LHS_index=utillib_rule_index_non_terminal_index(rule_index, utillib_symbol_value(LHS));
     for (size_t symbol_id=0; symbol_id<symbols_size; ++symbol_id) {
       if (utillib_ll1_set_contains(FIRST, symbol_id)) {
-        utillib_vector2_set(table, 
-            LHS_index, utillib_rule_index_terminal_index(rule_index, symbol_id),
-            (utillib_element_t) rule);
+        size_t symbol_index=utillib_rule_index_terminal_index(rule_index, symbol_id);
+        utillib_vector2_set(table, LHS_index, symbol_index, (utillib_element_t) rule);
       }
     }
-    if (FIRST->flag) {
-      FOLLOW=utillib_vector_at(&self->FOLLOW, LHS_index);
+    if (utillib_ll1_set_flag(FIRST)) {
+      struct utillib_ll1_set const *FOLLOW=utillib_vector_at(&self->FOLLOW, LHS_index);
       for (size_t symbol_id=0; symbol_id<symbols_size; ++symbol_id) {
         if (utillib_ll1_set_contains(FOLLOW, symbol_id)) {
-          utillib_vector2_set(table,
-              LHS_index, utillib_rule_index_terminal_index(rule_index, symbol_id), 
+          size_t symbol_index=utillib_rule_index_terminal_index(rule_index, symbol_id);
+          utillib_vector2_set(table, LHS_index, symbol_index,
               (utillib_element_t) UTILLIB_RULE_NULL);
         }
       }
@@ -407,6 +417,11 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
   }
 }
 
+/**
+ * \function utillib_ll1_builder_check
+ * Checks for LL(1) confirmness of the input based on the sets
+ * built.
+ */
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self)
 {
 
