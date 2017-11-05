@@ -42,6 +42,7 @@
 struct utillib_bitset {
   size_t *bits;
   size_t size;
+  size_t N;
 };
 
 struct utillib_bitset *utillib_bitset_create(size_t N);
@@ -56,8 +57,5 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
     struct utillib_bitset const * other);
 bool utillib_bitset_equal(struct utillib_bitset const *self, 
     struct utillib_bitset const * other);
-utillib_json_value_t *utillib_bitset_json_array_create_elements(void *base,
-                                                                size_t offset);
-utillib_json_value_t *utillib_bitset_json_array_create_rawbits(void *base,
-                                                               size_t offset);
+utillib_json_value_t *utillib_bitset_json_array_create(void *base, size_t offset);
 #endif // UTILLIB_BITSET_H

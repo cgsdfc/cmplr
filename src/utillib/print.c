@@ -62,15 +62,23 @@ void utillib_printer_init(utillib_printer_t *self, FILE *file, size_t npad) {
 }
 
 /**
+ * \function printer_padding
+ * Pads spaces without changing the indentation.
+ */
+static void printer_padding(utillib_printer_t *self) {
+  size_t lv = self->level;
+  for (size_t i=0; i<lv; ++i)
+    fputs(self->padstr, self->file);
+}
+
+/**
  * \function printer_indent
  * First increases the indentation and then
  * pads spaces.
  */
 static void printer_indent(utillib_printer_t *self) {
-  size_t lv = ++self->level;
-  while (lv--) {
-    fputs(self->padstr, self->file);
-  }
+  ++self->level;
+  printer_padding(self);
 }
 
 /**
@@ -79,21 +87,8 @@ static void printer_indent(utillib_printer_t *self) {
  * pads spaces.
  */
 static void printer_unindent(utillib_printer_t *self) {
-  size_t lv = --self->level;
-  while (lv--) {
-    fputs(self->padstr, self->file);
-  }
-}
-
-/**
- * \function printer_padding
- * Pads spaces without changing the indentation.
- */
-static void printer_padding(utillib_printer_t *self) {
-  size_t lv = self->level;
-  while (lv--) {
-    fputs(self->padstr, self->file);
-  }
+  --self->level;
+  printer_padding(self);
 }
 
 /**

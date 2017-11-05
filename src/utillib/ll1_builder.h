@@ -31,9 +31,9 @@ UTILLIB_ENUM_ELEM(UT_LL1_OK)
 UTILLIB_ENUM_ELEM(UT_LL1_ENOTLL1)
 UTILLIB_ENUM_END(utillib_ll1_error_kind)
 #define utillib_ll1_set_union(A, B)                                            \
-  (utillib_bitset_union(&(A)->bitset, &(B)->bitset))
-#define utillib_ll1_set_insert(A, V) (utillib_bitset_set(&(A)->bitset, (V)))
-#define utillib_ll1_set_contains(A, V) (utillib_bitset_test(&(A)->bitset, (V)))
+  utillib_bitset_union(&(A)->bitset, &(B)->bitset)
+#define utillib_ll1_set_insert(A, V) utillib_bitset_set(&(A)->bitset, (V))
+#define utillib_ll1_set_contains(A, V) utillib_bitset_test(&(A)->bitset, (V))
 #define utillib_ll1_set_flag(A) ((A)->flag)
 /**
  * \struct utillib_ll1_set
@@ -79,5 +79,13 @@ void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self);
 void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table);
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
+utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset);
+
+#define ll1_builder_FOLLOW_print(self) \
+do {\
+  utillib_json_value_t * val=ll1_builder_set_json_array_create(&self->FOLLOW, sizeof self->FOLLOW);\
+  utillib_json_pretty_print(val, stderr);\
+  utillib_json_value_destroy(val);\
+} while(0)
 
 #endif // UTILLIB_LL1_BUILDER_H

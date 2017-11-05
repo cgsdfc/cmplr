@@ -62,21 +62,22 @@ UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) {
   }
 }
 
-UTILLIB_TEST(bitset_json_rawbits) {
+UTILLIB_TEST(bitset_json_array) {
   UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
   utillib_json_value_t *val =
-      utillib_bitset_json_array_create_rawbits(UT_FIXTURE, 0);
+      utillib_bitset_json_array_create(UT_FIXTURE, 10);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
 
-UTILLIB_TEST(bitset_json_elements) {
-  UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
-  utillib_json_value_t *val =
-      utillib_bitset_json_array_create_elements(UT_FIXTURE, 10);
+UTILLIB_TEST(bitset_json_empty) {
+  struct utillib_bitset * EMPTY=UT_FIXTURE;
+  utillib_bitset_init(EMPTY, 10);
+  utillib_json_value_t * val=utillib_bitset_json_array_create(EMPTY, sizeof *EMPTY);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
+
 
 UTILLIB_TEST_AUX(bitset_init2, struct utillib_bitset *A, struct utillib_bitset *B, size_t N) {
   utillib_bitset_init(A, N);
@@ -120,8 +121,8 @@ UTILLIB_TEST_DEFINE(Utillib_Bitset) {
   UTILLIB_TEST_RUN(bitset_reset)
   UTILLIB_TEST_RUN(bitset_equal)
   UTILLIB_TEST_RUN(bitset_is_interset)
-  UTILLIB_TEST_SKIP(bitset_json_rawbits)
-  UTILLIB_TEST_SKIP(bitset_json_elements)
+  UTILLIB_TEST_RUN(bitset_json_array)
+  UTILLIB_TEST_RUN(bitset_json_empty)
   UTILLIB_TEST_END(Utillib_Bitset)
   UTILLIB_TEST_FIXTURE(struct utillib_bitset)
   UTILLIB_TEST_RETURN(Utillib_Bitset)

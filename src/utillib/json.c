@@ -47,7 +47,7 @@ UTILLIB_ETAB_ELEM(UT_JSON_BOOL)
 UTILLIB_ETAB_ELEM(UT_JSON_NULL)
 UTILLIB_ETAB_ELEM(UT_JSON_LONG)
 UTILLIB_ETAB_ELEM(UT_JSON_STRING)
-UTILLIB_ETAB_END(utillib_json_kind_t)
+UTILLIB_ETAB_END(utillib_json_kind_t);
 
 /**
  * \function json_object_register
@@ -378,12 +378,15 @@ static void json_value_tostring(utillib_json_value_t *, utillib_string *);
 static void json_array_tostring(utillib_json_array_t *self,
                                 utillib_string *string) {
   utillib_string_append(string, "[");
+  if (utillib_vector_empty(&self->elements)) {
+    utillib_string_append(string, "]");
+    return;
+  }
   UTILLIB_VECTOR_FOREACH(utillib_json_value_t *, elem, &self->elements) {
     json_value_tostring(elem, string);
     utillib_string_append(string, ",");
   }
-  utillib_string_erase_last(string);
-  utillib_string_append(string, "]");
+  utillib_string_replace_last(string, ']');
 }
 
 /**
@@ -392,6 +395,10 @@ static void json_array_tostring(utillib_json_array_t *self,
 static void json_object_tostring(utillib_json_object_t *self,
                                  utillib_string *string) {
   utillib_string_append(string, "{");
+  if (utillib_vector_empty(&self->members)) {
+    utillib_string_append(string, "}");
+    return;
+  }
   UTILLIB_VECTOR_FOREACH(utillib_pair_t *, mem, &self->members) {
     utillib_string_append(string, "\"");
     utillib_string_append(string, (char const *)UTILLIB_PAIR_FIRST(mem));
@@ -399,9 +406,7 @@ static void json_object_tostring(utillib_json_object_t *self,
     json_value_tostring(UTILLIB_PAIR_SECOND(mem), string);
     utillib_string_append(string, ",");
   }
-  // XXX use `utillib_string_replace_last' ??
-  utillib_string_erase_last(string);
-  utillib_string_append(string, "}");
+  utillib_string_replace_last(string, '}');
 }
 
 /**
@@ -456,15 +461,14 @@ void utillib_json_tostring(utillib_json_value_t *self, utillib_string *str) {
  */
 
 utillib_json_value_t *utillib_json_array_create_from_vector(
-    void *vec, size_t not_used, utillib_json_value_create_func_t *create_func) {
-  utillib_vector *self = vec;
-  utillib_json_array_t *array = malloc(sizeof *array);
-  json_array_init(array);
-  for (utillib_element_pointer_t p = self->begin; p != self->end; ++p) {
-    utillib_json_value_t *val = create_func(*p, sizeof *p);
-    utillib_vector_push_back(&array->elements, val);
+    void *base, size_t not_used, utillib_json_value_create_func_t *create_func) {
+  struct utillib_vector *const vec=base;
+  utillib_json_value_t * array=utillib_json_array_create_empty();
+  for (utillib_element_t *pelem=vec->begin; pelem!=vec->end; ++pelem) {
+    utillib_json_value_t *val = create_func(*pelem, sizeof *pelem);
+    utillib_json_array_push_back(array, val);
   }
-  return json_value_create_ptr(UT_JSON_ARRAY, array);
+  return array;
 }
 
 /**

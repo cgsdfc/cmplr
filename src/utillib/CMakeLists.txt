@@ -25,6 +25,7 @@ add_library(utillib
 )
 
 add_library(utillib_test_lib
+  ./test/print.c
   ./test/vector2.c
   ./test/bitset.c
   ./test/ll1_builder.c

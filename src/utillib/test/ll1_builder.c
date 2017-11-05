@@ -5,31 +5,28 @@
 static struct utillib_rule_index rule_index;
 static const size_t test_rules_FIRST[][10] = {
         [SYM_E] = {SYM_LP, SYM_I, UT_SYM_NULL},
-        [SYM_T] = {SYM_LP, SYM_I, UT_SYM_NULL},
-        [SYM_F] = {SYM_LP, SYM_I, UT_SYM_NULL},
         [SYM_EP] = {SYM_PLUS, UT_SYM_EPS, UT_SYM_NULL},
+        [SYM_T] = {SYM_LP, SYM_I, UT_SYM_NULL},
         [SYM_TP] = {SYM_MUL, UT_SYM_EPS, UT_SYM_NULL},
+        [SYM_F] = {SYM_LP, SYM_I, UT_SYM_NULL},
 };
 
 static const size_t test_rules_FOLLOW[][10] = {
         [SYM_E] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_EP] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_T] = {SYM_PLUS, UT_SYM_EOF, UT_SYM_NULL},
-        [SYM_F] = {SYM_PLUS, SYM_MUL, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_TP] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
+        [SYM_F] = {SYM_PLUS, SYM_MUL, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
 };
 
 UTILLIB_TEST_CONST(test_rules_set_LEN, 5);
 
 UTILLIB_TEST_SET_UP() {
   utillib_rule_index_init(&rule_index, test_symbols, test_rules);
+  utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
 }
 
 UTILLIB_TEST_TEAR_DOWN() { utillib_rule_index_destroy(&rule_index); }
-
-UTILLIB_TEST(ll1_builder_init) {
-  utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
-}
 
 UTILLIB_TEST_AUX(ll1_builder_set_correct,
                  struct utillib_vector const *actual_sets,
@@ -67,12 +64,18 @@ UTILLIB_TEST(ll1_builder_build_table) {
   utillib_ll1_builder_build_table(UT_FIXTURE, &table);
 }
 
+UTILLIB_TEST(ll1_builder_json) {
+  utillib_json_value_t * val=utillib_ll1_builder_json_object_create(UT_FIXTURE, sizeof (struct utillib_ll1_builder));
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+
 UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)
-  UTILLIB_TEST_RUN(ll1_builder_init)
+  UTILLIB_TEST_SKIP(ll1_builder_json)
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
-  UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
-  UTILLIB_TEST_RUN(ll1_builder_build_table)
+  UTILLIB_TEST_SKIP(ll1_builder_FOLLOW_correct)
+  UTILLIB_TEST_SKIP(ll1_builder_build_table)
   UTILLIB_TEST_END(Utillib_LL1Builder)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_builder);
   UTILLIB_TEST_RETURN(Utillib_LL1Builder)

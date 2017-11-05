@@ -18,34 +18,21 @@
    02110-1301 USA
 
 */
-
-#define _GNU_SOURCE
+#include <utillib/print.h>
 #include <utillib/test.h>
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
-UTILLIB_TEST_DECLARE(Utillib_Print);
+UTILLIB_TEST(unbalanced_json) {
 
-int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule */
-      /* Utillib_Symbol */
-      Utillib_LL1Builder
-      /* Utillib_Bitset, */
-      /* Utillib_Print */
-      );
+  char const * unbalanced="[[[XXX]]";
+  utillib_printer_t printer;
+  utillib_printer_init(&printer, stdout, 4);
+  utillib_printer_print_json(&printer, unbalanced);
+}
+
+
+UTILLIB_TEST_DEFINE(Utillib_Print) {
+  UTILLIB_TEST_BEGIN(Utillib_Print)
+    UTILLIB_TEST_RUN(unbalanced_json)
+  UTILLIB_TEST_END(Utillib_Print)
+  UTILLIB_TEST_RETURN(Utillib_Print)
 }

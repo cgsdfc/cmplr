@@ -7,6 +7,37 @@ UTILLIB_ETAB_ELEM_INIT(UT_LL1_OK, "Success")
 UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENOTLL1, "Input is not LL(1)")
 UTILLIB_ETAB_END(utillib_ll1_error_kind);
 
+/**
+ * JSON interfaces
+ */
+
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1BuilderSet_Fields)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "epsilon", flag, utillib_json_bool_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "elements", bitset, utillib_bitset_json_array_create)
+UTILLIB_JSON_OBJECT_FIELD_END(LL1BuilderSet_Fields);
+
+static utillib_json_value_t *
+ll1_builder_set_json_object_create(void *base, size_t offset)
+{
+  return utillib_json_object_create(base, offset, LL1BuilderSet_Fields);
+}
+
+static utillib_json_value_t *
+ll1_builder_set_json_array_create(void *base, size_t offset) 
+{
+  utillib_json_array_create_from_vector(base, offset, ll1_builder_set_json_object_create);
+}
+  
+UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1Builder_Fields)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FIRST", FIRST, ll1_builder_set_json_array_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FOLLOW", FOLLOW, ll1_builder_set_json_array_create)
+UTILLIB_JSON_OBJECT_FIELD_END(LL1Builder_Fields);
+
+utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset)
+{
+  return utillib_json_object_create(base, offset, LL1Builder_Fields);
+}
+
 /*
  * Private interfaces
  */
@@ -27,23 +58,6 @@ static struct utillib_ll1_set *ll1_set_create(size_t N) {
 static void ll1_set_destroy(struct utillib_ll1_set *self) {
   utillib_bitset_destroy(&self->bitset);
   free(self);
-}
-
-static utillib_json_value_t *
-ll1_set_json_array_create(struct utillib_ll1_set const *self,
-                          size_t symbols_size,
-                          struct utillib_rule_index const *rule_index) {
-  utillib_json_value_t *array = utillib_json_array_create_empty();
-  for (size_t i = 0; i < symbols_size; ++i) {
-    if (utillib_ll1_set_contains(self, i)) {
-      char const *symbol_name =
-          utillib_symbol_name(utillib_rule_index_symbol_at(rule_index, i));
-      utillib_json_value_t *val =
-          utillib_json_string_create(&symbol_name, sizeof symbol_name);
-      utillib_json_array_push_back(array, val);
-    }
-  }
-  return array;
 }
 
 /**
@@ -180,6 +194,10 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
   }
 }
 
+/*
+ * FOLLOW construction
+ */
+
 /**
  * \function ll1_builder_FOLLOW_form_correct
  * Helper to judge whether the right hand side of the rule is in the form
@@ -228,12 +246,8 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
       utillib_rule_index_rules(rule_index);
   struct utillib_symbol const *TOP_symbol =
       utillib_rule_index_top_symbol(rule_index);
-  size_t TOP_value = utillib_symbol_value(TOP_symbol);
-  size_t TOP_index =
-      utillib_rule_index_non_terminal_index(rule_index, TOP_value);
-  struct utillib_ll1_set *TOP_FOLLOW =
-      utillib_vector_at(&self->FOLLOW, TOP_index);
-  utillib_bitset_set(&TOP_FOLLOW->bitset, UT_SYM_EOF);
+  struct utillib_ll1_set *TOP_FOLLOW = ll1_builder_FOLLOW_get(self, TOP_symbol);
+  utillib_ll1_set_insert(TOP_FOLLOW, UT_SYM_EOF);
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
@@ -249,13 +263,14 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
       continue;
     struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
     if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
-      utillib_bitset_set(&PREV_FOLLOW->bitset, LAST_value);
+      utillib_ll1_set_insert(PREV_FOLLOW, LAST_value);
       continue;
     }
     struct utillib_ll1_set const *LAST_FIRST =
         ll1_builder_FIRST_get(self, LAST);
     utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
   }
+  ll1_builder_FOLLOW_print(self);
 }
 
 /**
@@ -362,7 +377,8 @@ void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
   self->rule_index = rule_index;
   size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
   size_t terminals_size = utillib_rule_index_terminals_size(rule_index);
-  size_t symbols_size = non_terminals_size + terminals_size;
+  /* Since our symbol starts from one. */
+  size_t symbols_size = non_terminals_size + terminals_size + 1;
   size_t rules_size = utillib_rule_index_rules_size(rule_index);
 
   utillib_vector_reserve(&self->FIRST, non_terminals_size);
@@ -450,3 +466,4 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
  * built.
  */
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self) {}
+
