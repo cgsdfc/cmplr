@@ -182,6 +182,6 @@ UTILLIB_TEST_DEFINE(Utillib_String) {
   UTILLIB_TEST_RUN(append_char)
   UTILLIB_TEST_END(Utillib_String)
 
-  UTILLIB_TEST_FIXTURE(utillib_string);
+  UTILLIB_TEST_FIXTURE(struct utillib_string);
   UTILLIB_TEST_RETURN(Utillib_String);
 }

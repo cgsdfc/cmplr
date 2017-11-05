@@ -25,3 +25,5 @@ test-driver
 *~
 utillib_test
 *.tar.gz
+autoscan.log
+configure.scan

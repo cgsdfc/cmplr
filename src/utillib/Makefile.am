@@ -3,8 +3,10 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = enum.c \
-												unordered_op.c
+												ll1_builder.c \
+												unordered_op.c \
 												bitset.c \
+												vector2.c \
 												symbol.c \
 												rule.c \
 												equal.c \
@@ -23,6 +25,7 @@ libutillib_la_SOURCES = enum.c \
 												vector.c 
 
 include_HEADERS = flags.h \
+									ll1_builder.h \
 									symbol.h \
 									color.h \
 									enum.h \
@@ -44,16 +47,25 @@ include_HEADERS = flags.h \
 									bitset.h \
 									vector.h
 
-check_LTLIBRARIES=libutillib_test.la
-libutillib_test_la_SOURCES= test/json.c \
-														test/bitset.c \
-														test/rule.c \
-														test/symbol.c \
-														test/hash.c \
-														test/test.c \
-														test/vector.c \
-														test/string.c
-
 check_PROGRAMS= utillib_test
-utillib_test_SOURCES=test/driver.c
-utillib_test_LDADD=-lutillib -lutillib_test
+utillib_test_SOURCES=test/driver.c \
+										 test/print.c \
+										 test/flags.c \
+										 test/vector2.c \
+										 test/json.c \
+										 test/ll1_builder.c \
+										 test/bitset.c \
+										 test/rule.c \
+										 test/symbol.c \
+										 test/hash.c \
+										 test/test.c \
+										 test/vector.c \
+										 test/string.c
+
+utillib_test_LDADD=libutillib.la
+
+noinst_PROGRAMS=example-json
+
+example_json_SOURCES=example/json.c
+example_json_LDADD=libutillib.la
+

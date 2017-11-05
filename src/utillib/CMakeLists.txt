@@ -24,8 +24,10 @@ add_library(utillib
   ./string.c
 )
 
-add_library(utillib_test_lib
-  ./test/print.c
+link_libraries(utillib)
+
+add_executable(utillib_test 
+   ./test/print.c
   ./test/vector2.c
   ./test/bitset.c
   ./test/ll1_builder.c
@@ -37,20 +39,11 @@ add_library(utillib_test_lib
   ./test/string.c
   ./test/test.c
   ./test/slist.c
-  ./test/argp.c
+  ./test/flags.c
   ./test/vector.c
   ./test/strref.c
   ./test/logging.c
+ ./test/driver.c
 )
 
-add_executable(utillib_test 
-  ./test/driver.c
-)
-
-target_link_libraries(utillib_test
-  utillib_test_lib
-  utillib
-)
-
-link_libraries(utillib)
 add_executable(example-json example/json.c)
