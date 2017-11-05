@@ -338,6 +338,11 @@ UTILLIB_TEST(test_entry_create) {
       TestEntry_Fields);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
+
+UTILLIB_TEST(json_array_create_empty) {
+
+}
+
 UTILLIB_TEST(json_object_pointer) {
 
 

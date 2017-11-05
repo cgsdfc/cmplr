@@ -42,8 +42,8 @@ int main(int argc, char ** argv) {
       /* Utillib_String, */
       /* Utillib_JSON, */
       /* Utillib_Rule */
-      Utillib_LL1Builder
+      /* Utillib_LL1Builder */
       /* Utillib_Symbol */
-      /* Utillib_Bitset */
+      Utillib_Bitset
   );
 }

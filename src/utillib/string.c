@@ -172,6 +172,7 @@ size_t utillib_string_capacity(utillib_string * self)
 void utillib_string_destroy(utillib_string * self)
 {
 	free(self->c_str);
+  self->c_str=NULL;
 }
 
 /**

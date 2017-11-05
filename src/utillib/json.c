@@ -520,6 +520,10 @@ utillib_json_value_t *utillib_json_array_create_from_vector(void *vec,
         return json_value_create_ptr(UT_JSON_ARRAY, array);
 }
 
+/**
+ * The following functions create empty JSON array or object
+ * that client can fill in with push_back functions.
+ */
 utillib_json_value_t * utillib_json_array_create_empty(void)
 {
   utillib_json_array_t *self=malloc(sizeof *self);

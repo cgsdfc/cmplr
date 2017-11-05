@@ -20,6 +20,7 @@
 */
 #include <utillib/bitset.h>
 #include <utillib/test.h>
+
 UTILLIB_TEST_SET_UP() {}
 UTILLIB_TEST_TEAR_DOWN() {
   utillib_bitset_destroy(UT_FIXTURE);
@@ -52,11 +53,40 @@ UTILLIB_TEST(bitset_reset) {
   UTILLIB_TEST_ASSERT_FALSE(utillib_bitset_test(UT_FIXTURE, 2));
 }
 
+UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) 
+{
+  UTILLIB_TEST_MESSAGE("Fill in some odd numbers in range %lu", N);
+
+  utillib_bitset_init(UT_FIXTURE, N);
+  for (size_t i=0; i< N; ++i ) {
+    if (i & 1) 
+      utillib_bitset_set(UT_FIXTURE, i);
+  }
+}
+
+UTILLIB_TEST(bitset_json_rawbits) {
+  UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
+  utillib_json_value_t * val=utillib_bitset_json_array_create_rawbits(
+      UT_FIXTURE, 0);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+
+UTILLIB_TEST(bitset_json_elements) {
+  UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
+  utillib_json_value_t * val=utillib_bitset_json_array_create_elements(
+      UT_FIXTURE, 10);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Bitset) {
   UTILLIB_TEST_BEGIN(Utillib_Bitset)
     UTILLIB_TEST_RUN(bitset_init)
     UTILLIB_TEST_RUN(bitset_test_and_set)
     UTILLIB_TEST_RUN(bitset_reset)
+    UTILLIB_TEST_RUN(bitset_json_rawbits)
+    UTILLIB_TEST_RUN(bitset_json_elements)
   UTILLIB_TEST_END(Utillib_Bitset)
   UTILLIB_TEST_FIXTURE(struct utillib_bitset)
   UTILLIB_TEST_RETURN(Utillib_Bitset)

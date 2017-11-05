@@ -51,5 +51,6 @@ bool utillib_bitset_test(struct utillib_bitset const*self, size_t pos);
 void utillib_bitset_set(struct utillib_bitset*self, size_t pos);
 void utillib_bitset_reset(struct utillib_bitset*self, size_t pos);
 bool utillib_bitset_union(struct utillib_bitset *self, struct utillib_bitset const * other);
-utillib_json_value_t * utillib_bitset_json_array_create(void *base, size_t offset);
+utillib_json_value_t * utillib_bitset_json_array_create_elements(void *base, size_t offset);
+utillib_json_value_t * utillib_bitset_json_array_create_rawbits(void *base, size_t offset);
 #endif // UTILLIB_BITSET_H

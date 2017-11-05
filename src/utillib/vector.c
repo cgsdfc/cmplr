@@ -163,6 +163,7 @@ void utillib_vector_push_back(struct utillib_vector * self, utillib_element_t x)
 void utillib_vector_destroy(struct utillib_vector * self)
 {
 	free(self->begin);
+  self->begin=NULL;
 }
 
 /**

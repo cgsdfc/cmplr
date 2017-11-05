@@ -45,6 +45,7 @@ void utillib_bitset_init(struct utillib_bitset *self, size_t N)
 void utillib_bitset_destroy(struct utillib_bitset*self)
 {
   free (self->bits);
+  self->bits=NULL;
 }
 
 #define bit_index(pos, self) ((pos) / sizeof *(self)->bits)
@@ -110,6 +111,11 @@ utillib_json_value_t * utillib_bitset_json_array_create_rawbits(void *base, size
   return utillib_json_array_pointer_create(self->bits, self->size, &Bitset_ArrayDesc);
 }
 
+/**
+ * \function utillib_bitset_json_array_create_elements
+ * Notes that since bitset does not store the number of represented
+ * elements, the offset is **abused** to provide that.
+ */
 utillib_json_value_t * utillib_bitset_json_array_create_elements(void *base, size_t offset)
 {
   struct utillib_bitset const *self=base;

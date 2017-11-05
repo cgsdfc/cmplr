@@ -121,9 +121,9 @@
  */
 
 UTILLIB_ENUM_BEGIN(utillib_test_status_t)
-    UTILLIB_ENUM_ELEM(UT_STATUS_SKIP)
-    UTILLIB_ENUM_ELEM(UT_STATUS_RUN)
-    UTILLIB_ENUM_END(utillib_test_status_t)
+  UTILLIB_ENUM_ELEM(UT_STATUS_SKIP)
+  UTILLIB_ENUM_ELEM(UT_STATUS_RUN)
+UTILLIB_ENUM_END(utillib_test_status_t);
 
 /**
  * \enum utillib_test_severity_t
@@ -136,12 +136,12 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
  * \value US_ABORT if failed, aborts the current group
  * of test functions and goes on to next group.
  */
-    UTILLIB_ENUM_BEGIN(utillib_test_severity_t)
-    UTILLIB_ENUM_ELEM(US_SUCCESS)
-    UTILLIB_ENUM_ELEM(US_EXPECT)
-    UTILLIB_ENUM_ELEM(US_ASSERT)
-    UTILLIB_ENUM_ELEM(US_ABORT)
-    UTILLIB_ENUM_END(utillib_test_severity_t)
+UTILLIB_ENUM_BEGIN(utillib_test_severity_t)
+  UTILLIB_ENUM_ELEM(US_SUCCESS)
+  UTILLIB_ENUM_ELEM(US_EXPECT)
+  UTILLIB_ENUM_ELEM(US_ASSERT)
+  UTILLIB_ENUM_ELEM(US_ABORT)
+UTILLIB_ENUM_END(utillib_test_severity_t);
 
 /**
  * \macro UTILLIB_TEST_DECLARE
@@ -188,12 +188,12 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
  * whatever arguments it likes.
  */
 #define UTILLIB_TEST_AUX(NAME, ...)                                            \
-  static void NAME(utillib_test_entry_t *self, ##__VA_ARGS__)
+  static void NAME(utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF, utillib_test_fixture_t UT_FIXTURE, ##__VA_ARGS__)
 /*
  * \macro UTILLIB_TEST_AUX_INVOKE
  * For calling helpers defined by `UTILLIB_TEST_AUX'.
  */
-#define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(self, ##__VA_ARGS__);
+#define UTILLIB_TEST_AUX_INVOKE(NAME, ...) NAME(_UTILLIB_TEST_ENTRY_SELF, UT_FIXTURE, ##__VA_ARGS__);
 /**
  * \macro UTILLIB_TEST_FIXTURE
  * Requires to use fixture.
@@ -208,14 +208,21 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
  * The identifier of the possibily defined fixture.
  * Use it only when you defined `UTILLIB_TEST_FIXTURE' properly.
  */
-#define UT_FIXTURE fixture
+#define UT_FIXTURE _utillib_fixture
+
+/**
+ * \macro _UTILLIB_TEST_ENTRY_SELF
+ * The name of the `self' pointer passed into a test.
+ */
+#define _UTILLIB_TEST_ENTRY_SELF _utillib_test_entry_self
+
 /**
  * \macro UTILLIB_TEST
  * Defines a single test function with the fix signature.
  * \param NAME The name of the test function.
  */
 #define UTILLIB_TEST(NAME)                                                     \
-  static void NAME(utillib_test_entry_t *self,                                 \
+  static void NAME(utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF,                                 \
                    utillib_test_fixture_t UT_FIXTURE)
 /**
  * \macro UTILLIB_TEST_DEFINE
@@ -253,28 +260,28 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
  */
 #define UTILLIB_TEST_RETURN(NAME) return &static_test_env;
 /**
- * \macro UTILLIB_TEST_ENTRY
+ * \macro _UTILLIB_TEST_ENTRY
  * Initilizer of a `utillib_test_entry_t' structure.
  * \param FUNC The identifier of the test function.
  * Only valid C identifier is acceptable.
  * \param STATUS whether to skip or to run this function.
  */
-#define UTILLIB_TEST_ENTRY(FUNC, STATUS)                                       \
+#define _UTILLIB_TEST_ENTRY(FUNC, STATUS)                                       \
   {                                                                            \
       .func = (FUNC), .func_name = #FUNC, .status = (STATUS),                  \
   },
 /**
  * \macro UTILLIB_TEST_RUN
- * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_RUN.
+ * Derives from `_UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_RUN.
  */
-#define UTILLIB_TEST_RUN(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_RUN)
+#define UTILLIB_TEST_RUN(FUNC) _UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_RUN)
 /**
  * \macro UTILLIB_TEST_SKIP
- * Derives from `UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_SKIP.
+ * Derives from `_UTILLIB_TEST_ENTRY' and set `status' to UT_STATUS_SKIP.
  */
-#define UTILLIB_TEST_SKIP(FUNC) UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_SKIP)
+#define UTILLIB_TEST_SKIP(FUNC) _UTILLIB_TEST_ENTRY(FUNC, UT_STATUS_SKIP)
 /**
- * \macro UTILLIB_INIT_PRED
+ * \macro _UTILLIB_INIT_PRED
  * Initilizes a `utillib_test_predicate_t' with all its fields.
  * Since we cannot use brace-initializing with runtime variables, we
  * call `utillib_test_predicate_init' here.
@@ -284,7 +291,7 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
  * \param SEVERITY The level of this failure which may change the control
  * flow of testing. It also has effect on the message displayed.
  */
-#define UTILLIB_INIT_PRED(PRED, EXPR, MSG, SEVERITY)                           \
+#define _UTILLIB_INIT_PRED(PRED, EXPR, MSG, SEVERITY)                           \
   utillib_test_predicate_init(PRED, EXPR, __LINE__, MSG, SEVERITY)
 /**
  * \macro UTILLIB_TEST_MESSAGE
@@ -304,8 +311,8 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
 #define UTILLIB_TEST_ASSERT(EXPR)                                              \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
-    UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_ASSERT);                   \
-    if (utillib_test_predicate(self, &predicate)) {                            \
+    _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_ASSERT);                   \
+    if (utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate)) {                            \
       break;                                                                   \
     }                                                                          \
     return;                                                                    \
@@ -318,8 +325,8 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
 #define UTILLIB_TEST_EXPECT(EXPR)                                              \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
-    UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                   \
-    (void)utillib_test_predicate(self, &predicate);                            \
+    _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                   \
+    (void)utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);                            \
   } while (0);
 /**
  * \macro UTILLIB_TEST_ABORT
@@ -329,8 +336,8 @@ UTILLIB_ENUM_BEGIN(utillib_test_status_t)
 #define UTILLIB_TEST_ABORT(MSG)                                                \
   do {                                                                         \
     utillib_test_predicate_t predicate;                                        \
-    UTILLIB_INIT_PRED(&predicate, false, (MSG), US_ABORT);                     \
-    utillib_test_predicate(self, &predicate);                                  \
+    _UTILLIB_INIT_PRED(&predicate, false, (MSG), US_ABORT);                     \
+    utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);                                  \
     return;                                                                    \
   } while (0);
 /**
