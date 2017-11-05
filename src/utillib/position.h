@@ -4,8 +4,8 @@
 #include <stdio.h>
 
 typedef struct utillib_position {
-	size_t lineno;
-	size_t column;
+  size_t lineno;
+  size_t column;
 } utillib_position;
 
 #define UTILLIB_POS_ROW(p) ((p)->lineno)
@@ -13,4 +13,4 @@ typedef struct utillib_position {
 #define UTILLIB_POS_COLUMN(p) UTILLIB_POS_COL(p)
 #define UTILLIB_POS_LINENO(p) UTILLIB_POS_ROW(p)
 
-#endif				// LEXER_POSITION
+#endif // LEXER_POSITION

@@ -10,4 +10,4 @@ DECL_IS_FUNC_DECLARE(type_specifier);
 DECL_IS_FUNC_DECLARE(type_qualifier_list);
 DECL_IS_FUNC_DECLARE(storage_specifier_list);
 DECL_IS_FUNC_DECLARE(declare_specifier);
-#endif				// RECURSIVE_SPECIFIER_H
+#endif // RECURSIVE_SPECIFIER_H

@@ -36,24 +36,24 @@
 #define STACK_BUFFER_NFILL 10
 
 typedef union element {
-	int int_val;
-	void *ptr_val;
+  int int_val;
+  void *ptr_val;
 } element;
 
 typedef struct stack_buffer_entry {
-	struct stack_buffer_entry *next;
-	element value;
+  struct stack_buffer_entry *next;
+  element value;
 } stack_buffer_entry;
 
 typedef struct stack_buffer {
-	block_buffer *blk_buf;
-	stack_buffer_entry *head;
-	int nalloc;
-	int nused;
+  block_buffer *blk_buf;
+  stack_buffer_entry *head;
+  int nalloc;
+  int nused;
 } stack_buffer;
 
 stack_buffer *alloc_stack_buffer(int elesz);
-int stack_buffer_alloc(stack_buffer * buf, stack_buffer_entry ** ent);
-int stack_buffer_dealloc(stack_buffer * buf, stack_buffer_entry * ent);
+int stack_buffer_alloc(stack_buffer *buf, stack_buffer_entry **ent);
+int stack_buffer_dealloc(stack_buffer *buf, stack_buffer_entry *ent);
 
 #endif

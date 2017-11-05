@@ -3,4 +3,4 @@
 #include "recursive/decl.h"
 DECL_IS_FUNC_DECLARE(enum_specifier);
 DECL_IS_FUNC_DECLARE(struct_or_union_specifier);
-#endif				// RECURSIVE_STRUCT_H
+#endif // RECURSIVE_STRUCT_H

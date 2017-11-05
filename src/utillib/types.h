@@ -24,7 +24,7 @@
 #include <stddef.h>
 
 /* Common typedef */
-typedef void (utillib_destroy_func_t) (void *);
+typedef void(utillib_destroy_func_t)(void *);
 typedef void *utillib_element_t;
 typedef utillib_element_t *utillib_element_pointer_t;
 
@@ -38,8 +38,8 @@ typedef struct utillib_string utillib_string;
 /* Utillib.Unordered_map */
 typedef void const *utillib_key_t;
 typedef void *utillib_value_t;
-typedef size_t(utillib_hash_func_t) (utillib_key_t);
-typedef bool(utillib_equal_func_t) (utillib_key_t, utillib_key_t);
+typedef size_t(utillib_hash_func_t)(utillib_key_t);
+typedef bool(utillib_equal_func_t)(utillib_key_t, utillib_key_t);
 
 /* Utillib.Test */
 typedef struct utillib_test_predicate_t utillib_test_predicate_t;
@@ -48,21 +48,21 @@ typedef struct utillib_test_env_t utillib_test_env_t;
 typedef void *utillib_test_fixture_t;
 
 /* Defined by client as a single test */
-typedef void (utillib_test_func_t) (utillib_test_entry_t *,
-				    utillib_test_fixture_t);
-typedef void (utillib_test_fixfunc_t) (utillib_test_fixture_t);
+typedef void(utillib_test_func_t)(utillib_test_entry_t *,
+                                  utillib_test_fixture_t);
+typedef void(utillib_test_fixfunc_t)(utillib_test_fixture_t);
 /* Returns an registered `utillib_test_entry_t' */
-typedef utillib_test_env_t *(utillib_test_getenv_func_t) (void);
+typedef utillib_test_env_t *(utillib_test_getenv_func_t)(void);
 
 /* Utillib.Print */
 typedef struct utillib_printer_t utillib_printer_t;
-typedef char const *(utillib_print_tostring_func_t) (utillib_element_t);
+typedef char const *(utillib_print_tostring_func_t)(utillib_element_t);
 
 /* Utillib.JSON */
 typedef struct utillib_json_value_t utillib_json_value_t;
 typedef struct utillib_json_object_t utillib_json_object_t;
 typedef struct utillib_json_array_t utillib_json_array_t;
-typedef utillib_json_value_t *(utillib_json_value_create_func_t) (void *,
-								  size_t);
+typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void *,
+                                                                 size_t);
 
-#endif				// UTILLIB_TYPEDEF_H
+#endif // UTILLIB_TYPEDEF_H

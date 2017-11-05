@@ -21,18 +21,14 @@
 #include "equal.h"
 #include <string.h>
 
-bool utillib_equal_c_str(char const *lhs, char const *rhs)
-{
-	return 0 == strcmp(lhs, rhs);
+bool utillib_equal_c_str(char const *lhs, char const *rhs) {
+  return 0 == strcmp(lhs, rhs);
 }
 
-bool utillib_equal_int(int const * i0, int const * i1) 
-{
-  return *(int*) i0 == *(int*) i1;
+bool utillib_equal_int(int const *i0, int const *i1) {
+  return *(int *)i0 == *(int *)i1;
 }
 
-bool utillib_equal_bool(bool const *b0, bool const *b1)
-{
-  return *(bool*) b0 == *(bool*) b1;
+bool utillib_equal_bool(bool const *b0, bool const *b1) {
+  return *(bool *)b0 == *(bool *)b1;
 }
-

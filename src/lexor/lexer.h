@@ -17,4 +17,4 @@ void DestroyLexer(Lexer *);
 int LexerPrintToken(Lexer *);
 const char *LexerTerminalString(Token *);
 const char **LexerTerminalTab(void);
-#endif				// LEXER_LEXER_H
+#endif // LEXER_LEXER_H

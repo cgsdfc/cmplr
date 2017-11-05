@@ -20,16 +20,15 @@
 */
 
 #include "pair.h"
-#include <stdlib.h>		// for malloc
-		    /**
+#include <stdlib.h> // for malloc
+                    /**
                      * \file utillib/pair.c
                      * Provides `utillib_make_pair'.
                      */
 
-utillib_pair_t *utillib_make_pair(utillib_key_t key, utillib_value_t value)
-{
-	utillib_pair_t *pair = malloc(sizeof *pair);
-	UTILLIB_PAIR_FIRST(pair) = key;
-	UTILLIB_PAIR_SECOND(pair) = value;
-	return pair;
+utillib_pair_t *utillib_make_pair(utillib_key_t key, utillib_value_t value) {
+  utillib_pair_t *pair = malloc(sizeof *pair);
+  UTILLIB_PAIR_FIRST(pair) = key;
+  UTILLIB_PAIR_SECOND(pair) = value;
+  return pair;
 }

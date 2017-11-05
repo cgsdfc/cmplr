@@ -10,4 +10,4 @@ DECL_IS_FUNC_DECLARE(optional_abstract_decltor);
 DECL_IS_FUNC_DECLARE(declare);
 DECL_IS_FUNC_DECLARE(abstract_decltor);
 
-#endif				// RECURSIVE_DECLTOR_H
+#endif // RECURSIVE_DECLTOR_H

@@ -21,8 +21,8 @@
 #include "vector.h"
 #include "error.h"
 #include <assert.h>
-#include <stdlib.h>		// calloc free
-#include <string.h>		// memset
+#include <stdlib.h> // calloc free
+#include <string.h> // memset
 
 /**
  * \function push_back_aux
@@ -33,11 +33,9 @@
  * \return void.
  */
 
-static void push_back_aux(struct utillib_vector * self, utillib_element_t x)
-{
-	*(self->end)++ = x;
+static void push_back_aux(struct utillib_vector *self, utillib_element_t x) {
+  *(self->end)++ = x;
 }
-
 
 /**
  * \function do_realloc
@@ -47,19 +45,19 @@ static void push_back_aux(struct utillib_vector * self, utillib_element_t x)
  * \return void.
  */
 
-static void do_realloc(struct utillib_vector * self, size_t new_cap)
-{
-	size_t size = utillib_vector_size(self);
-	utillib_element_pointer_t newspace =
-	    realloc(self->begin, sizeof *newspace * new_cap);
-	if (newspace) {
-		self->begin = newspace;
-		self->end = size + self->begin;
-		self->stor_end = self->begin + new_cap;
-		return;
-	}
-	utillib_die("utillib_vector: realloc failed");
+static void do_realloc(struct utillib_vector *self, size_t new_cap) {
+  size_t size = utillib_vector_size(self);
+  utillib_element_pointer_t newspace =
+      realloc(self->begin, sizeof *newspace * new_cap);
+  if (newspace) {
+    self->begin = newspace;
+    self->end = size + self->begin;
+    self->stor_end = self->begin + new_cap;
+    return;
+  }
+  utillib_die("utillib_vector: realloc failed");
 }
+
 /**
  * \function clear_self
  * Clear the memory of self to zero.
@@ -67,18 +65,17 @@ static void do_realloc(struct utillib_vector * self, size_t new_cap)
  * \return void.
  */
 
-static void clear_self(struct utillib_vector * self)
-{
-	memset(self, 0, sizeof *self);
+static void clear_self(struct utillib_vector *self) {
+  memset(self, 0, sizeof *self);
 }
 
-void utillib_vector_init_fill(struct utillib_vector *self, size_t N, utillib_element_t data)
-{
-  utillib_element_t * begin=malloc(N * sizeof *begin);
-  self->begin=begin;
-  self->end=begin+N;
-  for (self->stor_end=begin; self->stor_end!=self->end; ++self->stor_end) {
-    *self->stor_end=data;
+void utillib_vector_init_fill(struct utillib_vector *self, size_t N,
+                              utillib_element_t data) {
+  utillib_element_t *begin = malloc(N * sizeof *begin);
+  self->begin = begin;
+  self->end = begin + N;
+  for (self->stor_end = begin; self->stor_end != self->end; ++self->stor_end) {
+    *self->stor_end = data;
   }
 }
 
@@ -89,9 +86,8 @@ void utillib_vector_init_fill(struct utillib_vector *self, size_t N, utillib_ele
  * \return true if self has no element else false.
  */
 
-bool utillib_vector_empty(struct utillib_vector * self)
-{
-	return utillib_vector_size(self) == 0;
+bool utillib_vector_empty(struct utillib_vector *self) {
+  return utillib_vector_size(self) == 0;
 }
 
 /**
@@ -101,10 +97,7 @@ bool utillib_vector_empty(struct utillib_vector * self)
  * \return void
  */
 
-void utillib_vector_init(struct utillib_vector * self)
-{
-	clear_self(self);
-}
+void utillib_vector_init(struct utillib_vector *self) { clear_self(self); }
 
 /**
  * \function utillib_vector_size
@@ -113,9 +106,8 @@ void utillib_vector_init(struct utillib_vector * self)
  * \return size of self.
  */
 
-size_t utillib_vector_size(struct utillib_vector const* self)
-{
-	return self->end - self->begin;
+size_t utillib_vector_size(struct utillib_vector const *self) {
+  return self->end - self->begin;
 }
 
 /**
@@ -127,13 +119,11 @@ size_t utillib_vector_size(struct utillib_vector const* self)
  * \return the element at `pos'.
  */
 
-utillib_element_t utillib_vector_at(struct utillib_vector const* self, size_t pos)
-{
-	assert(pos < utillib_vector_size(self));
-	return self->begin[pos];
+utillib_element_t utillib_vector_at(struct utillib_vector const *self,
+                                    size_t pos) {
+  assert(pos < utillib_vector_size(self));
+  return self->begin[pos];
 }
-
-
 
 /**
  * \function utillib_vector_push_back
@@ -144,12 +134,12 @@ utillib_element_t utillib_vector_at(struct utillib_vector const* self, size_t po
  * \return void.
  */
 
-void utillib_vector_push_back(struct utillib_vector * self, utillib_element_t x)
-{
-	if (self->end == self->stor_end) {
-		do_realloc(self, (1 + utillib_vector_size(self)) << 1);
-	}
-	push_back_aux(self, x);
+void utillib_vector_push_back(struct utillib_vector *self,
+                              utillib_element_t x) {
+  if (self->end == self->stor_end) {
+    do_realloc(self, (1 + utillib_vector_size(self)) << 1);
+  }
+  push_back_aux(self, x);
 }
 
 /**
@@ -160,10 +150,9 @@ void utillib_vector_push_back(struct utillib_vector * self, utillib_element_t x)
  * \return void.
  */
 
-void utillib_vector_destroy(struct utillib_vector * self)
-{
-	free(self->begin);
-  self->begin=NULL;
+void utillib_vector_destroy(struct utillib_vector *self) {
+  free(self->begin);
+  self->begin = NULL;
 }
 
 /**
@@ -175,13 +164,10 @@ void utillib_vector_destroy(struct utillib_vector * self)
  * \return void.
  */
 
-void utillib_vector_destroy_owning(struct utillib_vector * self,
-				   utillib_destroy_func_t * destroy)
-{
-	UTILLIB_VECTOR_FOREACH(void *, elem, self) {
-		destroy(elem);
-	}
-	free(self->begin);
+void utillib_vector_destroy_owning(struct utillib_vector *self,
+                                   utillib_destroy_func_t *destroy) {
+  UTILLIB_VECTOR_FOREACH(void *, elem, self) { destroy(elem); }
+  free(self->begin);
 }
 
 /**
@@ -192,9 +178,8 @@ void utillib_vector_destroy_owning(struct utillib_vector * self,
  * \return the element at the front.
  */
 
-utillib_element_t utillib_vector_front(struct utillib_vector const* self)
-{
-	return self->begin[0];
+utillib_element_t utillib_vector_front(struct utillib_vector const *self) {
+  return self->begin[0];
 }
 
 /**
@@ -205,10 +190,9 @@ utillib_element_t utillib_vector_front(struct utillib_vector const* self)
  * \return void.
  */
 
-void utillib_vector_pop_back(struct utillib_vector * self)
-{
-	assert(utillib_vector_size(self) > 0);
-	--(self->end);
+void utillib_vector_pop_back(struct utillib_vector *self) {
+  assert(utillib_vector_size(self) > 0);
+  --(self->end);
 }
 
 /**
@@ -219,10 +203,9 @@ void utillib_vector_pop_back(struct utillib_vector * self)
  * \return the element at the back.
  */
 
-utillib_element_t utillib_vector_back(struct utillib_vector const* self)
-{
-	assert(utillib_vector_size(self) > 0);
-	return *(self->end - 1);
+utillib_element_t utillib_vector_back(struct utillib_vector const *self) {
+  assert(utillib_vector_size(self) > 0);
+  return *(self->end - 1);
 }
 
 /**
@@ -234,11 +217,10 @@ utillib_element_t utillib_vector_back(struct utillib_vector const* self)
  * \return void.
  */
 
-void utillib_vector_set(struct utillib_vector * self, size_t pos,
-			utillib_element_t data)
-{
-	assert(pos < utillib_vector_size(self));
-	self->begin[pos] = data;
+void utillib_vector_set(struct utillib_vector *self, size_t pos,
+                        utillib_element_t data) {
+  assert(pos < utillib_vector_size(self));
+  self->begin[pos] = data;
 }
 
 /**
@@ -249,9 +231,8 @@ void utillib_vector_set(struct utillib_vector * self, size_t pos,
  * \return capacity of self.
  */
 
-size_t utillib_vector_capacity(struct utillib_vector * self)
-{
-	return self->stor_end - self->begin;
+size_t utillib_vector_capacity(struct utillib_vector *self) {
+  return self->stor_end - self->begin;
 }
 
 /**
@@ -261,9 +242,8 @@ size_t utillib_vector_capacity(struct utillib_vector * self)
  * \param self.
  */
 
-void utillib_vector_clear(struct utillib_vector * self)
-{
-	self->end = self->begin;
+void utillib_vector_clear(struct utillib_vector *self) {
+  self->end = self->begin;
 }
 
 /**
@@ -274,11 +254,10 @@ void utillib_vector_clear(struct utillib_vector * self)
  * \return void.
  */
 
-void utillib_vector_reserve(struct utillib_vector * self, size_t new_cap)
-{
-	if (utillib_vector_capacity(self) < new_cap) {
-		do_realloc(self, new_cap);
-	}
+void utillib_vector_reserve(struct utillib_vector *self, size_t new_cap) {
+  if (utillib_vector_capacity(self) < new_cap) {
+    do_realloc(self, new_cap);
+  }
 }
 
 /**
@@ -290,11 +269,10 @@ void utillib_vector_reserve(struct utillib_vector * self, size_t new_cap)
  * \return void.
  */
 
-void utillib_vector_iterator_init(struct utillib_vector_iterator * self,
-				  struct utillib_vector * cont)
-{
-	self->iter_begin = cont->begin;
-	self->iter_end = cont->end;
+void utillib_vector_iterator_init(struct utillib_vector_iterator *self,
+                                  struct utillib_vector *cont) {
+  self->iter_begin = cont->begin;
+  self->iter_end = cont->end;
 }
 
 /**
@@ -308,9 +286,8 @@ void utillib_vector_iterator_init(struct utillib_vector_iterator * self,
  * \return whether self has a valid successor.
  */
 
-bool utillib_vector_iterator_has_next(struct utillib_vector_iterator * self)
-{
-	return self->iter_begin != self->iter_end;
+bool utillib_vector_iterator_has_next(struct utillib_vector_iterator *self) {
+  return self->iter_begin != self->iter_end;
 }
 
 /**
@@ -321,10 +298,9 @@ bool utillib_vector_iterator_has_next(struct utillib_vector_iterator * self)
  * undefined behaviour.
  */
 
-utillib_element_t utillib_vector_iterator_get(struct utillib_vector_iterator *
-					      self)
-{
-	return *self->iter_begin;
+utillib_element_t
+utillib_vector_iterator_get(struct utillib_vector_iterator *self) {
+  return *self->iter_begin;
 }
 
 /**
@@ -335,14 +311,13 @@ utillib_element_t utillib_vector_iterator_get(struct utillib_vector_iterator *
  * \return void.
  */
 
-void utillib_vector_iterator_next(struct utillib_vector_iterator * self)
-{
-	++self->iter_begin;
+void utillib_vector_iterator_next(struct utillib_vector_iterator *self) {
+  ++self->iter_begin;
 }
 
-bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, utillib_equal_func_t *eq)
-{
-  UTILLIB_VECTOR_FOREACH(utillib_element_t , elem, self) {
+bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data,
+                         utillib_equal_func_t *eq) {
+  UTILLIB_VECTOR_FOREACH(utillib_element_t, elem, self) {
     if (eq(elem, data)) {
       return true;
     }
@@ -350,11 +325,11 @@ bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, ut
   return false;
 }
 
-void utillib_vector_back_insert(struct utillib_vector *self, struct utillib_vector *other)
-{
-  size_t new_cap=utillib_vector_size(self) + utillib_vector_size(other);
+void utillib_vector_back_insert(struct utillib_vector *self,
+                                struct utillib_vector *other) {
+  size_t new_cap = utillib_vector_size(self) + utillib_vector_size(other);
   utillib_vector_reserve(self, new_cap);
-  UTILLIB_VECTOR_FOREACH(utillib_element_t , elem, other) {
+  UTILLIB_VECTOR_FOREACH(utillib_element_t, elem, other) {
     utillib_vector_push_back(self, elem);
   }
 }

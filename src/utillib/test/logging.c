@@ -20,6 +20,5 @@ UTILLIB_TEST(helloworld) {
 }
 
 UTILLIB_TEST_BEGIN(Utillib_Logging)
-  UTILLIB_TEST_RUN(helloworld)
+UTILLIB_TEST_RUN(helloworld)
 UTILLIB_TEST_END(logging)
-

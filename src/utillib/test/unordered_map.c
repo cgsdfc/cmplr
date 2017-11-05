@@ -1,5 +1,5 @@
-#include <utillib/unordered_map.h>
 #include <utillib/test.h>
+#include <utillib/unordered_map.h>
 
 static void test_unordered_map(void) {
   utillib_unordered_map map;

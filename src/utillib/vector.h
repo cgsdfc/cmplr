@@ -30,9 +30,9 @@
  * and storage tail for resizing.
  */
 
-#include "types.h"		// for utillib_element_pointer_t, utillib_element_t
-#include <stdbool.h>		// for bool
-#include <stddef.h>		// size_t
+#include "types.h"   // for utillib_element_pointer_t, utillib_element_t
+#include <stdbool.h> // for bool
+#include <stddef.h>  // size_t
 
 #define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))
 #define UTILLIB_VECTOR_BEGIN(V) ((V)->begin)
@@ -52,8 +52,8 @@
 
 /** \brief the element of utillib_vector is generic pointer */
 struct utillib_vector {
-	utillib_element_pointer_t begin, end, stor_end;
-} ;
+  utillib_element_pointer_t begin, end, stor_end;
+};
 
 /**
  * \struct utillib_vector_iterator
@@ -61,31 +61,33 @@ struct utillib_vector {
  * the vector to allow forward triversal.
  */
 struct utillib_vector_iterator {
-	utillib_element_pointer_t iter_begin, iter_end;
+  utillib_element_pointer_t iter_begin, iter_end;
 };
 
 /** \brief utillib_vector_iterator */
 void utillib_vector_iterator_init(struct utillib_vector_iterator *,
-				  struct utillib_vector *);
+                                  struct utillib_vector *);
 bool utillib_vector_iterator_has_next(struct utillib_vector_iterator *);
 void utillib_vector_iterator_next(struct utillib_vector_iterator *);
 utillib_element_t utillib_vector_iterator_get(struct utillib_vector_iterator *);
 
 /** \brief constructor destructor */
 void utillib_vector_init(struct utillib_vector *);
-void utillib_vector_init_fill(struct utillib_vector *, size_t, utillib_element_t);
+void utillib_vector_init_fill(struct utillib_vector *, size_t,
+                              utillib_element_t);
 void utillib_vector_destroy(struct utillib_vector *);
 void utillib_vector_destroy_owning(struct utillib_vector *,
-				   utillib_destroy_func_t *);
+                                   utillib_destroy_func_t *);
 
 /** \brief observer */
-size_t utillib_vector_size(struct utillib_vector const*);
+size_t utillib_vector_size(struct utillib_vector const *);
 size_t utillib_vector_capacity(struct utillib_vector *);
 bool utillib_vector_empty(struct utillib_vector *);
-utillib_element_t utillib_vector_at(struct utillib_vector const*, size_t);
-utillib_element_t utillib_vector_back(struct utillib_vector const*);
-utillib_element_t utillib_vector_front(struct utillib_vector const*);
-bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data, utillib_equal_func_t *eq);
+utillib_element_t utillib_vector_at(struct utillib_vector const *, size_t);
+utillib_element_t utillib_vector_back(struct utillib_vector const *);
+utillib_element_t utillib_vector_front(struct utillib_vector const *);
+bool utillib_vector_find(struct utillib_vector *self, utillib_element_t data,
+                         utillib_equal_func_t *eq);
 
 /** \brief modifier */
 void utillib_vector_push_back(struct utillib_vector *, utillib_element_t);
@@ -93,7 +95,8 @@ void utillib_vector_pop_back(struct utillib_vector *);
 void utillib_vector_reserve(struct utillib_vector *, size_t);
 void utillib_vector_set(struct utillib_vector *, size_t, utillib_element_t);
 void utillib_vector_clear(struct utillib_vector *);
-void utillib_vector_back_insert(struct utillib_vector *self, struct utillib_vector *other);
+void utillib_vector_back_insert(struct utillib_vector *self,
+                                struct utillib_vector *other);
 void utillib_vector_fill(struct utillib_vector *self, utillib_element_t data);
 
-#endif				// UTILLIB_VECTOR_H
+#endif // UTILLIB_VECTOR_H

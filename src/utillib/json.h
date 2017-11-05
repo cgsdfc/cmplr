@@ -30,7 +30,7 @@
 #include "string.h"
 #include "types.h"
 #include "vector.h"
-#include <stdarg.h>		// for va_list
+#include <stdarg.h> // for va_list
 #include <stdio.h>
 
 /**
@@ -38,7 +38,7 @@
  * Begins to define an array of `utillib_json_object_field_t'.
  */
 #define UTILLIB_JSON_OBJECT_FIELD_BEGIN(NAME)                                  \
- static const utillib_json_object_field_t NAME[] = {
+  static const utillib_json_object_field_t NAME[] = {
 #define UTILLIB_JSON_OBJECT_FIELD_END(NAME)                                    \
   { 0 }                                                                        \
   }                                                                            \
@@ -70,7 +70,6 @@
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
   utillib_json_value_t *NAME(void *, size_t);
 
-
 /**
  * \enum utillib_json_kind_t
  * Type field of `utillib_json_value_t'.
@@ -78,15 +77,15 @@
  */
 
 UTILLIB_ENUM_BEGIN(utillib_json_kind_t)
-    UTILLIB_ENUM_ELEM(UT_JSON_REAL)
-    UTILLIB_ENUM_ELEM(UT_JSON_OBJECT)
-    UTILLIB_ENUM_ELEM(UT_JSON_ARRAY)
-    UTILLIB_ENUM_ELEM(UT_JSON_BOOL)
-    UTILLIB_ENUM_ELEM(UT_JSON_NULL)
-    UTILLIB_ENUM_ELEM(UT_JSON_LONG)
-    UTILLIB_ENUM_ELEM(UT_JSON_SIZE_T)
-    UTILLIB_ENUM_ELEM(UT_JSON_INT)
-    UTILLIB_ENUM_ELEM(UT_JSON_STRING)
+UTILLIB_ENUM_ELEM(UT_JSON_REAL)
+UTILLIB_ENUM_ELEM(UT_JSON_OBJECT)
+UTILLIB_ENUM_ELEM(UT_JSON_ARRAY)
+UTILLIB_ENUM_ELEM(UT_JSON_BOOL)
+UTILLIB_ENUM_ELEM(UT_JSON_NULL)
+UTILLIB_ENUM_ELEM(UT_JSON_LONG)
+UTILLIB_ENUM_ELEM(UT_JSON_SIZE_T)
+UTILLIB_ENUM_ELEM(UT_JSON_INT)
+UTILLIB_ENUM_ELEM(UT_JSON_STRING)
 UTILLIB_ENUM_END(utillib_json_kind_t)
 
 /**
@@ -94,10 +93,10 @@ UTILLIB_ENUM_END(utillib_json_kind_t)
  * Meta information about a C structure.
  */
 typedef struct utillib_json_object_field_t {
-	utillib_json_value_create_func_t *create_func;
-	char const *key;
-	size_t offset;
-	size_t size;
+  utillib_json_value_create_func_t *create_func;
+  char const *key;
+  size_t offset;
+  size_t size;
 } utillib_json_object_field_t;
 
 /**
@@ -105,8 +104,8 @@ typedef struct utillib_json_object_field_t {
  * Meta information about a C array.
  */
 typedef struct utillib_json_array_desc_t {
-	utillib_json_value_create_func_t *create_func;
-	size_t elemsz;
+  utillib_json_value_create_func_t *create_func;
+  size_t elemsz;
 } utillib_json_array_desc_t;
 
 /**
@@ -115,7 +114,7 @@ typedef struct utillib_json_array_desc_t {
  */
 
 typedef struct utillib_json_object_t {
-	utillib_vector members;
+  utillib_vector members;
 } utillib_json_object_t;
 
 /**
@@ -123,7 +122,7 @@ typedef struct utillib_json_object_t {
  * Represents a JSON array.
  */
 typedef struct utillib_json_array_t {
-	utillib_vector elements;
+  utillib_vector elements;
 } utillib_json_array_t;
 
 /**
@@ -132,66 +131,61 @@ typedef struct utillib_json_array_t {
  * of JSON's different kinds value.
  */
 typedef struct utillib_json_value_t {
-	/* Takes value from `utillib_json_kind_t'. */
-	int kind;
-	union {
-		bool as_bool;
-		double as_double;
-		long as_long;
-		char const *as_str;
+  /* Takes value from `utillib_json_kind_t'. */
+  int kind;
+  union {
+    bool as_bool;
+    double as_double;
+    long as_long;
+    char const *as_str;
     int as_int;
     size_t as_size_t;
     /**
      * kind:`UT_JSON_ARRAY' && as_ptr:`utillib_json_array_t'.
      * kind:`UT_JSON_OBJECT' && as_ptr:`utillib_json_object_t'.
      */
-		void *as_ptr;
-	};
+    void *as_ptr;
+  };
 } utillib_json_value_t;
 
-utillib_json_value_t *utillib_json_object_create(void *, size_t,
-						 const
-						 utillib_json_object_field_t
-						 *);
-utillib_json_value_t *utillib_json_object_pointer_create(void *, size_t,
-							 const
-							 utillib_json_object_field_t
-							 *);
-utillib_json_value_t *utillib_json_array_create(void *, size_t,
-						const
-						utillib_json_array_desc_t
-						*);
+utillib_json_value_t *
+utillib_json_object_create(void *, size_t, const utillib_json_object_field_t *);
+utillib_json_value_t *
+utillib_json_object_pointer_create(void *, size_t,
+                                   const utillib_json_object_field_t *);
+utillib_json_value_t *
+utillib_json_array_create(void *, size_t, const utillib_json_array_desc_t *);
 utillib_json_value_t *utillib_json_value_create(int, ...);
 utillib_json_value_t *utillib_json_value_createV(int, va_list);
 void utillib_json_value_destroy(utillib_json_value_t *);
 utillib_json_value_t *utillib_json_null_create(void *, size_t);
 utillib_json_value_t *utillib_json_null_array_create(void *, size_t);
-utillib_json_value_t *utillib_json_array_create_from_vector(void *, size_t,
-							    utillib_json_value_create_func_t
-							    *);
-utillib_json_value_t *utillib_json_array_pointer_create(void *, size_t,
-							const
-							utillib_json_array_desc_t
-							*);
+utillib_json_value_t *
+utillib_json_array_create_from_vector(void *, size_t,
+                                      utillib_json_value_create_func_t *);
+utillib_json_value_t *
+utillib_json_array_pointer_create(void *, size_t,
+                                  const utillib_json_array_desc_t *);
 void utillib_json_tostring(utillib_json_value_t *, utillib_string *);
-void utillib_json_pretty_print(utillib_json_value_t *,
-			       FILE*);
+void utillib_json_pretty_print(utillib_json_value_t *, FILE *);
 
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_create)
 
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_array_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_array_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_array_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_array_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_array_create)
-    UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_array_create)
-void  utillib_json_array_push_back(utillib_json_value_t * self, utillib_json_value_t *  value);
-void  utillib_json_object_push_back(utillib_json_value_t *self, char const * key,utillib_json_value_t * value);
-utillib_json_value_t * utillib_json_object_create_empty(void);
-utillib_json_value_t * utillib_json_array_create_empty(void);
-#endif				// UTILLIB_JSON_H
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_array_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_array_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_long_array_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_string_array_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_int_array_create)
+UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_size_t_array_create)
+void utillib_json_array_push_back(utillib_json_value_t *self,
+                                  utillib_json_value_t *value);
+void utillib_json_object_push_back(utillib_json_value_t *self, char const *key,
+                                   utillib_json_value_t *value);
+utillib_json_value_t *utillib_json_object_create_empty(void);
+utillib_json_value_t *utillib_json_array_create_empty(void);
+#endif // UTILLIB_JSON_H

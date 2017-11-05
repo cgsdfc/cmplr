@@ -21,8 +21,8 @@
 #ifndef UTILLIB_PRINT_H
 #define UTILLIB_PRINT_H
 #include "types.h"
-#include <stdarg.h>		// for va_list
-#include <stddef.h>		// for offsetof
+#include <stdarg.h> // for va_list
+#include <stddef.h> // for offsetof
 #include <stdio.h>
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
 
@@ -30,16 +30,16 @@ void utillib_print_indent(FILE *, size_t, int);
 char *utillib_static_buf(void);
 char const *utillib_static_vsprintf(char const *fmt, va_list ap);
 char const *utillib_static_sprintf(char const *fmt, ...)
-    __attribute__ ((__format__(__printf__, 1, 2)));
+    __attribute__((__format__(__printf__, 1, 2)));
 char const *utillib_int_str(void *);
 
 typedef struct utillib_printer_t {
-	FILE *file;
-	size_t level;
-	char const *padstr;
+  FILE *file;
+  size_t level;
+  char const *padstr;
 } utillib_printer_t;
 
 void utillib_printer_init(utillib_printer_t *, FILE *, size_t);
 void utillib_printer_print_json(utillib_printer_t *, char const *);
 
-#endif				// UTILLIB_PRINT_H
+#endif // UTILLIB_PRINT_H

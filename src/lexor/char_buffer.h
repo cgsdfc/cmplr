@@ -4,13 +4,13 @@
 #include "lexer/position.h"
 #define CHAR_BUFFER_MAX_LINE BUFSIZ
 typedef struct char_buffer {
-	char *buf;
-	position pos;
-	int index;
-	int end;
-	int *limits;
-	int lines;
-	char *filename;
+  char *buf;
+  position pos;
+  int index;
+  int end;
+  int *limits;
+  int lines;
+  char *filename;
 
 } char_buffer;
 

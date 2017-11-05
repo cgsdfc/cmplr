@@ -1,5 +1,0 @@
-#include <utillib/json.h>
-
-struct compilation_entry {
-  char const * dir_name;
-  char const * 
