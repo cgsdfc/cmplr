@@ -2,6 +2,7 @@ set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
   ./ll1_parser.c
+  ./ll1_parser.c
   ./vector2.c
   ./bitset.c
   ./unordered_op.c
@@ -22,12 +23,13 @@ add_library(utillib
   ./slist.c
   ./vector.c
   ./string.c
-)
+  )
 
 link_libraries(utillib)
 
 add_executable(utillib_test 
-   ./test/print.c
+  ./test/ll1_parser.c
+  ./test/print.c
   ./test/vector2.c
   ./test/bitset.c
   ./test/ll1_builder.c
@@ -43,7 +45,7 @@ add_executable(utillib_test
   ./test/vector.c
   ./test/strref.c
   ./test/logging.c
- ./test/driver.c
-)
+  ./test/driver.c
+  )
 
 add_executable(example-json example/json.c)

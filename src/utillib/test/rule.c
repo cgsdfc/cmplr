@@ -10,10 +10,10 @@ UTILLIB_TEST_TEAR_DOWN() { utillib_rule_index_destroy(UT_FIXTURE); }
 UTILLIB_TEST(rule_index_init) {
   struct utillib_rule_index *index = UT_FIXTURE;
   UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_terminals_size(index),
-                         terminals_size);
+                         test_terminals_size);
   UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(index),
-                         non_terminals_size);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), rules_size);
+                         test_non_terminals_size);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), test_rules_size);
 }
 
 UTILLIB_TEST(rule_index_json) {

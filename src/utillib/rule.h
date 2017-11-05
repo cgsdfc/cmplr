@@ -96,6 +96,7 @@ utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)
+#define utillib_rule_id(self) ((self)->id)
 
 #define utillib_rule_index_terminals_size(self)                                \
   ((self)->terminals_size)

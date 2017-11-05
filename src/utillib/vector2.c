@@ -31,7 +31,7 @@ void utillib_vector2_init(struct utillib_vector2 *self, size_t nrow,
 
 #define vector2_offset(self, row, col) ((self)->ncol * row + col)
 
-utillib_element_t utillib_vector2_at(struct utillib_vector2 *self, size_t row,
+utillib_element_t utillib_vector2_at(struct utillib_vector2 const *self, size_t row,
                                      size_t col) {
   return self->array[vector2_offset(self, row, col)];
 }

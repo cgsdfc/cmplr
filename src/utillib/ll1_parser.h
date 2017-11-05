@@ -20,9 +20,29 @@
 */
 #ifndef UTILLIB_LL1_PARSER_H
 #define UTILLIB_LL1_PARSER_H
+#include "enum.h"
 #include "rule.h"
-#include "slist.h"
 #include "vector2.h"
+#include "vector.h"
+#include "scanner.h"
+
+UTILLIB_ENUM_BEGIN(utillib_ll1_parser_error_kind)
+  UTILLIB_ENUM_ELEM(UT_LL1_PARSER_OK)
+  UTILLIB_ENUM_ELEM(UT_LL1_PARSER_ERR)
+UTILLIB_ENUM_END(utillib_ll1_parser_error_kind);
+
+struct utillib_ll1_parser_error {
+
+
+};
+
+struct utillib_ll1_parser_context {
+  size_t RHS_count;
+  size_t rule_id;
+};
+
+struct utillib_ll1_parser;
+typedef int (utillib_ll1_parser_callback_t) (void *, struct utillib_ll1_parser *);
 
 /**
  * \struct utillib_ll1_parser
@@ -31,11 +51,22 @@
  */
 
 struct utillib_ll1_parser {
-  struct utillib_slist symbol_stack;
-  struct utillib_slist tree_stack;
-  struct utillib_slist error_stack;
+  void *client_data;
+  struct utillib_vector tree_stack;
+  struct utillib_vector context;
+  struct utillib_vector symbol_stack;
+  struct utillib_vector error_stack;
   struct utillib_rule_index const *rule_index;
-  struct utillib_vector2 const *table;
+  struct utillib_vector2 *table;
+  utillib_ll1_parser_callback_t const** callbacks;
 };
 
+void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
+                             struct utillib_rule_index const *rule_index,
+                             struct utillib_vector2 *table,
+                             void * client_data,
+                             const utillib_ll1_parser_callback_t ** callbacks) ;
+void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) ;
+int utillib_ll1_parser_parse(struct utillib_ll1_parser *self,
+    void *input, struct utillib_scanner_op const *scanner);
 #endif // UTILLIB_LL1_PARSER_H

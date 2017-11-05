@@ -3,23 +3,8 @@
 #include <utillib/test.h>
 
 static struct utillib_rule_index rule_index;
-static const size_t test_rules_FIRST[][10] = {
-        [SYM_E] = {SYM_LP, SYM_I, UT_SYM_NULL},
-        [SYM_EP] = {SYM_PLUS, UT_SYM_EPS, UT_SYM_NULL},
-        [SYM_T] = {SYM_LP, SYM_I, UT_SYM_NULL},
-        [SYM_TP] = {SYM_MUL, UT_SYM_EPS, UT_SYM_NULL},
-        [SYM_F] = {SYM_LP, SYM_I, UT_SYM_NULL},
-};
 
-static const size_t test_rules_FOLLOW[][10] = {
-        [SYM_E] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
-        [SYM_EP] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
-        [SYM_T] = {SYM_PLUS, UT_SYM_EOF, UT_SYM_NULL},
-        [SYM_TP] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
-        [SYM_F] = {SYM_PLUS, SYM_MUL, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
-};
 
-UTILLIB_TEST_CONST(test_rules_set_LEN, 5);
 
 UTILLIB_TEST_SET_UP() {
   utillib_rule_index_init(&rule_index, test_symbols, test_rules);
@@ -99,7 +84,7 @@ UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)
   UTILLIB_TEST_RUN(ll1_builder_json)
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
-  UTILLIB_TEST_SKIP(ll1_builder_FOLLOW_correct)
+  UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
   UTILLIB_TEST_RUN(ll1_builder_build_table)
   UTILLIB_TEST_END(Utillib_LL1Builder)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_builder);
