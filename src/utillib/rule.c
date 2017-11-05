@@ -22,8 +22,21 @@
 #include <stdlib.h> // malloc
 #include <limits.h> // ULONG_MAX
 
+/**
+ * \variable utillib_rule_null
+ * Represents any rule whose right hand side is 
+ * merely an `epsilon'.
+ * Thus, the left hand side is out of concern or
+ * can be deducted from context.
+ */
 struct utillib_rule utillib_rule_null;
 
+/**
+ * \function rule_index_rule_create
+ * Creates `utillib_rule' from `utillib_rule_literal'.
+ * \param symbols The symbol table to look up.
+ * \param rule_literal The literal under concern.
+ */
 static struct utillib_rule * rule_index_rule_create (
     struct utillib_symbol const *symbols, 
     struct utillib_rule_literal const *rule_literal)
@@ -43,6 +56,17 @@ static struct utillib_rule * rule_index_rule_create (
   return self;
 }
 
+static void rule_index_rule_destroy(struct utillib_rule *self)
+{
+  utillib_vector_destroy(&self->RHS);
+  free(self);
+}
+
+
+/**
+ * \function utillib_rule_index_init
+ * Initilizes self.
+ */
 void utillib_rule_index_init(struct utillib_rule_index * self, 
     struct utillib_symbol const * symbols,
     struct utillib_rule_literal const * rule_literals)
@@ -77,12 +101,6 @@ void utillib_rule_index_init(struct utillib_rule_index * self,
       *pvalue=value;
     utillib_vector_push_back(pvector, (utillib_element_t) symbol);
   }
-}
-
-static void rule_index_rule_destroy(struct utillib_rule *self)
-{
-  utillib_vector_destroy(&self->RHS);
-  free(self);
 }
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self) {

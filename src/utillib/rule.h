@@ -20,10 +20,17 @@
 */
 #ifndef UTILLIB_RULE_H
 #define UTILLIB_RULE_H
+/**
+ * \file utillib/rule.h
+ * Provides supports for defining BNF rule in source code
+ * and building index from rules to allow other parser generating
+ * algorithm to run upon.
+ */
 #include "symbol.h"
 #include "vector.h"
 #include "json.h"
   
+/* Currently limit for the maximum size of right hand side */
 #define UTILLIB_RULE_MAX_RHS 10
 #define UTILLIB_RULE_NULL (&utillib_rule_null)
 #define UTILLIB_RULE_ELEM(LHS, ...) { .LHS_LIT=(LHS), .RHS_LIT= {  __VA_ARGS__ , UT_SYM_NULL } },
@@ -44,19 +51,17 @@ extern struct utillib_rule utillib_rule_null;
 
 /**
  * \struct utillib_rule_index
- * Provides fast access to each rule
- * given the left-hand-side non terminal symbol
- * of the rule. 
- * Each element of the index is a pair of the LHS
- * symbol and its productions in a vector.
+ * Collects basic info about the rule defined
+ * in source code and provides it to other
+ * algorithms.
  */
 struct utillib_rule_index {
   struct utillib_vector rules;
   struct utillib_vector terminals;
   struct utillib_vector non_terminals;
-  size_t * index;
   size_t min_terminal;
   size_t min_non_terminal;
+  size_t * index;
 };
 
 void utillib_rule_index_init(struct utillib_rule_index * self, 
@@ -70,6 +75,8 @@ utillib_json_value_t * utillib_rule_index_json_object_create(void *base, size_t 
 
 size_t utillib_rule_index_non_terminal_index(struct utillib_rule_index const*self, size_t value);
 size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, size_t value);
+struct utillib_symbol * utillib_rule_index_top_symbol(struct utillib_rule_index const*self);
+
 #define utillib_rule_rhs(RULE) (&(RULE)->RHS)
 #define utillib_rule_lhs(RULE) ((RULE)->LHS)
 #define utillib_rule_index_terminals_size(self) \
@@ -83,6 +90,5 @@ size_t utillib_rule_index_terminal_index(struct utillib_rule_index const*self, s
 #define utillib_rule_index_rule_at(self, rule_id) \
   (utillib_vector_at(&(self)->rules, (rule_id)))
 
-struct utillib_symbol * utillib_rule_index_top_symbol(struct utillib_rule_index const*self);
 
 #endif // UTILLIB_RULE_H

@@ -18,32 +18,24 @@
    02110-1301 USA
 
 */
-
-#define _GNU_SOURCE
+#include <utillib/vector2.h>
 #include <utillib/test.h>
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
+UTILLIB_TEST_SET_UP() {}
 
-int main(int argc, char ** argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      /* Utillib_Hash, */
-      /* Utillib_Vector, */
-      /* Utillib_Test, */
-      /* Utillib_String, */
-      /* Utillib_JSON, */
-      /* Utillib_Rule */
-      Utillib_LL1Builder
-      /* Utillib_Symbol */
-      /* Utillib_Bitset */
-  );
+UTILLIB_TEST_TEAR_DOWN() {
+  utillib_vector2_destroy(UT_FIXTURE);
 }
+UTILLIB_TEST(vector2_at) {}
+UTILLIB_TEST(vector2_set) {}
+
+
+UTILLIB_TEST_DEFINE(Utillib_Vector2) {
+  UTILLIB_TEST_BEGIN(Utillib_Vector)
+  UTILLIB_TEST_RUN(vector2_at)
+  UTILLIB_TEST_RUN(vector2_set)
+  UTILLIB_TEST_END(Utillib_Vector2)
+  UTILLIB_TEST_FIXTURE(struct utillib_vector2);
+  UTILLIB_TEST_RETURN(Utillib_Vector2)
+}
+

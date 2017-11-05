@@ -208,7 +208,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t);
  * The identifier of the possibily defined fixture.
  * Use it only when you defined `UTILLIB_TEST_FIXTURE' properly.
  */
-#define UT_FIXTURE _utillib_fixture
+#define UT_FIXTURE _utillib_test_fixture
 
 /**
  * \macro _UTILLIB_TEST_ENTRY_SELF

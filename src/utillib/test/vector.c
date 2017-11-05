@@ -21,13 +21,13 @@
 #include <utillib/vector.h>
 #include <utillib/test.h>
 
-static void pop_back_Ntimes(utillib_vector *self, size_t N) {
+static void pop_back_Ntimes(struct utillib_vector *self, size_t N) {
   for (int i=0;i<N;++i) {
     utillib_vector_pop_back(self);
   }
 }
 
-static void push_back_Ntimes(utillib_vector *self, size_t N) {
+static void push_back_Ntimes(struct utillib_vector *self, size_t N) {
   for (int i=0;i<N;++i) {
     utillib_vector_push_back(self, utillib_test_dummy());
   }
@@ -122,14 +122,13 @@ UTILLIB_TEST(foreach) {
     utillib_vector_push_back(UT_FIXTURE, (utillib_element_t) i);
   }
   i=0;
-  UTILLIB_VECTOR_FOREACH(size_t , elem, (utillib_vector*) UT_FIXTURE) {
+  UTILLIB_VECTOR_FOREACH(size_t , elem, (struct utillib_vector*) UT_FIXTURE) {
     UTILLIB_TEST_ASSERT_EQ(elem, i);
     i++;
   }
 }
 
 UTILLIB_TEST_DEFINE(Utillib_Vector) {
-  static utillib_vector static_vector;
   UTILLIB_TEST_BEGIN(Utillib_Vector)
   UTILLIB_TEST_RUN(init)
   UTILLIB_TEST_RUN(push_back)
@@ -140,7 +139,6 @@ UTILLIB_TEST_DEFINE(Utillib_Vector) {
   UTILLIB_TEST_RUN(capacity)
   UTILLIB_TEST_RUN(reserve)
   UTILLIB_TEST_END(Utillib_Vector)
-
-  UTILLIB_TEST_FIXTURE(utillib_vector);
-  UTILLIB_TEST_RETURN()
+  UTILLIB_TEST_FIXTURE(struct utillib_vector);
+  UTILLIB_TEST_RETURN(Utillib_Vector)
 }
