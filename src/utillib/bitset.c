@@ -46,8 +46,8 @@ void utillib_bitset_destroy(struct utillib_bitset *self) {
   self->bits = NULL;
 }
 
-#define bit_index(pos, self) ((pos) / sizeof *(self)->bits)
-#define bit_offset(pos, self) ((pos) % sizeof *(self)->bits)
+#define bit_index(pos, self) ((pos) / sizeof (self)->bits[0])
+#define bit_offset(pos, self) ((pos) % sizeof (self)->bits[0])
 
 /**
  * \function utillib_bitset_test

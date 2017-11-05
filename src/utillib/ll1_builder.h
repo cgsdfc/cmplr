@@ -81,11 +81,4 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
 utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset);
 
-#define ll1_builder_FOLLOW_print(self) \
-do {\
-  utillib_json_value_t * val=ll1_builder_set_json_array_create(&self->FOLLOW, sizeof self->FOLLOW);\
-  utillib_json_pretty_print(val, stderr);\
-  utillib_json_value_destroy(val);\
-} while(0)
-
 #endif // UTILLIB_LL1_BUILDER_H

@@ -28,6 +28,13 @@ UTILLIB_TEST_SET_UP() {
 
 UTILLIB_TEST_TEAR_DOWN() { utillib_rule_index_destroy(&rule_index); }
 
+/**
+ * \test ll1_builder_set_correct
+ * Tests the sets built against expected data.
+ * \param actual_sets The set from `utillib_ll1_builder'.
+ * \param expected_sets The correct data.
+ */
+
 UTILLIB_TEST_AUX(ll1_builder_set_correct,
                  struct utillib_vector const *actual_sets,
                  size_t const expected_sets[][10]) {
@@ -72,10 +79,10 @@ UTILLIB_TEST(ll1_builder_json) {
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)
-  UTILLIB_TEST_SKIP(ll1_builder_json)
+  UTILLIB_TEST_RUN(ll1_builder_json)
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
-  UTILLIB_TEST_SKIP(ll1_builder_FOLLOW_correct)
-  UTILLIB_TEST_SKIP(ll1_builder_build_table)
+  UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
+  UTILLIB_TEST_RUN(ll1_builder_build_table)
   UTILLIB_TEST_END(Utillib_LL1Builder)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_builder);
   UTILLIB_TEST_RETURN(Utillib_LL1Builder)

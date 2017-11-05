@@ -1,11 +1,29 @@
 #include "ll1_builder.h"
 #include "equal.h" // for utillib_equal_bool
 #include <stdlib.h>
+#include <assert.h>
 
 UTILLIB_ETAB_BEGIN(utillib_ll1_error_kind)
-UTILLIB_ETAB_ELEM_INIT(UT_LL1_OK, "Success")
-UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENOTLL1, "Input is not LL(1)")
+  UTILLIB_ETAB_ELEM_INIT(UT_LL1_OK, "Success")
+  UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENOTLL1, "Input is not LL(1)")
 UTILLIB_ETAB_END(utillib_ll1_error_kind);
+
+/**
+ * \enum ll1_builder_rule_form_kind
+ * Values returned by `ll1_builder_FOLLOW_rule_form'.
+ * Indicates different forms of rule needed to detected
+ * when evaluating the FOLLOW sets.
+ */
+UTILLIB_ENUM_BEGIN(ll1_builder_rule_form_kind)
+  /* A := aB */
+  UTILLIB_ENUM_ELEM( LL1_RULE_FORM_NO_TAIL )
+  /* A := aBb and b is `epsilon' related */
+  UTILLIB_ENUM_ELEM( LL1_RULE_FORM_TAIL_EP )
+  /* A := aBb and b has nothing with `epsilon' */
+  UTILLIB_ENUM_ELEM( LL1_RULE_FORM_TAIL_NOT_EPS)
+  /* Whatever */
+  UTILLIB_ENUM_ELEM( LL1_RULE_FORM_OTHER ) 
+UTILLIB_ENUM_END(ll1_builder_rule_form_kind);
 
 /**
  * JSON interfaces
@@ -37,6 +55,30 @@ utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t 
 {
   return utillib_json_object_create(base, offset, LL1Builder_Fields);
 }
+
+/*
+ * Debug functions
+ */
+
+enum {
+  UT_LL1B_FIRST,
+  UT_LL1B_FOLLOW,
+};
+
+static void ll1_builder_SET_print(struct utillib_ll1_builder * self, int kind) 
+{
+  utillib_json_value_t * val;
+  switch (kind) {
+    case UT_LL1B_FOLLOW:
+      val=ll1_builder_set_json_array_create(&self->FOLLOW, sizeof self->FOLLOW);
+      break;
+    case UT_LL1B_FIRST:
+      val=ll1_builder_set_json_array_create(&self->FIRST, sizeof self->FIRST);
+      break;
+  }
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+} 
 
 /*
  * Private interfaces
@@ -199,19 +241,19 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
  */
 
 /**
- * \function ll1_builder_FOLLOW_form_correct
+ * \function ll1_builder_FOLLOW_has_tailing
  * Helper to judge whether the right hand side of the rule is in the form
- * required
- * by FOLLOW evaluation, i.e., `aBb', where `a' can be nothing.
+ * required by FOLLOW evaluation, i.e., `aBb', where `B' is of non-terminal
+ * symbol.
  */
-static bool ll1_builder_FOLLOW_form_correct(struct utillib_vector const *RHS) {
-  size_t RHS_size;
-  if ((RHS_size = utillib_vector_size(RHS)) < 2)
+
+static bool ll1_builder_FOLLOW_has_tailing(struct utillib_vector const *RHS) {
+  size_t RHS_size=utillib_vector_size(RHS);
+  assert (RHS_size > 0 && "Right hand side of rule should not be empty");
+  if (RHS_size < 2)
     return false;
-  struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
-  if (utillib_symbol_kind(PREV) == UT_SYMBOL_TERMINAL)
-    return false;
-  return true;
+  struct utillib_symbol const * PREV=utillib_vector_at(RHS, RHS_size-2);
+  return utillib_symbol_kind(PREV) == UT_SYMBOL_NON_TERMINAL;
 }
 
 /**
@@ -252,7 +294,7 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
     /* The form of rule does not match */
-    if (!ll1_builder_FOLLOW_form_correct(RHS))
+    if (!ll1_builder_FOLLOW_has_tailing(RHS))
       continue;
     size_t RHS_size = utillib_vector_size(RHS);
     struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
@@ -270,7 +312,6 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
         ll1_builder_FIRST_get(self, LAST);
     utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
   }
-  ll1_builder_FOLLOW_print(self);
 }
 
 /**
@@ -300,8 +341,10 @@ static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
  * Based on the following algorithm:
  * If the rule has form `A := aBb' and `b' satisfies
  * `ll1_builder_FOLLOW_last_epsilon' implying `epsilon'
- * can be derived from `b', then what follows `A' can
+ * can be derived from `b' (or `b' is epsilon itself), then what follows `A' can
  * also follows `B'.
+ * Otherwise, if the rule has the form `A := aB', then
+ * what follows `A' can also follows `B'.
  * Thus, we merge `FOLLOW' for `A' into that of `B'.
  */
 
@@ -316,18 +359,19 @@ static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
     struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
-    /* The form of rule does not match */
-    if (!ll1_builder_FOLLOW_form_correct(RHS))
-      continue;
     struct utillib_symbol const *LAST = utillib_vector_back(RHS);
-    if (!ll1_builder_FOLLOW_last_epsilon(self, LAST))
-      continue;
-    size_t RHS_size = utillib_vector_size(RHS);
     struct utillib_ll1_set const *LHS_FOLLOW =
-        ll1_builder_FOLLOW_get(self, LHS);
-    struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
-    struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
-    changed = utillib_ll1_set_union(PREV_FOLLOW, LHS_FOLLOW);
+    ll1_builder_FOLLOW_get(self, LHS);
+    if (utillib_symbol_kind(LAST) == UT_SYMBOL_NON_TERMINAL) {
+      struct utillib_ll1_set * LAST_FOLLOW = ll1_builder_FOLLOW_get(self, LAST);
+      changed=utillib_ll1_set_union(LAST_FOLLOW, LHS_FOLLOW);
+    }
+    if (ll1_builder_FOLLOW_has_tailing(RHS) && ll1_builder_FOLLOW_last_epsilon(self, LAST)) {
+      size_t RHS_size = utillib_vector_size(RHS);
+      struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
+      struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
+      changed = utillib_ll1_set_union(PREV_FOLLOW, LHS_FOLLOW);
+    }
   }
   return changed;
 }
