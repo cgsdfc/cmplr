@@ -19,7 +19,7 @@
 
 */
 #include "vector.h"
-#include "error.h"
+#include "json.h"
 #include <assert.h>
 #include <stdlib.h> // calloc free
 #include <string.h> // memset
@@ -329,3 +329,22 @@ void utillib_vector_back_insert(struct utillib_vector *self,
     utillib_vector_push_back(self, elem);
   }
 }
+
+/**
+ * JSON interfaces
+ */
+/**
+ * \function utillib_json_array_create_from_vector
+ */
+utillib_json_value_t *utillib_json_array_create_from_vector(
+    struct utillib_vector const *self,
+    utillib_json_value_create_func_t *create_func) {
+  utillib_json_value_t * array=utillib_json_array_create_empty();
+  for (utillib_element_t *pelem=self->begin; pelem!=self->end; ++pelem) {
+    utillib_json_value_t *val = (*pelem && create_func) ? create_func(*pelem, sizeof *pelem)
+    : utillib_json_null_create(0,0);
+    utillib_json_array_push_back(array, val);
+  }
+  return array;
+}
+

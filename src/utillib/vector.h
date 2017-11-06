@@ -99,4 +99,7 @@ void utillib_vector_back_insert(struct utillib_vector *self,
                                 struct utillib_vector *other);
 void utillib_vector_fill(struct utillib_vector *self, utillib_element_t data);
 
+utillib_json_value_t *
+utillib_json_array_create_from_vector(struct utillib_vector const *self,
+    utillib_json_value_create_func_t * create_func);
 #endif // UTILLIB_VECTOR_H

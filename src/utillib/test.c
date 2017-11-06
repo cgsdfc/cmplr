@@ -530,8 +530,7 @@ static utillib_json_value_t *json_test_env_create(void *base, size_t offset) {
  */
 static utillib_json_value_t *json_test_suite_test_create(void *base,
                                                          size_t offset) {
-  return utillib_json_array_create_from_vector(base, offset,
-                                               json_test_env_create);
+  return utillib_json_array_create_from_vector(base, json_test_env_create);
 }
 
 /**

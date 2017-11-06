@@ -456,20 +456,6 @@ void utillib_json_tostring(utillib_json_value_t *self, utillib_string *str) {
   json_value_tostring(self, str);
 }
 
-/**
- * \function utillib_json_array_create_from_vector
- */
-
-utillib_json_value_t *utillib_json_array_create_from_vector(
-    void *base, size_t not_used, utillib_json_value_create_func_t *create_func) {
-  struct utillib_vector *const vec=base;
-  utillib_json_value_t * array=utillib_json_array_create_empty();
-  for (utillib_element_t *pelem=vec->begin; pelem!=vec->end; ++pelem) {
-    utillib_json_value_t *val = create_func(*pelem, sizeof *pelem);
-    utillib_json_array_push_back(array, val);
-  }
-  return array;
-}
 
 /**
  * The following functions create empty JSON array or object

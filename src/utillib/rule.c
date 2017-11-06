@@ -146,7 +146,7 @@ utillib_rule_index_top_symbol(struct utillib_rule_index const *self) {
 static utillib_json_value_t *
 rule_RHS_json_array_create_from_vector(void *base, size_t offset) {
   return utillib_json_array_create_from_vector(
-      base, offset, utillib_symbol_json_object_create);
+      base,  utillib_symbol_json_object_create);
 }
 
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(Rule_Fields)
@@ -163,7 +163,7 @@ utillib_json_value_t *utillib_rule_json_object_create(void *base,
 
 static utillib_json_value_t *
 rule_index_rule_json_array_create_from_vector(void *base, size_t offset) {
-  return utillib_json_array_create_from_vector(base, offset,
+  return utillib_json_array_create_from_vector(base, 
                                                utillib_rule_json_object_create);
 }
 

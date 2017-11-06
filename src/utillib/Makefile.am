@@ -4,11 +4,13 @@ lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = enum.c \
 												ll1_builder.c \
+												ll1_parser.c \
 												unordered_op.c \
 												bitset.c \
 												vector2.c \
 												symbol.c \
 												rule.c \
+												scanner.c \
 												equal.c \
 												error.c \
 												hash.c \
@@ -25,6 +27,8 @@ libutillib_la_SOURCES = enum.c \
 												vector.c 
 
 include_HEADERS = flags.h \
+									scanner.h \
+									ll1_parser.h \
 									ll1_builder.h \
 									symbol.h \
 									color.h \
@@ -45,6 +49,7 @@ include_HEADERS = flags.h \
 									unordered_map.h \
 									unordered_op.h \
 									bitset.h \
+									vector2.h \
 									vector.h
 
 check_PROGRAMS= utillib_test
@@ -52,13 +57,15 @@ utillib_test_SOURCES=test/driver.c \
 										 test/print.c \
 										 test/flags.c \
 										 test/vector2.c \
-										 test/json.c \
+										 test/ll1_parser.c \
+										 test/scanner.c \
 										 test/ll1_builder.c \
 										 test/bitset.c \
 										 test/rule.c \
 										 test/symbol.c \
 										 test/hash.c \
 										 test/test.c \
+										 test/json.c \
 										 test/vector.c \
 										 test/string.c
 

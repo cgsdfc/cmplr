@@ -61,7 +61,7 @@ utillib_json_value_t *utillib_symbol_json_array_create(void *base,
 utillib_json_value_t *
 utillib_symbol_json_array_create_from_vector(void *base, size_t offset) {
   return utillib_json_array_create_from_vector(
-      base, offset, utillib_symbol_json_object_create);
+      base, utillib_symbol_json_object_create);
 }
 
 struct utillib_symbol utillib_symbol_eof = {

@@ -43,7 +43,7 @@ ll1_builder_set_json_object_create(void *base, size_t offset)
 static utillib_json_value_t *
 ll1_builder_set_json_array_create(void *base, size_t offset) 
 {
-  utillib_json_array_create_from_vector(base, offset, ll1_builder_set_json_object_create);
+  utillib_json_array_create_from_vector(base, ll1_builder_set_json_object_create);
 }
   
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1Builder_Fields)

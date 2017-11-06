@@ -161,9 +161,6 @@ void utillib_json_value_destroy(utillib_json_value_t *);
 utillib_json_value_t *utillib_json_null_create(void *, size_t);
 utillib_json_value_t *utillib_json_null_array_create(void *, size_t);
 utillib_json_value_t *
-utillib_json_array_create_from_vector(void *, size_t,
-                                      utillib_json_value_create_func_t *);
-utillib_json_value_t *
 utillib_json_array_pointer_create(void *, size_t,
                                   const utillib_json_array_desc_t *);
 void utillib_json_tostring(utillib_json_value_t *, utillib_string *);
