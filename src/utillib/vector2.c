@@ -23,6 +23,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/**
+ * \function utillib_vector2_init
+ * Initilizes a 2-dimension table with all slots
+ * filled `NULL'.
+ */
 void utillib_vector2_init(struct utillib_vector2 *self, size_t nrow,
                           size_t ncol) {
   utillib_element_t *array = calloc(nrow * ncol, sizeof *array);
@@ -31,19 +36,40 @@ void utillib_vector2_init(struct utillib_vector2 *self, size_t nrow,
   self->array = array;
 }
 
+/**
+ * \macro
+ * vector2_check
+ * Checks the sanity of the ROW index and COLUMN index.
+ */
 #define vector2_check(self, row, col) do {\
   assert (row < self->nrow && "Row index out of range");\
   assert (col < self->ncol && "Column index out of range");\
 }while (0)
 
+/**
+ * \macro
+ * vector2_offset
+ * Computes the offset in `self->array'
+ * given row index and column index.
+ */
 #define vector2_offset(self, row, col) ((self)->ncol * row + col)
 
+/**
+ * \function utillib_vector2_at
+ * Accesses table element.
+ * Checks index with `assert'.
+ */
 utillib_element_t utillib_vector2_at(struct utillib_vector2 const *self, size_t row,
                                      size_t col) {
   vector2_check(self, row, col);
   return self->array[vector2_offset(self, row, col)];
 }
 
+/**
+ * \function utillib_vector2_set
+ * Alters table element and returns the old one.
+ * Checks index with `assert'.
+ */
 utillib_element_t utillib_vector2_set(struct utillib_vector2 *self, size_t row,
                                       size_t col, utillib_element_t data) {
   vector2_check(self, row, col);
@@ -53,6 +79,10 @@ utillib_element_t utillib_vector2_set(struct utillib_vector2 *self, size_t row,
   return old_data;
 }
 
+/**
+ * \function utillib_vector2_destroy
+ * Free up memory.
+ */
 void utillib_vector2_destroy(struct utillib_vector2 *self) {
   free(self->array);
   self->array=NULL;
@@ -73,7 +103,7 @@ utillib_json_value_t * utillib_vector2_json_array_create(
       utillib_element_t data=self->array[vector2_offset(self, i, j)];
       utillib_json_value_t * json_data= (data && create_func) ?
       create_func(data, sizeof data)
-      :utillib_json_null_create(NULL, 0);
+      :utillib_json_null_create();
       utillib_json_array_push_back(row_array, json_data);
     }
     utillib_json_array_push_back(array, row_array);

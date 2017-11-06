@@ -342,7 +342,7 @@ utillib_json_value_t *utillib_json_array_create_from_vector(
   utillib_json_value_t * array=utillib_json_array_create_empty();
   for (utillib_element_t *pelem=self->begin; pelem!=self->end; ++pelem) {
     utillib_json_value_t *val = (*pelem && create_func) ? create_func(*pelem, sizeof *pelem)
-    : utillib_json_null_create(0,0);
+    : utillib_json_null_create();
     utillib_json_array_push_back(array, val);
   }
   return array;

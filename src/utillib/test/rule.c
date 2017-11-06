@@ -57,10 +57,21 @@ UTILLIB_TEST(rule_index_index_not_overflow) {
   UTILLIB_TEST_AUX_INVOKE(rule_index_index_not_overflow_helper, non_terminal_vector);
 }
 
+UTILLIB_TEST(rule_index_rule_id)
+{
+  struct utillib_rule_index const *self=UT_FIXTURE;
+  struct utillib_vector const * RULES=utillib_rule_index_rules(self);
+  for (int i=0; i<test_rules_size; ++i) {
+    struct utillib_rule const * rule=utillib_vector_at(RULES, i);
+    UTILLIB_TEST_EXPECT_EQ(utillib_rule_id(rule), i+1);
+  }
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_BEGIN(Utillib_Rule)
   UTILLIB_TEST_RUN(rule_index_init)
   UTILLIB_TEST_RUN(rule_index_index_not_overflow)
+  UTILLIB_TEST_RUN(rule_index_rule_id)
   /* Verbose output skipped */
   UTILLIB_TEST_SKIP(rule_index_json)
   UTILLIB_TEST_END(Utillib_Rule)

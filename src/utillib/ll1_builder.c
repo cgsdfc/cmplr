@@ -50,10 +50,9 @@ UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1Builder_Fields)
   UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FIRST", FIRST, ll1_builder_set_json_array_create)
   UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FOLLOW", FOLLOW, ll1_builder_set_json_array_create)
 UTILLIB_JSON_OBJECT_FIELD_END(LL1Builder_Fields);
-
-utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset)
+utillib_json_value_t* utillib_ll1_builder_json_object_create(struct utillib_ll1_builder *self)
 {
-  return utillib_json_object_create(base, offset, LL1Builder_Fields);
+  return utillib_json_object_create(self, 0, LL1Builder_Fields);
 }
 
 /*

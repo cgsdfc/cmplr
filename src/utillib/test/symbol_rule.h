@@ -77,8 +77,8 @@ UTILLIB_RULE_ELEM(SYM_EP, UT_SYM_EPS)
 UTILLIB_RULE_ELEM(SYM_T, SYM_F, SYM_TP)
 UTILLIB_RULE_ELEM(SYM_TP, SYM_MUL, SYM_F, SYM_TP)
 UTILLIB_RULE_ELEM(SYM_TP, UT_SYM_EPS)
-UTILLIB_RULE_ELEM(SYM_F, SYM_I)
 UTILLIB_RULE_ELEM(SYM_F, SYM_LP, SYM_E, SYM_RP)
+UTILLIB_RULE_ELEM(SYM_F, SYM_I)
 UTILLIB_RULE_END(test_rules);
 
 static const size_t test_rules_FIRST[][10] = {
@@ -95,6 +95,27 @@ static const size_t test_rules_FOLLOW[][10] = {
         [SYM_T] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_TP] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_F] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, SYM_MUL, UT_SYM_NULL},
+};
+
+static const size_t test_rules_TABLE[][10]={
+  [SYM_I][SYM_E]=1,
+  [SYM_I][SYM_T]=4,
+  [SYM_I][SYM_F]=8,
+
+  [SYM_PLUS][SYM_EP]=2,
+  [SYM_PLUS][SYM_TP]=6,
+
+  [SYM_MUL][SYM_TP]=5,
+
+  [SYM_LP][SYM_E]=1,
+  [SYM_LP][SYM_T]=4,
+  [SYM_LP][SYM_F]=7,
+
+  [SYM_RP][SYM_EP]=3,
+  [SYM_RP][SYM_TP]=6,
+
+  [UT_SYM_EOF][SYM_EP]=3,
+  [UT_SYM_EOF][SYM_TP]=6,
 };
 
 static const size_t test_symbols_input[]={

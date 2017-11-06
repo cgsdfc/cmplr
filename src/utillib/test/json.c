@@ -166,7 +166,7 @@ UTILLIB_TEST(json_object_create_nested_object) {
 }
 
 UTILLIB_TEST(json_null_create) {
-  utillib_json_value_t *null = utillib_json_null_create(NULL, 0);
+  utillib_json_value_t *null = utillib_json_null_create();
   UTILLIB_TEST_ASSERT_EQ(null->kind, UT_JSON_NULL);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, null);
 }
@@ -174,7 +174,7 @@ UTILLIB_TEST(json_null_create) {
 UTILLIB_TEST(json_null_array_create) {
   void *null_array[] = {NULL, NULL};
   utillib_json_value_t *val =
-      utillib_json_null_array_create(NULL, UTILLIB_TEST_LEN(null_array));
+      utillib_json_null_array_create(UTILLIB_TEST_LEN(null_array));
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 

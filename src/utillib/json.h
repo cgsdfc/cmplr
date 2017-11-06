@@ -158,8 +158,8 @@ utillib_json_array_create(void *, size_t, const utillib_json_array_desc_t *);
 utillib_json_value_t *utillib_json_value_create(int, ...);
 utillib_json_value_t *utillib_json_value_createV(int, va_list);
 void utillib_json_value_destroy(utillib_json_value_t *);
-utillib_json_value_t *utillib_json_null_create(void *, size_t);
-utillib_json_value_t *utillib_json_null_array_create(void *, size_t);
+utillib_json_value_t *utillib_json_null_create(void);
+utillib_json_value_t *utillib_json_null_array_create(size_t);
 utillib_json_value_t *
 utillib_json_array_pointer_create(void *, size_t,
                                   const utillib_json_array_desc_t *);

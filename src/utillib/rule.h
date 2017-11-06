@@ -32,9 +32,29 @@
 
 /* Currently limit for the maximum size of right hand side */
 #define UTILLIB_RULE_MAX_RHS 10
+
+/**
+ * \macro
+ * UTILLIB_RULE_NULL
+ * Address of the special rule `null' which has `epsilon' as the 
+ * only symbol on its right hand side.
+ */
 #define UTILLIB_RULE_NULL (&utillib_rule_null)
+
+/**
+ * \macro
+ * UTILLIB_RULE_ELEM
+ * Convenient macro to define a BNF rule in C source.
+ * The rule take as left hand side symbol the first argument
+ * and the following arguments as right hand side symbols.
+ * All the arguments should be C enum values.
+ * Notice there must be at least one symbol on the RHS for
+ * which there is no `##' before the `__VA_ARGS__'.
+ */
 #define UTILLIB_RULE_ELEM(LHS, ...)                                            \
   {.LHS_LIT = (LHS), .RHS_LIT = {__VA_ARGS__, UT_SYM_NULL}},
+
+
 #define UTILLIB_RULE_BEGIN(NAME)                                               \
   static const struct utillib_rule_literal NAME[] = {
 #define UTILLIB_RULE_END(NAME)                                                 \
@@ -42,11 +62,30 @@
   }                                                                            \
   ;
 
+/**
+ * \struct
+ * utillib_rule_literal
+ * A rule that can be defined directly
+ * in C source with initializers other
+ * than in other format.
+ * Since in C source, it is not expected
+ * to contain lots of symbols. For this
+ * sack the `RHS_LIT' field is bounded.
+ * Also, it may contain special symbols
+ * like `epsilon' having negative value.
+ * 
+ */
 struct utillib_rule_literal {
   int LHS_LIT;
   int RHS_LIT[UTILLIB_RULE_MAX_RHS];
 };
 
+/**
+ * \struct utillib_rule
+ * A BNF rule, or production.
+ * Index number starts from one.
+ * Zero is preserved.
+ */
 struct utillib_rule {
   size_t id;
   struct utillib_symbol const *LHS;

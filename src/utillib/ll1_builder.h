@@ -84,6 +84,6 @@ void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self);
 void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table);
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
-utillib_json_value_t* utillib_ll1_builder_json_object_create(void *base, size_t offset);
+utillib_json_value_t* utillib_ll1_builder_json_object_create(struct utillib_ll1_builder *self);
 void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
 #endif // UTILLIB_LL1_BUILDER_H

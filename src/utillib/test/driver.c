@@ -48,14 +48,14 @@ int main(int argc, char **argv) {
       /* Utillib_Test, */
       /* Utillib_String, */
       Utillib_JSON,
-      Utillib_Rule,
       Utillib_Symbol,
       Utillib_Bitset,
       Utillib_Print,
       Utillib_Flags,
-      Utillib_LL1Builder,
       Utillib_Scanner,
       Utillib_Vector2,
-      Utillib_LL1Parser
+      /* Utillib_LL1Parser, */
+      Utillib_Rule,
+      Utillib_LL1Builder
       );
 }

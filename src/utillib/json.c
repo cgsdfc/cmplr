@@ -207,15 +207,13 @@ UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_int, int)
 /**
  * \function utillib_json_null_array_create
  * Map anything to a JSON array of `null'.
- * \param base Not used. Can even be `NULL'.
  * \param size The number of `null' in the array to create.
  * Notes that the `size' parameter here has different meaning
  * from the more general `utillib_json_array_create'.
  * As if sizeof null == 1.
  */
 /* UTILLIB_JSON_PRIMARY_ARRAY_CREATE_FUNC_DEFINE(utillib_json_null, void *) */
-utillib_json_value_t *utillib_json_null_array_create(void *not_used,
-                                                     size_t size) {
+utillib_json_value_t *utillib_json_null_array_create(size_t size) {
   utillib_json_array_t *self = malloc(sizeof *self);
   utillib_vector_init(&self->elements);
   for (size_t i = 0; i < size; ++i) {
@@ -228,8 +226,7 @@ utillib_json_value_t *utillib_json_null_array_create(void *not_used,
  * \function utillib_json_null_create
  */
 
-utillib_json_value_t *utillib_json_null_create(void *not_used_1,
-                                               size_t not_used_2) {
+utillib_json_value_t *utillib_json_null_create(void) {
   return &static_json_null;
 }
 
@@ -327,7 +324,7 @@ utillib_json_value_t *utillib_json_value_createV(int kind, va_list ap) {
   void *desc;
   switch (kind) {
   case UT_JSON_NULL:
-    return utillib_json_null_create(NULL, 0);
+    return utillib_json_null_create();
   case UT_JSON_LONG:
     data = va_arg(ap, long *);
     return utillib_json_long_create(data, 0);
