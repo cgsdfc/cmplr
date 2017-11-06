@@ -29,10 +29,20 @@ UTILLIB_TEST(vector2_at) {}
 
 UTILLIB_TEST(vector2_set) {}
 
+UTILLIB_TEST(vector2_json)
+{
+  utillib_vector2_init(UT_FIXTURE, 2, 3);
+  utillib_json_value_t *val=utillib_vector2_json_array_create(UT_FIXTURE, NULL);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+         
+  
 UTILLIB_TEST_DEFINE(Utillib_Vector2) {
   UTILLIB_TEST_BEGIN(Utillib_Vector)
   UTILLIB_TEST_RUN(vector2_at)
   UTILLIB_TEST_RUN(vector2_set)
+  UTILLIB_TEST_RUN(vector2_json)
   UTILLIB_TEST_END(Utillib_Vector2)
   UTILLIB_TEST_FIXTURE(struct utillib_vector2);
   UTILLIB_TEST_RETURN(Utillib_Vector2)

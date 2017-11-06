@@ -76,7 +76,7 @@ static void ll1_parser_start_deduct(struct utillib_ll1_parser *self,
   utillib_vector_push_back(&self->context,
       ll1_parser_context_create(utillib_rule_id(rule), RHS_size));
   utillib_vector_pop_back(&self->symbol_stack);
-  for (size_t i=RHS_size-1; i>=0; --i) {
+  for (int i=RHS_size-1; i>=0; --i) {
     struct utillib_symbol *symbol=utillib_vector_at(RHS, i);
     utillib_vector_push_back(&self->symbol_stack, symbol);
   }
@@ -91,12 +91,12 @@ static void ll1_parser_symbol_stack_init(struct utillib_ll1_parser *self)
 
 static struct utillib_rule *
 ll1_parser_table_lookup(struct utillib_ll1_parser *self,
-    size_t input_symbol_value,
-    size_t top_symbol_value)
+    struct utillib_symbol const *input_symbol,
+    struct utillib_symbol const *top_symbol)
 {
   struct utillib_rule_index const * rule_index=self->rule_index;
-  size_t input_symbol_index=utillib_rule_index_terminal_index(rule_index, input_symbol_value);
-  size_t top_symbol_index=utillib_rule_index_terminal_index(rule_index, top_symbol_value);
+  size_t input_symbol_index=utillib_rule_index_symbol_index(rule_index, input_symbol);
+  size_t top_symbol_index=utillib_rule_index_symbol_index(rule_index, top_symbol);
   struct utillib_rule * rule=utillib_vector2_at(self->table, input_symbol_index, top_symbol_index);
   return rule;
 }
@@ -127,6 +127,8 @@ void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) {
   utillib_vector_destroy(&self->error_stack);
   utillib_vector_destroy(&self->symbol_stack);
   utillib_vector_destroy(&self->tree_stack);
+  utillib_vector_destroy_owning(&self->context, 
+      (void*) ll1_parser_context_destroy);
   utillib_vector2_destroy(self->table);
 }
 
@@ -158,8 +160,9 @@ int utillib_ll1_parser_parse(struct utillib_ll1_parser *self,
       } 
       return UT_LL1_PARSER_ERR;
     } else { /* non-terminal */
-      struct utillib_rule const * rule=
-      ll1_parser_table_lookup(self, isym, top_val);
+      struct utillib_symbol const * isymbol=
+      utillib_rule_index_symbol_at(rule_index, isym);
+      struct utillib_rule const * rule=ll1_parser_table_lookup(self,isymbol, top_sym);
       if (!rule) {
         return UT_LL1_PARSER_ERR;
       }

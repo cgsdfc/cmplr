@@ -24,6 +24,12 @@
 #include <utillib/symbol.h>
 #include <utillib/test.h>
 
+enum {
+  UT_LL1_INPUT0,
+  UT_LL1_INPUT1,
+};
+
+
 /*
  * Rule 
  * E := T E'
@@ -89,6 +95,11 @@ static const size_t test_rules_FOLLOW[][10] = {
         [SYM_T] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_TP] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
         [SYM_F] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, SYM_MUL, UT_SYM_NULL},
+};
+
+static const size_t test_symbols_input[]={
+  SYM_I, SYM_PLUS, SYM_I, SYM_MUL, SYM_I, 
+  UT_SYM_EOF, UT_SYM_NULL,
 };
 
 /**

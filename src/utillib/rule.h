@@ -86,11 +86,9 @@ utillib_json_value_t *utillib_rule_json_object_create(void *base,
 utillib_json_value_t *utillib_rule_index_json_object_create(void *base,
                                                             size_t offset);
 
-size_t
-utillib_rule_index_non_terminal_index(struct utillib_rule_index const *self,
-                                      size_t value);
-size_t utillib_rule_index_terminal_index(struct utillib_rule_index const *self,
-                                         size_t value);
+size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
+    struct utillib_symbol const *symbol);
+
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
 

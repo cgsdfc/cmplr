@@ -48,11 +48,11 @@ UTILLIB_TEST_AUX(ll1_builder_set_correct,
   size_t symbols_size=utillib_rule_index_symbols_size(rule_index);
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const*, symbol,
       utillib_rule_index_non_terminals(rule_index)) {
-    size_t value=utillib_symbol_value(symbol);
-    size_t index=utillib_rule_index_non_terminal_index(rule_index, value);
+    size_t index=utillib_rule_index_symbol_index(rule_index, symbol);
     struct utillib_ll1_set const *actual_set = utillib_vector_at(actual_sets, index);
     struct utillib_ll1_set expected_set;
-    UTILLIB_TEST_AUX_INVOKE(build_expected_set, &expected_set, symbols_size, expected_sets[value]);
+    UTILLIB_TEST_AUX_INVOKE(build_expected_set, &expected_set, symbols_size, 
+        expected_sets[utillib_symbol_value(symbol)]);
     UTILLIB_TEST_EXPECT(utillib_ll1_set_equal(actual_set, &expected_set));
     utillib_ll1_set_destroy(&expected_set);
   }

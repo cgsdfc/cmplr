@@ -1,6 +1,7 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./scanner.c
   ./ll1_parser.c
   ./ll1_parser.c
   ./vector2.c
@@ -28,6 +29,7 @@ add_library(utillib
 link_libraries(utillib)
 
 add_executable(utillib_test 
+  ./test/scanner.c
   ./test/ll1_parser.c
   ./test/print.c
   ./test/vector2.c

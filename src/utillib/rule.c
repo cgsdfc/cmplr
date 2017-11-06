@@ -39,18 +39,20 @@ struct utillib_rule utillib_rule_null;
  */
 static struct utillib_rule *
 rule_index_rule_create(struct utillib_symbol const *symbols,
-                       struct utillib_rule_literal const *rule_literal) {
+    size_t rule_id,
+    struct utillib_rule_literal const *rule_literal) {
   struct utillib_rule *self = malloc(sizeof *self);
   utillib_vector_init(&self->RHS);
   int LHS_LIT = rule_literal->LHS_LIT;
   self->LHS = &symbols[LHS_LIT];
+  self->id=rule_id;
   for (int const *pi = rule_literal->RHS_LIT; *pi != UT_SYM_NULL; ++pi) {
     struct utillib_symbol const *symbol;
     if (*pi == UT_SYM_EPS)
       symbol = UTILLIB_SYMBOL_EPS;
     else
       symbol = &symbols[*pi];
-    utillib_vector_push_back(&self->RHS, (utillib_element_t)symbol);
+    utillib_vector_push_back(&self->RHS, (utillib_element_t) symbol);
   }
   return self;
 }
@@ -80,7 +82,8 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
   for (struct utillib_rule_literal const *rule_literal = rule_literals;
        rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
-    struct utillib_rule *rule = rule_index_rule_create(symbols, rule_literal);
+    size_t rule_id=rule_literal-rule_literals;
+    struct utillib_rule *rule = rule_index_rule_create(symbols, rule_id, rule_literal);
     utillib_vector_push_back(&self->rules, rule);
   }
   /* Since `EOF' always takes the "zero" place, we start from "1" */
@@ -104,6 +107,9 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   self->symbols_size=self->non_terminals_size+self->terminals_size+1;
 }
 
+/**
+ * \function utillib_rule_index_destroy
+ */
 void utillib_rule_index_destroy(struct utillib_rule_index *self) {
   utillib_vector_destroy(&self->terminals);
   utillib_vector_destroy(&self->non_terminals);
@@ -111,17 +117,24 @@ void utillib_rule_index_destroy(struct utillib_rule_index *self) {
       &self->rules, (utillib_destroy_func_t *)rule_index_rule_destroy);
 }
 
-size_t
-utillib_rule_index_non_terminal_index(struct utillib_rule_index const *self,
-                                      size_t value) {
-  return value - self->min_non_terminal;
+/**
+ * \function utillib_rule_index_symbol_index
+ */
+size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
+    struct utillib_symbol const *symbol)
+{
+  size_t value=utillib_symbol_value(symbol);
+  switch (utillib_symbol_kind(symbol)) {
+  case UT_SYMBOL_TERMINAL:
+    return value - self->min_terminal;
+  case UT_SYMBOL_NON_TERMINAL:
+    return value - self->min_non_terminal;
+  }
 }
 
-size_t utillib_rule_index_terminal_index(struct utillib_rule_index const *self,
-                                         size_t value) {
-  return value - self->min_terminal;
-}
-
+/**
+ * \function utillib_rule_index_top_symbol
+ */
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self) {
   return utillib_vector_front(&self->non_terminals);
