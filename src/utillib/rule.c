@@ -95,7 +95,7 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   for (struct utillib_rule_literal const *rule_literal = rule_literals;
        rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
     /* Rule index starts form ONE */
-    size_t rule_id=1+rule_literal-rule_literals;
+    size_t rule_id=rule_literal-rule_literals;
     struct utillib_rule *rule = rule_index_rule_create_from_literal
     (symbols, rule_id, rule_literal);
     utillib_vector_push_back(&self->rules, rule);
@@ -162,6 +162,13 @@ size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
   }
 }
 
+struct utillib_symbol const * utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
+    size_t symbol_id)
+{
+  assert (symbol_id < self->symbols_size && "Symbol index out of range");
+  return &self->symbols[symbol_id];
+}
+
 /**
  * \function utillib_rule_index_top_symbol
  * For any symbol defined in the `begin-elem-end' way,
@@ -201,8 +208,9 @@ UTILLIB_JSON_OBJECT_FIELD_END(Rule_Fields)
 
 utillib_json_value_t *utillib_rule_json_object_create(void *base,
                                                       size_t offset) {
-  if (base == &utillib_rule_null) {
-    return utillib_json_null_create();
+  static const char * rule_null_str="A := epsilon";
+  if (base == UTILLIB_RULE_NULL) {
+    return utillib_json_string_create(&rule_null_str, sizeof rule_null_str);
   }
   return utillib_json_object_create(base, offset, Rule_Fields);
 }

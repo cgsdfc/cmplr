@@ -514,7 +514,8 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
   size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
   size_t terminals_size = utillib_rule_index_terminals_size(rule_index);
   size_t symbols_size = non_terminals_size + terminals_size;
-  utillib_vector2_init(table, non_terminals_size + 1, terminals_size + 1);
+  assert (symbols_size == utillib_rule_index_symbols_size(rule_index));
+  utillib_vector2_init(table, non_terminals_size, terminals_size);
 
   for (size_t rule_id = 0, size = utillib_rule_index_rules_size(rule_index);
        rule_id < size; ++rule_id) {
@@ -523,7 +524,7 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
     struct utillib_rule *rule = utillib_vector_at(rules_vector, rule_id);
     struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
     size_t LHS_index = utillib_rule_index_symbol_index(rule_index, LHS);
-    for (size_t symbol_id = 0; symbol_id < symbols_size; ++symbol_id) {
+    for (size_t symbol_id = 1; symbol_id < symbols_size; ++symbol_id) {
       if (utillib_ll1_set_contains(FIRST, symbol_id)) {
         struct utillib_symbol const * symbol=
         utillib_rule_index_symbol_at(rule_index, symbol_id);
@@ -535,7 +536,7 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
     if (utillib_ll1_set_flag(FIRST)) {
       struct utillib_ll1_set const *FOLLOW =
           utillib_vector_at(&self->FOLLOW, LHS_index);
-      for (size_t symbol_id = 0; symbol_id < symbols_size; ++symbol_id) {
+      for (size_t symbol_id = 1; symbol_id < symbols_size; ++symbol_id) {
         if (utillib_ll1_set_contains(FOLLOW, symbol_id)) {
           struct utillib_symbol const *symbol=
               utillib_rule_index_symbol_at(rule_index, symbol_id);

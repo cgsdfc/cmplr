@@ -107,34 +107,9 @@ UTILLIB_TEST(ll1_builder_FOLLOW_correct) {
 UTILLIB_TEST_AUX(ll1_builder_locate_rule, size_t row, size_t col, size_t *prule_id) 
 {
   /* `eof' tricky part */
-  row+=row? rule_index.min_terminal:0 ;
-  col+=rule_index.min_non_terminal;
+  col+=col? rule_index.min_terminal-1 :0 ;
+  row+=rule_index.min_non_terminal;
   *prule_id=test_rules_TABLE[row][col];
-}
-
-/**
- * \test ll1_builder_build_table_check
- * Checks that the built table and the 
- * hard-coded one is the same.
- * Notice the differences between 2 tables:
- * Built one: has symbol index as index && pointer to rule as content.
- * Hard-coded one: has symbol value as index && rule id as content.
- */
-
-UTILLIB_TEST(ll1_builder_build_table_check) {
-  size_t Expected_Rule_ID=0;
-  struct utillib_rule const * Actual_Rule=NULL;
-  for (int i=0; i<ll1_table.nrow; ++i) {
-    for (int j=0; j<ll1_table.ncol; ++j) {
-      Actual_Rule=utillib_vector2_at(&ll1_table, i, j);
-      UTILLIB_TEST_AUX_INVOKE(ll1_builder_locate_rule, i,j, &Expected_Rule_ID);
-      if (Actual_Rule) {
-       UTILLIB_TEST_EXPECT(utillib_rule_id(Actual_Rule) == Expected_Rule_ID);
-      } else {
-        UTILLIB_TEST_EXPECT(Expected_Rule_ID == 0);
-      }
-    }
-  }
 }
 
 /**
@@ -161,11 +136,10 @@ UTILLIB_TEST(ll1_builder_json) {
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)
-  UTILLIB_TEST_RUN(ll1_builder_json)
+  UTILLIB_TEST_SKIP(ll1_builder_json)
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
   UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
-  UTILLIB_TEST_RUN(ll1_builder_build_table_check)
-  UTILLIB_TEST_SKIP(ll1_builder_build_table_json)
+  UTILLIB_TEST_RUN(ll1_builder_build_table_json)
   UTILLIB_TEST_END(Utillib_LL1Builder)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_builder);
   UTILLIB_TEST_RETURN(Utillib_LL1Builder)

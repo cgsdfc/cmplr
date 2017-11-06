@@ -310,23 +310,28 @@ static void utillib_test_setup(utillib_test_env_t *self) {
   status_output(GREEN_BANG, "Test suite `%s' sets up.", self->case_name);
 }
 
+static void utillib_test_report_failure(utillib_test_env_t *self) {
+  for (struct utillib_test_entry_t const * test=self->cases;
+      test->func!=NULL; ++test){
+    if (test->status != UT_STATUS_RUN)
+      continue;
+    if (test->succeeded)
+      continue;
+    status_output(RED_DASH, "Failed `%s'", test->func_name);
+  }
+}
+
 /**
  * \function utillib_test_summary
  * Displays statistics of a test suite after its execution reached end.
  */
 static void utillib_test_summary(utillib_test_env_t *self) {
+  status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
+  utillib_test_report_failure(self);
   status_output(GREEN_DASH, "Summary: Total %lu tests, Run %lu, Skipped %lu.",
                 self->ntests, self->nrun, self->nskipped);
   status_output(GREEN_DASH, "Summary: Run %lu tests, Passed %lu, Failed %lu.",
                 self->nrun, self->nsuccess, self->nfailure);
-}
-
-/**
- * \function utillib_test_teardown
- * Informs the user that all the test suites were run.
- */
-static void utillib_test_teardown(utillib_test_env_t *self) {
-  status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
 }
 
 /**
@@ -343,7 +348,6 @@ int utillib_test_run_suite(utillib_test_env_t *self) {
     }
   }
   utillib_test_summary(self);
-  utillib_test_teardown(self);
   return self->nfailure;
 }
 
@@ -567,6 +571,12 @@ static void test_suite_print_json(utillib_test_suite_t *self) {
   fclose(file);
 }
 
+static void utillib_test_suite_report_failure(utillib_test_suite_t *self) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t*, env, &self->tests) {
+    utillib_test_report_failure(env);
+  }
+}
+
 /**
  * \function utillib_test_suite_run_all
  * Runs all the tests and Returns the number of failed tests.
@@ -585,6 +595,7 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self, int argc,
     fputs("\n", stderr);
   }
   status_output(GREEN_BANG, "Global testing environment tears down.");
+  utillib_test_suite_report_failure(self);
   test_suite_print_json(self);
   return test_failure;
 }

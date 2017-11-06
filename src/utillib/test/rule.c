@@ -56,13 +56,18 @@ UTILLIB_TEST(rule_index_index_not_overflow) {
   UTILLIB_TEST_AUX_INVOKE(rule_index_index_not_overflow_helper, non_terminal_vector, self->non_terminals_size);
 }
 
+/**
+ * \test rule_index_rule_id
+ * Ensures that each rule in `self->rules' has the same
+ * rule_id as its index.
+ */
 UTILLIB_TEST(rule_index_rule_id)
 {
   struct utillib_rule_index const *self=UT_FIXTURE;
   struct utillib_vector const * RULES=utillib_rule_index_rules(self);
   for (int i=0; i<test_rules_size; ++i) {
     struct utillib_rule const * rule=utillib_vector_at(RULES, i);
-    UTILLIB_TEST_EXPECT_EQ(utillib_rule_id(rule), i+1);
+    UTILLIB_TEST_EXPECT_EQ(utillib_rule_id(rule), i);
   }
 }
 

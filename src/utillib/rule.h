@@ -130,8 +130,9 @@ size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
 size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self);
-struct utillib_rule *
-utillib_rule_index_rule_create_null(size_t rule_id, struct utillib_symbol const *LHS);
+
+struct utillib_symbol const * utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
+    size_t symbol_id);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)
@@ -152,8 +153,6 @@ utillib_rule_index_rule_create_null(size_t rule_id, struct utillib_symbol const 
 
 #define utillib_rule_index_rule_at(self, rule_id)                              \
   (utillib_vector_at(&(self)->rules, (rule_id)))
-#define utillib_rule_index_symbol_at(self, symbol_id)                          \
-  (&((self)->symbols[symbol_id]))
 
 
 #endif // UTILLIB_RULE_H
