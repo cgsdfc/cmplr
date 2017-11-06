@@ -56,6 +56,7 @@ struct utillib_ll1_parser {
   struct utillib_vector context;
   struct utillib_vector symbol_stack;
   struct utillib_vector error_stack;
+  struct utillib_vector rule_seq;
   struct utillib_rule_index const *rule_index;
   struct utillib_vector2 *table;
   utillib_ll1_parser_callback_t const** callbacks;
