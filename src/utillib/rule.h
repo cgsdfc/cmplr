@@ -110,7 +110,6 @@ struct utillib_rule_index {
   size_t terminals_size;
   size_t non_terminals_size;
   size_t symbols_size;
-  size_t rules_size;
   size_t *index;
 };
 
@@ -130,6 +129,9 @@ size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
 
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
+size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self);
+struct utillib_rule *
+utillib_rule_index_rule_create_null(size_t rule_id, struct utillib_symbol const *LHS);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)
@@ -139,8 +141,6 @@ utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
   ((self)->terminals_size)
 #define utillib_rule_index_non_terminals_size(self)                            \
   ((self)->non_terminals_size)
-#define utillib_rule_index_rules_size(self)                                    \
-  ((self)->rules_size)
 #define utillib_rule_index_symbols_size(self) \
   ((self)->symbols_size)
 

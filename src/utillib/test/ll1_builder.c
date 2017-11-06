@@ -19,6 +19,11 @@ UTILLIB_TEST_TEAR_DOWN() {
   utillib_vector2_destroy(&ll1_table);
 }
 
+enum {
+  UT_FIRST_SET, 
+  UT_FOLLOW_SET,
+};
+
 /**
  * \test build_expected_set
  * Due to the different formats, here we
@@ -36,7 +41,7 @@ UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set * set,
   utillib_ll1_set_init(set, symbols_size);
   for (size_t j = 0; expected_set[j] != UT_SYM_NULL; ++j) {
     size_t sym = expected_set[j];
-      if (sym == UT_SYM_EPS)
+      if (sym == UT_SYM_EPS || sym == UT_SYM_EOF)
         utillib_ll1_set_flag(set)=true;
       else
         utillib_ll1_set_insert(set, sym);

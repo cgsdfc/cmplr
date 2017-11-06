@@ -32,6 +32,16 @@
  */
 struct utillib_rule utillib_rule_null;
 
+static struct utillib_rule *
+rule_index_rule_create(size_t rule_id, struct utillib_symbol const *LHS)
+{
+  struct utillib_rule *self = malloc(sizeof *self);
+  self->id=rule_id;
+  self->LHS=LHS;
+  utillib_vector_init(&self->RHS);
+  return self;
+}
+
 /**
  * \function rule_index_rule_create
  * Creates `utillib_rule' from `utillib_rule_literal'.
@@ -40,16 +50,14 @@ struct utillib_rule utillib_rule_null;
  * \param rule_literal The literal under concern.
  */
 static struct utillib_rule *
-rule_index_rule_create(struct utillib_symbol const *symbols,
+rule_index_rule_create_from_literal(struct utillib_symbol const *symbols,
     size_t rule_id,
     struct utillib_rule_literal const *rule_literal) 
 {
   int  const* RHS_LIT=rule_literal->RHS_LIT;
-  struct utillib_rule *self = malloc(sizeof *self);
-  utillib_vector_init(&self->RHS);
   int LHS_LIT = rule_literal->LHS_LIT;
-  self->LHS = &symbols[LHS_LIT];
-  self->id=rule_id;
+  struct utillib_rule *self = rule_index_rule_create(rule_id, &symbols[LHS_LIT]);
+
   for (; *RHS_LIT != UT_SYM_NULL; ++RHS_LIT) {
     struct utillib_symbol const *symbol;
     if (*RHS_LIT == UT_SYM_EPS)
@@ -88,7 +96,8 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
        rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
     /* Rule index starts form ONE */
     size_t rule_id=1+rule_literal-rule_literals;
-    struct utillib_rule *rule = rule_index_rule_create(symbols, rule_id, rule_literal);
+    struct utillib_rule *rule = rule_index_rule_create_from_literal
+    (symbols, rule_id, rule_literal);
     utillib_vector_push_back(&self->rules, rule);
   }
   /* Since `EOF' always takes the "zero" place, we start from "1" */
@@ -109,7 +118,6 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   /* counts EOF */
   self->non_terminals_size=utillib_vector_size(&self->non_terminals);
   self->terminals_size=utillib_vector_size(&self->terminals)+1;
-  self->rules_size=utillib_vector_size(&self->rules);
   self->symbols_size=self->non_terminals_size+self->terminals_size;
 }
 
@@ -168,6 +176,11 @@ struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self) {
   rule_index_check_non_terminal_non_empty(self);
   return utillib_vector_front(&self->non_terminals);
+}
+
+size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self)
+{
+  return utillib_vector_size(&self->rules);
 }
 
 /**

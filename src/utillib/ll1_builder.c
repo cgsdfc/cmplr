@@ -30,7 +30,7 @@ UTILLIB_ENUM_END(ll1_builder_rule_form_kind);
  */
 
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1BuilderSet_Fields)
-  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "epsilon", flag, utillib_json_bool_create)
+  UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "epsilon/eof", flag, utillib_json_bool_create)
   UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "elements", bitset, utillib_bitset_json_array_create)
 UTILLIB_JSON_OBJECT_FIELD_END(LL1BuilderSet_Fields);
 
@@ -308,6 +308,9 @@ ll1_builder_FOLLOW_get(struct utillib_ll1_builder *self,
  * evaluation.
  *
  */
+#define ll1_builder_check_not_eof(value) do {\
+  assert (( value ) != UT_SYM_EOF && "End-of-input special symbol should not appear");\
+} while(0)
 
 static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
@@ -316,7 +319,8 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
   struct utillib_symbol const *TOP_symbol =
       utillib_rule_index_top_symbol(rule_index);
   struct utillib_ll1_set *TOP_FOLLOW = ll1_builder_FOLLOW_get(self, TOP_symbol);
-  utillib_ll1_set_insert(TOP_FOLLOW, UT_SYM_EOF);
+  /* utillib_ll1_set_insert(TOP_FOLLOW, UT_SYM_EOF); */
+  utillib_ll1_set_flag(TOP_FOLLOW)=true;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_vector const *RHS = utillib_rule_rhs(rule);
@@ -327,6 +331,7 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
     struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
     struct utillib_symbol const *LAST = utillib_vector_back(RHS);
     size_t LAST_value = utillib_symbol_value(LAST);
+    ll1_builder_check_not_eof(LAST);
     /* The `b' symbol is `epsilon' */
     if (LAST_value == UT_SYM_EPS)
       continue;
@@ -363,6 +368,17 @@ static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
   return false;
 }
 
+static bool ll1_builder_FOLLOW_update(struct utillib_ll1_set *self,
+    struct utillib_ll1_set const *other)
+{
+  bool changed=utillib_ll1_set_union(self, other);
+  if (!utillib_ll1_set_flag(self) && utillib_ll1_set_flag(other)) {
+    utillib_ll1_set_flag(self)=true;
+    changed=true;
+  }
+  return changed;
+}
+
 /**
  * \function ll1_builder_FOLLOW_incremental
  * Based on the following algorithm:
@@ -391,13 +407,13 @@ static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self) {
     ll1_builder_FOLLOW_get(self, LHS);
     if (utillib_symbol_kind(LAST) == UT_SYMBOL_NON_TERMINAL) {
       struct utillib_ll1_set * LAST_FOLLOW = ll1_builder_FOLLOW_get(self, LAST);
-      changed=utillib_ll1_set_union(LAST_FOLLOW, LHS_FOLLOW);
+      changed=ll1_builder_FOLLOW_update(LAST_FOLLOW, LHS_FOLLOW);
     }
     if (ll1_builder_FOLLOW_has_tailing(RHS) && ll1_builder_FOLLOW_last_epsilon(self, LAST)) {
       size_t RHS_size = utillib_vector_size(RHS);
       struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
       struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
-      changed = utillib_ll1_set_union(PREV_FOLLOW, LHS_FOLLOW);
+      changed=ll1_builder_FOLLOW_update(PREV_FOLLOW, LHS_FOLLOW);
     }
   }
   return changed;
@@ -504,7 +520,7 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
        rule_id < size; ++rule_id) {
     struct utillib_ll1_set const *FIRST =
         utillib_vector_at(&self->FIRST_RULE, rule_id);
-    struct utillib_rule const *rule = utillib_vector_at(rules_vector, rule_id);
+    struct utillib_rule *rule = utillib_vector_at(rules_vector, rule_id);
     struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
     size_t LHS_index = utillib_rule_index_symbol_index(rule_index, LHS);
     for (size_t symbol_id = 0; symbol_id < symbols_size; ++symbol_id) {
@@ -513,10 +529,9 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
         utillib_rule_index_symbol_at(rule_index, symbol_id);
         size_t symbol_index =
             utillib_rule_index_symbol_index(rule_index, symbol);
-        utillib_vector2_set(table, LHS_index, symbol_index,
-                            (utillib_element_t)rule);
+        utillib_vector2_set(table, LHS_index, symbol_index, rule);
       }
-    }
+    } /* epsilon */
     if (utillib_ll1_set_flag(FIRST)) {
       struct utillib_ll1_set const *FOLLOW =
           utillib_vector_at(&self->FOLLOW, LHS_index);
@@ -525,9 +540,11 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
           struct utillib_symbol const *symbol=
               utillib_rule_index_symbol_at(rule_index, symbol_id);
           size_t symbol_index =utillib_rule_index_symbol_index(rule_index, symbol);
-          utillib_vector2_set(table, LHS_index, symbol_index,
-                              (utillib_element_t)UTILLIB_RULE_NULL);
+          utillib_vector2_set(table, LHS_index, symbol_index, UTILLIB_RULE_NULL);
         }
+      }
+      if (utillib_ll1_set_flag(FOLLOW)) { /* special `eof' */
+        utillib_vector2_set(table, LHS_index, UT_SYM_EOF, UTILLIB_RULE_NULL);
       }
     }
   }
