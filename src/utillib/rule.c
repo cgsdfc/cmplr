@@ -106,10 +106,11 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
       *pvalue = value;
     utillib_vector_push_back(pvector, (utillib_element_t)symbol);
   }
+  /* counts EOF */
   self->non_terminals_size=utillib_vector_size(&self->non_terminals);
-  self->terminals_size=utillib_vector_size(&self->terminals);
+  self->terminals_size=utillib_vector_size(&self->terminals)+1;
   self->rules_size=utillib_vector_size(&self->rules);
-  self->symbols_size=self->non_terminals_size+self->terminals_size+1;
+  self->symbols_size=self->non_terminals_size+self->terminals_size;
 }
 
 /**
@@ -129,21 +130,25 @@ void utillib_rule_index_destroy(struct utillib_rule_index *self) {
  * from 0 to number-of-symbol, exclusively.
  * \param symbol From which the index is computed.
  * its value should be non negative.
- * 
+ * Notes that it preserves the zero index for special
+ * symbol `eof'.
  */
 #define rule_index_check_symbol_value(symbol) do {\
-  assert (utillib_symbol_value(symbol) > 0 && "Value of symbol should be non negative");\
+  assert (utillib_symbol_value(symbol) >= 0 && "Value of symbol should be non negative");\
 } while(0)
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
     struct utillib_symbol const *symbol)
 {
   rule_index_check_symbol_value(symbol);
-  /* Checked */
   size_t value=utillib_symbol_value(symbol);
+  if (value == UT_SYM_EOF)
+    return UT_SYM_EOF;
+  /* Checked */
   switch (utillib_symbol_kind(symbol)) {
   case UT_SYMBOL_TERMINAL:
-    return value - self->min_terminal;
+    /* EOF takes zero */
+    return value - self->min_terminal + 1;
   case UT_SYMBOL_NON_TERMINAL:
     return value - self->min_non_terminal;
   }

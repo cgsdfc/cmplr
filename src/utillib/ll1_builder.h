@@ -37,9 +37,10 @@ UTILLIB_ENUM_END(utillib_ll1_error_kind)
 /**
  * \struct utillib_ll1_set
  * A set used for both `FIRST_SET' and `FOLLOW_SET'.
+ * The flag is for testing existence of special symbol
+ * like `epsilon' or `eof'.
  */
 struct utillib_ll1_set {
-  /* whether contains special symbol `epsilon'. */
   bool flag;
   /* The set of terminal symbol values */
   struct utillib_bitset bitset;
