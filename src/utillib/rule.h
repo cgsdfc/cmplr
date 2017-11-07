@@ -36,7 +36,7 @@
 /**
  * \macro
  * UTILLIB_RULE_NULL
- * Address of the special rule `null' which has `epsilon' as the 
+ * Address of the special rule `null' which has `epsilon' as the
  * only symbol on its right hand side.
  */
 #define UTILLIB_RULE_NULL (&utillib_rule_null)
@@ -54,9 +54,7 @@
 #define UTILLIB_RULE_ELEM(LHS, ...)                                            \
   {.LHS_LIT = (LHS), .RHS_LIT = {__VA_ARGS__, UT_SYM_NULL}},
 
-
-#define UTILLIB_RULE_BEGIN(NAME)                                               \
-  static const struct utillib_rule_literal NAME[] = {
+#define UTILLIB_RULE_BEGIN(NAME) const struct utillib_rule_literal NAME[] = {
 #define UTILLIB_RULE_END(NAME)                                                 \
   { .LHS_LIT = UT_SYM_NULL }                                                   \
   }                                                                            \
@@ -73,7 +71,7 @@
  * sack the `RHS_LIT' field is bounded.
  * Also, it may contain special symbols
  * like `epsilon' having negative value.
- * 
+ *
  */
 struct utillib_rule_literal {
   int LHS_LIT;
@@ -125,34 +123,29 @@ utillib_json_value_t *utillib_rule_index_json_object_create(void *base,
                                                             size_t offset);
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
-    struct utillib_symbol const *symbol);
+                                       struct utillib_symbol const *symbol);
 
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self);
 size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self);
 
-struct utillib_symbol const * utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
-    size_t symbol_id);
+struct utillib_symbol const *
+utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
+                             size_t symbol_id);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)
 #define utillib_rule_id(self) ((self)->id)
 
-#define utillib_rule_index_terminals_size(self)                                \
-  ((self)->terminals_size)
-#define utillib_rule_index_non_terminals_size(self)                            \
-  ((self)->non_terminals_size)
-#define utillib_rule_index_symbols_size(self) \
-  ((self)->symbols_size)
+#define utillib_rule_index_terminals_size(self) ((self)->terminals_size)
+#define utillib_rule_index_non_terminals_size(self) ((self)->non_terminals_size)
+#define utillib_rule_index_symbols_size(self) ((self)->symbols_size)
 
 #define utillib_rule_index_rules(self) (&(self)->rules)
-#define utillib_rule_index_non_terminals(self) \
-  (&(self)->non_terminals)
+#define utillib_rule_index_non_terminals(self) (&(self)->non_terminals)
 #define utillib_rule_index_terminals(self) (&(self)->terminals)
-
 
 #define utillib_rule_index_rule_at(self, rule_id)                              \
   (utillib_vector_at(&(self)->rules, (rule_id)))
-
 
 #endif // UTILLIB_RULE_H

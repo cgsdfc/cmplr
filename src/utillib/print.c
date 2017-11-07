@@ -67,7 +67,7 @@ void utillib_printer_init(utillib_printer_t *self, FILE *file, size_t npad) {
  */
 static void printer_padding(utillib_printer_t *self) {
   size_t lv = self->level;
-  for (size_t i=0; i<lv; ++i)
+  for (size_t i = 0; i < lv; ++i)
     fputs(self->padstr, self->file);
 }
 

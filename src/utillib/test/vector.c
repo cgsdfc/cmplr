@@ -114,9 +114,7 @@ UTILLIB_TEST(capacity) {
                        utillib_vector_capacity(UT_FIXTURE));
 }
 
-UTILLIB_TEST(reserve) {
-  utillib_vector_reserve(UT_FIXTURE, 10); 
-}
+UTILLIB_TEST(reserve) { utillib_vector_reserve(UT_FIXTURE, 10); }
 
 UTILLIB_TEST(foreach) {
   int N = 100;

@@ -311,8 +311,8 @@ static void utillib_test_setup(utillib_test_env_t *self) {
 }
 
 static void utillib_test_report_failure(utillib_test_env_t *self) {
-  for (struct utillib_test_entry_t const * test=self->cases;
-      test->func!=NULL; ++test){
+  for (struct utillib_test_entry_t const *test = self->cases;
+       test->func != NULL; ++test) {
     if (test->status != UT_STATUS_RUN)
       continue;
     if (test->succeeded)
@@ -572,7 +572,7 @@ static void test_suite_print_json(utillib_test_suite_t *self) {
 }
 
 static void utillib_test_suite_report_failure(utillib_test_suite_t *self) {
-  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t*, env, &self->tests) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
     utillib_test_report_failure(env);
   }
 }

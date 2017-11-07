@@ -27,9 +27,18 @@ UTILLIB_TEST(json_array_create) {
   utillib_json_value_destroy(val);
 }
 
+UTILLIB_TEST(symbol_redefined)
+{
+  UTILLIB_SYMBOL_BEGIN(maybe_redefined_symbol)
+    UTILLIB_SYMBOL_TERMINAL(0)
+    UTILLIB_SYMBOL_TERMINAL(0)
+  UTILLIB_SYMBOL_END(maybe_redefined_symbol);
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Symbol) {
   UTILLIB_TEST_BEGIN(Utillib_Symbol)
   UTILLIB_TEST_RUN(specaial_symbol_value)
+  UTILLIB_TEST_RUN(symbol_redefined)
   UTILLIB_TEST_RUN(json_object_create)
   UTILLIB_TEST_RUN(json_array_create)
   UTILLIB_TEST_END(Utillib_Symbol)

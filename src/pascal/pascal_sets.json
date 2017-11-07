@@ -1,0 +1,423 @@
+{
+  "FIRST": [
+    {
+      "epsilon/eof": true,
+      "elements": [
+        38,
+        43
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        31,
+        33,
+        35,
+        37,
+        38,
+        39,
+        40,
+        42,
+        43,
+        49
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        38
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        49
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        43
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        31
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        33,
+        35,
+        37,
+        39,
+        40,
+        42,
+        49
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        49
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        42
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        40
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        37
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        35
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        33
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        39
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        49,
+        51,
+        58,
+        60
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        49,
+        51,
+        60
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        49,
+        51,
+        60
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        45,
+        58
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        58
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        46,
+        57
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        58
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        32,
+        45,
+        49,
+        51,
+        58,
+        60
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        46,
+        57
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        47,
+        52,
+        53,
+        54,
+        55,
+        56
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        59
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        31
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        59
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        59
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        48
+      ]
+    }
+  ],
+  "FOLLOW": [
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        48,
+        59
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        59,
+        61
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        58
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        46,
+        57
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        59,
+        61
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        58
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        45,
+        49,
+        51,
+        58,
+        60
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        61
+      ]
+    },
+    {
+      "epsilon/eof": true,
+      "elements": [
+        33,
+        35,
+        37,
+        39,
+        40,
+        42,
+        48,
+        49
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        48
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        48,
+        61
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        36
+      ]
+    },
+    {
+      "epsilon/eof": false,
+      "elements": [
+        48
+      ]
+    }
+  ]
+}

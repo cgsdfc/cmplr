@@ -453,7 +453,6 @@ void utillib_json_tostring(utillib_json_value_t *self, utillib_string *str) {
   json_value_tostring(self, str);
 }
 
-
 /**
  * The following functions create empty JSON array or object
  * that client can fill in with push_back functions.

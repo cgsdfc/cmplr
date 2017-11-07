@@ -161,7 +161,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t);
  */
 #define UTILLIB_TEST_DECLARE(NAME) utillib_test_env_t *NAME(void);
 /**
- * \macro UTILLIB_TEST_RUN_ALL_ARG
+ * \macro UTILLIB_TEST_RUN_ALL
  * Initilizes the test suite with the all the tests to run
  * and run them. Passed in command line arguments.
  * It should be called exactly once.
@@ -170,7 +170,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t);
  * \param ARGV argv.
  * \param ... The tests function pointers.
  */
-#define UTILLIB_TEST_RUN_ALL_ARG(ARGC, ARGV, ...)                              \
+#define UTILLIB_TEST_RUN_ALL(ARGC, ARGV, ...)                              \
   do {                                                                         \
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
@@ -178,12 +178,6 @@ UTILLIB_ENUM_END(utillib_test_severity_t);
     utillib_test_suite_destroy(&static_suite);                                 \
     return rc;                                                                 \
   } while (0)
-/**
- * \macro UTILLIB_TEST_RUN_ALL
- * Same as above but takes no command line arguments.
- * And uses their defaults.
- */
-#define UTILLIB_TEST_RUN_ALL(...) UTILLIB_TEST_RUN_ALL_ARG(0, 0, __VA_ARGS__)
 /**
  * \macro UTILLIB_TEST_LEN
  * Shortcut for getting the length of a constant array.

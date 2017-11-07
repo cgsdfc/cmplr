@@ -39,23 +39,17 @@ UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
 UTILLIB_TEST_DECLARE(Utillib_Scanner);
 UTILLIB_TEST_DECLARE(Utillib_Vector2);
 
-
 int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL_ARG(argc, argv,
-      Utillib_Hash,
-      Utillib_Vector,
+  UTILLIB_TEST_RUN_ALL(argc, argv,
+      Utillib_Hash, Utillib_Vector,
       /* Failing */
       /* Utillib_Test, */
       /* Utillib_String, */
-      Utillib_JSON,
-      Utillib_Symbol,
-      Utillib_Bitset,
-      Utillib_Print,
-      Utillib_Flags,
+      /* Utillib_JSON, Utillib_Symbol, Utillib_Bitset, */
+      /* Utillib_Print, Utillib_Flags, */
       Utillib_Scanner,
-      Utillib_Vector2,
+      /* Utillib_Vector2, Utillib_Rule, Utillib_LL1Builder, */
       Utillib_LL1Parser,
-      Utillib_Rule,
-      Utillib_LL1Builder
+      Utillib_Symbol
       );
 }

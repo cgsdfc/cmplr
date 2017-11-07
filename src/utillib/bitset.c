@@ -20,9 +20,9 @@
 */
 #include "bitset.h"
 #include "json.h"
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h> // memcmp
-#include <assert.h>
 
 /**
  * \function utillib_bitset_init
@@ -36,7 +36,7 @@ void utillib_bitset_init(struct utillib_bitset *self, size_t N) {
   bits = calloc(size, sizeof *bits);
   self->bits = bits;
   self->size = size;
-  self->N=N;
+  self->N = N;
 }
 
 /**
@@ -48,9 +48,10 @@ void utillib_bitset_destroy(struct utillib_bitset *self) {
   self->bits = NULL;
 }
 
-#define bit_index(pos, self) ((pos) / sizeof (self)->bits[0])
-#define bit_offset(pos, self) ((pos) % sizeof (self)->bits[0])
-#define bitset_index_check(pos, self)  assert (pos < self->N && "Index out of range")
+#define bit_index(pos, self) ((pos) / sizeof(self)->bits[0])
+#define bit_offset(pos, self) ((pos) % sizeof(self)->bits[0])
+#define bitset_index_check(pos, self)                                          \
+  assert(pos < self->N && "Index out of range")
 
 /**
  * \function utillib_bitset_test
@@ -97,16 +98,15 @@ bool utillib_bitset_union(struct utillib_bitset *self,
   return changed;
 }
 
-bool utillib_bitset_equal(struct utillib_bitset const *self, 
-    struct utillib_bitset     const * other)
-{
-  return 0 == memcmp (self->bits, other->bits, sizeof self->bits[0] * self->size);
+bool utillib_bitset_equal(struct utillib_bitset const *self,
+                          struct utillib_bitset const *other) {
+  return 0 ==
+         memcmp(self->bits, other->bits, sizeof self->bits[0] * self->size);
 }
 
-bool utillib_bitset_is_intersect(struct utillib_bitset const *self, 
-    struct utillib_bitset     const * other)
-{ 
-  for (size_t i=0; i<self->size; ++i)
+bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
+                                 struct utillib_bitset const *other) {
+  for (size_t i = 0; i < self->size; ++i)
     if (self->bits[i] & other->bits[i])
       return true;
   return false;
@@ -120,12 +120,14 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
  * \function utillib_bitset_json_array_create
  * Dumps the elements that is in the bitset.
  */
-utillib_json_value_t *utillib_bitset_json_array_create(void *base, size_t offset) {
+utillib_json_value_t *utillib_bitset_json_array_create(void *base,
+                                                       size_t offset) {
   struct utillib_bitset const *self = base;
   utillib_json_value_t *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {
     if (utillib_bitset_test(self, i)) {
-      utillib_json_array_push_back(array, utillib_json_size_t_create(&i, sizeof i));
+      utillib_json_array_push_back(array,
+                                   utillib_json_size_t_create(&i, sizeof i));
     }
   }
   return array;

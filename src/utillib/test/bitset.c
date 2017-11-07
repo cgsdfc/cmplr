@@ -64,27 +64,28 @@ UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) {
 
 UTILLIB_TEST(bitset_json_array) {
   UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
-  utillib_json_value_t *val =
-      utillib_bitset_json_array_create(UT_FIXTURE, 10);
+  utillib_json_value_t *val = utillib_bitset_json_array_create(UT_FIXTURE, 10);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
 
 UTILLIB_TEST(bitset_json_empty) {
-  struct utillib_bitset * EMPTY=UT_FIXTURE;
+  struct utillib_bitset *EMPTY = UT_FIXTURE;
   utillib_bitset_init(EMPTY, 10);
-  utillib_json_value_t * val=utillib_bitset_json_array_create(EMPTY, sizeof *EMPTY);
+  utillib_json_value_t *val =
+      utillib_bitset_json_array_create(EMPTY, sizeof *EMPTY);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
 
-
-UTILLIB_TEST_AUX(bitset_init2, struct utillib_bitset *A, struct utillib_bitset *B, size_t N) {
+UTILLIB_TEST_AUX(bitset_init2, struct utillib_bitset *A,
+                 struct utillib_bitset *B, size_t N) {
   utillib_bitset_init(A, N);
   utillib_bitset_init(B, N);
 }
 
-UTILLIB_TEST_AUX(bitset_destroy2, struct utillib_bitset *A, struct utillib_bitset *B) {
+UTILLIB_TEST_AUX(bitset_destroy2, struct utillib_bitset *A,
+                 struct utillib_bitset *B) {
   utillib_bitset_destroy(A);
   utillib_bitset_destroy(B);
 }
@@ -94,7 +95,7 @@ UTILLIB_TEST(bitset_equal) {
   struct utillib_bitset b0, b1;
   UTILLIB_TEST_AUX_INVOKE(bitset_init2, &b0, &b1, N);
   UTILLIB_TEST_ASSERT(utillib_bitset_equal(&b0, &b1));
-  for (size_t i=0; i<N; i+=3) {
+  for (size_t i = 0; i < N; i += 3) {
     utillib_bitset_set(&b0, i);
     utillib_bitset_set(&b1, i);
   }
@@ -106,16 +107,16 @@ UTILLIB_TEST(bitset_is_interset) {
   UTILLIB_TEST_CONST(N, 100);
   struct utillib_bitset b0, b1;
   UTILLIB_TEST_AUX_INVOKE(bitset_init2, &b0, &b1, N);
-  for (size_t i=0; i<N; ++i) {
-     if (i % 2) 
-       utillib_bitset_set(&b0, i);
-     else
-       utillib_bitset_set(&b1, i);
+  for (size_t i = 0; i < N; ++i) {
+    if (i % 2)
+      utillib_bitset_set(&b0, i);
+    else
+      utillib_bitset_set(&b1, i);
   }
   UTILLIB_TEST_EXPECT_FALSE(utillib_bitset_is_intersect(&b0, &b1));
   UTILLIB_TEST_AUX_INVOKE(bitset_destroy2, &b0, &b1);
 }
-  
+
 UTILLIB_TEST_DEFINE(Utillib_Bitset) {
   UTILLIB_TEST_BEGIN(Utillib_Bitset)
   UTILLIB_TEST_RUN(bitset_init)

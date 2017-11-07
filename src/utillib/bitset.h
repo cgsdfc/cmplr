@@ -53,9 +53,10 @@ void utillib_bitset_set(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_reset(struct utillib_bitset *self, size_t pos);
 bool utillib_bitset_union(struct utillib_bitset *self,
                           struct utillib_bitset const *other);
-bool utillib_bitset_is_intersect(struct utillib_bitset const *self, 
-    struct utillib_bitset const * other);
-bool utillib_bitset_equal(struct utillib_bitset const *self, 
-    struct utillib_bitset const * other);
-utillib_json_value_t *utillib_bitset_json_array_create(void *base, size_t offset);
+bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
+                                 struct utillib_bitset const *other);
+bool utillib_bitset_equal(struct utillib_bitset const *self,
+                          struct utillib_bitset const *other);
+utillib_json_value_t *utillib_bitset_json_array_create(void *base,
+                                                       size_t offset);
 #endif // UTILLIB_BITSET_H

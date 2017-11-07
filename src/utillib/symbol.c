@@ -19,6 +19,7 @@
 
 */
 #include "symbol.h"
+#include <stdio.h>
 
 UTILLIB_ETAB_BEGIN(utillib_symbol_kind)
 UTILLIB_ETAB_ELEM_INIT(UT_SYMBOL_TERMINAL, "terminal-symbol")
@@ -75,3 +76,40 @@ struct utillib_symbol utillib_symbol_error = {
 
 struct utillib_symbol utillib_symbol_epsilon = {
     .value = UT_SYM_EPS, .kind = UT_SYMBOL_TERMINAL, .name = "epsilon-symbol"};
+
+
+/**
+ * \function utillib_symbol_check
+ * Checks whether the symbol array has any inconsistent
+ * entry or less or more entries than the `enum' does.
+ * \param symbols The symbol table defined using `UTILLIB_SYMBOL_BEGIN'.
+ * \param expected_size The number of the enumeration. If the `enum' was
+ * defined by `UTILLIB_ENUM_BEGIN' with name `NAME', then pass in the
+ * `NAME_N'.
+ * \return If the check success.
+ */
+bool utillib_symbol_check(struct utillib_symbol const *symbols, size_t expected_size)
+{
+  size_t actual_size=0;
+  struct utillib_symbol const *zero=symbols;
+  bool preserved_zero=zero->name == NULL && zero->value == 0 && zero->kind == 0;
+  if (!preserved_zero) {
+    puts("Entry zero should be preserved for `eof'");
+    printf("Forget to use `UTILLIB_ENUM_ELEM_INIT(%s, 1)' ?", zero->name);
+    return false;
+  }
+  struct utillib_symbol const * symbol=symbols + 1;
+  for(; NULL  != utillib_symbol_name(symbol); ++symbol)
+    ;
+  actual_size=symbol-symbols;
+  if (actual_size != expected_size) {
+    struct utillib_symbol const * prev=symbol-1;
+    printf("Empty Entry at `%d' detected\n", prev->value+1);
+    struct utillib_json_value_t *val=utillib_symbol_json_object_create((void*) prev, sizeof *prev);
+    puts("\tPrevious symbol is");
+    utillib_json_pretty_print(val, stdout);
+    utillib_json_value_destroy(val);
+    return false;
+  }
+  return true;
+}

@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = enum.c \
+												opg_builder.c \
 												ll1_builder.c \
 												ll1_parser.c \
 												unordered_op.c \
@@ -55,6 +56,8 @@ include_HEADERS = flags.h \
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c \
 										 test/print.c \
+										 test/ll1_sample_1.c \
+										 test/ll1_sample_2.c \
 										 test/flags.c \
 										 test/vector2.c \
 										 test/ll1_parser.c \

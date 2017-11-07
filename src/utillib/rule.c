@@ -19,9 +19,9 @@
 
 */
 #include "rule.h"
+#include <assert.h>
 #include <limits.h> // ULONG_MAX
 #include <stdlib.h> // malloc
-#include <assert.h>
 
 /**
  * \variable utillib_rule_null
@@ -32,12 +32,17 @@
  */
 struct utillib_rule utillib_rule_null;
 
+/*
+ * Ensures sanity of LHS
+ */
+#define rule_check_lhs_non_terminal(symbol) assert (utillib_symbol_kind(symbol) == UT_SYMBOL_NON_TERMINAL && "Symbol on the left hand side of a rule must be non terminal")
+
 static struct utillib_rule *
-rule_index_rule_create(size_t rule_id, struct utillib_symbol const *LHS)
-{
+rule_index_rule_create(size_t rule_id, struct utillib_symbol const *LHS) {
+  rule_check_lhs_non_terminal(LHS);
   struct utillib_rule *self = malloc(sizeof *self);
-  self->id=rule_id;
-  self->LHS=LHS;
+  self->id = rule_id;
+  self->LHS = LHS;
   utillib_vector_init(&self->RHS);
   return self;
 }
@@ -45,18 +50,17 @@ rule_index_rule_create(size_t rule_id, struct utillib_symbol const *LHS)
 /**
  * \function rule_index_rule_create
  * Creates `utillib_rule' from `utillib_rule_literal'.
- * If the rule literal is of form `A := epsilon', 
+ * If the rule literal is of form `A := epsilon',
  * \param symbols The symbol table to look up.
  * \param rule_literal The literal under concern.
  */
-static struct utillib_rule *
-rule_index_rule_create_from_literal(struct utillib_symbol const *symbols,
-    size_t rule_id,
-    struct utillib_rule_literal const *rule_literal) 
-{
-  int  const* RHS_LIT=rule_literal->RHS_LIT;
+static struct utillib_rule *rule_index_rule_create_from_literal(
+    struct utillib_symbol const *symbols, size_t rule_id,
+    struct utillib_rule_literal const *rule_literal) {
+  int const *RHS_LIT = rule_literal->RHS_LIT;
   int LHS_LIT = rule_literal->LHS_LIT;
-  struct utillib_rule *self = rule_index_rule_create(rule_id, &symbols[LHS_LIT]);
+  struct utillib_rule *self =
+      rule_index_rule_create(rule_id, &symbols[LHS_LIT]);
 
   for (; *RHS_LIT != UT_SYM_NULL; ++RHS_LIT) {
     struct utillib_symbol const *symbol;
@@ -64,7 +68,7 @@ rule_index_rule_create_from_literal(struct utillib_symbol const *symbols,
       symbol = UTILLIB_SYMBOL_EPS;
     else
       symbol = &symbols[*RHS_LIT];
-    utillib_vector_push_back(&self->RHS, (utillib_element_t) symbol);
+    utillib_vector_push_back(&self->RHS, (utillib_element_t)symbol);
   }
   return self;
 }
@@ -95,9 +99,9 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   for (struct utillib_rule_literal const *rule_literal = rule_literals;
        rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
     /* Rule index starts form ONE */
-    size_t rule_id=rule_literal-rule_literals;
-    struct utillib_rule *rule = rule_index_rule_create_from_literal
-    (symbols, rule_id, rule_literal);
+    size_t rule_id = rule_literal - rule_literals;
+    struct utillib_rule *rule =
+        rule_index_rule_create_from_literal(symbols, rule_id, rule_literal);
     utillib_vector_push_back(&self->rules, rule);
   }
   /* Since `EOF' always takes the "zero" place, we start from "1" */
@@ -116,9 +120,9 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
     utillib_vector_push_back(pvector, (utillib_element_t)symbol);
   }
   /* counts EOF */
-  self->non_terminals_size=utillib_vector_size(&self->non_terminals);
-  self->terminals_size=utillib_vector_size(&self->terminals)+1;
-  self->symbols_size=self->non_terminals_size+self->terminals_size;
+  self->non_terminals_size = utillib_vector_size(&self->non_terminals);
+  self->terminals_size = utillib_vector_size(&self->terminals) + 1;
+  self->symbols_size = self->non_terminals_size + self->terminals_size;
 }
 
 /**
@@ -141,15 +145,16 @@ void utillib_rule_index_destroy(struct utillib_rule_index *self) {
  * Notes that it preserves the zero index for special
  * symbol `eof'.
  */
-#define rule_index_check_symbol_value(symbol) do {\
-  assert (utillib_symbol_value(symbol) >= 0 && "Value of symbol should be non negative");\
-} while(0)
+#define rule_index_check_symbol_value(symbol)                                  \
+  do {                                                                         \
+    assert(utillib_symbol_value(symbol) >= 0 &&                                \
+           "Value of symbol should be non negative");                          \
+  } while (0)
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
-    struct utillib_symbol const *symbol)
-{
+                                       struct utillib_symbol const *symbol) {
   rule_index_check_symbol_value(symbol);
-  size_t value=utillib_symbol_value(symbol);
+  size_t value = utillib_symbol_value(symbol);
   if (value == UT_SYM_EOF)
     return UT_SYM_EOF;
   /* Checked */
@@ -162,22 +167,24 @@ size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
   }
 }
 
-struct utillib_symbol const * utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
-    size_t symbol_id)
-{
-  assert (symbol_id < self->symbols_size && "Symbol index out of range");
+struct utillib_symbol const *
+utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
+                             size_t symbol_id) {
+  assert(symbol_id < self->symbols_size && "Symbol index out of range");
   return &self->symbols[symbol_id];
 }
 
 /**
  * \function utillib_rule_index_top_symbol
  * For any symbol defined in the `begin-elem-end' way,
- * identifies the first non terminal symbol as the 
+ * identifies the first non terminal symbol as the
  * TOP symbol of the input grammar.
  */
-#define rule_index_check_non_terminal_non_empty(self) do {\
-  assert (self->non_terminals_size > 0 && "Number of non terminal symbols should be at least 1");\
-} while (0)
+#define rule_index_check_non_terminal_non_empty(self)                          \
+  do {                                                                         \
+    assert(self->non_terminals_size > 0 &&                                     \
+           "Number of non terminal symbols should be at least 1");             \
+  } while (0)
 
 struct utillib_symbol *
 utillib_rule_index_top_symbol(struct utillib_rule_index const *self) {
@@ -185,8 +192,7 @@ utillib_rule_index_top_symbol(struct utillib_rule_index const *self) {
   return utillib_vector_front(&self->non_terminals);
 }
 
-size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self)
-{
+size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self) {
   return utillib_vector_size(&self->rules);
 }
 
@@ -196,7 +202,7 @@ size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self)
 static utillib_json_value_t *
 rule_RHS_json_array_create_from_vector(void *base, size_t offset) {
   return utillib_json_array_create_from_vector(
-      base,  utillib_symbol_json_object_create);
+      base, utillib_symbol_json_object_create);
 }
 
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(Rule_Fields)
@@ -208,7 +214,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(Rule_Fields)
 
 utillib_json_value_t *utillib_rule_json_object_create(void *base,
                                                       size_t offset) {
-  static const char * rule_null_str="A := epsilon";
+  static const char *rule_null_str = "A := epsilon";
   if (base == UTILLIB_RULE_NULL) {
     return utillib_json_string_create(&rule_null_str, sizeof rule_null_str);
   }
@@ -217,7 +223,7 @@ utillib_json_value_t *utillib_rule_json_object_create(void *base,
 
 static utillib_json_value_t *
 rule_index_rule_json_array_create_from_vector(void *base, size_t offset) {
-  return utillib_json_array_create_from_vector(base, 
+  return utillib_json_array_create_from_vector(base,
                                                utillib_rule_json_object_create);
 }
 

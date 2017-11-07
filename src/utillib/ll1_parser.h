@@ -22,19 +22,16 @@
 #define UTILLIB_LL1_PARSER_H
 #include "enum.h"
 #include "rule.h"
-#include "vector2.h"
-#include "vector.h"
 #include "scanner.h"
+#include "vector.h"
+#include "vector2.h"
 
 UTILLIB_ENUM_BEGIN(utillib_ll1_parser_error_kind)
-  UTILLIB_ENUM_ELEM(UT_LL1_PARSER_OK)
-  UTILLIB_ENUM_ELEM(UT_LL1_PARSER_ERR)
+UTILLIB_ENUM_ELEM(UT_LL1_PARSER_OK)
+UTILLIB_ENUM_ELEM(UT_LL1_PARSER_ERR)
 UTILLIB_ENUM_END(utillib_ll1_parser_error_kind);
 
-struct utillib_ll1_parser_error {
-
-
-};
+struct utillib_ll1_parser_error {};
 
 struct utillib_ll1_parser_context {
   size_t RHS_count;
@@ -42,7 +39,7 @@ struct utillib_ll1_parser_context {
 };
 
 struct utillib_ll1_parser;
-typedef int (utillib_ll1_parser_callback_t) (void *, struct utillib_ll1_parser *);
+typedef int(utillib_ll1_parser_callback_t)(void *, struct utillib_ll1_parser *);
 
 /**
  * \struct utillib_ll1_parser
@@ -59,15 +56,14 @@ struct utillib_ll1_parser {
   struct utillib_vector rule_seq;
   struct utillib_rule_index const *rule_index;
   struct utillib_vector2 *table;
-  utillib_ll1_parser_callback_t const** callbacks;
+  utillib_ll1_parser_callback_t const **callbacks;
 };
 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 *table,
-                             void * client_data,
-                             const utillib_ll1_parser_callback_t ** callbacks) ;
-void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) ;
-int utillib_ll1_parser_parse(struct utillib_ll1_parser *self,
-    void *input, struct utillib_scanner_op const *scanner);
+                             struct utillib_vector2 *table, void *client_data,
+                             const utillib_ll1_parser_callback_t **callbacks);
+void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
+int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
+                             struct utillib_scanner_op const *scanner);
 #endif // UTILLIB_LL1_PARSER_H
