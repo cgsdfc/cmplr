@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
       Utillib_Flags,
       Utillib_Scanner,
       Utillib_Vector2,
-      Utillib_LL1Parser
-      /* Utillib_Rule, */
-      /* Utillib_LL1Builder */
+      Utillib_LL1Parser,
+      Utillib_Rule,
+      Utillib_LL1Builder
       );
 }

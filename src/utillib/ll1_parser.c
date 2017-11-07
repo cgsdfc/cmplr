@@ -164,9 +164,9 @@ int utillib_ll1_parser_parse(struct utillib_ll1_parser *self,
         return UT_LL1_PARSER_OK;
       }
       if (top_val == isym) {
+        printf("Match Symbol `%s'\n", utillib_symbol_name(isymbol));
         ll1_parser_match_symbol(self);
         scanner->shiftaway(input);
-        printf("Match Symbol `%s'\n", utillib_symbol_name(isymbol));
         continue;
       } 
       return UT_LL1_PARSER_ERR;

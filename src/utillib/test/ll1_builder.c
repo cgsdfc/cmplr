@@ -92,6 +92,7 @@ UTILLIB_TEST(ll1_builder_FOLLOW_correct) {
   UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, &self->FOLLOW, test_rules_FOLLOW);
 }
 
+
 /**
  * \test ll1_builder_locate_rule
  * Locates the Rule Index in `table'.
@@ -111,6 +112,34 @@ UTILLIB_TEST_AUX(ll1_builder_locate_rule, size_t row, size_t col, size_t *prule_
   row+=rule_index.min_non_terminal;
   *prule_id=test_rules_TABLE[row][col];
 }
+
+UTILLIB_TEST(ll1_builder_build_table_correct)
+{
+  size_t Expected_RuleID;
+  size_t Actual_RuleID;
+  for (int i=0; i<ll1_table.nrow; ++i) {
+    for (int j=0; j<ll1_table.ncol; ++j) {
+      struct utillib_rule const * Actual_Rule=
+      utillib_vector2_at(&ll1_table, i, j);
+      UTILLIB_TEST_AUX_INVOKE(ll1_builder_locate_rule,
+          i, j, &Expected_RuleID);
+      if (Actual_Rule) {
+        if (Actual_Rule == UTILLIB_RULE_NULL) {
+          struct utillib_rule const * Expected_Rule=utillib_rule_index_rule_at
+          (&rule_index, Expected_RuleID);
+          struct utillib_symbol const * x=utillib_vector_front(utillib_rule_rhs(Expected_Rule));
+          UTILLIB_TEST_EXPECT_EQ(x, UTILLIB_SYMBOL_EPS);
+        } else {
+          Actual_RuleID=utillib_rule_id(Actual_Rule);
+          UTILLIB_TEST_EXPECT_EQ(Actual_RuleID, Expected_RuleID);
+        }
+      } else {
+        UTILLIB_TEST_EXPECT_EQ(Expected_RuleID, 0);
+      }
+    }
+  }
+}
+  
 
 /**
  * \test ll1_builder_build_table_json
@@ -140,6 +169,7 @@ UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
   UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
   UTILLIB_TEST_RUN(ll1_builder_build_table_json)
+  UTILLIB_TEST_RUN(ll1_builder_build_table_correct)
   UTILLIB_TEST_END(Utillib_LL1Builder)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_builder);
   UTILLIB_TEST_RETURN(Utillib_LL1Builder)

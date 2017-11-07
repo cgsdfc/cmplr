@@ -94,6 +94,14 @@
 #include <time.h>   // for time_t
 
 /**
+ * \macro UTILLIB_TEST_ZERO_BASE
+ * Converts a `one-based' number, .i.e.,
+ * counting start from one, to a `zero-based'
+ * number, .i.e, counting starts from zero.
+ */
+#define UTILLIB_TEST_ZERO_BASED(N) ((N)-1)
+
+/**
  * \macro UTILLIB_TEST_SETUP
  */
 #define UTILLIB_TEST_SET_UP()                                                  \
