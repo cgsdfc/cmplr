@@ -66,7 +66,7 @@ bool utillib_unordered_map_iterator_has_next(
     struct utillib_unordered_map_iterator *);
 void utillib_unordered_map_iterator_next(
     struct utillib_unordered_map_iterator *);
-utillib_pair_t *
+struct utillib_pair_t *
 utillib_unordered_map_iterator_get(struct utillib_unordered_map_iterator *);
 
 /* constructor destructor */
@@ -83,7 +83,7 @@ void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *,
 int utillib_unordered_map_emplace(struct utillib_unordered_map *, utillib_key_t,
                                   utillib_value_t);
 int utillib_unordered_map_insert(struct utillib_unordered_map *,
-                                 utillib_pair_t const *);
+                                 struct utillib_pair_t const *);
 int utillib_unordered_map_erase(struct utillib_unordered_map *, utillib_key_t);
 void utillib_unordered_map_set_max_load_factor(struct utillib_unordered_map *,
                                                double);
@@ -91,7 +91,7 @@ void utillib_unordered_map_rehash(struct utillib_unordered_map *, size_t);
 void utillib_unordered_map_clear(struct utillib_unordered_map *);
 
 /* observer */
-utillib_pair_t *utillib_unordered_map_find(struct utillib_unordered_map *,
+struct utillib_pair_t *utillib_unordered_map_find(struct utillib_unordered_map *,
                                            utillib_key_t);
 size_t utillib_unordered_map_size(struct utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);

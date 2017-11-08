@@ -428,7 +428,7 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
  * \param base Pointer to the `status' field of `utillib_test_entry_t'.
  * \param offset No used.
  */
-static utillib_json_value_t *json_status_string_create(void *base,
+static utillib_json_value_t *json_status_string_create(void const *base,
                                                        size_t offset) {
   int status = *(int *)base;
   char const *str = utillib_test_status_t_tostring(status);
@@ -456,7 +456,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
  * Wraps `TestEntry_Fields' in.
  * It depends on `TestEntry_Fields'.
  */
-static utillib_json_value_t *json_test_entry_create(void *base, size_t offset) {
+static utillib_json_value_t *json_test_entry_create(void const *base, size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
@@ -481,7 +481,7 @@ UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(utillib_test_entry_t),
  */
 
 static utillib_json_value_t *
-json_test_entry_array_pointer_create(void *base, size_t offset) {
+json_test_entry_array_pointer_create(void const *base, size_t offset) {
   size_t offsetof_base = offsetof(utillib_test_env_t, cases);
   size_t offsetof_size = offsetof(utillib_test_env_t, ntests);
   /* hack out the address of the field `ntests' from 2 offsets */
@@ -522,7 +522,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
  * \function json_test_env_create
  * Wraps `TestEnv_Fields'.
  */
-static utillib_json_value_t *json_test_env_create(void *base, size_t offset) {
+static utillib_json_value_t *json_test_env_create(void const *base, size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 
@@ -532,7 +532,7 @@ static utillib_json_value_t *json_test_env_create(void *base, size_t offset) {
  * \param base Points to a `utillib_vector'.
  * \param offset Useless.
  */
-static utillib_json_value_t *json_test_suite_test_create(void *base,
+static utillib_json_value_t *json_test_suite_test_create(void const *base,
                                                          size_t offset) {
   return utillib_json_array_create_from_vector(base, json_test_env_create);
 }

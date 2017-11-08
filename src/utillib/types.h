@@ -62,7 +62,7 @@ typedef char const *(utillib_print_tostring_func_t)(utillib_element_t);
 typedef struct utillib_json_value_t utillib_json_value_t;
 typedef struct utillib_json_object_t utillib_json_object_t;
 typedef struct utillib_json_array_t utillib_json_array_t;
-typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void *,
+typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const*,
                                                                  size_t);
 
 #endif /* UTILLIB_TYPEDEF_H */

@@ -62,7 +62,7 @@ struct utillib_ll1_set {
  *
  */
 struct utillib_ll1_builder {
-  struct utillib_rule_index const *rule_index;
+  struct utillib_rule_index *rule_index;
   /* first set for all the non-terminal symbols, */
   /* as an intermediate result. */
   struct utillib_vector FIRST;
@@ -82,7 +82,7 @@ bool utillib_ll1_set_equal(struct utillib_ll1_set const *self,
                            struct utillib_ll1_set const *other);
 
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
-                              struct utillib_rule_index const *rule_index);
+                              struct utillib_rule_index *rule_index);
 void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self);
 void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table);

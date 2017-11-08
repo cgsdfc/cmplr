@@ -108,7 +108,7 @@ struct utillib_rule_index {
   size_t terminals_size;
   size_t non_terminals_size;
   size_t symbols_size;
-  size_t *index;
+  struct utillib_vector * LHS_index;
 };
 
 void utillib_rule_index_init(struct utillib_rule_index *self,
@@ -117,9 +117,9 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self);
 
-utillib_json_value_t *utillib_rule_json_object_create(void *base,
+utillib_json_value_t *utillib_rule_json_object_create(void const*base,
                                                       size_t offset);
-utillib_json_value_t *utillib_rule_index_json_object_create(void *base,
+utillib_json_value_t *utillib_rule_index_json_object_create(void const*base,
                                                             size_t offset);
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
@@ -132,6 +132,9 @@ size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self);
 struct utillib_symbol const *
 utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
                              size_t symbol_id);
+
+void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self);
+
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)

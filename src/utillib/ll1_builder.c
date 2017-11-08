@@ -9,23 +9,6 @@ UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENOTLL1, "Input is not LL(1)")
 UTILLIB_ETAB_END(utillib_ll1_error_kind);
 
 /**
- * \enum ll1_builder_rule_form_kind
- * Values returned by `ll1_builder_FOLLOW_rule_form'.
- * Indicates different forms of rule needed to detected
- * when evaluating the FOLLOW sets.
- */
-UTILLIB_ENUM_BEGIN(ll1_builder_rule_form_kind)
-/* A := aB */
-UTILLIB_ENUM_ELEM(LL1_RULE_FORM_NO_TAIL)
-/* A := aBb and b is `epsilon' related */
-UTILLIB_ENUM_ELEM(LL1_RULE_FORM_TAIL_EP)
-/* A := aBb and b has nothing with `epsilon' */
-UTILLIB_ENUM_ELEM(LL1_RULE_FORM_TAIL_NOT_EPS)
-/* Whatever */
-UTILLIB_ENUM_ELEM(LL1_RULE_FORM_OTHER)
-UTILLIB_ENUM_END(ll1_builder_rule_form_kind);
-
-/**
  * JSON interfaces
  */
 
@@ -36,12 +19,12 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "elements", bitset,
                                utillib_bitset_json_array_create)
 UTILLIB_JSON_OBJECT_FIELD_END(LL1BuilderSet_Fields);
 
-static utillib_json_value_t *ll1_builder_set_json_object_create(void *base,
+static struct utillib_json_value_t *ll1_builder_set_json_object_create(void const*base,
                                                                 size_t offset) {
   return utillib_json_object_create(base, offset, LL1BuilderSet_Fields);
 }
 
-static utillib_json_value_t *ll1_builder_set_json_array_create(void *base,
+static struct utillib_json_value_t *ll1_builder_set_json_array_create(void const*base,
                                                                size_t offset) {
   utillib_json_array_create_from_vector(base,
                                         ll1_builder_set_json_object_create);
@@ -53,7 +36,7 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FIRST", FIRST,
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FOLLOW", FOLLOW,
                                ll1_builder_set_json_array_create)
 UTILLIB_JSON_OBJECT_FIELD_END(LL1Builder_Fields);
-utillib_json_value_t *
+struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder *self) {
   return utillib_json_object_create(self, 0, LL1Builder_Fields);
 }
@@ -68,7 +51,7 @@ enum {
 };
 
 static void ll1_builder_SET_print(struct utillib_ll1_builder *self, int kind) {
-  utillib_json_value_t *val;
+  struct utillib_json_value_t *val;
   switch (kind) {
   case UT_LL1B_FOLLOW:
     val = ll1_builder_set_json_array_create(&self->FOLLOW, sizeof self->FOLLOW);
@@ -459,7 +442,7 @@ static void ll1_builder_build_FIRST_FOLLOW(struct utillib_ll1_builder *self) {
  * Builds the sets.
  */
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
-                              struct utillib_rule_index const *rule_index) {
+                              struct utillib_rule_index *rule_index) {
   utillib_vector_init(&self->FIRST);
   utillib_vector_init(&self->FOLLOW);
   utillib_vector_init(&self->errors);
@@ -558,8 +541,33 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
 }
 
 /**
+ * \function ll1_builder_check_FIRST
+ * Checks whether for different rules with the same non terminal
+ * symbol as LHS, the FIRST of each does not intersect with one
+ * another. 
+ * This is a fundamental condition for a grammar to be LL(1).
+ */
+
+static int ll1_builder_check_FIRST(struct utillib_ll1_builder *self)
+{
+  struct utillib_rule_index * rule_index=self->rule_index;
+  utillib_rule_index_build_LHS_index(rule_index);
+
+
+
+
+}
+
+/**
  * \function utillib_ll1_builder_check
  * Checks for LL(1) confirmness of the input based on the sets
  * built.
  */
-int utillib_ll1_builder_check(struct utillib_ll1_builder *self) {}
+int utillib_ll1_builder_check(struct utillib_ll1_builder *self)
+{
+
+
+
+
+}
+
