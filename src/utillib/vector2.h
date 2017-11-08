@@ -21,22 +21,21 @@
 #ifndef UTILLIB_VECTOR2_H
 #define UTILLIB_VECTOR2_H
 #include "json.h"
-#include "types.h"
 #include <stddef.h>
 
 struct utillib_vector2 {
-  utillib_element_t *array;
+  void const **array;
   size_t nrow;
   size_t ncol;
 };
 
 void utillib_vector2_init(struct utillib_vector2 *, size_t, size_t);
-utillib_element_t utillib_vector2_at(struct utillib_vector2 const *, size_t,
+void * utillib_vector2_at(struct utillib_vector2 const *, size_t,
                                      size_t);
-utillib_element_t utillib_vector2_set(struct utillib_vector2 *, size_t, size_t,
-                                      utillib_element_t);
+void * utillib_vector2_set(struct utillib_vector2 *, size_t, size_t,
+                                      void const *);
 void utillib_vector2_destroy(struct utillib_vector2 *);
-utillib_json_value_t *utillib_vector2_json_array_create(
+struct utillib_json_value_t *utillib_vector2_json_array_create(
     struct utillib_vector2 const *self,
     utillib_json_value_create_func_t *create_func);
 

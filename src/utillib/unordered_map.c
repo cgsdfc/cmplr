@@ -52,9 +52,9 @@ static bool do_equal(struct utillib_unordered_map *self, utillib_key_t lhs,
 /**
  * \function make_slist
  */
-static utillib_slist *make_slist(void) {
+static struct utillib_slist *make_slist(void) {
   // create an empty slist on the heap
-  utillib_slist *list = malloc(sizeof *list);
+  struct utillib_slist *list = malloc(sizeof *list);
   if (list) {
     utillib_slist_init(list);
     return list;
@@ -70,7 +70,7 @@ static void push_free(struct utillib_unordered_map *self,
 }
 
 void utillib_unordered_map_clear(struct utillib_unordered_map *self) {
-  UTILLIB_VECTOR_FOREACH(utillib_slist *, list, &self->un_bucket) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_slist *, list, &self->un_bucket) {
     while (!utillib_slist_empty(list)) {
       struct utillib_pair_t *pair = utillib_slist_front(list);
       utillib_slist_pop_front(list);
@@ -100,7 +100,7 @@ static struct utillib_pair_t *make_pair(struct utillib_unordered_map *self,
 static void push_back_bucket(struct utillib_unordered_map *self,
                              size_t nbucket) {
   for (int i = 0; i < nbucket; ++i) {
-    utillib_slist *l = make_slist();
+    struct utillib_slist *l = make_slist();
     utillib_vector_push_back(&(self->un_bucket), l);
   }
 }
@@ -110,7 +110,7 @@ static void rehash_impl(struct utillib_unordered_map *self, size_t nbucket) {
   utillib_vector_init(&holder);
   utillib_vector_reserve(&holder, self->un_size);
   size_t cur_nb = utillib_vector_size(&(self->un_bucket));
-  UTILLIB_VECTOR_FOREACH(utillib_slist *, l, &(self->un_bucket)) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_slist *, l, &(self->un_bucket)) {
     while (!utillib_slist_empty(l)) {
       utillib_vector_push_back(&holder, utillib_slist_front(l));
       utillib_slist_pop_front(l);
@@ -121,7 +121,7 @@ static void rehash_impl(struct utillib_unordered_map *self, size_t nbucket) {
   }
   UTILLIB_VECTOR_FOREACH(struct utillib_pair_t *, pair, &holder) {
     size_t hashv = do_hash(self, UTILLIB_PAIR_FIRST(pair));
-    utillib_slist *l = utillib_vector_at(&(self->un_bucket), hashv);
+    struct utillib_slist *l = utillib_vector_at(&(self->un_bucket), hashv);
     utillib_slist_push_front(l, pair);
   }
   self->un_nbucket = nbucket;
@@ -169,7 +169,7 @@ static void destroy_free(struct utillib_unordered_map *self) {
 }
 
 static void destroy_bucket(struct utillib_unordered_map *self) {
-  UTILLIB_VECTOR_FOREACH(utillib_slist *, list, &self->un_bucket) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_slist *, list, &self->un_bucket) {
     utillib_slist_destroy(list);
     free(list);
   }
@@ -190,27 +190,27 @@ void utillib_unordered_map_destroy(struct utillib_unordered_map *self) {
 }
 
 static struct utillib_pair_t *linear_search_list(struct utillib_unordered_map *self,
-                                          utillib_slist *list,
+                                          struct utillib_slist *list,
                                           utillib_key_t key,
-                                          utillib_slist_node **pos) {
-  utillib_slist_node *node = UTILLIB_SLIST_HEAD(list);
+                                          struct utillib_slist_node **pos) {
+  struct utillib_slist_node *node = UTILLIB_SLIST_HEAD(list);
   for (; node != NULL; node = UTILLIB_SLIST_NODE_NEXT(node)) {
-    struct utillib_pair_t *pair = UTILLIB_SLIST_NODE_DATA(node);
+    struct utillib_pair_t const *pair = UTILLIB_SLIST_NODE_DATA(node);
     if (do_equal(self, key, UTILLIB_PAIR_FIRST(pair))) {
       if (pos) {
         *pos = node;
       }
-      return pair;
+      return (void*) pair;
     }
   }
   return NULL;
 }
 
 static int find_impl(struct utillib_unordered_map *self, utillib_key_t key,
-                     utillib_value_t value, int mode, utillib_slist **plist,
-                     utillib_slist_node **pos, struct utillib_pair_t **retv) {
+                     utillib_value_t value, int mode, struct utillib_slist **plist,
+                     struct utillib_slist_node **pos, struct utillib_pair_t **retv) {
   size_t hashv = do_hash(self, key);
-  utillib_slist *list = utillib_vector_at(&(self->un_bucket), hashv);
+  struct utillib_slist *list = utillib_vector_at(&(self->un_bucket), hashv);
   struct utillib_pair_t *pair = linear_search_list(self, list, key, pos);
   if (retv) {
     *retv = pair;
@@ -261,8 +261,8 @@ struct utillib_pair_t *utillib_unordered_map_find(struct utillib_unordered_map *
 
 int utillib_unordered_map_erase(struct utillib_unordered_map *self,
                                 utillib_key_t key) {
-  utillib_slist *l;
-  utillib_slist_node *n;
+  struct utillib_slist *l;
+  struct utillib_slist_node *n;
   switch (find_impl(self, key, NULL, FIND_ONLY, &l, &n, NULL)) {
   default:
     assert(false);
@@ -295,7 +295,7 @@ size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *self) {
 size_t utillib_unordered_map_bucket_size(struct utillib_unordered_map *self,
                                          size_t n) {
   assert(n < self->un_nbucket);
-  utillib_slist *l = utillib_vector_at(&(self->un_bucket), n);
+  struct utillib_slist *l = utillib_vector_at(&(self->un_bucket), n);
   return utillib_slist_size(l);
 }
 
@@ -312,7 +312,7 @@ void utillib_unordered_map_set_max_load_factor(
 static void iter_skip_empty_slot(struct utillib_unordered_map_iterator *self) {
   for (; utillib_vector_iterator_has_next(&self->iter_slot);
        utillib_vector_iterator_next(&self->iter_slot)) {
-    utillib_slist *list = utillib_vector_iterator_get(&self->iter_slot);
+    struct utillib_slist *list = utillib_vector_iterator_get(&self->iter_slot);
     if (!utillib_slist_empty(list)) {
       return;
     }

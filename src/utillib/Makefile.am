@@ -55,6 +55,7 @@ include_HEADERS = flags.h \
 
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c \
+										 test/slist.c \
 										 test/print.c \
 										 test/ll1_sample_1.c \
 										 test/ll1_sample_2.c \

@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void destroy_node(utillib_slist_node *node) { free(node); }
+static void destroy_node(struct utillib_slist_node *node) { free(node); }
 
-static void destory_slist(utillib_slist_node *node) {
-  utillib_slist_node *x;
+static void destory_slist(struct utillib_slist_node *node) {
+  struct utillib_slist_node *x;
   while (node) {
     x = node;
     node = x->next;
@@ -35,21 +35,21 @@ static void destory_slist(utillib_slist_node *node) {
   }
 }
 
-static void push_front_aux(utillib_slist_node **tail,
-                           utillib_slist_node *node) {
+static void push_front_aux(struct utillib_slist_node **tail,
+                           struct utillib_slist_node *node) {
   node->next = (*tail);
   *tail = node;
 }
 
-static void pop_front_aux(utillib_slist_node **tail,
-                          utillib_slist_node **node) {
+static void pop_front_aux(struct utillib_slist_node **tail,
+                          struct utillib_slist_node **node) {
   *node = *tail;
   *tail = (*tail)->next;
 }
 
-static utillib_slist_node *make_node(struct utillib_slist *self,
-                                     utillib_element_t data) {
-  utillib_slist_node *node;
+static struct utillib_slist_node *make_node(struct utillib_slist *self,
+                                     void const * data) {
+  struct utillib_slist_node *node;
   if (self->sl_free) {
     pop_front_aux(&(self->sl_free), &node);
     node->data = data;
@@ -65,7 +65,7 @@ static utillib_slist_node *make_node(struct utillib_slist *self,
 }
 
 void utillib_slist_push_front_node(struct utillib_slist *self,
-                                   utillib_slist_node *node) {
+                                   struct utillib_slist_node *node) {
   assert(node);
   push_front_aux(&(self->sl_tail), node);
 }
@@ -85,8 +85,8 @@ void utillib_slist_init(struct utillib_slist *self) {
  */
 
 void utillib_slist_push_front(struct utillib_slist *self,
-                              utillib_element_t data) {
-  utillib_slist_node *to_push = make_node(self, data);
+                              void const * data) {
+  struct utillib_slist_node *to_push = make_node(self, data);
   push_front_aux(&(self->sl_tail), to_push);
 }
 
@@ -101,22 +101,22 @@ void utillib_slist_erase(struct utillib_slist *self,
 }
 
 void utillib_slist_erase_node(struct utillib_slist *self,
-                              utillib_slist_node *node) {
-  utillib_slist_node **prev = &(self->sl_tail);
+                              struct utillib_slist_node *node) {
+  struct utillib_slist_node **prev = &(self->sl_tail);
   for (; *prev && (*prev)->next != node; *prev = (*prev)->next)
     ;
   *prev = node->next;
   push_front_aux(&(self->sl_free), *prev);
 }
 
-utillib_element_t utillib_slist_front(struct utillib_slist *self) {
+void * utillib_slist_front(struct utillib_slist *self) {
   assert(self->sl_tail);
-  return self->sl_tail->data;
+  return (void*) self->sl_tail->data;
 }
 
 void utillib_slist_pop_front(struct utillib_slist *self) {
   assert(self->sl_tail);
-  utillib_slist_node *x;
+  struct utillib_slist_node *x;
   pop_front_aux(&(self->sl_tail), &x);
   push_front_aux(&(self->sl_free), x);
 }
@@ -138,7 +138,7 @@ bool utillib_slist_empty(struct utillib_slist *self) {
 
 size_t utillib_slist_size(struct utillib_slist *self) {
   size_t i = 0;
-  for (utillib_slist_node *tail = self->sl_tail; tail != NULL;
+  for (struct utillib_slist_node *tail = self->sl_tail; tail != NULL;
        tail = tail->next) {
     i++;
   }
@@ -172,7 +172,7 @@ void utillib_slist_iterator_next(struct utillib_slist_iterator *self) {
   self->iter_node = UTILLIB_SLIST_NODE_NEXT(self->iter_node);
 }
 
-utillib_element_t
+void *
 utillib_slist_iterator_get(struct utillib_slist_iterator *self) {
-  return UTILLIB_SLIST_NODE_DATA(self->iter_node);
+  return  (void*)UTILLIB_SLIST_NODE_DATA(self->iter_node);
 }

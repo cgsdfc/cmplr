@@ -33,6 +33,8 @@
 #include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
+typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const*,
+                                                                 size_t);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
  * Begins to define an array of `struct utillib_json_object_field_t'.
