@@ -27,9 +27,26 @@
 #include "vector2.h"
 
 UTILLIB_ENUM_BEGIN(utillib_ll1_error_kind)
-UTILLIB_ENUM_ELEM(UT_LL1_OK)
-UTILLIB_ENUM_ELEM(UT_LL1_ENOTLL1)
-UTILLIB_ENUM_END(utillib_ll1_error_kind)
+UTILLIB_ENUM_ELEM(UT_LL1_EFIRST)
+UTILLIB_ENUM_ELEM(UT_LL1_EFOLLOW)
+UTILLIB_ENUM_END(utillib_ll1_error_kind);
+
+struct utillib_ll1_builder_error {
+  int kind;
+  union {
+    struct {
+      struct utillib_ll1_set const * lhs_FIRST;
+      struct utillib_ll1_set const * rhs_FIRST;
+      struct utillib_rule const * lhs_rule;
+      struct utillib_rule const * rhs_rule;
+    } as_EFIRST;
+    struct {
+      struct utillib_rule const * eps_rule;
+      struct utillib_ll1_set const * FIRST;
+      struct utillib_ll1_set const * FOLLOW;
+    } as_EFOLLOW;
+  };
+};
 
 #define utillib_ll1_set_flag(A) ((A)->flag)
 #define utillib_ll1_set_destroy(A) utillib_bitset_destroy(&(A)->bitset)
@@ -74,20 +91,31 @@ struct utillib_ll1_builder {
 };
 
 void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
+
 bool utillib_ll1_set_union(struct utillib_ll1_set *self,
                            struct utillib_ll1_set const *other);
+
 void utillib_ll1_set_insert(struct utillib_ll1_set *self, size_t value);
+
 bool utillib_ll1_set_contains(struct utillib_ll1_set const *self, size_t value);
+
 bool utillib_ll1_set_equal(struct utillib_ll1_set const *self,
                            struct utillib_ll1_set const *other);
 
+bool utillib_ll1_set_intersect(struct utillib_ll1_set const * lhs,
+    struct utillib_ll1_set  const* rhs, bool about_flag);
+
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
                               struct utillib_rule_index *rule_index);
+
 void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self);
+
 void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table);
+
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
-utillib_json_value_t *
-utillib_ll1_builder_json_object_create(struct utillib_ll1_builder *self);
-void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
+
+struct utillib_json_value_t *
+utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
+
 #endif /* UTILLIB_LL1_BUILDER_H */

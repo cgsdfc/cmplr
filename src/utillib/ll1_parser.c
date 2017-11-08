@@ -45,16 +45,16 @@ ll1_parser_context_destroy(struct utillib_ll1_parser_context *self) {
  */
 static void ll1_parser_match_symbol(struct utillib_ll1_parser *self) {
   utillib_vector_pop_back(&self->symbol_stack);
-  struct utillib_ll1_parser_context *context =
-      utillib_vector_back(&self->context);
-  --context->RHS_count;
-  if (context->RHS_count == 0) {
-    printf("Reduce rule `%lu'\n", 1 + context->rule_id);
-    utillib_ll1_parser_callback_t *callback = self->callbacks[context->rule_id];
-    callback(self->client_data, self);
-    ll1_parser_context_destroy(context);
-    utillib_vector_pop_back(&self->context);
-  }
+  /* struct utillib_ll1_parser_context *context = */
+  /*     utillib_vector_back(&self->context); */
+  /* --context->RHS_count; */
+  /* if (context->RHS_count == 0) { */
+  /*   printf("Reduce rule `%lu'\n", 1 + context->rule_id); */
+  /*   utillib_ll1_parser_callback_t *callback = self->callbacks[context->rule_id]; */
+  /*   callback(self->client_data, self); */
+  /*   ll1_parser_context_destroy(context); */
+  /*   utillib_vector_pop_back(&self->context); */
+  /* } */
 }
 
 /**
@@ -71,9 +71,9 @@ static void ll1_parser_start_deduct(struct utillib_ll1_parser *self,
   struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
   struct utillib_vector const *RHS = utillib_rule_rhs(rule);
   size_t RHS_size = utillib_vector_size(RHS);
-  utillib_vector_push_back(
-      &self->context,
-      ll1_parser_context_create(RHS_size, utillib_rule_id(rule)));
+  /* utillib_vector_push_back( */
+  /*     &self->context, */
+  /*     ll1_parser_context_create(RHS_size, utillib_rule_id(rule))); */
   utillib_vector_pop_back(&self->symbol_stack);
   for (int i = RHS_size - 1; i >= 0; --i) {
     struct utillib_symbol *symbol = utillib_vector_at(RHS, i);
@@ -154,7 +154,7 @@ int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
       }
       if (top_val == isym) {
         printf("Match Symbol `%s'\n", utillib_symbol_name(isymbol));
-        ll1_parser_match_symbol(self);
+        utillib_vector_pop_back(&self->symbol_stack);
         scanner->shiftaway(input);
         continue;
       }
