@@ -74,4 +74,4 @@ void utillib_logging_logmsg(int, const char *, const char *, size_t,
 void utillib_logging_set_stderr_threshold(int);
 void utillib_logging_set_logdir(const char *);
 
-#endif // UTILLIB_LOGING_H
+#endif /* UTILLIB_LOGING_H */

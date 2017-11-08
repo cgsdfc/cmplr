@@ -25,4 +25,4 @@ bool utillib_equal_c_str(char const *lhs, char const *rhs);
 bool utillib_equal_int(int const *i0, int const *i1);
 bool utillib_equal_bool(bool const *b0, bool const *b1);
 
-#endif // UTILLIB_EQUAL_H
+#endif /* UTILLIB_EQUAL_H */

@@ -90,4 +90,4 @@ int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
 utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder *self);
 void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size);
-#endif // UTILLIB_LL1_BUILDER_H
+#endif /* UTILLIB_LL1_BUILDER_H */

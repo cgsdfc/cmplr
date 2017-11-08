@@ -20,8 +20,8 @@
 */
 #ifndef UTILLIB_ENUM
 #define UTILLIB_ENUM
-#include <stdio.h> // for FILE*
-// ENUM
+#include <stdio.h> /* for FILE* */
+/* ENUM */
 #define UTILLIB_ETAB_TOSTRING(NAME) const char *NAME##_tostring(int tag)
 #define UTILLIB_ENUM_ELEM(TAG) TAG,
 #define UTILLIB_ENUM_ELEM_INIT(TAG, VAL) TAG = (VAL),
@@ -31,7 +31,7 @@
   }                                                                            \
   NAME;                                                                        \
   UTILLIB_ETAB_TOSTRING(NAME);
-// ETAB
+/* ETAB */
 #define UTILLIB_ETAB_ELEM_ARRAY_IMPL(TAB, VAL) [TAB] = (VAL),
 #define UTILLIB_ETAB_ELEM_ARRAY(TAB) UTILLIB_ETAB_ELEM_ARRAY_IMPL(TAB, #TAB)
 #define UTILLIB_ETAB_ELEM_SWITCH_IMPL(TAB, VAL)                                \
@@ -56,32 +56,32 @@
 #define UTILLIB_ETAB_END_IMPL_COMMON(NAME) }
 
 #ifdef UTILLIB_ETAB_USE_SWITCH
-// begin
+/* begin */
 #define UTILLIB_ETAB_BEGIN_IMPL(NAME)                                          \
   UTILLIB_ETAB_BIGIN_IMPL_COMMON(NAME)                                         \
   UTILLIB_ETAB_BEGIN_SWITCH(NAME)
-// elem
+/* elem */
 #define UTILLIB_ETAB_ELEM_IMPL(NAME) UTILLIB_ETAB_ELEM_SWITCH(NAME)
-// end
+/* end */
 #define UTILLIB_ETAB_END_IMPL(NAME)                                            \
   UTILLIB_ETAB_END_SWITCH(NAME)                                                \
   UTILLIB_ETAB_END_IMPL_COMMON(NAME)
-// elem_init
+/* elem_init */
 #define UTILLIB_ETAB_ELEM_INIT(NAME, VAL)                                      \
   UTILLIB_ETAB_ELEM_SWITCH_IMPL(NAME, VAL)
 
 #else
-// begin
+/* begin */
 #define UTILLIB_ETAB_BEGIN_IMPL(NAME)                                          \
   UTILLIB_ETAB_BIGIN_IMPL_COMMON(NAME)                                         \
   UTILLIB_ETAB_BEGIN_ARRAY(NAME)
-// elem
+/* elem */
 #define UTILLIB_ETAB_ELEM_IMPL(NAME) UTILLIB_ETAB_ELEM_ARRAY(NAME)
-// end
+/* end */
 #define UTILLIB_ETAB_END_IMPL(NAME)                                            \
   UTILLIB_ETAB_END_ARRAY(NAME)                                                 \
   UTILLIB_ETAB_END_IMPL_COMMON(NAME)
-// elem_init
+/* elem_init */
 #define UTILLIB_ETAB_ELEM_INIT(NAME, VAL)                                      \
   UTILLIB_ETAB_ELEM_ARRAY_IMPL(NAME, VAL)
 #endif
@@ -96,4 +96,4 @@ void utillib_print_enum_range(FILE *, utillib_enum_tostring_function *,
                               const char *, int, int);
 void utillib_print_enum(utillib_enum_tostring_function *, int);
 
-#endif // UTILLIB_ENUM
+#endif /* UTILLIB_ENUM */

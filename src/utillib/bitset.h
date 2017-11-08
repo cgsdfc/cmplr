@@ -22,8 +22,8 @@
 #define UTILLIB_BITSET_H
 
 #include "json.h"
-#include <stdbool.h> // bool
-#include <stddef.h>  // size_t
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* size_t */
 #define UTILLIB_BITSET_SET_FOREACH(ELEM, N, BITSET)                            \
   for (size_t ELEM=0; ELEM < (N);
 
@@ -59,4 +59,4 @@ bool utillib_bitset_equal(struct utillib_bitset const *self,
                           struct utillib_bitset const *other);
 utillib_json_value_t *utillib_bitset_json_array_create(void *base,
                                                        size_t offset);
-#endif // UTILLIB_BITSET_H
+#endif /* UTILLIB_BITSET_H */

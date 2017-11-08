@@ -89,9 +89,9 @@
 #include "types.h"
 #include "vector.h"
 #include <stdbool.h>
-#include <stdio.h>  // for FILE*
-#include <string.h> // for strcmp
-#include <time.h>   // for time_t
+#include <stdio.h>  /* for FILE* */
+#include <string.h> /* for strcmp */
+#include <time.h>   /* for time_t */
 
 /**
  * \macro UTILLIB_TEST_ZERO_BASE
@@ -170,7 +170,7 @@ UTILLIB_ENUM_END(utillib_test_severity_t);
  * \param ARGV argv.
  * \param ... The tests function pointers.
  */
-#define UTILLIB_TEST_RUN_ALL(ARGC, ARGV, ...)                              \
+#define UTILLIB_TEST_RUN_ALL(ARGC, ARGV, ...)                                  \
   do {                                                                         \
     static utillib_test_suite_t static_suite = {.filename = __FILE__};         \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
@@ -512,4 +512,4 @@ utillib_test_dummy_t *utillib_test_dummy(void);
  * Prints a message to stderr.
  */
 void utillib_test_message(char const *, size_t, char const *, ...);
-#endif // UTILLIB_TEST_H
+#endif /* UTILLIB_TEST_H */

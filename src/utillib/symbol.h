@@ -5,7 +5,8 @@
 #define utillib_symbol_name(SYM) ((SYM)->name)
 #define utillib_symbol_kind(SYM) ((SYM)->kind)
 #define utillib_symbol_value(SYM) ((SYM)->value)
-#define UTTILLIB_SYMBOL_SIZE(SYMBOL_ARR) ((sizeof SYMBOL_ARR / sizeof SYMBOL_ARR[0])-1)
+#define UTTILLIB_SYMBOL_SIZE(SYMBOL_ARR)                                       \
+  ((sizeof SYMBOL_ARR / sizeof SYMBOL_ARR[0]) - 1)
 
 #define UTILLIB_SYMBOL_EOF (&utillib_symbol_eof)
 #define UTILLIB_SYMBOL_ERR (&utillib_symbol_error)
@@ -62,4 +63,4 @@ utillib_json_value_t *
 utillib_symbol_json_array_create_from_vector(void *base, size_t offset);
 bool utillib_symbol_check(struct utillib_symbol const *symbols, size_t size);
 
-#endif // UTILLIB_SYMBOL_H
+#endif /* UTILLIB_SYMBOL_H */

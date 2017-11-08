@@ -26,21 +26,18 @@
 /* void *bsearch(const void *key, const void *base, */
 /*               size_t nmemb, size_t size, */
 /*               int (*compar)(const void *, const void *)); */
-static int keyword_pair_cmp(struct utillib_keyword_pair const * lhs,
-    struct utillib_keyword_pair const * rhs)
-{
+static int keyword_pair_cmp(struct utillib_keyword_pair const *lhs,
+                            struct utillib_keyword_pair const *rhs) {
   return strcmp(lhs->key, rhs->key);
 }
 
-size_t utillib_keyword_bsearch(char const * key,
-    struct utillib_keyword_pair const * table,
-    size_t nmemb)
-{
+size_t utillib_keyword_bsearch(char const *key,
+                               struct utillib_keyword_pair const *table,
+                               size_t nmemb) {
   struct utillib_keyword_pair input;
-  input.key=key;
-  struct utillib_keyword_pair const * pair=bsearch(&input, table,  nmemb, 
-      sizeof table[0],
-      (void*) keyword_pair_cmp);
+  input.key = key;
+  struct utillib_keyword_pair const *pair =
+      bsearch(&input, table, nmemb, sizeof table[0], (void *)keyword_pair_cmp);
   if (!pair)
     return UT_SYM_NULL;
   return pair->value;

@@ -1,0 +1,3 @@
+[submodule "src/pascal"]
+	path = src/pascal
+	url = /home/cgsdfc/cmplr/src/pascal/

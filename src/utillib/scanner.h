@@ -20,12 +20,12 @@
 */
 #ifndef UTILLIB_ABSTRACT_SCANNER_H
 #define UTILLIB_ABSTRACT_SCANNER_H
-#include <stdbool.h> // for bool
-#include <stddef.h>  // size_t
+#include <stdbool.h> /* for bool */
+#include <stddef.h>  /* size_t */
 #include <stdio.h>
 
 struct utillib_keyword_pair {
-  char const * key;
+  char const *key;
   size_t value;
 };
 
@@ -64,8 +64,8 @@ size_t utillib_char_scanner_lookahead(struct utillib_char_scanner *self);
 void utillib_char_scanner_shiftaway(struct utillib_char_scanner *self);
 bool utillib_char_scanner_reacheof(struct utillib_char_scanner *self);
 
-size_t utillib_keyword_bsearch(char const * key,
-    struct utillib_keyword_pair const * table,
-    size_t nmemb);
+size_t utillib_keyword_bsearch(char const *key,
+                               struct utillib_keyword_pair const *table,
+                               size_t nmemb);
 
-#endif // UTILLIB_ABSTRACT_SCANNER_H
+#endif /* UTILLIB_ABSTRACT_SCANNER_H */

@@ -40,4 +40,4 @@ utillib_json_value_t *utillib_vector2_json_array_create(
     struct utillib_vector2 const *self,
     utillib_json_value_create_func_t *create_func);
 
-#endif // UTILLIB_VECTOR2_H
+#endif /* UTILLIB_VECTOR2_H */

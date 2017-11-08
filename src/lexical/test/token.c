@@ -18,9 +18,5 @@
    02110-1301 USA
 
 */
-#ifndef PASCAL_RULES_H
-#define PASCAL_RULES_H
-#include <utillib/rule.h>
-extern struct utillib_rule_literal const pascal_rules[];
-
-#endif // PASCAL_RULES_H
+#include <scanner/token.h>
+#include <utillib/test.h>

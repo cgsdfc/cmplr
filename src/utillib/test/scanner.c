@@ -41,20 +41,15 @@ enum {
 };
 
 /* Copied from K&R book */
-static const struct utillib_keyword_pair keywords[]={
-  "auto"     , SYM_KW_AUTO,       
-  "break"    , SYM_KW_BREAK,       
-  "case"     , SYM_KW_CASE,                      
-  "char"     , SYM_KW_CHAR,                      
-  "const"    , SYM_KW_CONST,                      
-  "continue" , SYM_KW_CONTINUE,                    
-  "default"  , SYM_KW_DEFAULT,                  
-  "unsigned" , SYM_KW_UNSIGNED,                    
-  "void"     , SYM_KW_VOID,                      
-  "volatile" , SYM_KW_VOLATILE,                    
-  "while"    , SYM_KW_WHILE,                      
+static const struct utillib_keyword_pair keywords[] = {
+    "auto",    SYM_KW_AUTO,    "break",    SYM_KW_BREAK,
+    "case",    SYM_KW_CASE,    "char",     SYM_KW_CHAR,
+    "const",   SYM_KW_CONST,   "continue", SYM_KW_CONTINUE,
+    "default", SYM_KW_DEFAULT, "unsigned", SYM_KW_UNSIGNED,
+    "void",    SYM_KW_VOID,    "volatile", SYM_KW_VOLATILE,
+    "while",   SYM_KW_WHILE,
 };
-static const size_t keywords_size=sizeof keywords / sizeof keywords[0];
+static const size_t keywords_size = sizeof keywords / sizeof keywords[0];
 
 UTILLIB_TEST(symbol_scanner_lookahead) {
   utillib_symbol_scanner_init(&symbol_scanner, test_symbols_input,
@@ -70,21 +65,20 @@ UTILLIB_TEST(symbol_scanner_lookahead) {
   UTILLIB_TEST_ASSERT(utillib_symbol_scanner_reacheof(&symbol_scanner));
 }
 
-UTILLIB_TEST(keyword_bearch)
-{
-  for (int i=0; i<keywords_size; ++i) {
-    char const *key=keywords[i].key;
-    size_t code=utillib_keyword_bsearch(key, keywords, keywords_size);
-    UTILLIB_TEST_EXPECT_EQ(code, keywords[i].value);
-  }
-  
-  for (int i=keywords_size-1; i>=0; --i) {
-    char const *key=keywords[i].key;
-    size_t code=utillib_keyword_bsearch(key, keywords, keywords_size);
+UTILLIB_TEST(keyword_bearch) {
+  for (int i = 0; i < keywords_size; ++i) {
+    char const *key = keywords[i].key;
+    size_t code = utillib_keyword_bsearch(key, keywords, keywords_size);
     UTILLIB_TEST_EXPECT_EQ(code, keywords[i].value);
   }
 
-  size_t code=utillib_keyword_bsearch("banana", keywords, keywords_size);
+  for (int i = keywords_size - 1; i >= 0; --i) {
+    char const *key = keywords[i].key;
+    size_t code = utillib_keyword_bsearch(key, keywords, keywords_size);
+    UTILLIB_TEST_EXPECT_EQ(code, keywords[i].value);
+  }
+
+  size_t code = utillib_keyword_bsearch("banana", keywords, keywords_size);
   UTILLIB_TEST_ASSERT(code == UT_SYM_NULL);
 }
 

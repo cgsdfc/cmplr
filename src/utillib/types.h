@@ -65,4 +65,4 @@ typedef struct utillib_json_array_t utillib_json_array_t;
 typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void *,
                                                                  size_t);
 
-#endif // UTILLIB_TYPEDEF_H
+#endif /* UTILLIB_TYPEDEF_H */

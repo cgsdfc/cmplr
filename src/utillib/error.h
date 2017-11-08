@@ -56,4 +56,4 @@ utillib_error_cleanup_func_t *
 utillib_error_cleanup_func(utillib_error_cleanup_func_t *);
 utillib_error *utillib_make_error(int, utillib_position *, char *);
 void utillib_destroy_error(utillib_error *);
-#endif // UTILLIB_ERROR_H
+#endif /* UTILLIB_ERROR_H */

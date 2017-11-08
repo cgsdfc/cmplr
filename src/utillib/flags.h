@@ -68,4 +68,4 @@ typedef struct argp_state utillib_argp_state;
 /* access to argp_state structure */
 #define UTILLIB_ARGP_STATE_INPUT(S) ((S)->input)
 
-#endif // UTILLIB_ARGP_H
+#endif /* UTILLIB_ARGP_H */

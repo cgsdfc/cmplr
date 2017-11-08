@@ -28,8 +28,8 @@
  * insertion/remove at the front.
  */
 #include "types.h"
-#include <stdbool.h> // for bool
-#include <stddef.h>  // for size_t
+#include <stdbool.h> /* for bool */
+#include <stddef.h>  /* for size_t */
 #define UTILLIB_SLIST_HAS_NEXT(N) ((N) != NULL)
 #define UTILLIB_SLIST_NODE_DATA(N) ((N)->data)
 #define UTILLIB_SLIST_NODE_NEXT(N) ((N)->next)
@@ -105,4 +105,4 @@ void utillib_slist_push_front_node(struct utillib_slist *,
 void utillib_slist_erase_node(struct utillib_slist *, utillib_slist_node *);
 void utillib_slist_erase(struct utillib_slist *, utillib_slist_iterator *);
 void utillib_slist_pop_front(struct utillib_slist *);
-#endif // UTILLIB_SLIST_H
+#endif /* UTILLIB_SLIST_H */

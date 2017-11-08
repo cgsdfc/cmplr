@@ -6,4 +6,4 @@ struct utillib_unordered_set {
   struct utillib_vector buckects;
 };
 
-#endif // UTILLIB_UNORDERED_SET_H
+#endif /* UTILLIB_UNORDERED_SET_H */

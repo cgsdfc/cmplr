@@ -27,11 +27,10 @@ UTILLIB_TEST(json_array_create) {
   utillib_json_value_destroy(val);
 }
 
-UTILLIB_TEST(symbol_redefined)
-{
+UTILLIB_TEST(symbol_redefined) {
   UTILLIB_SYMBOL_BEGIN(maybe_redefined_symbol)
-    UTILLIB_SYMBOL_TERMINAL(0)
-    UTILLIB_SYMBOL_TERMINAL(0)
+  UTILLIB_SYMBOL_TERMINAL(0)
+  UTILLIB_SYMBOL_TERMINAL(0)
   UTILLIB_SYMBOL_END(maybe_redefined_symbol);
 }
 

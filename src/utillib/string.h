@@ -22,8 +22,8 @@
 #define UTILLIB_STRING_H
 #define UTILLIB_C_STR(S) ((S)->c_str)
 #include "enum.h"
-#include <stdbool.h> // for bool
-#include <stddef.h>  // for size_t
+#include <stdbool.h> /* for bool */
+#include <stddef.h>  /* for size_t */
 
 /**
  * \file utillib/string.h
@@ -72,4 +72,4 @@ void utillib_string_reserve(utillib_string *, size_t);
 void utillib_string_append(utillib_string *, char const *);
 void utillib_string_append_char(utillib_string *, char);
 
-#endif // UTILLIB_STRING_H
+#endif /* UTILLIB_STRING_H */

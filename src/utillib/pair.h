@@ -35,4 +35,4 @@ typedef struct utillib_pair_t {
 } utillib_pair_t;
 
 utillib_pair_t *utillib_make_pair(utillib_key_t, utillib_value_t);
-#endif // UTILLIB_PAIR_H
+#endif /* UTILLIB_PAIR_H */

@@ -148,4 +148,4 @@ utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
 #define utillib_rule_index_rule_at(self, rule_id)                              \
   (utillib_vector_at(&(self)->rules, (rule_id)))
 
-#endif // UTILLIB_RULE_H
+#endif /* UTILLIB_RULE_H */

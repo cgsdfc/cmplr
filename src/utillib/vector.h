@@ -30,9 +30,9 @@
  * and storage tail for resizing.
  */
 
-#include "types.h"   // for utillib_element_pointer_t, utillib_element_t
-#include <stdbool.h> // for bool
-#include <stddef.h>  // size_t
+#include "types.h"   /* for utillib_element_pointer_t, utillib_element_t */
+#include <stdbool.h> /* for bool */
+#include <stddef.h>  /* size_t */
 
 #define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))
 #define UTILLIB_VECTOR_BEGIN(V) ((V)->begin)
@@ -102,4 +102,4 @@ void utillib_vector_fill(struct utillib_vector *self, utillib_element_t data);
 utillib_json_value_t *utillib_json_array_create_from_vector(
     struct utillib_vector const *self,
     utillib_json_value_create_func_t *create_func);
-#endif // UTILLIB_VECTOR_H
+#endif /* UTILLIB_VECTOR_H */

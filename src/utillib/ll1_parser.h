@@ -66,4 +66,4 @@ void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
 int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner);
-#endif // UTILLIB_LL1_PARSER_H
+#endif /* UTILLIB_LL1_PARSER_H */

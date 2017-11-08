@@ -30,7 +30,7 @@
 #include "string.h"
 #include "types.h"
 #include "vector.h"
-#include <stdarg.h> // for va_list
+#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
 /**
@@ -185,4 +185,4 @@ void utillib_json_object_push_back(utillib_json_value_t *self, char const *key,
                                    utillib_json_value_t *value);
 utillib_json_value_t *utillib_json_object_create_empty(void);
 utillib_json_value_t *utillib_json_array_create_empty(void);
-#endif // UTILLIB_JSON_H
+#endif /* UTILLIB_JSON_H */

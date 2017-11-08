@@ -21,8 +21,8 @@
 #ifndef UTILLIB_PRINT_H
 #define UTILLIB_PRINT_H
 #include "types.h"
-#include <stdarg.h> // for va_list
-#include <stddef.h> // for offsetof
+#include <stdarg.h> /* for va_list */
+#include <stddef.h> /* for offsetof */
 #include <stdio.h>
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
 
@@ -42,4 +42,4 @@ typedef struct utillib_printer_t {
 void utillib_printer_init(utillib_printer_t *, FILE *, size_t);
 void utillib_printer_print_json(utillib_printer_t *, char const *);
 
-#endif // UTILLIB_PRINT_H
+#endif /* UTILLIB_PRINT_H */

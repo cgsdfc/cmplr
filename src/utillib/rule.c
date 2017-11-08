@@ -35,7 +35,9 @@ struct utillib_rule utillib_rule_null;
 /*
  * Ensures sanity of LHS
  */
-#define rule_check_lhs_non_terminal(symbol) assert (utillib_symbol_kind(symbol) == UT_SYMBOL_NON_TERMINAL && "Symbol on the left hand side of a rule must be non terminal")
+#define rule_check_lhs_non_terminal(symbol)                                    \
+  assert(utillib_symbol_kind(symbol) == UT_SYMBOL_NON_TERMINAL &&              \
+         "Symbol on the left hand side of a rule must be non terminal")
 
 static struct utillib_rule *
 rule_index_rule_create(size_t rule_id, struct utillib_symbol const *LHS) {

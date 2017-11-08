@@ -36,10 +36,10 @@
 #include <stdlib.h>
 
 UTILLIB_ENUM_BEGIN(utillib_unordered_map_retval_t)
-// for mode find_only
+/* for mode find_only */
 UTILLIB_ENUM_ELEM(KEY_FOUND)
 UTILLIB_ENUM_ELEM(KEY_MISSING)
-// for mode force_insert
+/* for mode force_insert */
 UTILLIB_ENUM_ELEM(KEY_EXISTS)
 UTILLIB_ENUM_ELEM(KEY_INSERTED)
 UTILLIB_ENUM_END(utillib_unordered_map_retval_t)
@@ -50,7 +50,7 @@ struct utillib_unordered_map {
   double un_max_lf;
   size_t un_nbucket;
   size_t un_size;
-  // manage memory of utillib_pair_t
+  /* manage memory of utillib_pair_t */
   struct utillib_pair_t *un_free;
 };
 
@@ -72,7 +72,7 @@ utillib_unordered_map_iterator_get(struct utillib_unordered_map_iterator *);
 /* constructor destructor */
 void utillib_unordered_map_init_from_array(
     struct utillib_unordered_map *, struct utillib_unordered_op *,
-    struct utillib_pair_t const *); // NULL teminated
+    struct utillib_pair_t const *); /* NULL teminated */
 void utillib_unordered_map_init(struct utillib_unordered_map *,
                                 struct utillib_unordered_op *);
 void utillib_unordered_map_destroy(struct utillib_unordered_map *);
@@ -97,4 +97,4 @@ size_t utillib_unordered_map_size(struct utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);
 bool utillib_unordered_map_empty(struct utillib_unordered_map *);
 double utillib_unordered_map_load_factor(struct utillib_unordered_map *);
-#endif // UTILLIB_UNORDERED_MAP_H
+#endif /* UTILLIB_UNORDERED_MAP_H */
