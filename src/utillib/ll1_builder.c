@@ -118,8 +118,7 @@ static void ll1_set_destroy(struct utillib_ll1_set *self) {
 static struct utillib_ll1_set *
 ll1_builder_FIRST_get(struct utillib_ll1_builder *self,
                       struct utillib_symbol const *symbol) {
-  return utillib_vector_at(
-      &self->FIRST, utillib_rule_index_symbol_index(self->rule_index, symbol));
+  return &self->FIRST[ utillib_rule_index_symbol_index(self->rule_index, symbol)];
 }
 
 /**
@@ -130,8 +129,8 @@ ll1_builder_FIRST_get(struct utillib_ll1_builder *self,
 static struct utillib_ll1_set *
 ll1_builder_FOLLOW_get(struct utillib_ll1_builder const *self,
                        struct utillib_symbol const *symbol) {
-  return utillib_vector_at(
-      &self->FOLLOW, utillib_rule_index_symbol_index(self->rule_index, symbol));
+  return 
+      &self->FOLLOW[ utillib_rule_index_symbol_index(self->rule_index, symbol)];
 }
 
 /**
@@ -142,7 +141,7 @@ static struct utillib_ll1_set *
 ll1_builder_FIRST_RULE_get(struct utillib_ll1_builder const *self,
     struct utillib_rule const *rule)
 {
-  return utillib_vector_at(&self->FIRST_RULE, rule->id);
+  return &self->FIRST_RULE[rule->id];
 }
 
 /*
@@ -479,29 +478,26 @@ static void ll1_builder_build_FIRST_FOLLOW(struct utillib_ll1_builder *self) {
  */
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
                               struct utillib_rule_index *rule_index) {
-  utillib_vector_init(&self->FIRST);
-  utillib_vector_init(&self->FOLLOW);
   utillib_vector_init(&self->errors);
-  utillib_vector_init(&self->FIRST_RULE);
 
   self->rule_index = rule_index;
-  size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
   size_t terminals_size = utillib_rule_index_terminals_size(rule_index);
-  /* Since our symbol starts from one. */
   size_t symbols_size = utillib_rule_index_symbols_size(rule_index);
+  size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
   size_t rules_size = utillib_rule_index_rules_size(rule_index);
 
-  utillib_vector_reserve(&self->FIRST, non_terminals_size);
-  utillib_vector_reserve(&self->FOLLOW, non_terminals_size);
-  utillib_vector_reserve(&self->FIRST_RULE, rules_size);
+  self->FIRST=malloc(sizeof self->FIRST[0] * non_terminals_size);
+  self->FOLLOW=malloc(sizeof self->FOLLOW[0] * non_terminals_size);
+  self->FIRST_RULE=malloc(sizeof self->FIRST_RULE[0] * rules_size);
 
   for (size_t i = 0; i < non_terminals_size; ++i) {
-    utillib_vector_push_back(&self->FIRST, ll1_set_create(symbols_size));
-    utillib_vector_push_back(&self->FOLLOW, ll1_set_create(symbols_size));
+    utillib_ll1_set_init(&self->FIRST[i], symbols_size);
+    utillib_ll1_set_init(&self->FOLLOW[i], symbols_size);
   }
   for (size_t i = 0; i < rules_size; ++i) {
-    utillib_vector_push_back(&self->FIRST_RULE, ll1_set_create(symbols_size));
+    utillib_ll1_set_init(&self->FIRST_RULE[i], symbols_size);
   }
+
   ll1_builder_build_FIRST_FOLLOW(self);
 }
 
@@ -509,13 +505,22 @@ void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
  * \function utillib_ll1_builder_destroy
  */
 void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self) {
-  utillib_vector_destroy_owning(&self->FIRST,
-                                (utillib_destroy_func_t *)ll1_set_destroy);
-  utillib_vector_destroy_owning(&self->FIRST_RULE,
-                                (utillib_destroy_func_t *)ll1_set_destroy);
-  utillib_vector_destroy_owning(&self->FOLLOW,
-                                (utillib_destroy_func_t *)ll1_set_destroy);
+  struct utillib_rule_index const * rule_index=self->rule_index;
+  size_t non_terminals_size = utillib_rule_index_non_terminals_size(rule_index);
+  size_t rules_size = utillib_rule_index_rules_size(rule_index);
+
+  for (size_t i = 0; i < non_terminals_size; ++i) {
+    utillib_ll1_set_destroy(&self->FIRST[i]);
+    utillib_ll1_set_destroy(&self->FOLLOW[i]);
+  }
+  for (size_t i = 0; i < rules_size; ++i) {
+    utillib_ll1_set_destroy(&self->FIRST_RULE[i]);
+  }
+
   utillib_vector_destroy_owning(&self->errors, free);
+  free(self->FIRST);
+  free(self->FOLLOW);
+  free(self->FIRST_RULE);
 }
 
 /**

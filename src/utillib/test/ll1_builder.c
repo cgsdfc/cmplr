@@ -55,7 +55,7 @@ UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
  */
 
 UTILLIB_TEST_AUX(ll1_builder_set_correct,
-                 struct utillib_vector const *actual_sets,
+                 struct utillib_ll1_set const * actual_sets,
                  size_t const expected_sets[][10]) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
   struct utillib_rule_index const *rule_index = self->rule_index;
@@ -63,8 +63,7 @@ UTILLIB_TEST_AUX(ll1_builder_set_correct,
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol,
                          utillib_rule_index_non_terminals(rule_index)) {
     size_t index = utillib_rule_index_symbol_index(rule_index, symbol);
-    struct utillib_ll1_set const *actual_set =
-        utillib_vector_at(actual_sets, index);
+    struct utillib_ll1_set const *actual_set = &actual_sets[index];
     struct utillib_ll1_set expected_set;
     UTILLIB_TEST_AUX_INVOKE(build_expected_set, &expected_set, symbols_size,
                             expected_sets[utillib_symbol_value(symbol)]);
@@ -75,13 +74,13 @@ UTILLIB_TEST_AUX(ll1_builder_set_correct,
 
 UTILLIB_TEST(ll1_builder_FIRST_correct) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
-  UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, &self->FIRST,
+  UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, self->FIRST,
                           test_rules_FIRST);
 }
 
 UTILLIB_TEST(ll1_builder_FOLLOW_correct) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
-  UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, &self->FOLLOW,
+  UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, self->FOLLOW,
                           test_rules_FOLLOW);
 }
 

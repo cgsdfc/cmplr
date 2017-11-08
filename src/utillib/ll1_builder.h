@@ -82,11 +82,11 @@ struct utillib_ll1_builder {
   struct utillib_rule_index *rule_index;
   /* first set for all the non-terminal symbols, */
   /* as an intermediate result. */
-  struct utillib_vector FIRST;
+  struct utillib_ll1_set * FIRST;
   /* first set for all the rules as the final result */
-  struct utillib_vector FIRST_RULE;
+  struct utillib_ll1_set * FIRST_RULE;
   /* follow set for all the non-terminal symbols */
-  struct utillib_vector FOLLOW;
+  struct utillib_ll1_set * FOLLOW;
   struct utillib_vector errors;
 };
 
