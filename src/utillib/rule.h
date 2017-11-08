@@ -27,8 +27,15 @@
  * algorithm to run upon.
  */
 #include "json.h"
+#include "vector2.h"
 #include "symbol.h"
 #include "vector.h"
+#include "enum.h"
+
+UTILLIB_ENUM_BEGIN(utillib_rule_special_kind)
+  UTILLIB_ENUM_ELEM_INIT(UT_RULE_EPS, -1)
+  UTILLIB_ENUM_ELEM_INIT(UT_RULE_NULL, -2)
+UTILLIB_ENUM_END(utillib_rule_special_kind);
 
 /* Currently limit for the maximum size of right hand side */
 #define UTILLIB_RULE_MAX_RHS 10
@@ -36,10 +43,10 @@
 /**
  * \macro
  * UTILLIB_RULE_NULL
- * Address of the special rule `null' which has `epsilon' as the
+ * Address of the special rule which has `epsilon' as the
  * only symbol on its right hand side.
  */
-#define UTILLIB_RULE_NULL (&utillib_rule_null)
+#define UTILLIB_RULE_EPS (&utillib_rule_eps)
 
 /**
  * \macro
@@ -90,7 +97,7 @@ struct utillib_rule {
   utillib_vector RHS;
 };
 
-extern struct utillib_rule utillib_rule_null;
+extern struct utillib_rule utillib_rule_eps;
 
 /**
  * \struct utillib_rule_index
@@ -135,6 +142,8 @@ utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
 
 void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self);
 
+void utillib_rule_index_load_table(struct utillib_rule_index const *self,
+    struct utillib_vector2 * table, int const *array);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)

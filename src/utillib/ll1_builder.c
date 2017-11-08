@@ -1,54 +1,77 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
 #include "ll1_builder.h"
-#include "equal.h" // for utillib_equal_bool
 #include <assert.h>
 #include <stdlib.h>
+/**
+ * \file utillib/ll1_builder.c
+ * Engine for building LL(1) parser table.
+ */
 
 /**
  * JSON interfaces
  */
 
-/*
- * JSON object fields
- */
-/* Forward declaration */
 static struct utillib_json_value_t *
-ll1_builder_set_json_object_create(void const*base, size_t offset);
-static struct utillib_json_value_t *
-ll1_builder_set_json_array_create(void const*base, size_t offset);
-struct utillib_json_value_t *
-utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
-
-UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1BuilderSet_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "epsilon/eof", flag,
-                               utillib_json_bool_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_set, "elements", bitset,
-                               utillib_bitset_json_array_create)
-UTILLIB_JSON_OBJECT_FIELD_END(LL1BuilderSet_Fields);
-
-UTILLIB_JSON_OBJECT_FIELD_BEGIN(LL1Builder_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FIRST", FIRST,
-                               ll1_builder_set_json_array_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_ll1_builder, "FOLLOW", FOLLOW,
-                               ll1_builder_set_json_array_create)
-UTILLIB_JSON_OBJECT_FIELD_END(LL1Builder_Fields);
-
-/*
- * JSON creator override
- */
-static struct utillib_json_value_t *
-ll1_builder_set_json_object_create(void const*base, size_t offset) {
-  return utillib_json_object_create(base, offset, LL1BuilderSet_Fields);
+ll1_builder_set_json_array_create(struct utillib_ll1_set const *self, 
+    struct utillib_rule_index const * rule_index, bool is_eps)
+{
+  struct utillib_vector const * terminals=utillib_rule_index_terminals(rule_index);
+  struct utillib_json_value_t * array=utillib_json_array_create_empty();
+  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, terminals) {
+    if (utillib_ll1_set_contains(self, symbol->value)) {
+      utillib_json_array_push_back(array, 
+          utillib_json_string_create(&symbol->name, 0));
+    }
+  }
+  if (self->flag) {
+    utillib_json_array_push_back(array, 
+        utillib_json_string_create(is_eps? &UTILLIB_SYMBOL_EPS->name:
+          &UTILLIB_SYMBOL_EOF->name, 0));
+  }
+  return array;
 }
 
 static struct utillib_json_value_t *
-ll1_builder_set_json_array_create(void const*base, size_t offset) {
-  utillib_json_array_create_from_vector(base,
-                                        ll1_builder_set_json_object_create);
+ll1_builder_set_json_array2_create(struct utillib_ll1_set const *self,
+    struct utillib_rule_index const  * rule_index, bool is_eps)
+{
+  struct utillib_json_value_t * array=utillib_json_array_create_empty();
+  for (int i=0; i< rule_index->non_terminals_size; ++i ) {
+    utillib_json_array_push_back(array, 
+        ll1_builder_set_json_array_create(&self[i], rule_index, is_eps));
+  }
+  return array;
 }
+
 
 struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self) {
-  return utillib_json_object_create(self, 0, LL1Builder_Fields);
+  struct utillib_rule_index const *rule_index=self->rule_index;
+  struct utillib_json_value_t * object=utillib_json_object_create_empty();
+  struct utillib_json_value_t * FIRST=ll1_builder_set_json_array2_create(self->FIRST, rule_index, true);
+  struct utillib_json_value_t * FOLLOW=ll1_builder_set_json_array2_create(self->FOLLOW, rule_index, false);
+  utillib_json_object_push_back(object, "FIRST", FIRST);
+  utillib_json_object_push_back(object, "FOLLOW", FOLLOW);
+  return object;
 }
 
 /*
@@ -312,7 +335,7 @@ static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
   if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL)
     return false;
   struct utillib_ll1_set const *LAST_FIRST = ll1_builder_FIRST_get(self, LAST);
-  if (utillib_ll1_set_flag(LAST_FIRST))
+  if (LAST_FIRST->flag)
     return true;
   return false;
 }
@@ -458,22 +481,6 @@ static void ll1_builder_build_FIRST_FOLLOW(struct utillib_ll1_builder *self) {
 /**
  * \function utillib_ll1_builder_init
  * Builds the sets.
- * XXX possible optimization: replace vector
- * with pointer in those sets.
- * Their sizes are known and not expanding.
- * Reasons: most of time (set building) we do not
- * traversal these set using a foreach (but traversal
- * of rules are frequent).
- * One exception is in `utillib_ll1_builder_build_table'
- * but from there, their sizes are well-known.
- * And access to these sets rawly out-of-range since
- * index are computed by `utillib_rule_index_symbol_index'.
- * 
- * Benefits: allocates those sets directly in the array
- * rather than via vector.
- * No reserve needed.
- * no destroy_owning needed ( although individual destruction
- * of each set is still needed)
  * 
  */
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
@@ -564,11 +571,11 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
           size_t symbol_index =
               utillib_rule_index_symbol_index(rule_index, symbol);
           utillib_vector2_set(table, LHS_index, symbol_index,
-                              UTILLIB_RULE_NULL);
+                              UTILLIB_RULE_EPS);
         }
       }
-      if (utillib_ll1_set_flag(FOLLOW)) { /* special `eof' */
-        utillib_vector2_set(table, LHS_index, UT_SYM_EOF, UTILLIB_RULE_NULL);
+      if (FOLLOW->flag) { /* special `eof' */
+        utillib_vector2_set(table, LHS_index, UT_SYM_EOF, UTILLIB_RULE_EPS);
       }
     }
   }

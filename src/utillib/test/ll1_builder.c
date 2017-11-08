@@ -34,7 +34,7 @@ UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
   for (size_t j = 0; expected_set[j] != UT_SYM_NULL; ++j) {
     size_t sym = expected_set[j];
     if (sym == UT_SYM_EPS || sym == UT_SYM_EOF)
-      utillib_ll1_set_flag(set) = true;
+      set->flag = true;
     else
       utillib_ll1_set_insert(set, sym);
   }
@@ -113,7 +113,7 @@ UTILLIB_TEST(ll1_builder_build_table_correct) {
           utillib_vector2_at(&ll1_table, i, j);
       UTILLIB_TEST_AUX_INVOKE(ll1_builder_locate_rule, i, j, &Expected_RuleID);
       if (Actual_Rule) {
-        if (Actual_Rule == UTILLIB_RULE_NULL) {
+        if (Actual_Rule == UTILLIB_RULE_EPS) {
           struct utillib_rule const *Expected_Rule =
               utillib_rule_index_rule_at(&rule_index, Expected_RuleID);
           struct utillib_symbol const *x =
@@ -155,7 +155,7 @@ UTILLIB_TEST(ll1_builder_json) {
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Builder) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Builder)
-  UTILLIB_TEST_SKIP(ll1_builder_json)
+  UTILLIB_TEST_RUN(ll1_builder_json)
   UTILLIB_TEST_RUN(ll1_builder_FIRST_correct)
   UTILLIB_TEST_RUN(ll1_builder_FOLLOW_correct)
   UTILLIB_TEST_RUN(ll1_builder_build_table_json)

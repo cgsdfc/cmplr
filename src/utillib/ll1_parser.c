@@ -62,7 +62,7 @@ static void ll1_parser_match_symbol(struct utillib_ll1_parser *self) {
  */
 static void ll1_parser_start_deduct(struct utillib_ll1_parser *self,
                                     struct utillib_rule const *rule) {
-  if (rule == UTILLIB_RULE_NULL) {
+  if (rule == UTILLIB_RULE_EPS) {
     utillib_vector_push_back(&self->tree_stack, NULL);
     utillib_vector_pop_back(&self->symbol_stack);
     return;

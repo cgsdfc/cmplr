@@ -19,18 +19,19 @@
 
 */
 #include "rule.h"
+#include "vector2.h"
 #include <assert.h>
 #include <limits.h> // ULONG_MAX
 #include <stdlib.h> // malloc
 
 /**
- * \variable utillib_rule_null
+ * \variable utillib_rule_eps
  * Represents any rule whose right hand side is
  * merely an `epsilon'.
  * Thus, the left hand side is out of concern or
  * can be deducted from context.
  */
-struct utillib_rule utillib_rule_null;
+struct utillib_rule utillib_rule_eps={.id=UT_RULE_EPS};
 
 /*
  * Ensures sanity of LHS
@@ -231,32 +232,59 @@ void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self)
   }
 }
 
+void utillib_rule_index_load_table(struct utillib_rule_index const *self,
+    struct utillib_vector2 * table, int const *array)
+{
+  size_t non_terminals_size=self->non_terminals_size;
+  size_t terminals_size=self->terminals_size;
+  utillib_vector2_init(table, non_terminals_size, terminals_size);
+
+  for (int i=0; i<non_terminals_size; ++i) {
+   for (int j=0; j<terminals_size; ++j) {
+    int rule_id=array[i * terminals_size + j];
+    struct utillib_rule const * rule;
+    if (rule_id == UT_RULE_NULL) {
+      rule=NULL;
+    } else if (rule_id == UT_RULE_EPS) {
+      rule=UTILLIB_RULE_EPS;
+    } else {
+      rule=utillib_vector_at(&self->rules, rule_id);
+    }
+    utillib_vector2_set(table, i, j, rule);
+   }
+  }
+}
+
 /**
  * Implements JSON format interface.
  */
-static utillib_json_value_t *
-rule_RHS_json_array_create_from_vector(void const*base, size_t offset) {
-  return utillib_json_array_create_from_vector(
-      base, utillib_symbol_json_object_create);
+static struct utillib_json_value_t *
+rule_symbol_json_create(struct utillib_symbol const *self)
+{
+  char const *name=utillib_symbol_name(self);
+  return utillib_json_string_create(&name, 0);
 }
 
-UTILLIB_JSON_OBJECT_FIELD_BEGIN(Rule_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule, "left-hand-side", LHS,
-                               utillib_symbol_json_object_pointer_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule, "right-hand-side", RHS,
-                               rule_RHS_json_array_create_from_vector)
-UTILLIB_JSON_OBJECT_FIELD_END(Rule_Fields)
-
-utillib_json_value_t *utillib_rule_json_object_create(void const*base,
+struct utillib_json_value_t *utillib_rule_json_object_create(void const* base,
                                                       size_t offset) {
   static const char *rule_null_str = "A := epsilon";
-  if (base == UTILLIB_RULE_NULL) {
-    return utillib_json_string_create(&rule_null_str, sizeof rule_null_str);
+  if (base == UTILLIB_RULE_EPS) {
+    return utillib_json_string_create(&rule_null_str, 0);
   }
-  return utillib_json_object_create(base, offset, Rule_Fields);
+  struct utillib_rule const *self=base;
+  struct utillib_json_value_t *object=utillib_json_object_create_empty();
+  struct utillib_json_value_t *array=utillib_json_array_create_empty();
+
+  utillib_json_object_push_back(object, 
+      "LHS", rule_symbol_json_create(self->LHS));
+  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const*, symbol, &self->RHS) {
+    utillib_json_array_push_back(array, rule_symbol_json_create(symbol));
+  }
+  utillib_json_object_push_back(object, "RHS", array);
+  return object;
 }
 
-static utillib_json_value_t *
+static struct utillib_json_value_t *
 rule_index_rule_json_array_create_from_vector(void const*base, size_t offset) {
   return utillib_json_array_create_from_vector(base,
                                                utillib_rule_json_object_create);
@@ -276,9 +304,9 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index,
                                utillib_symbol_json_array_create_from_vector)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,
                                rule_index_rule_json_array_create_from_vector)
-UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields)
+UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields);
 
-utillib_json_value_t *utillib_rule_index_json_object_create(void const*base,
+struct utillib_json_value_t *utillib_rule_index_json_object_create(void const*base,
                                                             size_t offset) {
   return utillib_json_object_create(base, offset, RuleIndex_Fields);
 }

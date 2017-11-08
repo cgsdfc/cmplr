@@ -26,6 +26,8 @@
 #include <stdio.h>
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
 
+extern char const * utillib_LICENSE_str;
+
 void utillib_print_indent(FILE *, size_t, int);
 char *utillib_static_buf(void);
 char const *utillib_static_vsprintf(char const *fmt, va_list ap);

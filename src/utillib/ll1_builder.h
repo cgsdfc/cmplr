@@ -48,8 +48,6 @@ struct utillib_ll1_builder_error {
   };
 };
 
-#define utillib_ll1_set_flag(A) ((A)->flag)
-#define utillib_ll1_set_destroy(A) utillib_bitset_destroy(&(A)->bitset)
 
 /**
  * \struct utillib_ll1_set
@@ -76,16 +74,26 @@ struct utillib_ll1_set {
  * that can follow A in all the sentencial forms OR the end-of-input special
  * symbol.
  * <\para>
+ * <para>Why use pointers instead of vector in those sets:
+ * Reasons: most of time (set building) we do not
+ * traversal these set using a foreach (but traversal
+ * of rules are frequent).
+ * One exception is in `utillib_ll1_builder_build_table'
+ * but from there, their sizes are well-known.
+ * And access to these sets rawly out-of-range since
+ * index are computed by `utillib_rule_index_symbol_index'.
+ * 
+ * Benefits: allocates those sets directly in the array
+ * rather than via vector.
+ * No reserve needed.
+ * no destroy_owning needed ( although individual destruction
+ * of each set is still needed)
  *
  */
 struct utillib_ll1_builder {
   struct utillib_rule_index *rule_index;
-  /* first set for all the non-terminal symbols, */
-  /* as an intermediate result. */
   struct utillib_ll1_set * FIRST;
-  /* first set for all the rules as the final result */
   struct utillib_ll1_set * FIRST_RULE;
-  /* follow set for all the non-terminal symbols */
   struct utillib_ll1_set * FOLLOW;
   struct utillib_vector errors;
 };
@@ -104,6 +112,8 @@ bool utillib_ll1_set_equal(struct utillib_ll1_set const *self,
 
 bool utillib_ll1_set_intersect(struct utillib_ll1_set const * lhs,
     struct utillib_ll1_set  const* rhs, bool about_flag);
+
+#define utillib_ll1_set_destroy(A) utillib_bitset_destroy(&(A)->bitset)
 
 void utillib_ll1_builder_init(struct utillib_ll1_builder *self,
                               struct utillib_rule_index *rule_index);
