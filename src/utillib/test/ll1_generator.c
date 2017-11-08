@@ -24,16 +24,19 @@
 #include "ll1_sample_1.h"
 
 UTILLIB_TEST_SET_UP() {
+  utillib_ll1_generator_init_from_code(UT_FIXTURE, 
+      ll1_sample_1_symbols,
+      ll1_sample_1_rules);
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
+  utillib_ll1_generator_destroy(UT_FIXTURE);
 }
 
 UTILLIB_TEST(ll1_generator_works)
 {
-
-
-
+  utillib_ll1_generator_generate(UT_FIXTURE,
+      "sample_1.c");
 }
 
 

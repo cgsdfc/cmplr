@@ -22,19 +22,18 @@
 #ifndef UTILLIB_LL1_GENERATOR_H
 #define UTILLIB_LL1_GENERATOR_H
 #include "rule.h"
-#include "string.h"
 #include "vector2.h"
 #include "ll1_builder.h"
 
 struct utillib_ll1_generator {
-  struct utillib_rule_index const* rule_index;
+  struct utillib_rule_index rule_index;
   struct utillib_ll1_builder builder;
   struct utillib_vector2 table;
-  struct utillib_string buffer;
 };
 
 void utillib_ll1_generator_init_from_code(struct utillib_ll1_generator *self,
-    struct utillib_rule_index * rule_index);
+    struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules);
 
 bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
     char const *filename);

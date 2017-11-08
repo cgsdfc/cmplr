@@ -65,7 +65,7 @@ static bool ll1_generator_check_table(struct utillib_ll1_generator *self)
 static void ll1_generator_write_table(
     struct utillib_ll1_generator *self, FILE *file)
 {
-  struct utillib_rule_index const * rule_index=self->rule_index;
+  struct utillib_rule_index const * rule_index=&self->rule_index;
 
   fputs("static int ll1_parser_table", file);
   fprintf(file, "[%lu][%lu]={\n", 
@@ -84,9 +84,9 @@ static void ll1_generator_write_table(
       } else {
         rule_id=rule->id;
       }
-      fprintf (file, "%d, ", rule_id);
+      fprintf (file, "%4d, ", rule_id);
     }
-    fputs("}\n", file);
+    fputs("},\n", file);
   }
   fputs("};\n", file);
 }
@@ -102,11 +102,11 @@ static void ll1_generator_write(struct utillib_ll1_generator *self, FILE *file)
 }
 
 void utillib_ll1_generator_init_from_code(struct utillib_ll1_generator *self,
-    struct utillib_rule_index * rule_index)
+    struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules)
 {
-  self->rule_index=rule_index;
-  utillib_ll1_builder_init(&self->builder, rule_index);
-  utillib_string_init(&self->buffer);
+  utillib_rule_index_init(&self->rule_index, symbols, rules);
+  utillib_ll1_builder_init(&self->builder, &self->rule_index);
   utillib_ll1_builder_build_table(&self->builder, &self->table);
 }
 
@@ -128,8 +128,8 @@ bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
 
 void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self)
 {
+  utillib_rule_index_destroy(&self->rule_index);
   utillib_ll1_builder_destroy(&self->builder);
   utillib_vector2_destroy(&self->table);
-  utillib_string_destroy(&self->buffer);
 }
 
