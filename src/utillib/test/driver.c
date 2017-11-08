@@ -38,6 +38,7 @@ UTILLIB_TEST_DECLARE(Utillib_LL1Parser);
 UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
 UTILLIB_TEST_DECLARE(Utillib_Scanner);
 UTILLIB_TEST_DECLARE(Utillib_Vector2);
+UTILLIB_TEST_DECLARE(Utillib_LL1Generator);
 
 int main(int argc, char **argv) {
   UTILLIB_TEST_RUN_ALL(argc, argv, Utillib_Hash, Utillib_Vector,
@@ -48,7 +49,8 @@ int main(int argc, char **argv) {
                        /* Utillib_Print, Utillib_Flags, */
                        /* Utillib_Scanner, */
                        /* Utillib_Vector2, Utillib_Rule, */
-                       Utillib_LL1Builder
+                       /* Utillib_LL1Builder */
+      Utillib_LL1Generator
                        /* Utillib_LL1Parser, Utillib_Symbol); */
   );
 }

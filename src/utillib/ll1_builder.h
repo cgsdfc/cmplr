@@ -25,6 +25,7 @@
 #include "rule.h"
 #include "vector.h"
 #include "vector2.h"
+#define UT_LL1_ERR_VAL_MAX 4
 
 UTILLIB_ENUM_BEGIN(utillib_ll1_error_kind)
 UTILLIB_ENUM_ELEM(UT_LL1_EFIRST)
@@ -33,19 +34,7 @@ UTILLIB_ENUM_END(utillib_ll1_error_kind);
 
 struct utillib_ll1_builder_error {
   int kind;
-  union {
-    struct {
-      struct utillib_ll1_set const * lhs_FIRST;
-      struct utillib_ll1_set const * rhs_FIRST;
-      struct utillib_rule const * lhs_rule;
-      struct utillib_rule const * rhs_rule;
-    } as_EFIRST;
-    struct {
-      struct utillib_rule const * eps_rule;
-      struct utillib_ll1_set const * FIRST;
-      struct utillib_ll1_set const * FOLLOW;
-    } as_EFOLLOW;
-  };
+  struct utillib_json_value_t * values[UT_LL1_ERR_VAL_MAX];
 };
 
 

@@ -25,6 +25,8 @@
 #include <stddef.h> /* for offsetof */
 #include <stdio.h>
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
+#define utillib_error_printf(...) fprintf(stderr, __VA_ARGS__)
+
 
 extern char const * utillib_LICENSE_str;
 

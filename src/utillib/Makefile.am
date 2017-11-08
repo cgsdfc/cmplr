@@ -5,6 +5,7 @@ lib_LTLIBRARIES = libutillib.la
 libutillib_la_SOURCES = enum.c \
 												opg_builder.c \
 												ll1_builder.c \
+												ll1_generator.c \
 												ll1_parser.c \
 												unordered_op.c \
 												bitset.c \
@@ -55,6 +56,7 @@ include_HEADERS = flags.h \
 
 check_PROGRAMS= utillib_test
 utillib_test_SOURCES=test/driver.c \
+										 test/ll1_generator.c \
 										 test/slist.c \
 										 test/print.c \
 										 test/ll1_sample_1.c \

@@ -19,26 +19,28 @@
 
 */
 
-#ifndef UTILLIB_LL1_GENERATOR_H
-#define UTILLIB_LL1_GENERATOR_H
-#include "rule.h"
-#include "string.h"
-#include "vector2.h"
-#include "ll1_builder.h"
+#include <utillib/ll1_generator.h>
+#include <utillib/test.h>
+#include "ll1_sample_1.h"
 
-struct utillib_ll1_generator {
-  struct utillib_rule_index const* rule_index;
-  struct utillib_ll1_builder builder;
-  struct utillib_vector2 table;
-  struct utillib_string buffer;
-};
+UTILLIB_TEST_SET_UP() {
+}
 
-void utillib_ll1_generator_init_from_code(struct utillib_ll1_generator *self,
-    struct utillib_rule_index * rule_index);
+UTILLIB_TEST_TEAR_DOWN() {
+}
 
-bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
-    char const *filename);
+UTILLIB_TEST(ll1_generator_works)
+{
 
-void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self);
 
-#endif /* UTILLIB_LL1_GENERATOR_H */
+
+}
+
+
+UTILLIB_TEST_DEFINE(Utillib_LL1Generator) {
+  UTILLIB_TEST_BEGIN(Utillib_LL1Generator)
+  UTILLIB_TEST_RUN(ll1_generator_works)
+  UTILLIB_TEST_END(Utillib_LL1Generator)
+  UTILLIB_TEST_FIXTURE(struct utillib_ll1_generator)
+  UTILLIB_TEST_RETURN(Utillib_LL1Generator)
+}
