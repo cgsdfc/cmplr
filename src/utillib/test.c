@@ -456,7 +456,8 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
  * Wraps `TestEntry_Fields' in.
  * It depends on `TestEntry_Fields'.
  */
-static utillib_json_value_t *json_test_entry_create(void const *base, size_t offset) {
+static utillib_json_value_t *json_test_entry_create(void const *base,
+                                                    size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
@@ -522,7 +523,8 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
  * \function json_test_env_create
  * Wraps `TestEnv_Fields'.
  */
-static utillib_json_value_t *json_test_env_create(void const *base, size_t offset) {
+static utillib_json_value_t *json_test_env_create(void const *base,
+                                                  size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 

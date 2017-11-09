@@ -33,7 +33,7 @@ struct utillib_scanner_op {
   size_t (*lookahead)(void *);
   void (*shiftaway)(void *);
   bool (*reacheof)(void *);
-  void *(*getsymbol)(void *);
+  void const *(*getsymbol)(void *);
 };
 
 struct utillib_symbol_scanner {
@@ -57,10 +57,13 @@ void utillib_symbol_scanner_init(struct utillib_symbol_scanner *self,
 void utillib_symbol_scanner_shiftaway(struct utillib_symbol_scanner *self);
 size_t utillib_symbol_scanner_lookahead(struct utillib_symbol_scanner *self);
 bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self);
-void *utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self);
+void const *
+utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self);
 
 void utillib_char_scanner_init(struct utillib_char_scanner *self, FILE *file);
 size_t utillib_char_scanner_lookahead(struct utillib_char_scanner *self);
+void const *
+utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self);
 void utillib_char_scanner_shiftaway(struct utillib_char_scanner *self);
 bool utillib_char_scanner_reacheof(struct utillib_char_scanner *self);
 

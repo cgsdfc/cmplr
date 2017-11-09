@@ -86,7 +86,8 @@ struct utillib_pair_t *pop_free(struct utillib_unordered_map *self) {
 }
 
 static struct utillib_pair_t *make_pair(struct utillib_unordered_map *self,
-                                 utillib_key_t key, utillib_value_t value) {
+                                        utillib_key_t key,
+                                        utillib_value_t value) {
   struct utillib_pair_t *pair;
   if (self->un_free) {
     pair = pop_free(self);
@@ -189,10 +190,10 @@ void utillib_unordered_map_destroy(struct utillib_unordered_map *self) {
   destroy_bucket(self);
 }
 
-static struct utillib_pair_t *linear_search_list(struct utillib_unordered_map *self,
-                                          struct utillib_slist *list,
-                                          utillib_key_t key,
-                                          struct utillib_slist_node **pos) {
+static struct utillib_pair_t *
+linear_search_list(struct utillib_unordered_map *self,
+                   struct utillib_slist *list, utillib_key_t key,
+                   struct utillib_slist_node **pos) {
   struct utillib_slist_node *node = UTILLIB_SLIST_HEAD(list);
   for (; node != NULL; node = UTILLIB_SLIST_NODE_NEXT(node)) {
     struct utillib_pair_t const *pair = UTILLIB_SLIST_NODE_DATA(node);
@@ -200,15 +201,17 @@ static struct utillib_pair_t *linear_search_list(struct utillib_unordered_map *s
       if (pos) {
         *pos = node;
       }
-      return (void*) pair;
+      return (void *)pair;
     }
   }
   return NULL;
 }
 
 static int find_impl(struct utillib_unordered_map *self, utillib_key_t key,
-                     utillib_value_t value, int mode, struct utillib_slist **plist,
-                     struct utillib_slist_node **pos, struct utillib_pair_t **retv) {
+                     utillib_value_t value, int mode,
+                     struct utillib_slist **plist,
+                     struct utillib_slist_node **pos,
+                     struct utillib_pair_t **retv) {
   size_t hashv = do_hash(self, key);
   struct utillib_slist *list = utillib_vector_at(&(self->un_bucket), hashv);
   struct utillib_pair_t *pair = linear_search_list(self, list, key, pos);
@@ -252,8 +255,9 @@ int utillib_unordered_map_emplace(struct utillib_unordered_map *self,
   return insert_impl(self, key, value);
 }
 
-struct utillib_pair_t *utillib_unordered_map_find(struct utillib_unordered_map *self,
-                                           utillib_key_t key) {
+struct utillib_pair_t *
+utillib_unordered_map_find(struct utillib_unordered_map *self,
+                           utillib_key_t key) {
   struct utillib_pair_t *p;
   find_impl(self, key, NULL, FIND_ONLY, NULL, NULL, &p);
   return p;

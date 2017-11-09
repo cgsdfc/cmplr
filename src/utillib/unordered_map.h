@@ -91,8 +91,8 @@ void utillib_unordered_map_rehash(struct utillib_unordered_map *, size_t);
 void utillib_unordered_map_clear(struct utillib_unordered_map *);
 
 /* observer */
-struct utillib_pair_t *utillib_unordered_map_find(struct utillib_unordered_map *,
-                                           utillib_key_t);
+struct utillib_pair_t *
+utillib_unordered_map_find(struct utillib_unordered_map *, utillib_key_t);
 size_t utillib_unordered_map_size(struct utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);
 bool utillib_unordered_map_empty(struct utillib_unordered_map *);

@@ -42,7 +42,7 @@
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
-  for (struct utillib_slist_node *_p = (L)->sl_tail;                                  \
+  for (struct utillib_slist_node *_p = (L)->sl_tail;                           \
        _p != NULL && (((X) = _p->data) || 1); _p = _p->next)
 
 /**
@@ -53,8 +53,8 @@
 
 struct utillib_slist_node {
   struct utillib_slist_node *next;
-  void const * data;
-} ;
+  void const *data;
+};
 
 /**
  * \struct utillib_slist
@@ -67,7 +67,7 @@ struct utillib_slist_node {
 struct utillib_slist {
   struct utillib_slist_node *sl_tail;
   struct utillib_slist_node *sl_free;
-} ;
+};
 
 /**
  * \struct utillib_slist_iterator
@@ -85,7 +85,7 @@ void utillib_slist_iterator_init(struct utillib_slist_iterator *,
                                  struct utillib_slist *);
 bool utillib_slist_iterator_has_next(struct utillib_slist_iterator *);
 void utillib_slist_iterator_next(struct utillib_slist_iterator *);
-void * utillib_slist_iterator_get(struct utillib_slist_iterator *);
+void *utillib_slist_iterator_get(struct utillib_slist_iterator *);
 
 /** \brief constructor destructor */
 void utillib_slist_init(struct utillib_slist *);
@@ -96,13 +96,15 @@ void utillib_slist_destroy_owning(struct utillib_slist *,
 /** \brief observer */
 bool utillib_slist_empty(struct utillib_slist *);
 size_t utillib_slist_size(struct utillib_slist *);
-void * utillib_slist_front(struct utillib_slist *);
+void *utillib_slist_front(struct utillib_slist *);
 
 /** \brief modifier */
 void utillib_slist_push_front(struct utillib_slist *, void const *);
 void utillib_slist_push_front_node(struct utillib_slist *,
                                    struct utillib_slist_node *);
-void utillib_slist_erase_node(struct utillib_slist *, struct utillib_slist_node *);
-void utillib_slist_erase(struct utillib_slist *, struct utillib_slist_iterator *);
+void utillib_slist_erase_node(struct utillib_slist *,
+                              struct utillib_slist_node *);
+void utillib_slist_erase(struct utillib_slist *,
+                         struct utillib_slist_iterator *);
 void utillib_slist_pop_front(struct utillib_slist *);
 #endif /* UTILLIB_SLIST_H */

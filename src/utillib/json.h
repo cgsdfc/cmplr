@@ -27,13 +27,13 @@
  */
 
 #include "enum.h"
+#include "string.h"
 #include "types.h"
 #include "vector.h"
-#include "string.h"
 #include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
-typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const*,
+typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const *,
                                                                  size_t);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
@@ -53,7 +53,8 @@ typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const*,
  * \param KEY A string literal to name this field. It is not
  * necessarily the name of the field.
  * \param FIELD The identifier as the name of the field.
- * \param FUNC A function pointer that should create a `struct utillib_json_value_t'
+ * \param FUNC A function pointer that should create a `struct
+ * utillib_json_value_t'
  * when passed in the base address and offset of this field.
  */
 #define UTILLIB_JSON_OBJECT_FIELD_ELEM(STRUCT, KEY, FIELD, FUNC)               \
@@ -63,8 +64,8 @@ typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const*,
    .size = sizeof((STRUCT *)NULL)->FIELD},
 
 #define UTILLIB_JSON_ARRAY_DESC(NAME, ELEMSZ, FUNC)                            \
-  static const struct utillib_json_array_desc_t NAME = {.create_func = (FUNC),        \
-                                                 .elemsz = (ELEMSZ)};
+  static const struct utillib_json_array_desc_t NAME = {.create_func = (FUNC), \
+                                                        .elemsz = (ELEMSZ)};
 /**
  * \macro UTILLIB_JSON_CREATE_FUNC_DECLARE
  * Shortcut for declaring creating function.
@@ -108,7 +109,7 @@ struct utillib_json_object_field_t {
 struct utillib_json_array_desc_t {
   utillib_json_value_create_func_t *create_func;
   size_t elemsz;
-} ;
+};
 
 /**
  * \struct utillib_json_object_t
@@ -117,7 +118,7 @@ struct utillib_json_array_desc_t {
 
 struct utillib_json_object_t {
   utillib_vector members;
-} ;
+};
 
 /**
  * \struct utillib_json_array_t
@@ -125,7 +126,7 @@ struct utillib_json_object_t {
  */
 struct utillib_json_array_t {
   utillib_vector elements;
-} ;
+};
 
 /**
  * \struct utillib_json_value_t
@@ -148,16 +149,18 @@ struct utillib_json_value_t {
      */
     void *as_ptr;
   };
-} ;
+};
 
 struct utillib_json_value_t *
-utillib_json_object_create(void const*, size_t, struct utillib_json_object_field_t const *);
+utillib_json_object_create(void const *, size_t,
+                           struct utillib_json_object_field_t const *);
 
 struct utillib_json_value_t *
-utillib_json_object_pointer_create(void const*, size_t,
+utillib_json_object_pointer_create(void const *, size_t,
                                    struct utillib_json_object_field_t const *);
 struct utillib_json_value_t *
-utillib_json_array_create(void const*, size_t, struct utillib_json_array_desc_t const *);
+utillib_json_array_create(void const *, size_t,
+                          struct utillib_json_array_desc_t const *);
 
 struct utillib_json_value_t *utillib_json_value_create(int, ...);
 
@@ -170,18 +173,20 @@ struct utillib_json_value_t *utillib_json_null_create(void);
 struct utillib_json_value_t *utillib_json_null_array_create(size_t);
 
 struct utillib_json_value_t *
-utillib_json_array_pointer_create(void const*, size_t,
-                                  struct utillib_json_array_desc_t const*);
+utillib_json_array_pointer_create(void const *, size_t,
+                                  struct utillib_json_array_desc_t const *);
 
-void utillib_json_tostring(struct utillib_json_value_t const*, struct utillib_string *);
+void utillib_json_tostring(struct utillib_json_value_t const *,
+                           struct utillib_string *);
 
-void utillib_json_pretty_print(struct utillib_json_value_t const*, FILE *);
+void utillib_json_pretty_print(struct utillib_json_value_t const *, FILE *);
 
 void utillib_json_array_push_back(struct utillib_json_value_t *self,
-                                  struct utillib_json_value_t const*value);
+                                  struct utillib_json_value_t const *value);
 
-void utillib_json_object_push_back(struct utillib_json_value_t *self, char const *key,
-                                   struct utillib_json_value_t const*value);
+void utillib_json_object_push_back(struct utillib_json_value_t *self,
+                                   char const *key,
+                                   struct utillib_json_value_t const *value);
 
 struct utillib_json_value_t *utillib_json_object_create_empty(void);
 

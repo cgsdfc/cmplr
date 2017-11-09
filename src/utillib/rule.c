@@ -31,7 +31,7 @@
  * Thus, the left hand side is out of concern or
  * can be deducted from context.
  */
-struct utillib_rule utillib_rule_eps={.id=UT_RULE_EPS};
+struct utillib_rule utillib_rule_eps = {.id = UT_RULE_EPS};
 
 /*
  * Ensures sanity of LHS
@@ -98,7 +98,7 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   self->min_non_terminal = ULONG_MAX;
   self->min_terminal = ULONG_MAX;
   self->symbols = symbols;
-  self->LHS_index=NULL;
+  self->LHS_index = NULL;
 
   for (struct utillib_rule_literal const *rule_literal = rule_literals;
        rule_literal->LHS_LIT != UT_SYM_NULL; ++rule_literal) {
@@ -129,11 +129,10 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
   self->symbols_size = self->non_terminals_size + self->terminals_size;
 }
 
-static void rule_index_LHS_index_destroy(struct utillib_rule_index *self)
-{
+static void rule_index_LHS_index_destroy(struct utillib_rule_index *self) {
   if (!self->LHS_index)
     return;
-  for (int i=0; i< self->non_terminals_size; ++i){
+  for (int i = 0; i < self->non_terminals_size; ++i) {
     utillib_vector_destroy(&self->LHS_index[i]);
   }
   free(self->LHS_index);
@@ -216,42 +215,42 @@ size_t utillib_rule_index_rules_size(struct utillib_rule_index const *self) {
  * Builds an index for all the non terminal symbols which
  * allows traversal of the rules with the same LHS faster.
  */
-void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self)
-{
+void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self) {
   if (self->LHS_index) {
     return;
   }
-  size_t non_terminals_size= self->non_terminals_size;
-  self->LHS_index=calloc(sizeof self->LHS_index[0], non_terminals_size);
-  UTILLIB_VECTOR_FOREACH(struct utillib_rule const * , rule, &self->rules) {
-    struct utillib_symbol const * LHS=rule->LHS;
-    size_t pos=utillib_rule_index_symbol_index(self, LHS);
-    assert (pos < non_terminals_size && "Non terminal symbol index out of range");
-    struct utillib_vector * same_LHS_rule=&self->LHS_index[pos];
+  size_t non_terminals_size = self->non_terminals_size;
+  self->LHS_index = calloc(sizeof self->LHS_index[0], non_terminals_size);
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, &self->rules) {
+    struct utillib_symbol const *LHS = rule->LHS;
+    size_t pos = utillib_rule_index_symbol_index(self, LHS);
+    assert(pos < non_terminals_size &&
+           "Non terminal symbol index out of range");
+    struct utillib_vector *same_LHS_rule = &self->LHS_index[pos];
     utillib_vector_push_back(same_LHS_rule, rule);
   }
 }
 
 void utillib_rule_index_load_table(struct utillib_rule_index const *self,
-    struct utillib_vector2 * table, int const *array)
-{
-  size_t non_terminals_size=self->non_terminals_size;
-  size_t terminals_size=self->terminals_size;
+                                   struct utillib_vector2 *table,
+                                   int const *array) {
+  size_t non_terminals_size = self->non_terminals_size;
+  size_t terminals_size = self->terminals_size;
   utillib_vector2_init(table, non_terminals_size, terminals_size);
 
-  for (int i=0; i<non_terminals_size; ++i) {
-   for (int j=0; j<terminals_size; ++j) {
-    int rule_id=array[i * terminals_size + j];
-    struct utillib_rule const * rule;
-    if (rule_id == UT_RULE_NULL) {
-      rule=NULL;
-    } else if (rule_id == UT_RULE_EPS) {
-      rule=UTILLIB_RULE_EPS;
-    } else {
-      rule=utillib_vector_at(&self->rules, rule_id);
+  for (int i = 0; i < non_terminals_size; ++i) {
+    for (int j = 0; j < terminals_size; ++j) {
+      int rule_id = array[i * terminals_size + j];
+      struct utillib_rule const *rule;
+      if (rule_id == UT_RULE_NULL) {
+        rule = NULL;
+      } else if (rule_id == UT_RULE_EPS) {
+        rule = UTILLIB_RULE_EPS;
+      } else {
+        rule = utillib_vector_at(&self->rules, rule_id);
+      }
+      utillib_vector2_set(table, i, j, rule);
     }
-    utillib_vector2_set(table, i, j, rule);
-   }
   }
 }
 
@@ -259,27 +258,28 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
  * Implements JSON format interface.
  */
 
-struct utillib_json_value_t *utillib_rule_json_object_create(void const* base,
-                                                      size_t offset) {
+struct utillib_json_value_t *utillib_rule_json_object_create(void const *base,
+                                                             size_t offset) {
   static const char *rule_null_str = "A := epsilon";
   if (base == UTILLIB_RULE_EPS) {
     return utillib_json_string_create(&rule_null_str, 0);
   }
-  struct utillib_rule const *self=base;
-  struct utillib_json_value_t *object=utillib_json_object_create_empty();
-  struct utillib_json_value_t *array=utillib_json_array_create_empty();
+  struct utillib_rule const *self = base;
+  struct utillib_json_value_t *object = utillib_json_object_create_empty();
+  struct utillib_json_value_t *array = utillib_json_array_create_empty();
 
-  utillib_json_object_push_back(object, 
-      "LHS", utillib_symbol_json_string_create(self->LHS));
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const*, symbol, &self->RHS) {
-    utillib_json_array_push_back(array, utillib_symbol_json_string_create(symbol));
+  utillib_json_object_push_back(object, "LHS",
+                                utillib_symbol_json_string_create(self->LHS));
+  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, &self->RHS) {
+    utillib_json_array_push_back(array,
+                                 utillib_symbol_json_string_create(symbol));
   }
   utillib_json_object_push_back(object, "RHS", array);
   return object;
 }
 
 static struct utillib_json_value_t *
-rule_index_rule_json_array_create_from_vector(void const*base, size_t offset) {
+rule_index_rule_json_array_create_from_vector(void const *base, size_t offset) {
   return utillib_json_array_create_from_vector(base,
                                                utillib_rule_json_object_create);
 }
@@ -300,7 +300,7 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,
                                rule_index_rule_json_array_create_from_vector)
 UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields);
 
-struct utillib_json_value_t *utillib_rule_index_json_object_create(struct utillib_rule_index const * self)
-{
-    return utillib_json_object_create(self, 0, RuleIndex_Fields);
+struct utillib_json_value_t *
+utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
+  return utillib_json_object_create(self, 0, RuleIndex_Fields);
 }

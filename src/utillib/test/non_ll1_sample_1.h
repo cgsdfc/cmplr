@@ -62,5 +62,4 @@ extern const size_t non_ll1_sample_1_follow[][NON_LL1_SAMPLE_1_EXTEND];
 extern const size_t non_ll1_sample_1_input_1[];
 extern const size_t non_ll1_sample_1_input_2[];
 
-
 #endif // UTILLIB_TEST_NON_LL1_SAMPLE_1_H

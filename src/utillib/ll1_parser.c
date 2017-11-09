@@ -50,7 +50,8 @@ static void ll1_parser_match_symbol(struct utillib_ll1_parser *self) {
   /* --context->RHS_count; */
   /* if (context->RHS_count == 0) { */
   /*   printf("Reduce rule `%lu'\n", 1 + context->rule_id); */
-  /*   utillib_ll1_parser_callback_t *callback = self->callbacks[context->rule_id]; */
+  /*   utillib_ll1_parser_callback_t *callback =
+   * self->callbacks[context->rule_id]; */
   /*   callback(self->client_data, self); */
   /*   ll1_parser_context_destroy(context); */
   /*   utillib_vector_pop_back(&self->context); */

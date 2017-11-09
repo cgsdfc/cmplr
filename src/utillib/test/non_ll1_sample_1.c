@@ -32,27 +32,25 @@ UTILLIB_SYMBOL_TERMINAL(SYM_c)
 UTILLIB_SYMBOL_END(non_ll1_sample_1_symbols);
 
 UTILLIB_RULE_BEGIN(non_ll1_sample_1_rules)
-  UTILLIB_RULE_ELEM(SYM_S, SYM_a, SYM_b, SYM_B)
-  UTILLIB_RULE_ELEM(SYM_A, SYM_S, SYM_C)
-  UTILLIB_RULE_ELEM(SYM_A, SYM_B, SYM_A, SYM_A)
-  UTILLIB_RULE_ELEM(SYM_A, UT_SYM_EPS)
-  UTILLIB_RULE_ELEM(SYM_B, SYM_A, SYM_b, SYM_A)
-  UTILLIB_RULE_ELEM(SYM_C, SYM_B)
-  UTILLIB_RULE_ELEM(SYM_C, SYM_c)
+UTILLIB_RULE_ELEM(SYM_S, SYM_a, SYM_b, SYM_B)
+UTILLIB_RULE_ELEM(SYM_A, SYM_S, SYM_C)
+UTILLIB_RULE_ELEM(SYM_A, SYM_B, SYM_A, SYM_A)
+UTILLIB_RULE_ELEM(SYM_A, UT_SYM_EPS)
+UTILLIB_RULE_ELEM(SYM_B, SYM_A, SYM_b, SYM_A)
+UTILLIB_RULE_ELEM(SYM_C, SYM_B)
+UTILLIB_RULE_ELEM(SYM_C, SYM_c)
 UTILLIB_RULE_END(non_ll1_sample_1_rules);
 
-const size_t non_ll1_sample_1_first[][NON_LL1_SAMPLE_1_EXTEND]={
-  [SYM_S]={ SYM_a, UT_SYM_NULL },
-  [SYM_A]={SYM_a, UT_SYM_EPS, SYM_b , UT_SYM_NULL },
-  [SYM_B]={SYM_a, SYM_b , UT_SYM_NULL },
-  [SYM_C]={SYM_a, SYM_b, SYM_c, UT_SYM_NULL },
+const size_t non_ll1_sample_1_first[][NON_LL1_SAMPLE_1_EXTEND] = {
+        [SYM_S] = {SYM_a, UT_SYM_NULL},
+        [SYM_A] = {SYM_a, UT_SYM_EPS, SYM_b, UT_SYM_NULL},
+        [SYM_B] = {SYM_a, SYM_b, UT_SYM_NULL},
+        [SYM_C] = {SYM_a, SYM_b, SYM_c, UT_SYM_NULL},
 };
 
-const size_t non_ll1_sample_1_follow[][NON_LL1_SAMPLE_1_EXTEND]={
-  [SYM_S]={ SYM_c , UT_SYM_NULL },
-  [SYM_A]={SYM_b, UT_SYM_NULL },
+const size_t non_ll1_sample_1_follow[][NON_LL1_SAMPLE_1_EXTEND] = {
+        [SYM_S] = {SYM_c, UT_SYM_NULL}, [SYM_A] = {SYM_b, UT_SYM_NULL},
 };
 
-  /* [SYM_B]={S */
+/* [SYM_B]={S */
 /* [SYM_C]={S */
-

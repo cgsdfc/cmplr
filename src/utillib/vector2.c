@@ -60,10 +60,10 @@ void utillib_vector2_init(struct utillib_vector2 *self, size_t nrow,
  * Accesses table element.
  * Checks index with `assert'.
  */
-void *utillib_vector2_at(struct utillib_vector2 const *self,
-                                     size_t row, size_t col) {
+void *utillib_vector2_at(struct utillib_vector2 const *self, size_t row,
+                         size_t col) {
   vector2_check(self, row, col);
-  return (void *) self->array[vector2_offset(self, row, col)];
+  return (void *)self->array[vector2_offset(self, row, col)];
 }
 
 /**
@@ -71,13 +71,13 @@ void *utillib_vector2_at(struct utillib_vector2 const *self,
  * Alters table element and returns the old one.
  * Checks index with `assert'.
  */
-void *utillib_vector2_set(struct utillib_vector2 *self, size_t row,
-                                      size_t col, void const * data) {
+void *utillib_vector2_set(struct utillib_vector2 *self, size_t row, size_t col,
+                          void const *data) {
   vector2_check(self, row, col);
   size_t offset = vector2_offset(self, row, col);
-  void const * old_data = self->array[offset];
+  void const *old_data = self->array[offset];
   self->array[offset] = data;
-  return (void*) old_data;
+  return (void *)old_data;
 }
 
 /**
@@ -100,7 +100,7 @@ struct utillib_json_value_t *utillib_vector2_json_array_create(
   for (int i = 0; i < self->nrow; ++i) {
     struct utillib_json_value_t *row_array = utillib_json_array_create_empty();
     for (int j = 0; j < self->ncol; ++j) {
-      void const * data = self->array[vector2_offset(self, i, j)];
+      void const *data = self->array[vector2_offset(self, i, j)];
       utillib_json_value_t *json_data = (data && create_func)
                                             ? create_func(data, sizeof data)
                                             : utillib_json_null_create();

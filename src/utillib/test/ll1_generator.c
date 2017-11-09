@@ -31,43 +31,29 @@
 #include "non_ll1_sample_2.h"
 #endif
 
+UTILLIB_TEST_SET_UP() {}
 
-UTILLIB_TEST_SET_UP() {
-}
+UTILLIB_TEST_TEAR_DOWN() { utillib_ll1_generator_destroy(UT_FIXTURE); }
 
-UTILLIB_TEST_TEAR_DOWN() {
-  utillib_ll1_generator_destroy(UT_FIXTURE);
-}
-
-UTILLIB_TEST(ll1_generator_works)
-{
-  utillib_ll1_generator_init_from_code(UT_FIXTURE, 
-      ll1_sample_1_symbols,
-      ll1_sample_1_rules);
-  utillib_ll1_generator_generate(UT_FIXTURE,
-      "sample_1.c");
+UTILLIB_TEST(ll1_generator_works) {
+  utillib_ll1_generator_init_from_code(UT_FIXTURE, ll1_sample_1_symbols,
+                                       ll1_sample_1_rules);
+  utillib_ll1_generator_generate(UT_FIXTURE, "sample_1.c");
 }
 
 #ifdef UT_TEST_LL1_SAMPLE_1
-UTILLIB_TEST(ll1_generator_non_ll1_sample)
-{
-  utillib_ll1_generator_init_from_code(UT_FIXTURE,
-      non_ll1_sample_1_symbols,
-      non_ll1_sample_1_rules);
-  utillib_ll1_generator_generate(UT_FIXTURE,
-      "this_should_not_be_generated");
+UTILLIB_TEST(ll1_generator_non_ll1_sample) {
+  utillib_ll1_generator_init_from_code(UT_FIXTURE, non_ll1_sample_1_symbols,
+                                       non_ll1_sample_1_rules);
+  utillib_ll1_generator_generate(UT_FIXTURE, "this_should_not_be_generated");
 }
-#elif defined (UT_TEST_LL1_SAMPLE_2)
-UTILLIB_TEST(ll1_generator_non_ll1_sample_2)
-{
-  utillib_ll1_generator_init_from_code(UT_FIXTURE,
-      non_ll1_sample_2_symbols,
-      non_ll1_sample_2_rules);
-  utillib_ll1_generator_generate(UT_FIXTURE,
-      "this_should_not_be_generated");
+#elif defined(UT_TEST_LL1_SAMPLE_2)
+UTILLIB_TEST(ll1_generator_non_ll1_sample_2) {
+  utillib_ll1_generator_init_from_code(UT_FIXTURE, non_ll1_sample_2_symbols,
+                                       non_ll1_sample_2_rules);
+  utillib_ll1_generator_generate(UT_FIXTURE, "this_should_not_be_generated");
 }
-#endif 
-
+#endif
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Generator) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Generator)

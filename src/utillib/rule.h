@@ -26,15 +26,15 @@
  * and building index from rules to allow other parser generating
  * algorithm to run upon.
  */
+#include "enum.h"
 #include "json.h"
-#include "vector2.h"
 #include "symbol.h"
 #include "vector.h"
-#include "enum.h"
+#include "vector2.h"
 
 UTILLIB_ENUM_BEGIN(utillib_rule_special_kind)
-  UTILLIB_ENUM_ELEM_INIT(UT_RULE_EPS, -1)
-  UTILLIB_ENUM_ELEM_INIT(UT_RULE_NULL, -2)
+UTILLIB_ENUM_ELEM_INIT(UT_RULE_EPS, -1)
+UTILLIB_ENUM_ELEM_INIT(UT_RULE_NULL, -2)
 UTILLIB_ENUM_END(utillib_rule_special_kind);
 
 /* Currently limit for the maximum size of right hand side */
@@ -115,7 +115,7 @@ struct utillib_rule_index {
   size_t terminals_size;
   size_t non_terminals_size;
   size_t symbols_size;
-  struct utillib_vector * LHS_index;
+  struct utillib_vector *LHS_index;
 };
 
 void utillib_rule_index_init(struct utillib_rule_index *self,
@@ -124,11 +124,11 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self);
 
-struct utillib_json_value_t *utillib_rule_json_object_create(void const*base,
-                                                      size_t offset);
+struct utillib_json_value_t *utillib_rule_json_object_create(void const *base,
+                                                             size_t offset);
 
-struct utillib_json_value_t *utillib_rule_index_json_object_create(
-    struct utillib_rule_index const * self);
+struct utillib_json_value_t *
+utillib_rule_index_json_object_create(struct utillib_rule_index const *self);
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
                                        struct utillib_symbol const *symbol);
@@ -144,7 +144,8 @@ utillib_rule_index_symbol_at(struct utillib_rule_index const *self,
 void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self);
 
 void utillib_rule_index_load_table(struct utillib_rule_index const *self,
-    struct utillib_vector2 * table, int const *array);
+                                   struct utillib_vector2 *table,
+                                   int const *array);
 
 #define utillib_rule_rhs(self) (&(self)->RHS)
 #define utillib_rule_lhs(self) ((self)->LHS)

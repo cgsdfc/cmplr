@@ -144,7 +144,8 @@ UTILLIB_TEST(json_object_create) {
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
-static utillib_json_value_t *Point_JSON_create(void const *base, size_t offset) {
+static utillib_json_value_t *Point_JSON_create(void const *base,
+                                               size_t offset) {
   return utillib_json_object_create(base, offset, Point_JSON);
 }
 
@@ -267,7 +268,8 @@ UTILLIB_TEST(json_array_pointer) {
   void *psize = (char *)&ba.barr - offsetof_base + offsetof_size;
 }
 
-static utillib_json_value_t *status_string_create(void const *base, size_t offset) {
+static utillib_json_value_t *status_string_create(void const *base,
+                                                  size_t offset) {
   int status = *(int *)base;
   char const *str = utillib_test_status_t_tostring(status);
   return utillib_json_string_create(&str, 0);
@@ -282,7 +284,8 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "succeeded", succeeded,
                                utillib_json_bool_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
 
-static utillib_json_value_t *json_test_entry_create(void const *base, size_t offset) {
+static utillib_json_value_t *json_test_entry_create(void const *base,
+                                                    size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
@@ -328,7 +331,8 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "tests", cases,
                                json_test_entry_array_pointer_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
 
-static utillib_json_value_t *json_test_env_create(void const *base, size_t offset) {
+static utillib_json_value_t *json_test_env_create(void const *base,
+                                                  size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 

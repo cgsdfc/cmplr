@@ -75,7 +75,7 @@ UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
  */
 
 UTILLIB_TEST_AUX(ll1_builder_set_correct,
-                 struct utillib_ll1_set const * actual_sets,
+                 struct utillib_ll1_set const *actual_sets,
                  size_t const expected_sets[][10]) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
   struct utillib_rule_index const *rule_index = self->rule_index;

@@ -48,7 +48,7 @@ static void pop_front_aux(struct utillib_slist_node **tail,
 }
 
 static struct utillib_slist_node *make_node(struct utillib_slist *self,
-                                     void const * data) {
+                                            void const *data) {
   struct utillib_slist_node *node;
   if (self->sl_free) {
     pop_front_aux(&(self->sl_free), &node);
@@ -84,8 +84,7 @@ void utillib_slist_init(struct utillib_slist *self) {
  * Pushes an element to its front in O(1) time.
  */
 
-void utillib_slist_push_front(struct utillib_slist *self,
-                              void const * data) {
+void utillib_slist_push_front(struct utillib_slist *self, void const *data) {
   struct utillib_slist_node *to_push = make_node(self, data);
   push_front_aux(&(self->sl_tail), to_push);
 }
@@ -109,9 +108,9 @@ void utillib_slist_erase_node(struct utillib_slist *self,
   push_front_aux(&(self->sl_free), *prev);
 }
 
-void * utillib_slist_front(struct utillib_slist *self) {
+void *utillib_slist_front(struct utillib_slist *self) {
   assert(self->sl_tail);
-  return (void*) self->sl_tail->data;
+  return (void *)self->sl_tail->data;
 }
 
 void utillib_slist_pop_front(struct utillib_slist *self) {
@@ -172,7 +171,6 @@ void utillib_slist_iterator_next(struct utillib_slist_iterator *self) {
   self->iter_node = UTILLIB_SLIST_NODE_NEXT(self->iter_node);
 }
 
-void *
-utillib_slist_iterator_get(struct utillib_slist_iterator *self) {
-  return  (void*)UTILLIB_SLIST_NODE_DATA(self->iter_node);
+void *utillib_slist_iterator_get(struct utillib_slist_iterator *self) {
+  return (void *)UTILLIB_SLIST_NODE_DATA(self->iter_node);
 }

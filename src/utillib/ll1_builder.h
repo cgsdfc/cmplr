@@ -34,9 +34,8 @@ UTILLIB_ENUM_END(utillib_ll1_error_kind);
 
 struct utillib_ll1_builder_error {
   int kind;
-  struct utillib_json_value_t * values[UT_LL1_ERR_VAL_MAX];
+  struct utillib_json_value_t *values[UT_LL1_ERR_VAL_MAX];
 };
-
 
 /**
  * \struct utillib_ll1_set
@@ -71,7 +70,7 @@ struct utillib_ll1_set {
  * but from there, their sizes are well-known.
  * And access to these sets rawly out-of-range since
  * index are computed by `utillib_rule_index_symbol_index'.
- * 
+ *
  * Benefits: allocates those sets directly in the array
  * rather than via vector.
  * No reserve needed.
@@ -81,9 +80,9 @@ struct utillib_ll1_set {
  */
 struct utillib_ll1_builder {
   struct utillib_rule_index *rule_index;
-  struct utillib_ll1_set * FIRST;
-  struct utillib_ll1_set * FIRST_RULE;
-  struct utillib_ll1_set * FOLLOW;
+  struct utillib_ll1_set *FIRST;
+  struct utillib_ll1_set *FIRST_RULE;
+  struct utillib_ll1_set *FOLLOW;
   struct utillib_vector errors;
 };
 
@@ -99,8 +98,9 @@ bool utillib_ll1_set_contains(struct utillib_ll1_set const *self, size_t value);
 bool utillib_ll1_set_equal(struct utillib_ll1_set const *self,
                            struct utillib_ll1_set const *other);
 
-bool utillib_ll1_set_intersect(struct utillib_ll1_set const * lhs,
-    struct utillib_ll1_set  const* rhs, bool about_flag);
+bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
+                               struct utillib_ll1_set const *rhs,
+                               bool about_flag);
 
 #define utillib_ll1_set_destroy(A) utillib_bitset_destroy(&(A)->bitset)
 

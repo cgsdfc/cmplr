@@ -18,6 +18,7 @@
    02110-1301 USA
 
 */
+#define _GNU_SOURCE
 #include "string.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -32,19 +33,19 @@
  * Removes all the chars of self but does not free memory.
  * Self becomes empty after that.
  */
-void utillib_string_clear(utillib_string *self) { self->size = 0; }
+void utillib_string_clear(struct utillib_string *self) { self->size = 0; }
 
 /**
  * \function utillib_string_erase_last
  * Removes the last char from self.
  * If self is empty, the behaviour is undefined.
  */
-void utillib_string_erase_last(utillib_string *self) { self->size--; }
+void utillib_string_erase_last(struct utillib_string *self) { self->size--; }
 
 /**
  * \function utillib_string_replace_last
  */
-inline void utillib_string_replace_last(utillib_string *self, char x) {
+inline void utillib_string_replace_last(struct utillib_string *self, char x) {
   self->c_str[self->size - 1] = x;
 }
 
@@ -54,7 +55,7 @@ inline void utillib_string_replace_last(utillib_string *self, char x) {
  * as `""'.
  * Both size and capacity are zero.
  */
-void utillib_string_init(utillib_string *self) {
+void utillib_string_init(struct utillib_string *self) {
   self->c_str = NULL;
   self->capacity = 0;
   self->size = 0;
@@ -66,7 +67,7 @@ void utillib_string_init(utillib_string *self) {
  * Ensures `size' + 1 <= `capacity'.
  * and `size' == strlen(str).
  */
-void utillib_string_init_c_str(utillib_string *self, char const *str) {
+void utillib_string_init_c_str(struct utillib_string *self, char const *str) {
   utillib_string_init(self);
   size_t len = strlen(str);
   utillib_string_reserve(self, len + 1);
@@ -81,7 +82,7 @@ void utillib_string_init_c_str(utillib_string *self, char const *str) {
  * by `new_capa'.
  * Otherwise, it does nothing.
  */
-void utillib_string_reserve(utillib_string *self, size_t new_capa) {
+void utillib_string_reserve(struct utillib_string *self, size_t new_capa) {
   if (new_capa <= self->capacity) {
     return;
   }
@@ -94,7 +95,7 @@ void utillib_string_reserve(utillib_string *self, size_t new_capa) {
  * \function string_append_aux
  * Append a single char to self without checking.
  */
-static inline void string_append_aux(utillib_string *self, char x) {
+static inline void string_append_aux(struct utillib_string *self, char x) {
   self->c_str[self->size++] = x;
 }
 
@@ -102,7 +103,7 @@ static inline void string_append_aux(utillib_string *self, char x) {
  * \function utillib_string_append_char
  * Append a single char to self and grows in 2's power.
  */
-void utillib_string_append_char(utillib_string *self, char x) {
+void utillib_string_append_char(struct utillib_string *self, char x) {
   if (self->capacity < self->size + 2) {
     utillib_string_reserve(self, (self->size + 1) << 1);
   }
@@ -112,7 +113,7 @@ void utillib_string_append_char(utillib_string *self, char x) {
 /**
  * \function utillib_string_append
  */
-void utillib_string_append(utillib_string *self, char const *str) {
+void utillib_string_append(struct utillib_string *self, char const *str) {
   size_t new_capa = self->size + strlen(str) + 1;
   utillib_string_reserve(self, new_capa);
   for (; *str; ++str) {
@@ -125,7 +126,7 @@ void utillib_string_append(utillib_string *self, char const *str) {
  * Returns a RO null-terminated C string of self.
  * If self is empty, the returned value equals to "".
  */
-char const *utillib_string_c_str(utillib_string *self) {
+char const *utillib_string_c_str(struct utillib_string *self) {
   if (!self->c_str) {
     return "";
   }
@@ -137,19 +138,21 @@ char const *utillib_string_c_str(utillib_string *self) {
  * \function utillib_string_size
  * \return size.
  */
-size_t utillib_string_size(utillib_string *self) { return self->size; }
+size_t utillib_string_size(struct utillib_string *self) { return self->size; }
 
 /**
  * \function utillib_string_capacity
  * \return capacity. Self can hold at most `capacity-1' chars.
  * If it returns zero, it means self is empty and can hold no char at all.
  */
-size_t utillib_string_capacity(utillib_string *self) { return self->capacity; }
+size_t utillib_string_capacity(struct utillib_string *self) {
+  return self->capacity;
+}
 
 /**
  * \function utillib_string_destroy
  */
-void utillib_string_destroy(utillib_string *self) {
+void utillib_string_destroy(struct utillib_string *self) {
   free(self->c_str);
   self->c_str = NULL;
 }
@@ -157,14 +160,16 @@ void utillib_string_destroy(utillib_string *self) {
 /**
  * \function utillib_string_empty
  */
-bool utillib_string_empty(utillib_string *self) { return self->size == 0; }
+bool utillib_string_empty(struct utillib_string *self) {
+  return self->size == 0;
+}
 
 /**
  * \function utillib_string_richcmp
  * Returns yes if `self' and `t' satisfy the relation `op'.
  */
-bool utillib_string_richcmp(utillib_string *self, utillib_string *t,
-                            enum string_cmpop op) {
+bool utillib_string_richcmp(struct utillib_string *self,
+                            struct utillib_string *t, enum string_cmpop op) {
 #define UTILLIB_STR_CMP(self, T, OP)                                           \
   (strcmp(UTILLIB_C_STR(self), UTILLIB_C_STR(T)) OP 0)
   switch (op) {
@@ -181,4 +186,15 @@ bool utillib_string_richcmp(utillib_string *self, utillib_string *t,
   case STRING_NE:
     return UTILLIB_STR_CMP(self, t, !=);
   }
+}
+
+/**
+ * \function utillib_string_fmemopen
+ * Opens in read mode to allow stream-like operation.
+ * Client should close the returned pointer.
+ */
+
+FILE *utillib_string_fmemopen(struct utillib_string *self) {
+  char const *buf = utillib_string_c_str(self);
+  return fmemopen((void *)buf, self->size, "r");
 }

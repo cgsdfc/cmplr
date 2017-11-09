@@ -27,8 +27,7 @@
 #define UTILLIB_STATIC_BUF_SIZE BUFSIZ
 #define utillib_error_printf(...) fprintf(stderr, __VA_ARGS__)
 
-
-extern char const * utillib_LICENSE_str;
+extern char const *utillib_LICENSE_str;
 
 void utillib_print_indent(FILE *, size_t, int);
 char *utillib_static_buf(void);

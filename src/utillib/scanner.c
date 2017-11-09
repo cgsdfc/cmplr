@@ -74,8 +74,9 @@ bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self) {
   return symbol_scanner_eof(self);
 }
 
-void *utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self) {
-  return (void *)&self->table[symbol_scanner_deref(self)];
+void const *
+utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self) {
+  return &self->table[symbol_scanner_deref(self)];
 }
 
 void utillib_char_scanner_init(struct utillib_char_scanner *self, FILE *file) {

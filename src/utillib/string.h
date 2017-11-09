@@ -24,23 +24,15 @@
 #include "enum.h"
 #include <stdbool.h> /* for bool */
 #include <stddef.h>  /* for size_t */
+#include <stdio.h>   /* FILE* */
+                     /**
+                      * \file utillib/string.h
+                      */
 
-/**
- * \file utillib/string.h
- */
-
-/**
- * \struct utillib_string
- * \invariant size+1 <= capacity if size!=0
- * else size == capacity == 0.
- * \invariant size == strlen(c_str) if
- * c_str!=NULL else size == 0.
- */
-
-typedef struct utillib_string {
+struct utillib_string {
   char *c_str;
   size_t size, capacity;
-} utillib_string;
+};
 
 UTILLIB_ENUM_BEGIN(string_cmpop)
 UTILLIB_ENUM_ELEM(STRING_EQ)
@@ -52,24 +44,24 @@ UTILLIB_ENUM_ELEM(STRING_LT)
 UTILLIB_ENUM_END(string_cmpop)
 
 /* constructor destructor */
-void utillib_string_init(utillib_string *);
-void utillib_string_init_c_str(utillib_string *, char const *);
-void utillib_string_destroy(utillib_string *);
+void utillib_string_init(struct utillib_string *);
+void utillib_string_init_c_str(struct utillib_string *, char const *);
+void utillib_string_destroy(struct utillib_string *);
 
 /* observer */
-size_t utillib_string_size(utillib_string *);
-size_t utillib_string_capacity(utillib_string *);
-bool utillib_string_empty(utillib_string *);
-char const *utillib_string_c_str(utillib_string *);
-bool utillib_string_richcmp(utillib_string *, utillib_string *,
+size_t utillib_string_size(struct utillib_string *);
+size_t utillib_string_capacity(struct utillib_string *);
+bool utillib_string_empty(struct utillib_string *);
+char const *utillib_string_c_str(struct utillib_string *);
+bool utillib_string_richcmp(struct utillib_string *, struct utillib_string *,
                             enum string_cmpop);
 
 /* modifier */
-void utillib_string_clear(utillib_string *);
-void utillib_string_erase_last(utillib_string *);
-void utillib_string_replace_last(utillib_string *, char);
-void utillib_string_reserve(utillib_string *, size_t);
-void utillib_string_append(utillib_string *, char const *);
-void utillib_string_append_char(utillib_string *, char);
-
+void utillib_string_clear(struct utillib_string *);
+void utillib_string_erase_last(struct utillib_string *);
+void utillib_string_replace_last(struct utillib_string *, char);
+void utillib_string_reserve(struct utillib_string *, size_t);
+void utillib_string_append(struct utillib_string *, char const *);
+void utillib_string_append_char(struct utillib_string *, char);
+FILE *utillib_string_fmemopen(struct utillib_string *);
 #endif /* UTILLIB_STRING_H */

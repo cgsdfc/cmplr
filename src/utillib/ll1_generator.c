@@ -20,11 +20,11 @@
 */
 
 #include "ll1_generator.h"
-#include "ll1_builder.h"
 #include "json.h"
-#include "string.h"
+#include "ll1_builder.h"
 #include "print.h"
 #include "rule.h"
+#include "string.h"
 
 /**
  * \function ll1_generator_print_EFOLLOW
@@ -33,24 +33,24 @@
  * The layout should be:
  * Rule A, FIRST A, Symbol B, FOLLOW B
  */
-static void ll1_generator_print_EFOLLOW(struct utillib_json_value_t *const *errs)
-{
+static void
+ll1_generator_print_EFOLLOW(struct utillib_json_value_t *const *errs) {
   struct utillib_string str;
-  for (int i=0; i< UT_LL1_ERR_VAL_MAX; ++i) {
+  for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
     utillib_json_tostring(errs[i], &str);
-    char const * msg=utillib_string_c_str(&str);
-    switch(i) {
+    char const *msg = utillib_string_c_str(&str);
+    switch (i) {
     case 0:
-      utillib_error_printf("Production in conflict is %s\n",msg);
+      utillib_error_printf("Production in conflict is %s\n", msg);
       break;
     case 1:
-      utillib_error_printf("The FIRST set of which is %s\n",msg);
+      utillib_error_printf("The FIRST set of which is %s\n", msg);
       break;
     case 2:
-      utillib_error_printf("The Symbol in conflict is %s\n",msg);
+      utillib_error_printf("The Symbol in conflict is %s\n", msg);
       break;
     case 3:
-      utillib_error_printf("The FOLLOW set of which is %s\n",msg);
+      utillib_error_printf("The FOLLOW set of which is %s\n", msg);
       break;
     }
   }
@@ -64,20 +64,20 @@ static void ll1_generator_print_EFOLLOW(struct utillib_json_value_t *const *errs
  * Rule A, FIRST A, Rule B, FIRST B.
  */
 
-static void ll1_generator_print_EFIRST(struct utillib_json_value_t *const *errs)
-{
+static void
+ll1_generator_print_EFIRST(struct utillib_json_value_t *const *errs) {
   struct utillib_string str;
-  for (int i=0; i< UT_LL1_ERR_VAL_MAX; ++i) {
+  for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
     utillib_json_tostring(errs[i], &str);
-    char const * msg=utillib_string_c_str(&str);
+    char const *msg = utillib_string_c_str(&str);
     switch (i) {
     case 0:
     case 2:
-      utillib_error_printf("Production in conflict is %s\n",msg);
+      utillib_error_printf("Production in conflict is %s\n", msg);
       break;
     case 3:
     case 1:
-      utillib_error_printf("FIRST set of which is %s\n",msg);
+      utillib_error_printf("FIRST set of which is %s\n", msg);
       break;
     }
     utillib_string_destroy(&str);
@@ -89,9 +89,10 @@ static void ll1_generator_print_EFIRST(struct utillib_json_value_t *const *errs)
  * Frontend of the Utillib.LL(1).
  */
 
-static void ll1_generator_print_error(struct utillib_ll1_builder_error const* error)
-{
-  utillib_error_printf("ERROR: %s\n", utillib_ll1_error_kind_tostring(error->kind));
+static void
+ll1_generator_print_error(struct utillib_ll1_builder_error const *error) {
+  utillib_error_printf("ERROR: %s\n",
+                       utillib_ll1_error_kind_tostring(error->kind));
   switch (error->kind) {
   case UT_LL1_EFIRST:
     ll1_generator_print_EFIRST(error->values);
@@ -103,14 +104,14 @@ static void ll1_generator_print_error(struct utillib_ll1_builder_error const* er
   utillib_error_printf("\n");
 }
 
-static bool ll1_generator_check_table(struct utillib_ll1_generator *self)
-{
-  struct utillib_ll1_builder * builder=&self->builder;
-  size_t error_size=utillib_ll1_builder_check(builder);
+static bool ll1_generator_check_table(struct utillib_ll1_generator *self) {
+  struct utillib_ll1_builder *builder = &self->builder;
+  size_t error_size = utillib_ll1_builder_check(builder);
   if (0 == error_size)
     return true;
-  struct utillib_vector const * errors=&builder->errors;
-  UTILLIB_VECTOR_FOREACH(struct utillib_ll1_builder_error const *, err, errors) {
+  struct utillib_vector const *errors = &builder->errors;
+  UTILLIB_VECTOR_FOREACH(struct utillib_ll1_builder_error const *, err,
+                         errors) {
     ll1_generator_print_error(err);
   }
   utillib_error_printf("%lu errors detected.\n", error_size);
@@ -123,61 +124,56 @@ static bool ll1_generator_check_table(struct utillib_ll1_generator *self)
  * `int[][]' format.
  */
 
-static void ll1_generator_write_table(
-    struct utillib_ll1_generator *self, FILE *file)
-{
-  struct utillib_rule_index const * rule_index=&self->rule_index;
+static void ll1_generator_write_table(struct utillib_ll1_generator *self,
+                                      FILE *file) {
+  struct utillib_rule_index const *rule_index = &self->rule_index;
 
   fputs("static int ll1_parser_table", file);
-  fprintf(file, "[%lu][%lu]={\n", 
-      rule_index->non_terminals_size,
-      rule_index->terminals_size);
+  fprintf(file, "[%lu][%lu]={\n", rule_index->non_terminals_size,
+          rule_index->terminals_size);
 
-  for (int i=0; i< rule_index->non_terminals_size; ++i) {
+  for (int i = 0; i < rule_index->non_terminals_size; ++i) {
     fputs("\t{ ", file);
-    for (int j=0; j< rule_index->terminals_size; ++j) {
-      struct utillib_rule const * rule=utillib_vector2_at(&self->table, i, j);
+    for (int j = 0; j < rule_index->terminals_size; ++j) {
+      struct utillib_rule const *rule = utillib_vector2_at(&self->table, i, j);
       int rule_id;
       if (NULL == rule) {
-        rule_id=UT_RULE_NULL;
+        rule_id = UT_RULE_NULL;
       } else if (rule == UTILLIB_RULE_EPS) {
-        rule_id=UT_RULE_EPS;
+        rule_id = UT_RULE_EPS;
       } else {
-        rule_id=rule->id;
+        rule_id = rule->id;
       }
-      fprintf (file, "%4d, ", rule_id);
+      fprintf(file, "%4d, ", rule_id);
     }
     fputs("},\n", file);
   }
   fputs("};\n", file);
 }
 
-static void ll1_generator_write(struct utillib_ll1_generator *self, FILE *file)
-{
+static void ll1_generator_write(struct utillib_ll1_generator *self,
+                                FILE *file) {
   fputs(utillib_LICENSE_str, file);
-  fputs("\n",file);
+  fputs("\n", file);
   fputs("/* LL(1) parser table */\n"
         "/* Generated by Utillib.LL(1). DONNOT EDIT !*/\n",
         file);
-  ll1_generator_write_table(self,file);
+  ll1_generator_write_table(self, file);
 }
 
-void utillib_ll1_generator_init_from_code(struct utillib_ll1_generator *self,
-    struct utillib_symbol const *symbols,
-    struct utillib_rule_literal const *rules)
-{
+void utillib_ll1_generator_init_from_code(
+    struct utillib_ll1_generator *self, struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules) {
   utillib_rule_index_init(&self->rule_index, symbols, rules);
   utillib_ll1_builder_init(&self->builder, &self->rule_index);
   utillib_ll1_builder_build_table(&self->builder, &self->table);
 }
 
-
 bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
-    const char * filename)
-{
-  if (!ll1_generator_check_table(self)) 
+                                    const char *filename) {
+  if (!ll1_generator_check_table(self))
     return false;
-  FILE *file=fopen(filename, "w");
+  FILE *file = fopen(filename, "w");
   if (!file) {
     perror("ERROR");
     return false;
@@ -187,10 +183,8 @@ bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
   return true;
 }
 
-void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self)
-{
+void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self) {
   utillib_rule_index_destroy(&self->rule_index);
   utillib_ll1_builder_destroy(&self->builder);
   utillib_vector2_destroy(&self->table);
 }
-

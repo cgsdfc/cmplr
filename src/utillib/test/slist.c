@@ -22,8 +22,8 @@
 #include <utillib/test.h>
 
 UTILLIB_TEST(iterator_init_null) {
- struct utillib_slist_iterator iter;
- utillib_slist_iterator_init_null(&iter);
+  struct utillib_slist_iterator iter;
+  utillib_slist_iterator_init_null(&iter);
   UTILLIB_TEST_EXPECT(utillib_slist_iterator_has_next(&iter) == false);
 }
 

@@ -60,5 +60,4 @@ extern const struct utillib_rule_literal non_ll1_sample_2_rules[];
 extern const size_t non_ll1_sample_2_input_1[];
 extern const size_t non_ll1_sample_2_input_2[];
 
-
 #endif // UTILLIB_TEST_NON_LL1_SAMPLE_2_H
