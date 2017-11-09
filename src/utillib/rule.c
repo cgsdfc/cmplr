@@ -258,12 +258,6 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
 /**
  * Implements JSON format interface.
  */
-static struct utillib_json_value_t *
-rule_symbol_json_create(struct utillib_symbol const *self)
-{
-  char const *name=utillib_symbol_name(self);
-  return utillib_json_string_create(&name, 0);
-}
 
 struct utillib_json_value_t *utillib_rule_json_object_create(void const* base,
                                                       size_t offset) {
@@ -276,9 +270,9 @@ struct utillib_json_value_t *utillib_rule_json_object_create(void const* base,
   struct utillib_json_value_t *array=utillib_json_array_create_empty();
 
   utillib_json_object_push_back(object, 
-      "LHS", rule_symbol_json_create(self->LHS));
+      "LHS", utillib_symbol_json_string_create(self->LHS));
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const*, symbol, &self->RHS) {
-    utillib_json_array_push_back(array, rule_symbol_json_create(symbol));
+    utillib_json_array_push_back(array, utillib_symbol_json_string_create(symbol));
   }
   utillib_json_object_push_back(object, "RHS", array);
   return object;
@@ -306,7 +300,7 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,
                                rule_index_rule_json_array_create_from_vector)
 UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields);
 
-struct utillib_json_value_t *utillib_rule_index_json_object_create(void const*base,
-                                                            size_t offset) {
-  return utillib_json_object_create(base, offset, RuleIndex_Fields);
+struct utillib_json_value_t *utillib_rule_index_json_object_create(struct utillib_rule_index const * self)
+{
+    return utillib_json_object_create(self, 0, RuleIndex_Fields);
 }

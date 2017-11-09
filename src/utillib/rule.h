@@ -124,10 +124,11 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self);
 
-utillib_json_value_t *utillib_rule_json_object_create(void const*base,
+struct utillib_json_value_t *utillib_rule_json_object_create(void const*base,
                                                       size_t offset);
-utillib_json_value_t *utillib_rule_index_json_object_create(void const*base,
-                                                            size_t offset);
+
+struct utillib_json_value_t *utillib_rule_index_json_object_create(
+    struct utillib_rule_index const * self);
 
 size_t utillib_rule_index_symbol_index(struct utillib_rule_index const *self,
                                        struct utillib_symbol const *symbol);

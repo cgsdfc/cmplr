@@ -59,7 +59,6 @@ Student students[] = {{.name = "John", .id = 12, .gpa = 3.2},
  */
 UTILLIB_TEST_AUX(tostring_helper, utillib_json_value_t *val) {
   utillib_string s;
-  utillib_string_init(&s);
   utillib_json_tostring(val, &s);
   UTILLIB_TEST_MESSAGE("tostring: `%s'", utillib_string_c_str(&s));
   utillib_json_value_destroy(val);

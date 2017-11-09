@@ -369,7 +369,7 @@ static void json_value_tostring(struct utillib_json_value_t const*, struct utill
  */
 
 static void json_array_tostring(struct utillib_json_array_t const *self,
-                                utillib_string *string) {
+                                struct utillib_string *string) {
   utillib_string_append(string, "[");
   if (utillib_vector_empty(&self->elements)) {
     utillib_string_append(string, "]");
@@ -445,7 +445,15 @@ static void json_value_tostring(struct utillib_json_value_t const *self,
   }
 }
 
+/**
+ * \funtion utillib_json_tostring
+ * Serializes the JSON value to a string.
+ * Before that, it initializes the string, so **do not**
+ * initialize the string yourself.
+ */
+
 void utillib_json_tostring(struct utillib_json_value_t const *self, struct utillib_string *str) {
+  utillib_string_init(str);
   json_value_tostring(self, str);
 }
 
@@ -487,7 +495,6 @@ void utillib_json_object_push_back(struct utillib_json_value_t *self, char const
                                    struct utillib_json_value_t const *value) {
   assert(self->kind == UT_JSON_OBJECT);
   struct utillib_json_object_t *object = self->as_ptr;
-  /* XXX */
   utillib_vector_push_back(&object->members, utillib_make_pair(key, (void*) value));
 }
 
@@ -497,8 +504,7 @@ void utillib_json_object_push_back(struct utillib_json_value_t *self, char const
  * and `utillib_printer_print_json'.
  */
 void utillib_json_pretty_print(struct utillib_json_value_t const *self, FILE *file) {
-  utillib_string json;
-  utillib_string_init(&json);
+  struct utillib_string json;
   utillib_printer_t print;
   utillib_printer_init(&print, file, 2);
   utillib_json_tostring(self, &json);

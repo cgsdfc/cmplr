@@ -607,8 +607,8 @@ ll1_builder_error_create_as_EFIRST(
 {
   struct utillib_ll1_builder_error * self=malloc(sizeof *self);
   self->values[0]=utillib_rule_json_object_create(lhs_rule, 0);
-  self->values[1]=utillib_rule_json_object_create(rhs_rule, 0);
-  self->values[2]=ll1_builder_set_json_array_create(lhs_FIRST, rule_index, true);
+  self->values[1]=ll1_builder_set_json_array_create(lhs_FIRST, rule_index, true);
+  self->values[2]=utillib_rule_json_object_create(rhs_rule, 0);
   self->values[3]=ll1_builder_set_json_array_create(rhs_FIRST, rule_index, true);
   self->kind=UT_LL1_EFIRST;
   return self;
@@ -624,15 +624,17 @@ ll1_builder_error_create_as_EFIRST(
 static struct utillib_ll1_builder_error *
 ll1_builder_error_create_as_EFOLLOW(
     struct utillib_rule_index const *rule_index,
-    struct utillib_rule const * eps_rule,
-    struct utillib_ll1_set const * FIRST,
-    struct utillib_ll1_set const * FOLLOW)
+    struct utillib_rule const * lhs_rule,
+    struct utillib_ll1_set const * lhs_FIRST,
+    struct utillib_symbol const * rhs_symbol,
+    struct utillib_ll1_set const * rhs_FOLLOW)
 {
   struct utillib_ll1_builder_error * self=malloc(sizeof *self);
   self->kind=UT_LL1_EFOLLOW;
-  self->values[0]=utillib_rule_index_json_object_create(eps_rule, 0);
-  self->values[1]=ll1_builder_set_json_array_create(FIRST, rule_index, true);
-  self->values[2]=ll1_builder_set_json_array_create(FOLLOW, rule_index, false);
+  self->values[0]=utillib_rule_json_object_create(lhs_rule, 0);
+  self->values[1]=ll1_builder_set_json_array_create(lhs_FIRST, rule_index, true);
+  self->values[2]=utillib_symbol_json_string_create(rhs_symbol);
+  self->values[3]=ll1_builder_set_json_array_create(rhs_FOLLOW, rule_index, false);
   return self;
 }
 
@@ -667,7 +669,7 @@ static void ll1_builder_check_impl(struct utillib_ll1_builder *self,
   struct utillib_rule_index const* rule_index=self->rule_index;
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const* , foo_rule, same_LHS_rules) {
     UTILLIB_VECTOR_FOREACH(struct utillib_rule const* , bar_rule, same_LHS_rules) {
-      if (foo_rule->id == bar_rule->id)
+      if (foo_rule->id <= bar_rule->id)
         continue;
       struct utillib_ll1_set const * foo_FIRST=ll1_builder_FIRST_RULE_get(self, foo_rule);
       struct utillib_ll1_set const * bar_FIRST=ll1_builder_FIRST_RULE_get(self, bar_rule);
@@ -680,7 +682,7 @@ static void ll1_builder_check_impl(struct utillib_ll1_builder *self,
       if (foo_FIRST->flag && utillib_ll1_set_intersect(bar_FIRST, LHS_FOLLOW, false)) {
         utillib_vector_push_back(&self->errors, 
         ll1_builder_error_create_as_EFOLLOW(rule_index,
-          foo_rule, bar_FIRST, LHS_FOLLOW));
+          bar_rule, bar_FIRST, foo_rule->LHS, LHS_FOLLOW));
       }
     }
   }

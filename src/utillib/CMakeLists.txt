@@ -32,6 +32,8 @@ link_libraries(utillib)
 
 add_executable(utillib_test 
   ./test/ll1_generator.c
+  ./test/non_ll1_sample_1.c
+  ./test/non_ll1_sample_2.c
   ./test/ll1_sample_1.c
   ./test/ll1_sample_2.c
   ./test/scanner.c
