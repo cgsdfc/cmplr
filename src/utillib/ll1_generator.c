@@ -128,12 +128,10 @@ static void ll1_generator_write_table(struct utillib_ll1_generator *self,
                                       FILE *file) {
   struct utillib_rule_index const *rule_index = &self->rule_index;
 
-  fputs("static int ll1_parser_table", file);
-  fprintf(file, "[%lu][%lu]={\n", rule_index->non_terminals_size,
-          rule_index->terminals_size);
+  fputs("static int ll1_parser_table[]={\n", file);
 
   for (int i = 0; i < rule_index->non_terminals_size; ++i) {
-    fputs("\t{ ", file);
+    fputs("\t", file);
     for (int j = 0; j < rule_index->terminals_size; ++j) {
       struct utillib_rule const *rule = utillib_vector2_at(&self->table, i, j);
       int rule_id;
@@ -146,7 +144,7 @@ static void ll1_generator_write_table(struct utillib_ll1_generator *self,
       }
       fprintf(file, "%4d, ", rule_id);
     }
-    fputs("},\n", file);
+    fputs("\n", file);
   }
   fputs("};\n", file);
 }

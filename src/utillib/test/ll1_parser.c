@@ -20,6 +20,8 @@
 */
 
 #include "ll1_sample_1.h"
+#include "ll1_sample_1_table.c"
+
 #include <utillib/ll1_builder.h>
 #include <utillib/ll1_parser.h>
 #include <utillib/scanner.h>
@@ -56,8 +58,39 @@ UTILLIB_TEST(ll1_parser_parse) {
   UTILLIB_TEST_EXPECT_EQ(result, UT_LL1_PARSER_OK);
 }
 
+/**
+ * \test rule_index_load_table
+ * Tests if the loaded table (from generated source)
+ * is the same with the directly built one.
+ * To achieves this, the generated source must be 
+ * compiled into this test.
+ * Notes since the built one and generated/loaded one
+ * share the same rule index, comparing their elements
+ * as pointer suffices.
+ * 
+ * XXX Use feature of build system to do this cleaner
+ */
+
+UTILLIB_TEST(rule_index_load_table)
+{
+  struct utillib_vector2 loaded_table;
+  utillib_rule_index_load_table(&rule_index, &loaded_table, 
+      ll1_parser_table);
+  UTILLIB_TEST_ASSERT_EQ(loaded_table.nrow, ll1_table.nrow);
+  UTILLIB_TEST_ASSERT_EQ(loaded_table.ncol, ll1_table.ncol);
+
+  for (int i=0; i<ll1_table.nrow; ++i) {
+    for (int j=0; j<ll1_table.ncol; ++j) {
+      void const * actual=utillib_vector2_at(&loaded_table, i, j);
+      void const * expected=utillib_vector2_at(&ll1_table, i , j);
+      UTILLIB_TEST_ASSERT_EQ(actual, expected);
+    }
+  }
+}
+
 UTILLIB_TEST_DEFINE(Utillib_LL1Parser) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Parser)
+  UTILLIB_TEST_RUN(rule_index_load_table)
   UTILLIB_TEST_RUN(ll1_parser_parse)
   UTILLIB_TEST_END(Utillib_LL1Parser)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_parser)

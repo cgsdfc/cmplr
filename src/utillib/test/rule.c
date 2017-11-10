@@ -71,6 +71,15 @@ UTILLIB_TEST(rule_index_rule_id) {
   }
 }
 
+UTILLIB_TEST(rule_index_build_LHS_index)
+{
+
+
+
+
+
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_BEGIN(Utillib_Rule)
   UTILLIB_TEST_RUN(rule_index_init)

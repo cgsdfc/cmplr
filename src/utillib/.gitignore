@@ -27,3 +27,4 @@ utillib_test
 *.tar.gz
 autoscan.log
 configure.scan
+*_table.c
