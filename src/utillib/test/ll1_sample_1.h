@@ -69,6 +69,4 @@ extern const size_t ll1_sample_1_table[][LL1_SAMPLE_1_EXTEND];
 extern const size_t ll1_sample_1_input_1[];
 extern const size_t ll1_sample_1_input_2[];
 
-extern const utillib_ll1_parser_callback_t *ll1_sample_1_callbacks[];
-
 #endif // UTILLIB_TEST_LL1_SAMPLE_1_H

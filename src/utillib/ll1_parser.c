@@ -20,67 +20,52 @@
 */
 #include "ll1_parser.h"
 #include <stdlib.h>
+#include <assert.h>
+
+UTILLIB_ETAB_BEGIN(utillib_ll1_parser_error_kind)
+UTILLIB_ETAB_ELEM_INIT(UT_LL1_ENORULE, "no rule can be expanded")
+UTILLIB_ETAB_ELEM_INIT(UT_LL1_EBADTOKEN, "unexpected token")
+UTILLIB_ETAB_END(utillib_ll1_parser_error_kind);
+
+#define ll1_parser_rule_handler_check(HANDLER) do {\
+  assert ((HANDLER) && "Rule handler should not be NULL");\
+} while (0)
 
 /**
- * \function ll1_parser_context_create
+ * \function ll1_parser_expand_rule
+ * Takes a rule, replaces the top of the symbol stack with
+ * the RHS of the rule, the components of which are pushed
+ * in reversed order onto the stack.
+ * And calls the `rule_handler' of the popped-off symbol.
  */
-static struct utillib_ll1_parser_context *
-ll1_parser_context_create(size_t RHS_count, size_t rule_id) {
-  struct utillib_ll1_parser_context *self = malloc(sizeof *self);
-  self->RHS_count = RHS_count;
-  self->rule_id = rule_id;
-  return self;
-}
 
-/**
- * \function ll1_parser_context_destroy
- */
-static void
-ll1_parser_context_destroy(struct utillib_ll1_parser_context *self) {
-  free(self);
-}
-
-/**
- * \function ll1_parser_match_symbol
- */
-static void ll1_parser_match_symbol(struct utillib_ll1_parser *self) {
-  utillib_vector_pop_back(&self->symbol_stack);
-  /* struct utillib_ll1_parser_context *context = */
-  /*     utillib_vector_back(&self->context); */
-  /* --context->RHS_count; */
-  /* if (context->RHS_count == 0) { */
-  /*   printf("Reduce rule `%lu'\n", 1 + context->rule_id); */
-  /*   utillib_ll1_parser_callback_t *callback =
-   * self->callbacks[context->rule_id]; */
-  /*   callback(self->client_data, self); */
-  /*   ll1_parser_context_destroy(context); */
-  /*   utillib_vector_pop_back(&self->context); */
-  /* } */
-}
-
-/**
- * \function ll1_parser_start_deduct
- */
-static void ll1_parser_start_deduct(struct utillib_ll1_parser *self,
+static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
                                     struct utillib_rule const *rule) {
   if (rule == UTILLIB_RULE_EPS) {
-    utillib_vector_push_back(&self->tree_stack, NULL);
+    struct utillib_symbol const * LHS=utillib_vector_back(&self->symbol_stack);
+    self->terminal_handler(self->client_data, UT_SYM_EPS, LHS);
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
-  printf("Deduct Rule `%lu'\n", 1 + utillib_rule_id(rule));
-  struct utillib_symbol const *LHS = utillib_rule_lhs(rule);
-  struct utillib_vector const *RHS = utillib_rule_rhs(rule);
-  size_t RHS_size = utillib_vector_size(RHS);
-  /* utillib_vector_push_back( */
-  /*     &self->context, */
-  /*     ll1_parser_context_create(RHS_size, utillib_rule_id(rule))); */
+  utillib_ll1_parser_rule_handler const * handler=self->rule_handlers[rule->id];
+  ll1_parser_rule_handler_check(handler);
+  handler(self->client_data);
+  
+
   utillib_vector_pop_back(&self->symbol_stack);
+  struct utillib_vector const * RHS=&rule->RHS;
+  size_t RHS_size=utillib_vector_size(RHS);
   for (int i = RHS_size - 1; i >= 0; --i) {
     struct utillib_symbol *symbol = utillib_vector_at(RHS, i);
     utillib_vector_push_back(&self->symbol_stack, symbol);
   }
 }
+
+/**
+ * \function ll1_parser_symbol_stack_init
+ * Initializes the symbol stack as [EOF, TOP].
+ * This is required by LL1 parsing.
+ */
 
 static void ll1_parser_symbol_stack_init(struct utillib_ll1_parser *self) {
   utillib_vector_push_back(&self->symbol_stack, UTILLIB_SYMBOL_EOF);
@@ -88,6 +73,15 @@ static void ll1_parser_symbol_stack_init(struct utillib_ll1_parser *self) {
                            utillib_rule_index_top_symbol(self->rule_index));
 }
 
+/**
+ * \function ll1_parser_table_lookup
+ * Looks up one rule from the table.
+ * \param input_symbol The lookahead terminal symbol. Used as
+ * column index.
+ * \param top_symbol The stack-top non terminal symbol. Used as
+ * row index.
+ * \return What is at [row][col] in the table. May be NULL.
+ */
 static struct utillib_rule *
 ll1_parser_table_lookup(struct utillib_ll1_parser *self,
                         struct utillib_symbol const *input_symbol,
@@ -104,39 +98,95 @@ ll1_parser_table_lookup(struct utillib_ll1_parser *self,
 
 /**
  * \function utillib_ll1_parser_init
- */
+ * Initializes a LL1 parser. The parser works as follow.
+ * 
+ * <para>Semantic actions: when one lookahead symbol matches 
+ * a terminal symbol on stack top, both symbols are shift away
+ * and the `terminal_handler' is called to notify `client_data';
+ * when the lookahead symbol causes the parser to expand the non
+ * terminal symbol on stack top with a rule where it shows up as
+ * LHS, the `rule_handler' at that rule is called.
+ * </para>
+ * 
+ * <para>Error handling: since the scanner it uses should handle scanning
+ * error transparently, the types of errors the parser may encounter
+ * are: 1. stack top terminal symbol mismatches the lookahead one. This
+ * means unexpected token shows up. 2. Lookahead symbol leads to a NULL
+ * rule, which in turn means unexpected token. 
+ * The current implementation simply skips that error token in both cases,
+ * passes on the error information to `client_data' and continues as if error
+ * did not happen. That is, if it is case 1, it pretends that the token matches,
+ * and still shifts off the stack top symbol. If it is case 2, it discards the error
+ * token and keep the symbol stack unchanged.
+ * </para>
+ * 
+ *<para> In both cases, it is the client's responsibility to assemble readable error messages
+ * from the hints of parser. The parser simpily does the skipping and notifies client.
+ * In the future, more sophisticated recovery may let client make more decisions based 
+ * on the knowledge of the grammar structure, .i.e., shipping to different token according
+ * to the involved rule.
+ * <\para>
+ * 
+ */ 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 *table, void *client_data,
-                             const utillib_ll1_parser_callback_t **callbacks) {
+                             struct utillib_vector2 const*table, 
+                             void *client_data,
+                             utillib_ll1_parser_terminal_handler const * terminal_handler,
+                             utillib_ll1_parser_rule_handler const ** rule_handlers,
+                             utillib_ll1_parser_error_handler const * error_handler)
+{
   utillib_vector_init(&self->symbol_stack);
-  utillib_vector_init(&self->error_stack);
-  utillib_vector_init(&self->tree_stack);
-  utillib_vector_init(&self->context);
-  utillib_vector_init(&self->rule_seq);
+  utillib_vector_init(&self->errors);
   self->rule_index = rule_index;
   self->table = table;
-  self->callbacks = callbacks;
   self->client_data = client_data;
+  self->terminal_handler=terminal_handler;
+  self->rule_handlers=rule_handlers;
+  self->error_handler=error_handler;
 }
+
+static struct utillib_ll1_parser_error *
+ll1_parser_error_create(int kind, 
+  struct utillib_symbol const * lookahead_symbol,
+  struct utillib_symbol const * stack_top_symbol)
+{
+  struct utillib_ll1_parser_error * self=malloc(sizeof *self);
+  self->lookahead_symbol=lookahead_symbol;
+  self->stack_top_symbol=stack_top_symbol;
+  self->kind=kind;
+  return self;
+}
+
+static void ll1_parser_error_destroy(struct utillib_ll1_parser_error *self)
+{
+  free(self);
+}
+
+static void ll1_parser_error_handle(struct utillib_ll1_parser *self, 
+    struct utillib_ll1_parser_error const *err)
+{
+  utillib_vector_push_back(&self->errors, err);
+  self->error_handler(self->client_data, err); 
+}
+
+/*
+ * Public interface
+ */
 
 /**
  * \function utillib_ll1_parser_destroy
  */
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) {
-  utillib_vector_destroy(&self->error_stack);
   utillib_vector_destroy(&self->symbol_stack);
-  utillib_vector_destroy(&self->tree_stack);
-  utillib_vector_destroy(&self->rule_seq);
-  utillib_vector_destroy_owning(&self->context,
-                                (void *)ll1_parser_context_destroy);
-  utillib_vector2_destroy(self->table);
+  utillib_vector_destroy_owning(&self->errors, 
+      (void*) ll1_parser_error_destroy);
 }
 
 /**
  * \function utillib_ll1_parser_parse
  */
-int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
+void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   ll1_parser_symbol_stack_init(self);
@@ -151,22 +201,28 @@ int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     size_t top_kind = utillib_symbol_kind(top_sym);
     if (top_kind == UT_SYMBOL_TERMINAL) {
       if (top_val == UT_SYM_EOF && isym == top_val) {
-        return UT_LL1_PARSER_OK;
+        return;
       }
       if (top_val == isym) {
+        void const * data=scanner->getsymbol(input);
         printf("Match Symbol `%s'\n", utillib_symbol_name(isymbol));
-        utillib_vector_pop_back(&self->symbol_stack);
-        scanner->shiftaway(input);
-        continue;
+        self->terminal_handler(self->client_data, isym, data);
+      } else {
+        ll1_parser_error_handle(self, ll1_parser_error_create(
+              UT_LL1_EBADTOKEN, isymbol, top_sym));
       }
-      return UT_LL1_PARSER_ERR;
+      utillib_vector_pop_back(&self->symbol_stack);
+      scanner->shiftaway(input);
     } else { /* non-terminal */
       struct utillib_rule const *rule =
           ll1_parser_table_lookup(self, isymbol, top_sym);
-      if (!rule) {
-        return UT_LL1_PARSER_ERR;
+      if (rule) {
+        ll1_parser_expand_rule(self, rule);
+      } else { /* rule == NULL */
+        ll1_parser_error_handle(self, ll1_parser_error_create(
+              UT_LL1_ENORULE, isymbol, top_sym));
+        scanner->shiftaway(input);
       }
-      ll1_parser_start_deduct(self, rule);
     }
   }
 }

@@ -27,19 +27,20 @@
 #include "vector2.h"
 
 UTILLIB_ENUM_BEGIN(utillib_ll1_parser_error_kind)
-UTILLIB_ENUM_ELEM(UT_LL1_PARSER_OK)
-UTILLIB_ENUM_ELEM(UT_LL1_PARSER_ERR)
+UTILLIB_ENUM_ELEM_INIT(UT_LL1_ENORULE, 1)
+UTILLIB_ENUM_ELEM(UT_LL1_EBADTOKEN)
 UTILLIB_ENUM_END(utillib_ll1_parser_error_kind);
 
-struct utillib_ll1_parser_error {};
-
-struct utillib_ll1_parser_context {
-  size_t RHS_count;
-  size_t rule_id;
+struct utillib_ll1_parser_error {
+  int kind;
+  struct utillib_symbol const * lookahead_symbol;
+  struct utillib_symbol const * stack_top_symbol;
 };
 
-struct utillib_ll1_parser;
-typedef int(utillib_ll1_parser_callback_t)(void *, struct utillib_ll1_parser *);
+typedef void (utillib_ll1_parser_terminal_handler) (void *client_data, int code, void const * semantic);
+typedef void (utillib_ll1_parser_rule_handler) (void *client_data);
+typedef void (utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
+
 
 /**
  * \struct utillib_ll1_parser
@@ -48,22 +49,30 @@ typedef int(utillib_ll1_parser_callback_t)(void *, struct utillib_ll1_parser *);
  */
 
 struct utillib_ll1_parser {
-  void *client_data;
-  struct utillib_vector tree_stack;
-  struct utillib_vector context;
+  /* LL1 parsing related */
   struct utillib_vector symbol_stack;
-  struct utillib_vector error_stack;
-  struct utillib_vector rule_seq;
+  struct utillib_vector errors;
   struct utillib_rule_index const *rule_index;
-  struct utillib_vector2 *table;
-  utillib_ll1_parser_callback_t const **callbacks;
+  struct utillib_vector2 const *table;
+
+  /* Semantic actions related */
+  void *client_data;
+  utillib_ll1_parser_terminal_handler const * 
+  terminal_handler;
+  utillib_ll1_parser_error_handler const *
+  error_handler;
+  utillib_ll1_parser_rule_handler const ** rule_handlers;
 };
 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 *table, void *client_data,
-                             const utillib_ll1_parser_callback_t **callbacks);
+                             struct utillib_vector2 const *table, 
+                             void *client_data,
+                             utillib_ll1_parser_terminal_handler const * terminal_handler,
+                             utillib_ll1_parser_rule_handler const ** rule_handlers,
+                             utillib_ll1_parser_error_handler const * error_handler);
+
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
-int utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
+void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner);
 #endif /* UTILLIB_LL1_PARSER_H */
