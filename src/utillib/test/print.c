@@ -24,7 +24,7 @@
 UTILLIB_TEST(unbalanced_json) {
 
   char const *unbalanced = "[[[XXX]]";
-  utillib_printer_t printer;
+  struct utillib_printer_t printer;
   utillib_printer_init(&printer, stdout, 4);
   utillib_printer_print_json(&printer, unbalanced);
 }

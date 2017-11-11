@@ -47,7 +47,7 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
-  utillib_ll1_parser_rule_handler const * handler=self->rule_handlers[rule->id];
+  utillib_ll1_parser_rule_handler handler=self->rule_handlers[rule->id];
   if (handler)
     handler(self->client_data);
   
@@ -132,9 +132,9 @@ void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
                              struct utillib_vector2 const*table, 
                              void *client_data,
-                             utillib_ll1_parser_terminal_handler const * terminal_handler,
-                             utillib_ll1_parser_rule_handler const ** rule_handlers,
-                             utillib_ll1_parser_error_handler const * error_handler)
+                             utillib_ll1_parser_terminal_handler terminal_handler,
+                             utillib_ll1_parser_rule_handler * rule_handlers,
+                             utillib_ll1_parser_error_handler  error_handler)
 {
   utillib_vector_init(&self->symbol_stack);
   utillib_vector_init(&self->errors);
@@ -166,8 +166,9 @@ static void ll1_parser_error_destroy(struct utillib_ll1_parser_error *self)
 static void ll1_parser_error_handle(struct utillib_ll1_parser *self, 
     struct utillib_ll1_parser_error const *err)
 {
-  utillib_vector_push_back(&self->errors, err);
+  printf("this is not called\n");
   self->error_handler(self->client_data, err); 
+  utillib_vector_push_back(&self->errors, err);
 }
 
 /*
@@ -186,7 +187,7 @@ void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) {
 /**
  * \function utillib_ll1_parser_parse
  */
-void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
+bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   ll1_parser_symbol_stack_init(self);
@@ -200,12 +201,18 @@ void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     input_symbol_value = scanner->lookahead(input);
     input_symbol = utillib_rule_index_symbol_at(rule_index, input_symbol_value);
     top_symbol = utillib_vector_back(&self->symbol_stack);
+    if (input_symbol_value == UT_SYM_EOF) {
+      if (input_symbol_value == top_symbol->value) {
+        return true;
+      }
+      ll1_parser_error_handle(self, ll1_parser_error_create(
+            UT_LL1_EBADTOKEN, input_symbol, top_symbol));
+      return false;
+    }
+    assert(input_symbol->kind == UT_SYMBOL_TERMINAL
+        && "Input can only be terminal");
 
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
-      if (top_symbol->value == UT_SYM_EOF && 
-          input_symbol_value == top_symbol->value) {
-        return;
-      }
       if (top_symbol->value == input_symbol_value) {
         semantic=scanner->semantic(input);
         self->terminal_handler(self->client_data,

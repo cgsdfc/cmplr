@@ -57,11 +57,8 @@ static struct utillib_slist_node *make_node(struct utillib_slist *self,
     return node;
   }
   node = calloc(sizeof *node, 1);
-  if (node) {
-    node->data = data;
-    return node;
-  }
-  utillib_die("ENOMEM in make_node");
+  node->data = data;
+  return node;
 }
 
 void utillib_slist_push_front_node(struct utillib_slist *self,

@@ -514,7 +514,7 @@ void utillib_json_object_push_back(struct utillib_json_value_t *self,
 void utillib_json_pretty_print(struct utillib_json_value_t const *self,
                                FILE *file) {
   struct utillib_string json;
-  utillib_printer_t print;
+  struct utillib_printer_t print;
   utillib_printer_init(&print, file, 2);
   utillib_json_tostring(self, &json);
   utillib_printer_print_json(&print, utillib_string_c_str(&json));

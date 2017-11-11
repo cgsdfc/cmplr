@@ -37,9 +37,9 @@ struct utillib_ll1_parser_error {
   struct utillib_symbol const * stack_top_symbol;
 };
 
-typedef void (utillib_ll1_parser_terminal_handler) (void *client_data, int code, void const * semantic);
-typedef void (utillib_ll1_parser_rule_handler) (void *client_data);
-typedef void (utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
+typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, int code, void const * semantic);
+typedef void (* utillib_ll1_parser_rule_handler) (void *client_data);
+typedef void (* utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
 
 
 /**
@@ -57,22 +57,22 @@ struct utillib_ll1_parser {
 
   /* Semantic actions related */
   void *client_data;
-  utillib_ll1_parser_terminal_handler const * 
+  utillib_ll1_parser_terminal_handler  
   terminal_handler;
-  utillib_ll1_parser_error_handler const *
+  utillib_ll1_parser_error_handler 
   error_handler;
-  utillib_ll1_parser_rule_handler const ** rule_handlers;
+  utillib_ll1_parser_rule_handler * rule_handlers;
 };
 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
                              struct utillib_vector2 const *table, 
                              void *client_data,
-                             utillib_ll1_parser_terminal_handler const * terminal_handler,
-                             utillib_ll1_parser_rule_handler const ** rule_handlers,
-                             utillib_ll1_parser_error_handler const * error_handler);
+                             utillib_ll1_parser_terminal_handler  terminal_handler,
+                             utillib_ll1_parser_rule_handler * rule_handlers,
+                             utillib_ll1_parser_error_handler  error_handler);
 
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
-void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
+bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner);
 #endif /* UTILLIB_LL1_PARSER_H */

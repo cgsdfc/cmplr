@@ -20,6 +20,7 @@
 */
 #include <utillib/json.h>
 #include <utillib/test.h>
+#include <utillib/vector.h>
 
 struct Point { double x, y; } ;
 

@@ -13,14 +13,14 @@ add_library(utillib
   ./rule.c
   ./pair.c
   ./json.c
-  ./logging.c
-  ./strref.c
+# ./logging.c
+# ./strref.c
   ./test.c
   ./print.c
   ./equal.c
   ./hash.c
   ./unordered_map.c
-  ./error.c
+# ./error.c
   ./slist.c
   ./vector.c
   ./string.c
@@ -50,8 +50,8 @@ add_executable(utillib_test
   ./test/slist.c
   ./test/flags.c
   ./test/vector.c
-  ./test/strref.c
-  ./test/logging.c
+# ./test/strref.c
+# ./test/logging.c
   ./test/driver.c
   )
 

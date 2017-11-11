@@ -54,11 +54,8 @@ char *utillib_static_buf(void) {
 /* use vsnprintf to detect buffer overflow */
 char const *utillib_static_vsprintf(char const *fmt, va_list ap) {
   char *buf = utillib_static_buf();
-  if (vsnprintf(buf, UTILLIB_STATIC_BUF_SIZE, fmt, ap) <
-      UTILLIB_STATIC_BUF_SIZE) {
-    return buf;
-  }
-  utillib_die("buffer overflowed");
+  vsnprintf(buf, UTILLIB_STATIC_BUF_SIZE, fmt, ap);
+  return buf;
 }
 
 char const *utillib_static_sprintf(char const *fmt, ...) {
@@ -75,7 +72,7 @@ char const *utillib_static_sprintf(char const *fmt, ...) {
  * If it is zero, the default 2 spaces padding will be used.
  * It should be in [0, 6).
  */
-void utillib_printer_init(utillib_printer_t *self, FILE *file, size_t npad) {
+void utillib_printer_init(struct utillib_printer_t *self, FILE *file, size_t npad) {
   static const char *static_padstr[] = {"  ",  " ",    "  ",
                                         "   ", "    ", "     "};
   self->file = file;
@@ -87,7 +84,7 @@ void utillib_printer_init(utillib_printer_t *self, FILE *file, size_t npad) {
  * \function printer_padding
  * Pads spaces without changing the indentation.
  */
-static void printer_padding(utillib_printer_t *self) {
+static void printer_padding(struct utillib_printer_t *self) {
   size_t lv = self->level;
   for (size_t i = 0; i < lv; ++i)
     fputs(self->padstr, self->file);
@@ -98,7 +95,7 @@ static void printer_padding(utillib_printer_t *self) {
  * First increases the indentation and then
  * pads spaces.
  */
-static void printer_indent(utillib_printer_t *self) {
+static void printer_indent(struct utillib_printer_t *self) {
   ++self->level;
   printer_padding(self);
 }
@@ -108,7 +105,7 @@ static void printer_indent(utillib_printer_t *self) {
  * First decreases the indentation and then
  * pads spaces.
  */
-static void printer_unindent(utillib_printer_t *self) {
+static void printer_unindent(struct utillib_printer_t *self) {
   --self->level;
   printer_padding(self);
 }
@@ -118,7 +115,7 @@ static void printer_unindent(utillib_printer_t *self) {
  * Prettily prints the JSON data to file with proper indentation.
  * \param str Assumed to be in JSON.
  */
-void utillib_printer_print_json(utillib_printer_t *self, char const *str) {
+void utillib_printer_print_json(struct utillib_printer_t *self, char const *str) {
   FILE *file = self->file;
   for (; *str; ++str) {
     switch (*str) {

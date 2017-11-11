@@ -102,4 +102,5 @@ void utillib_vector_fill(struct utillib_vector *self, void const *data);
 struct utillib_json_value_t *utillib_json_array_create_from_vector(
     struct utillib_vector const *self,
     utillib_json_value_create_func_t *create_func);
+
 #endif /* UTILLIB_VECTOR_H */

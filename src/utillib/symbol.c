@@ -19,6 +19,7 @@
 
 */
 #include "symbol.h"
+#include "vector.h"
 #include <stdio.h>
 
 UTILLIB_ETAB_BEGIN(utillib_symbol_kind)

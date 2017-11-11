@@ -68,7 +68,7 @@ extern const size_t ll1_sample_1_table[][LL1_SAMPLE_1_EXTEND];
 
 extern const size_t ll1_sample_1_input_1[];
 extern const size_t ll1_sample_1_input_2[];
-extern utillib_ll1_parser_rule_handler const * ll1_sample_1_rule_handlers[];
+extern utillib_ll1_parser_rule_handler ll1_sample_1_rule_handlers[];
 void ll1_sample_1_handle_error(struct ll1_sample_1_semantic *self,
     struct utillib_ll1_parser_error const *error);
 void ll1_sample_1_handle_terminal(struct ll1_sample_1_semantic *self,
