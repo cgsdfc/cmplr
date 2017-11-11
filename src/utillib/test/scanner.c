@@ -58,7 +58,7 @@ UTILLIB_TEST(symbol_scanner_lookahead) {
     UTILLIB_TEST_EXPECT_EQ(*psym,
                            utillib_symbol_scanner_lookahead(&symbol_scanner));
     struct utillib_symbol const *symbol =
-        utillib_symbol_scanner_getsymbol(&symbol_scanner);
+        utillib_symbol_scanner_semantic(&symbol_scanner);
     UTILLIB_TEST_EXPECT_EQ(*psym, utillib_symbol_value(symbol));
     utillib_symbol_scanner_shiftaway(&symbol_scanner);
   }

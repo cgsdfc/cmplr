@@ -47,7 +47,7 @@ const struct utillib_scanner_op utillib_symbol_scanner_op = {
     .lookahead = (void *)utillib_symbol_scanner_lookahead,
     .shiftaway = (void *)utillib_symbol_scanner_shiftaway,
     .reacheof = (void *)utillib_symbol_scanner_reacheof,
-    .getsymbol = (void *)utillib_symbol_scanner_getsymbol,
+    .semantic = (void *)utillib_symbol_scanner_semantic,
 };
 
 #define symbol_scanner_deref(self) (*(self)->symbols)
@@ -75,7 +75,7 @@ bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self) {
 }
 
 void const *
-utillib_symbol_scanner_getsymbol(struct utillib_symbol_scanner *self) {
+utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self) {
   return &self->table[symbol_scanner_deref(self)];
 }
 

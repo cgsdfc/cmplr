@@ -50,3 +50,5 @@ UTILLIB_RULE_END(ll1_sample_1_rules);
 const size_t ll1_sample_1_input_1[] = {
     SYM_I, SYM_PLUS, SYM_I, SYM_MUL, SYM_I, UT_SYM_EOF, UT_SYM_NULL,
 };
+utillib_ll1_parser_rule_handler const * ll1_sample_1_rule_handlers[UTILLIB_RULE_SIZE(ll1_sample_1_rules)]={ };
+

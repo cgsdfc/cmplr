@@ -50,7 +50,7 @@ struct utillib_unordered_map {
   size_t un_nbucket;
   size_t un_size;
   /* manage memory of utillib_pair_t */
-  struct utillib_pair_t const *un_free;
+  struct utillib_pair_t *un_free;
 };
 
 struct utillib_unordered_map_iterator {

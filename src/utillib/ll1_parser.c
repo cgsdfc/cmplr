@@ -190,34 +190,40 @@ void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
                              struct utillib_scanner_op const *scanner) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   ll1_parser_symbol_stack_init(self);
+  size_t input_symbol_value;
+  struct utillib_symbol const *top_symbol;
+  struct utillib_symbol const *input_symbol;
+  struct utillib_rule const * rule;
+  void const * semantic;
 
   while (true) {
-    size_t isym = scanner->lookahead(input);
-    struct utillib_symbol const *top_sym =
-        utillib_vector_back(&self->symbol_stack);
-    size_t top_val = utillib_symbol_value(top_sym);
-    size_t top_kind = utillib_symbol_kind(top_sym);
-    if (top_kind == UT_SYMBOL_TERMINAL) {
-      if (top_val == UT_SYM_EOF && isym == top_val) {
+    input_symbol_value = scanner->lookahead(input);
+    input_symbol = utillib_rule_index_symbol_at(rule_index, input_symbol_value);
+    top_symbol = utillib_vector_back(&self->symbol_stack);
+
+    if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
+      if (top_symbol->value == UT_SYM_EOF && 
+          input_symbol_value == top_symbol->value) {
         return;
       }
-      if (top_val == isym) {
-        void const * data=scanner->getsymbol(input);
-        self->terminal_handler(self->client_data, isym, data);
+      if (top_symbol->value == input_symbol_value) {
+        semantic=scanner->semantic(input);
+        self->terminal_handler(self->client_data,
+            input_symbol_value, semantic);
       } else {
         ll1_parser_error_handle(self, ll1_parser_error_create(
-              UT_LL1_EBADTOKEN, isymbol, top_sym));
+              UT_LL1_EBADTOKEN, input_symbol, top_symbol));
       }
       utillib_vector_pop_back(&self->symbol_stack);
       scanner->shiftaway(input);
     } else { /* non-terminal */
-      struct utillib_rule const *rule =
-          ll1_parser_table_lookup(self, isymbol, top_sym);
+      rule = ll1_parser_table_lookup(self, input_symbol, top_symbol);
       if (rule) {
         ll1_parser_expand_rule(self, rule);
       } else { /* rule == NULL */
-        ll1_parser_error_handle(self, ll1_parser_error_create(
-              UT_LL1_ENORULE, isymbol, top_sym));
+        ll1_parser_error_handle(self, 
+            ll1_parser_error_create(UT_LL1_ENORULE,
+              input_symbol, top_symbol));
         scanner->shiftaway(input);
       }
     }

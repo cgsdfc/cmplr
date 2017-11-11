@@ -55,11 +55,8 @@ static bool do_equal(struct utillib_unordered_map *self, void const *lhs,
 static struct utillib_slist *make_slist(void) {
   // create an empty slist on the heap
   struct utillib_slist *list = malloc(sizeof *list);
-  if (list) {
-    utillib_slist_init(list);
-    return list;
-  }
-  utillib_die("NOMEM in make_slist");
+  utillib_slist_init(list);
+  return list;
 }
 
 static void push_free(struct utillib_unordered_map *self,
@@ -79,10 +76,10 @@ void utillib_unordered_map_clear(struct utillib_unordered_map *self) {
   }
 }
 
-struct utillib_pair_t *pop_free(struct utillib_unordered_map *self) {
-  struct utillib_pair_t *pair = self->un_free;
-  self->un_free = UTILLIB_PAIR_SECOND(pair);
-  return self->un_free;
+static struct utillib_pair_t *pop_free(struct utillib_unordered_map *self) {
+  struct utillib_pair_t const *pair = self->un_free;
+  self->un_free = (void*) UTILLIB_PAIR_SECOND(pair);
+  return (void*) self->un_free;
 }
 
 static struct utillib_pair_t *make_pair(struct utillib_unordered_map *self,
@@ -155,7 +152,7 @@ static void destroy_free_owning(struct utillib_unordered_map *self,
                                 void (*destroy)(void*)) {
   while (self->un_free) {
     struct utillib_pair_t *p = self->un_free;
-    self->un_free = UTILLIB_PAIR_SECOND(p);
+    self->un_free = (void*) UTILLIB_PAIR_SECOND(p);
     destroy(p);
     free(p);
   }
@@ -164,8 +161,8 @@ static void destroy_free_owning(struct utillib_unordered_map *self,
 static void destroy_free(struct utillib_unordered_map *self) {
   while (self->un_free) {
     struct utillib_pair_t const *p = self->un_free;
-    self->un_free = UTILLIB_PAIR_SECOND(p);
-    free(p);
+    self->un_free =  (void*)UTILLIB_PAIR_SECOND(p);
+    free((void*) p);
   }
 }
 

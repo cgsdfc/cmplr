@@ -26,22 +26,23 @@
 #include <utillib/ll1_parser.h>
 #include <utillib/scanner.h>
 #include <utillib/test.h>
-#define RULES ll1_sample_1_rules
-#define SYMBOLS ll1_sample_1_symbols
 
 static struct utillib_rule_index rule_index;
 static struct utillib_vector2 ll1_table;
 static struct utillib_ll1_builder ll1_builder;
 static struct utillib_symbol_scanner symbol_scanner;
-static struct ll1_sample_1_struct client_struct;
+static struct ll1_sample_1_semantic semantic;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_rule_index_init(&rule_index, SYMBOLS, RULES);
+  utillib_rule_index_init(&rule_index, ll1_sample_1_symbols, ll1_sample_1_rules);
   utillib_ll1_builder_init(&ll1_builder, &rule_index);
   utillib_ll1_builder_build_table(&ll1_builder, &ll1_table);
   utillib_ll1_builder_destroy(&ll1_builder);
-  /* utillib_ll1_parser_init(UT_FIXTURE, &rule_index, &ll1_table, &client_struct, */
-  /*                         CALLBACK); */
+  utillib_ll1_parser_init(UT_FIXTURE, 
+      &rule_index, &ll1_table, 
+      &semantic,
+      NULL, ll1_sample_1_rule_handlers, NULL);
+
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
@@ -51,7 +52,7 @@ UTILLIB_TEST_TEAR_DOWN() {
 }
 
 UTILLIB_TEST(ll1_parser_parse) {
-  utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1, SYMBOLS);
+  utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1, ll1_sample_1_symbols);
   utillib_ll1_parser_parse(UT_FIXTURE, &symbol_scanner, &utillib_symbol_scanner_op);
 }
 

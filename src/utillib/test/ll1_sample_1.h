@@ -55,8 +55,8 @@ UTILLIB_ENUM_ELEM(SYM_PLUS)
 UTILLIB_ENUM_ELEM(SYM_MUL)
 UTILLIB_ENUM_END(ll1_sample_1_symbol_kind);
 
-struct ll1_sample_1_struct {
-  double value;
+struct ll1_sample_1_semantic {
+  struct utillib_vector stack;
 };
 
 extern const struct utillib_symbol ll1_sample_1_symbols[];
@@ -68,5 +68,10 @@ extern const size_t ll1_sample_1_table[][LL1_SAMPLE_1_EXTEND];
 
 extern const size_t ll1_sample_1_input_1[];
 extern const size_t ll1_sample_1_input_2[];
+extern utillib_ll1_parser_rule_handler const * ll1_sample_1_rule_handlers[];
+void ll1_sample_1_handle_error(struct ll1_sample_1_semantic *self,
+    struct utillib_ll1_parser_error const *error);
+void ll1_sample_1_handle_terminal(struct ll1_sample_1_semantic *self,
+    int code, void const * semantic);
 
 #endif // UTILLIB_TEST_LL1_SAMPLE_1_H
