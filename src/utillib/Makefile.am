@@ -4,6 +4,7 @@ lib_LTLIBRARIES = libutillib.la
 
 libutillib_la_SOURCES = opg_builder.c \
 												ll1_builder.c \
+												ll1_parser.c \
 												ll1_generator.c \
 												unordered_op.c \
 												bitset.c \
@@ -44,7 +45,6 @@ include_HEADERS = flags.h \
 									string.h \
 									strref.h \
 									test.h \
-									types.h \
 									unordered_map.h \
 									unordered_op.h \
 									bitset.h \
@@ -76,8 +76,16 @@ utillib_test_SOURCES=test/driver.c \
 
 utillib_test_LDADD=libutillib.la
 
-noinst_PROGRAMS=example-json
+noinst_PROGRAMS=example-json \
+								example-vector \
+								example-string 
 
 example_json_SOURCES=example/json.c
 example_json_LDADD=libutillib.la
+
+example_vector_SOURCES=example/vector.c
+example_vector_LDADD=libutillib.la
+
+example_string_SOURCES=example/string.c
+example_string_LDADD=libutillib.la
 
