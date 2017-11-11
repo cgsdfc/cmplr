@@ -27,7 +27,6 @@
  * A single-linked forward list. Suitable for fast
  * insertion/remove at the front.
  */
-#include "types.h"
 #include <stdbool.h> /* for bool */
 #include <stddef.h>  /* for size_t */
 #define UTILLIB_SLIST_HAS_NEXT(N) ((N) != NULL)
@@ -91,7 +90,7 @@ void *utillib_slist_iterator_get(struct utillib_slist_iterator *);
 void utillib_slist_init(struct utillib_slist *);
 void utillib_slist_destroy(struct utillib_slist *);
 void utillib_slist_destroy_owning(struct utillib_slist *,
-                                  utillib_destroy_func_t *);
+    void (* destroy) (void*));
 
 /** \brief observer */
 bool utillib_slist_empty(struct utillib_slist *);

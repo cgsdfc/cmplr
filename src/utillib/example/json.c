@@ -17,7 +17,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(struct compilatioin_entry)
 int main(void) {
   struct compilatioin_entry ce = {
       .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"};
-  utillib_json_value_t *val =
+  struct utillib_json_value_t *val =
       utillib_json_object_create(&ce, sizeof ce, CompilationEntry_Fields);
   utillib_json_pretty_print(val, stdout);
   utillib_json_value_destroy(val);

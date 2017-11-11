@@ -158,7 +158,7 @@ void utillib_vector_destroy(struct utillib_vector *self) {
  */
 
 void utillib_vector_destroy_owning(struct utillib_vector *self,
-                                   utillib_destroy_func_t *destroy) {
+                                   void (*destroy)(void*)) {
   UTILLIB_VECTOR_FOREACH(void const *, elem, self) { destroy((void *)elem); }
   free(self->begin);
 }
@@ -307,37 +307,18 @@ void utillib_vector_iterator_next(struct utillib_vector_iterator *self) {
   ++self->iter_begin;
 }
 
-bool utillib_vector_find(struct utillib_vector const *self, void const *data,
-                         utillib_equal_func_t *eq) {
-  UTILLIB_VECTOR_FOREACH(void *, elem, self) {
-    if (eq(elem, data)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void utillib_vector_back_insert(struct utillib_vector *self,
-                                struct utillib_vector const *other) {
-  size_t new_cap = utillib_vector_size(self) + utillib_vector_size(other);
-  utillib_vector_reserve(self, new_cap);
-  UTILLIB_VECTOR_FOREACH(void *, elem, other) {
-    utillib_vector_push_back(self, elem);
-  }
-}
-
 /**
  * JSON interfaces
  */
 /**
  * \function utillib_json_array_create_from_vector
  */
-utillib_json_value_t *utillib_json_array_create_from_vector(
+struct utillib_json_value_t *utillib_json_array_create_from_vector(
     struct utillib_vector const *self,
     utillib_json_value_create_func_t *create_func) {
-  utillib_json_value_t *array = utillib_json_array_create_empty();
+  struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (void const **pelem = self->begin; pelem != self->end; ++pelem) {
-    utillib_json_value_t *val = (*pelem && create_func)
+    struct utillib_json_value_t *val = (*pelem && create_func)
                                     ? create_func(*pelem, sizeof *pelem)
                                     : utillib_json_null_create();
     utillib_json_array_push_back(array, val);

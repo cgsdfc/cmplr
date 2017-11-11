@@ -48,8 +48,8 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
     return;
   }
   utillib_ll1_parser_rule_handler const * handler=self->rule_handlers[rule->id];
-  ll1_parser_rule_handler_check(handler);
-  handler(self->client_data);
+  if (handler)
+    handler(self->client_data);
   
 
   utillib_vector_pop_back(&self->symbol_stack);
@@ -193,8 +193,6 @@ void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
 
   while (true) {
     size_t isym = scanner->lookahead(input);
-    struct utillib_symbol const *isymbol =
-        utillib_rule_index_symbol_at(rule_index, isym);
     struct utillib_symbol const *top_sym =
         utillib_vector_back(&self->symbol_stack);
     size_t top_val = utillib_symbol_value(top_sym);
@@ -205,7 +203,6 @@ void utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
       }
       if (top_val == isym) {
         void const * data=scanner->getsymbol(input);
-        printf("Match Symbol `%s'\n", utillib_symbol_name(isymbol));
         self->terminal_handler(self->client_data, isym, data);
       } else {
         ll1_parser_error_handle(self, ll1_parser_error_create(

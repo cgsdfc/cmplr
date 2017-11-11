@@ -1,6 +1,5 @@
 #define _BSD_SOURCE
 #include "strref.h"
-#include "types.h"
 #include "unordered_op.h"
 #include <string.h>
 
@@ -12,7 +11,7 @@
  */
 
 static void free_str_in_pair(struct utillib_pair_t *pair) {
-  free((utillib_element_t)UTILLIB_PAIR_FIRST(pair));
+  free((void*)UTILLIB_PAIR_FIRST(pair));
 }
 
 /**
@@ -41,11 +40,11 @@ char const *utillib_strref_incr(struct utillib_strref *self, char const *str) {
   if (pair) {
     size_t cur_refcnt = (size_t)UTILLIB_PAIR_SECOND(pair);
     ++cur_refcnt;
-    UTILLIB_PAIR_SECOND(pair) = (utillib_value_t)cur_refcnt;
+    UTILLIB_PAIR_SECOND(pair) = (void const *)cur_refcnt;
     return UTILLIB_PAIR_FIRST(pair);
   }
   char const *dup = strdup(str);
-  utillib_unordered_map_emplace(&self->strref_map, dup, (utillib_value_t)1);
+  utillib_unordered_map_emplace(&self->strref_map, dup, (void const*)1);
   return dup;
 }
 
@@ -65,7 +64,7 @@ void utillib_strref_decr(struct utillib_strref *self, char const *str) {
     size_t cur_refcnt = (size_t)UTILLIB_PAIR_SECOND(pair);
     if (cur_refcnt) {
       --cur_refcnt;
-      UTILLIB_PAIR_SECOND(pair) = (utillib_value_t)(cur_refcnt);
+      UTILLIB_PAIR_SECOND(pair) = (void const*)(cur_refcnt);
       return;
     }
     utillib_unordered_map_erase(&self->strref_map, str);
@@ -98,5 +97,5 @@ size_t utillib_strref_getcnt(struct utillib_strref *self, char const *str) {
  */
 void utillib_strref_destroy(struct utillib_strref *self) {
   utillib_unordered_map_destroy_owning(
-      &self->strref_map, (utillib_destroy_func_t *)free_str_in_pair);
+      &self->strref_map, (void*)free_str_in_pair);
 }

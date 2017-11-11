@@ -26,7 +26,7 @@
                      * Provides `utillib_make_pair'.
                      */
 
-struct utillib_pair_t *utillib_make_pair(void const *key, void *value) {
+struct utillib_pair_t *utillib_make_pair(void const *key, void const *value) {
   struct utillib_pair_t *pair = malloc(sizeof *pair);
   UTILLIB_PAIR_FIRST(pair) = key;
   UTILLIB_PAIR_SECOND(pair) = value;

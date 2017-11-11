@@ -30,8 +30,8 @@
 
 struct utillib_pair_t {
   void const *up_first;
-  void *up_second;
+  void const *up_second;
 };
 
-struct utillib_pair_t *utillib_make_pair(void const *, void *);
+struct utillib_pair_t *utillib_make_pair(void const *,  void const *);
 #endif /* UTILLIB_PAIR_H */

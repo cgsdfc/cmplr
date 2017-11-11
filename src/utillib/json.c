@@ -37,7 +37,7 @@
  * \variable static_json_null
  */
 
-static utillib_json_value_t static_json_null = {.kind = UT_JSON_NULL};
+static struct utillib_json_value_t static_json_null = {.kind = UT_JSON_NULL};
 
 UTILLIB_ETAB_BEGIN(utillib_json_kind)
 UTILLIB_ETAB_ELEM(UT_JSON_REAL)
@@ -103,7 +103,7 @@ static void json_array_init(struct utillib_json_array_t *self) {
  * Recursively desctructs the value of the member.
  */
 static void json_object_member_destroy(struct utillib_pair_t *self) {
-  utillib_json_value_destroy(UTILLIB_PAIR_SECOND(self));
+  utillib_json_value_destroy((void*) self->up_second);
   free(self);
 }
 
@@ -113,7 +113,7 @@ static void json_object_member_destroy(struct utillib_pair_t *self) {
  */
 static void json_object_destroy(struct utillib_json_object_t *self) {
   utillib_vector_destroy_owning(
-      &self->members, (utillib_destroy_func_t *)json_object_member_destroy);
+      &self->members, (void*)json_object_member_destroy);
   free(self);
 }
 
@@ -125,7 +125,7 @@ static void json_object_destroy(struct utillib_json_object_t *self) {
  */
 static void json_array_destroy(struct utillib_json_array_t *self) {
   utillib_vector_destroy_owning(
-      &self->elements, (utillib_destroy_func_t *)utillib_json_value_destroy);
+      &self->elements, (void*)utillib_json_value_destroy);
   free(self);
 }
 
@@ -171,7 +171,7 @@ static struct utillib_json_value_t *json_value_create_ptr(int kind,
  */
 #define UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(NAME, FIELD, TYPE, KIND)       \
   struct utillib_json_value_t *NAME(void const *base, size_t not_used) {       \
-    utillib_json_value_t *self = malloc(sizeof *self);                         \
+    struct utillib_json_value_t *self = malloc(sizeof *self);                         \
     self->FIELD = *(TYPE *)base;                                               \
     self->kind = KIND;                                                         \
     return self;                                                               \
@@ -467,13 +467,13 @@ void utillib_json_tostring(struct utillib_json_value_t const *self,
  * The following functions create empty JSON array or object
  * that client can fill in with push_back functions.
  */
-utillib_json_value_t *utillib_json_array_create_empty(void) {
+struct utillib_json_value_t *utillib_json_array_create_empty(void) {
   struct utillib_json_array_t *self = malloc(sizeof *self);
   json_array_init(self);
   return json_value_create_ptr(UT_JSON_ARRAY, self);
 }
 
-utillib_json_value_t *utillib_json_object_create_empty(void) {
+struct utillib_json_value_t *utillib_json_object_create_empty(void) {
   struct utillib_json_object_t *self = malloc(sizeof *self);
   json_object_init(self);
   return json_value_create_ptr(UT_JSON_OBJECT, self);

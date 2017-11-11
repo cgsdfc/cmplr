@@ -29,13 +29,16 @@
  * the tail of the array for back insertion
  * and storage tail for resizing.
  */
-#include "types.h"
 #include <stdbool.h> /* for bool */
 #include <stddef.h>  /* size_t */
 
 #define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))
 #define UTILLIB_VECTOR_BEGIN(V) ((V)->begin)
 #define UTILLIB_VECTOR_END(V) ((V)->end)
+
+/* Forward declaraton */
+typedef struct utillib_json_value_t *
+(utillib_json_value_create_func_t)(void const *, size_t);
 
 /**
  * \macro UTILLIB_VECTOR_FOREACH
@@ -78,7 +81,7 @@ void utillib_vector_init_fill(struct utillib_vector *self, size_t,
                               void const *);
 void utillib_vector_destroy(struct utillib_vector *self);
 void utillib_vector_destroy_owning(struct utillib_vector *self,
-                                   utillib_destroy_func_t *);
+    void ( *destroy) (void*));
 
 /** \brief observer */
 size_t utillib_vector_size(struct utillib_vector const *self);
@@ -87,8 +90,6 @@ bool utillib_vector_empty(struct utillib_vector const *self);
 void *utillib_vector_at(struct utillib_vector const *self, size_t);
 void *utillib_vector_back(struct utillib_vector const *self);
 void *utillib_vector_front(struct utillib_vector const *self);
-bool utillib_vector_find(struct utillib_vector const *self, void const *data,
-                         utillib_equal_func_t *eq);
 
 /** \brief modifier */
 void utillib_vector_push_back(struct utillib_vector *self, void const *);
@@ -96,11 +97,9 @@ void utillib_vector_pop_back(struct utillib_vector *self);
 void utillib_vector_reserve(struct utillib_vector *self, size_t);
 void utillib_vector_set(struct utillib_vector *self, size_t, void const *);
 void utillib_vector_clear(struct utillib_vector *self);
-void utillib_vector_back_insert(struct utillib_vector *self,
-                                struct utillib_vector const *other);
 void utillib_vector_fill(struct utillib_vector *self, void const *data);
 
-utillib_json_value_t *utillib_json_array_create_from_vector(
+struct utillib_json_value_t *utillib_json_array_create_from_vector(
     struct utillib_vector const *self,
     utillib_json_value_create_func_t *create_func);
 #endif /* UTILLIB_VECTOR_H */

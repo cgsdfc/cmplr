@@ -120,10 +120,10 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
  * \function utillib_bitset_json_array_create
  * Dumps the elements that is in the bitset.
  */
-utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
+struct utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
                                                        size_t offset) {
   struct utillib_bitset const *self = base;
-  utillib_json_value_t *array = utillib_json_array_create_empty();
+  struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {
     if (utillib_bitset_test(self, i)) {
       utillib_json_array_push_back(array,

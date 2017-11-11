@@ -28,12 +28,11 @@
 
 #include "enum.h"
 #include "string.h"
-#include "types.h"
 #include "vector.h"
 #include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
-typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const *,
+typedef struct utillib_json_value_t *(utillib_json_value_create_func_t)(void const *,
                                                                  size_t);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
@@ -71,7 +70,7 @@ typedef utillib_json_value_t *(utillib_json_value_create_func_t)(void const *,
  * Shortcut for declaring creating function.
  */
 #define UTILLIB_JSON_CREATE_FUNC_DECLARE(NAME)                                 \
-  utillib_json_value_t *NAME(void const *, size_t);
+  struct utillib_json_value_t *NAME(void const *, size_t);
 
 /**
  * \enum utillib_json_kind
@@ -117,7 +116,7 @@ struct utillib_json_array_desc_t {
  */
 
 struct utillib_json_object_t {
-  utillib_vector members;
+  struct utillib_vector members;
 };
 
 /**
@@ -125,7 +124,7 @@ struct utillib_json_object_t {
  * Represents a JSON array.
  */
 struct utillib_json_array_t {
-  utillib_vector elements;
+  struct utillib_vector elements;
 };
 
 /**

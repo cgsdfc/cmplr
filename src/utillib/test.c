@@ -102,7 +102,7 @@ UTILLIB_ARGP_OPTION_REGISTER(NULL, "Utillib.Test Runner")
 
 static utillib_argp_error_t
 UTILLIB_ARGP_STATIC_PARSER(int key, char *text, utillib_argp_state *state) {
-  utillib_test_suite_t *self = UTILLIB_ARGP_STATE_INPUT(state);
+  struct utillib_test_suite_t *self = UTILLIB_ARGP_STATE_INPUT(state);
   switch (key) {
   case 'j':
     self->json_output = text;
@@ -131,29 +131,29 @@ static const char *RED_BAD = COLOR_STRING(RED, "[ BAD      ]");
 static const char *RED_FAILED = COLOR_STRING(RED, "[  FAILED  ]");
 
 /**
- * Strings associated with `utillib_test_severity_t'.
+ * Strings associated with `utillib_test_severity_kind'.
  */
-UTILLIB_ETAB_BEGIN(utillib_test_severity_t)
+UTILLIB_ETAB_BEGIN(utillib_test_severity_kind)
 UTILLIB_ETAB_ELEM_INIT(US_EXPECT, "Expected")
 UTILLIB_ETAB_ELEM_INIT(US_ASSERT, "Assertion Failed")
 UTILLIB_ETAB_ELEM_INIT(US_ABORT, "Abort")
-UTILLIB_ETAB_END(utillib_test_severity_t)
+UTILLIB_ETAB_END(utillib_test_severity_kind)
 
-UTILLIB_ETAB_BEGIN(utillib_test_status_t)
+UTILLIB_ETAB_BEGIN(utillib_test_status_kind)
 UTILLIB_ETAB_ELEM_INIT(UT_STATUS_SKIP, "skipped")
 UTILLIB_ETAB_ELEM_INIT(UT_STATUS_RUN, "run")
-UTILLIB_ETAB_END(utillib_test_status_t)
+UTILLIB_ETAB_END(utillib_test_status_kind)
 
 /**
  * \function utillib_test_predicate_init
- * Initializes a `utillib_test_predicate_t' for `UTILLIB_TEST_ASSERT'
+ * Initializes a `struct utillib_test_predicate_t' for `UTILLIB_TEST_ASSERT'
  * or such to use.
  * \param result The result of a boolean expression evaluated when passed in.
  * \param line The line where the predicate took place and self got initialized.
  * \param expr_str The stringized expression.
  * \param severity The severity of the failure.
  */
-void utillib_test_predicate_init(utillib_test_predicate_t *self, bool result,
+void utillib_test_predicate_init(struct utillib_test_predicate_t *self, bool result,
                                  size_t line, char const *expr_str,
                                  int severity) {
   self->result = result;
@@ -167,11 +167,11 @@ void utillib_test_predicate_init(utillib_test_predicate_t *self, bool result,
  * Prints a message about the failure of a predicate to stderr.
  */
 
-static void predicate_output(utillib_test_entry_t *self,
-                             utillib_test_predicate_t *predicate) {
+static void predicate_output(struct utillib_test_entry_t *self,
+                             struct utillib_test_predicate_t *predicate) {
   fprintf(stderr, "In `%s':%lu:\n", self->func_name, predicate->line);
   fprintf(stderr, "\t%s: `%s'.\n",
-          utillib_test_severity_t_tostring(predicate->severity),
+          utillib_test_severity_kind_tostring(predicate->severity),
           predicate->expr_str);
 }
 
@@ -184,8 +184,8 @@ static void predicate_output(utillib_test_entry_t *self,
  * \return predicate->result.
  */
 
-bool utillib_test_predicate(utillib_test_entry_t *self,
-                            utillib_test_predicate_t *predicate) {
+bool utillib_test_predicate(struct utillib_test_entry_t *self,
+                            struct utillib_test_predicate_t *predicate) {
   if (predicate->result) {
     return true;
   }
@@ -224,7 +224,7 @@ static void status_output(char const *status_str, char const *fmt, ...) {
  * Prints the name of the test with a status bar.
  */
 static void case_status_output(char const *status_str,
-                               utillib_test_entry_t *entry) {
+                               struct utillib_test_entry_t *entry) {
   status_output(status_str, "%s (%lds).", entry->func_name, entry->duration);
 }
 
@@ -241,8 +241,8 @@ static void filename_status_output(char const *filename) {
  * Invokes the function pointer in self, possibily after
  * calling its setup and does teardown after it.
  */
-static void utillib_test_case(utillib_test_entry_t *self,
-                              utillib_test_env_t *env) {
+static void utillib_test_case(struct utillib_test_entry_t *self,
+                              struct utillib_test_env_t *env) {
   time_t begin, end;
   if (env->setup_func) {
     env->setup_func(env->fixture);
@@ -266,8 +266,8 @@ static void utillib_test_case(utillib_test_entry_t *self,
  * `US_SUCCESS'; else returns the kind of severity of the failure of the test.
  */
 
-static int utillib_test_run_test(utillib_test_entry_t *self,
-                                 utillib_test_env_t *env) {
+static int utillib_test_run_test(struct utillib_test_entry_t *self,
+                                 struct utillib_test_env_t *env) {
   switch (self->status) {
   case UT_STATUS_RUN:
     /* displays a status bar */
@@ -305,12 +305,12 @@ static int utillib_test_run_test(utillib_test_entry_t *self,
  * Starts running a test suite by printing its name and
  * the file where it was defined.
  */
-static void utillib_test_setup(utillib_test_env_t *self) {
+static void utillib_test_setup(struct utillib_test_env_t *self) {
   filename_status_output(self->filename);
   status_output(GREEN_BANG, "Test suite `%s' sets up.", self->case_name);
 }
 
-static void utillib_test_report_failure(utillib_test_env_t *self) {
+static void utillib_test_report_failure(struct utillib_test_env_t *self) {
   for (struct utillib_test_entry_t const *test = self->cases;
        test->func != NULL; ++test) {
     if (test->status != UT_STATUS_RUN)
@@ -325,7 +325,7 @@ static void utillib_test_report_failure(utillib_test_env_t *self) {
  * \function utillib_test_summary
  * Displays statistics of a test suite after its execution reached end.
  */
-static void utillib_test_summary(utillib_test_env_t *self) {
+static void utillib_test_summary(struct utillib_test_env_t *self) {
   status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
   utillib_test_report_failure(self);
   status_output(GREEN_DASH, "Summary: Total %lu tests, Run %lu, Skipped %lu.",
@@ -340,9 +340,9 @@ static void utillib_test_summary(utillib_test_env_t *self) {
  * runs all its tests and stops at the first abort.
  * Returns the number of failed tests.
  */
-int utillib_test_run_suite(utillib_test_env_t *self) {
+int utillib_test_run_suite(struct utillib_test_env_t *self) {
   utillib_test_setup(self);
-  for (utillib_test_entry_t *test = self->cases; test->func != NULL; ++test) {
+  for (struct utillib_test_entry_t *test = self->cases; test->func != NULL; ++test) {
     if (US_ABORT == utillib_test_run_test(test, self)) {
       break;
     }
@@ -353,9 +353,9 @@ int utillib_test_run_suite(utillib_test_env_t *self) {
 
 /**
  * \function utillib_test_suite_destroy
- * Destructor of `utillib_test_suite_t'.
+ * Destructor of `struct utillib_test_suite_t'.
  */
-void utillib_test_suite_destroy(utillib_test_suite_t *self) {
+void utillib_test_suite_destroy(struct utillib_test_suite_t *self) {
   utillib_vector_destroy(&self->tests);
 }
 
@@ -366,15 +366,14 @@ void utillib_test_suite_destroy(utillib_test_suite_t *self) {
  * \param ... Multiple `utillib_test_getenv_func_t' pointers.
  */
 
-void utillib_test_suite_init(utillib_test_suite_t *self, ...) {
+void utillib_test_suite_init(struct utillib_test_suite_t *self, ...) {
   static const size_t init_capacity = 8;
   utillib_vector_init(&self->tests);
   utillib_vector_reserve(&self->tests, init_capacity);
   va_list ap;
   va_start(ap, self);
   while (true) {
-    utillib_test_getenv_func_t *getenv_func =
-        va_arg(ap, utillib_test_getenv_func_t *);
+    struct utillib_test_env_t * (* getenv_func) (void) =va_arg(ap, void *);
     if (!getenv_func) {
       break;
     }
@@ -388,22 +387,13 @@ void utillib_test_suite_init(utillib_test_suite_t *self, ...) {
  * Do not call it directly or more than once.
  * Call it via `UTILLIB_TEST_FIXTURE'.
  */
-void utillib_test_env_set_fixture(utillib_test_env_t *self,
+void utillib_test_env_set_fixture(struct utillib_test_env_t *self,
                                   utillib_test_fixture_t fixture,
-                                  utillib_test_fixfunc_t *setup,
-                                  utillib_test_fixfunc_t *teardown) {
+                                 void(  *setup ) (void*),
+                                 void(  *teardown ) (void*)) {
   self->fixture = fixture;
   self->setup_func = setup;
   self->teardown_func = teardown;
-}
-
-/**
- * \function utillib_test_dummy
- * Returns a pointer to a dummy object as a place holder for testing.
- */
-utillib_test_dummy_t *utillib_test_dummy(void) {
-  static utillib_test_dummy_t static_dummy;
-  return &static_dummy;
 }
 
 /**
@@ -423,15 +413,15 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
 
 /**
  * \function json_status_string_create
- * Creates JSON value from `utillib_test_suite_t' enum
+ * Creates JSON value from `struct utillib_test_suite_t' enum
  * using the enum tostring function.
- * \param base Pointer to the `status' field of `utillib_test_entry_t'.
+ * \param base Pointer to the `status' field of `struct utillib_test_entry_t'.
  * \param offset No used.
  */
-static utillib_json_value_t *json_status_string_create(void const *base,
+static struct utillib_json_value_t *json_status_string_create(void const *base,
                                                        size_t offset) {
   int status = *(int *)base;
-  char const *str = utillib_test_status_t_tostring(status);
+  char const *str = utillib_test_status_kind_tostring(status);
   return utillib_json_string_create(&str, 0);
 }
 
@@ -442,49 +432,49 @@ static utillib_json_value_t *json_status_string_create(void const *base,
  * It depends on `json_status_string_create'.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEntry_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "test_name", func_name,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "test_name", func_name,
                                utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "status", status,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "status", status,
                                json_status_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_entry_t, "succeeded", succeeded,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "succeeded", succeeded,
                                utillib_json_bool_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
 
 /**
  * \function json_test_entry_create
- * Creates JSON value from `utillib_test_entry_t'.
+ * Creates JSON value from `struct utillib_test_entry_t'.
  * Wraps `TestEntry_Fields' in.
  * It depends on `TestEntry_Fields'.
  */
-static utillib_json_value_t *json_test_entry_create(void const *base,
+static struct utillib_json_value_t *json_test_entry_create(void const *base,
                                                     size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
 /**
  * \variable TestEntry_ArrayDesc
- * Description about `utillib_test_entry_t' when used in
+ * Description about `struct utillib_test_entry_t' when used in
  * a `utillib_json_array_t'.
  * It depends on `json_test_entry_create'.
  */
-UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(utillib_test_entry_t),
+UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(struct utillib_test_entry_t),
                         json_test_entry_create);
 
 /**
  * \function json_test_entry_array_pointer_create
- * Creates the JSON array of `utillib_test_entry_t'
+ * Creates the JSON array of `struct utillib_test_entry_t'
  * from the fields `ntests' and `cases' of a
- * `utillib_test_env_t' struct.
+ * `struct utillib_test_env_t' struct.
  * \param base Pointer to the `cases' field of the
- * `utillib_test_env_t' struct.
+ * `struct utillib_test_env_t' struct.
  * \param offset Useless.
  * It depends on `TestEntry_ArrayDesc'.
  */
 
-static utillib_json_value_t *
+static struct utillib_json_value_t *
 json_test_entry_array_pointer_create(void const *base, size_t offset) {
-  size_t offsetof_base = offsetof(utillib_test_env_t, cases);
-  size_t offsetof_size = offsetof(utillib_test_env_t, ntests);
+  size_t offsetof_base = offsetof(struct utillib_test_env_t, cases);
+  size_t offsetof_size = offsetof(struct utillib_test_env_t, ntests);
   /* hack out the address of the field `ntests' from 2 offsets */
   void *psize = (char *)base - offsetof_base + offsetof_size;
   /* cast and deref to get the pointed-to `cases' and `ntests' fields. */
@@ -496,26 +486,26 @@ json_test_entry_array_pointer_create(void const *base, size_t offset) {
  * \variable TestEnv_Fields
  * Description of `utillib_test_env_t' when used in `utillib_json_object_t'.
  * The tricky part of it is the `tests' field which is a pointer to an array
- * of `utillib_test_entry_t's. With the `ntests' recording the size of this
+ * of `struct utillib_test_entry_t's. With the `ntests' recording the size of this
  * array, we can use `utillib_json_array_pointer_create' to create the JSON
  * array out of this C array in form of a `base, size' pair.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEnv_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "filename", filename,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "filename", filename,
                                utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "case_name", case_name,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "case_name", case_name,
                                utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_tests", ntests,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_tests", ntests,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_run", nrun,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_run", nrun,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_skipped", nskipped,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_skipped", nskipped,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_passed", nsuccess,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_passed", nsuccess,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "number_failed", nfailure,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_failed", nfailure,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_env_t, "tests", cases,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "tests", cases,
                                json_test_entry_array_pointer_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
 
@@ -523,31 +513,31 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
  * \function json_test_env_create
  * Wraps `TestEnv_Fields'.
  */
-static utillib_json_value_t *json_test_env_create(void const *base,
+static struct utillib_json_value_t *json_test_env_create(void const *base,
                                                   size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 
 /**
  * \function json_test_suite_test_create
- * Creates a JSON array out of a `utillib_vector' of `utillib_test_env_t's.
+ * Creates a JSON array out of a `utillib_vector' of `struct utillib_test_env_t's.
  * \param base Points to a `utillib_vector'.
  * \param offset Useless.
  */
-static utillib_json_value_t *json_test_suite_test_create(void const *base,
+static struct utillib_json_value_t *json_test_suite_test_create(void const *base,
                                                          size_t offset) {
   return utillib_json_array_create_from_vector(base, json_test_env_create);
 }
 
 /**
  * \variable TestSuite_Fields
- * Description for `utillib_test_suite_t' when used
+ * Description for `struct utillib_test_suite_t' when used
  * in `utillib_json_object_t'.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestSuite_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_suite_t, "filename", filename,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_suite_t, "filename", filename,
                                utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(utillib_test_suite_t, "tests", tests,
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_suite_t, "tests", tests,
                                json_test_suite_test_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestSuite_Fields)
 
@@ -555,7 +545,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestSuite_Fields)
  * \function test_suite_print_json
  * Implements output to JSON format.
  */
-static void test_suite_print_json(utillib_test_suite_t *self) {
+static void test_suite_print_json(struct utillib_test_suite_t *self) {
   if (!self->json_output) {
     /* no output requirement */
     return;
@@ -566,14 +556,14 @@ static void test_suite_print_json(utillib_test_suite_t *self) {
                   self->json_output);
     return;
   }
-  utillib_json_value_t *val =
+  struct utillib_json_value_t *val =
       utillib_json_object_create(self, sizeof *self, TestSuite_Fields);
   utillib_json_pretty_print(val, file);
   utillib_json_value_destroy(val);
   fclose(file);
 }
 
-static void utillib_test_suite_report_failure(utillib_test_suite_t *self) {
+static void utillib_test_suite_report_failure(struct utillib_test_suite_t *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
     utillib_test_report_failure(env);
   }
@@ -583,7 +573,7 @@ static void utillib_test_suite_report_failure(utillib_test_suite_t *self) {
  * \function utillib_test_suite_run_all
  * Runs all the tests and Returns the number of failed tests.
  */
-int utillib_test_suite_run_all(utillib_test_suite_t *self, int argc,
+int utillib_test_suite_run_all(struct utillib_test_suite_t *self, int argc,
                                char **argv) {
   UTILLIB_ARGP_PARSE(argc, argv, self);
   size_t test_failure = 0;
@@ -592,7 +582,7 @@ int utillib_test_suite_run_all(utillib_test_suite_t *self, int argc,
   status_output(GREEN_BANG, "%lu test suites found.", test_suites);
   status_output(GREEN_BANG, "Global testing environment sets up.");
   fputs("\n", stderr);
-  UTILLIB_VECTOR_FOREACH(utillib_test_env_t *, env, &self->tests) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
     test_failure += utillib_test_run_suite(env);
     fputs("\n", stderr);
   }

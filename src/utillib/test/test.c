@@ -84,7 +84,7 @@ UTILLIB_TEST(should_be_skip) {}
 
 UTILLIB_TEST(statistics_correct) {
   // sort of reflection.
-  utillib_test_env_t *env = Utillib_Test();
+  struct utillib_test_env_t *env = Utillib_Test();
   UTILLIB_TEST_ASSERT_EQ(env->nrun + env->nskipped, env->ntests);
   UTILLIB_TEST_ASSERT_EQ(env->nfailure + env->nsuccess, env->nrun);
   UTILLIB_TEST_ASSERT_EQ(env->nrun, 5);

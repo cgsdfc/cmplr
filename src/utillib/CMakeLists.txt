@@ -4,8 +4,7 @@ add_library(utillib
   ./ll1_generator.c
   ./opg_builder.c
   ./scanner.c
-  ./ll1_parser.c
-  ./ll1_parser.c
+# ./ll1_parser.c
   ./vector2.c
   ./bitset.c
   ./unordered_op.c
@@ -22,7 +21,6 @@ add_library(utillib
   ./hash.c
   ./unordered_map.c
   ./error.c
-  ./enum.c
   ./slist.c
   ./vector.c
   ./string.c
@@ -37,7 +35,7 @@ add_executable(utillib_test
   ./test/ll1_sample_1.c
   ./test/ll1_sample_2.c
   ./test/scanner.c
-  ./test/ll1_parser.c
+# ./test/ll1_parser.c
   ./test/print.c
   ./test/vector2.c
   ./test/bitset.c

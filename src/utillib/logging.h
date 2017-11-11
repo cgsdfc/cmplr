@@ -3,7 +3,6 @@
 #include "argp.h"
 #include "enum.h"
 #include "strref.h"
-#include "types.h"
 #include "unordered_map.h"
 #include <assert.h>
 #define UTILLIB_LOGGING_OPTIONS_STDERR_THRESHOLD(KEY)                          \
@@ -49,7 +48,7 @@ typedef struct utillib_logging_core_t {
   /* the collection of all the logmsg */
   struct utillib_vector lco_msgs;
   /* the cleanup function to call when `FATAL' was logged */
-  utillib_destroy_func_t *lco_cleanup;
+  void (*lco_cleanup) (void *);
   /* the object to be cleanupped by `lco_cleanup' */
   void *lco_toclean;
   /* the freelist of the utillib_logging_msg_t */
@@ -68,7 +67,7 @@ typedef struct utillib_logging_core_t {
 
 void utillib_logging_init(const char *);
 void utillib_logging_destroy(void);
-void utillib_logging_set_cleanup(void *, utillib_destroy_func_t *);
+void utillib_logging_set_cleanup(void *, void (*cleanup) (void*) );
 void utillib_logging_logmsg(int, const char *, const char *, size_t,
                             const char *, ...);
 void utillib_logging_set_stderr_threshold(int);

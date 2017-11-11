@@ -94,7 +94,7 @@ struct utillib_rule_literal {
 struct utillib_rule {
   size_t id;
   struct utillib_symbol const *LHS;
-  utillib_vector RHS;
+  struct utillib_vector RHS;
 };
 
 extern struct utillib_rule utillib_rule_eps;

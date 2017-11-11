@@ -71,7 +71,7 @@ static struct utillib_rule *rule_index_rule_create_from_literal(
       symbol = UTILLIB_SYMBOL_EPS;
     else
       symbol = &symbols[*RHS_LIT];
-    utillib_vector_push_back(&self->RHS, (utillib_element_t)symbol);
+    utillib_vector_push_back(&self->RHS, (void const*)symbol);
   }
   return self;
 }
@@ -121,7 +121,7 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
     }
     if (value < *pvalue)
       *pvalue = value;
-    utillib_vector_push_back(pvector, (utillib_element_t)symbol);
+    utillib_vector_push_back(pvector, (void const*)symbol);
   }
   /* counts EOF */
   self->non_terminals_size = utillib_vector_size(&self->non_terminals);
@@ -145,7 +145,7 @@ void utillib_rule_index_destroy(struct utillib_rule_index *self) {
   utillib_vector_destroy(&self->terminals);
   utillib_vector_destroy(&self->non_terminals);
   utillib_vector_destroy_owning(
-      &self->rules, (utillib_destroy_func_t *)rule_index_rule_destroy);
+      &self->rules, (void*)rule_index_rule_destroy);
   rule_index_LHS_index_destroy(self);
 }
 

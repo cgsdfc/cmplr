@@ -20,7 +20,6 @@
 */
 #ifndef UTILLIB_PRINT_H
 #define UTILLIB_PRINT_H
-#include "types.h"
 #include <stdarg.h> /* for va_list */
 #include <stddef.h> /* for offsetof */
 #include <stdio.h>

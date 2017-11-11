@@ -167,7 +167,7 @@ UTILLIB_TEST(ll1_builder_build_table_json) {
  * Mainly its SETs.
  */
 UTILLIB_TEST(ll1_builder_json) {
-  utillib_json_value_t *val =
+  struct utillib_json_value_t *val =
       utillib_ll1_builder_json_object_create(UT_FIXTURE);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);

@@ -2,11 +2,9 @@ AM_CPPFLAGS=-I$(srcdir)/../ -g3
 ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libutillib.la
 
-libutillib_la_SOURCES = enum.c \
-												opg_builder.c \
+libutillib_la_SOURCES = opg_builder.c \
 												ll1_builder.c \
 												ll1_generator.c \
-												ll1_parser.c \
 												unordered_op.c \
 												bitset.c \
 												vector2.c \
@@ -30,7 +28,6 @@ libutillib_la_SOURCES = enum.c \
 
 include_HEADERS = flags.h \
 									scanner.h \
-									ll1_parser.h \
 									ll1_builder.h \
 									symbol.h \
 									color.h \

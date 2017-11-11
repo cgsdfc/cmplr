@@ -35,7 +35,7 @@ UTILLIB_ENUM_END(find_mode_t)
  * \function do_hash
  * Do hash using fast modulo.
  */
-static size_t do_hash(struct utillib_unordered_map *self, utillib_key_t key) {
+static size_t do_hash(struct utillib_unordered_map *self, void const *key) {
   // use fast modulo i.e. x % power_of_2 == x & (power_of_2-1)
   return self->un_op->hash(key) & (self->un_nbucket - 1);
 }
@@ -44,8 +44,8 @@ static size_t do_hash(struct utillib_unordered_map *self, utillib_key_t key) {
    \function do_equal
    Calls the equal function.
 */
-static bool do_equal(struct utillib_unordered_map *self, utillib_key_t lhs,
-                     utillib_key_t rhs) {
+static bool do_equal(struct utillib_unordered_map *self, void const *lhs,
+                     void const *rhs) {
   return self->un_op->equal(lhs, rhs);
 }
 
@@ -86,8 +86,8 @@ struct utillib_pair_t *pop_free(struct utillib_unordered_map *self) {
 }
 
 static struct utillib_pair_t *make_pair(struct utillib_unordered_map *self,
-                                        utillib_key_t key,
-                                        utillib_value_t value) {
+                                        void const *key,
+                                        void const *value) {
   struct utillib_pair_t *pair;
   if (self->un_free) {
     pair = pop_free(self);
@@ -107,7 +107,7 @@ static void push_back_bucket(struct utillib_unordered_map *self,
 }
 
 static void rehash_impl(struct utillib_unordered_map *self, size_t nbucket) {
-  utillib_vector holder;
+  struct utillib_vector holder;
   utillib_vector_init(&holder);
   utillib_vector_reserve(&holder, self->un_size);
   size_t cur_nb = utillib_vector_size(&(self->un_bucket));
@@ -152,7 +152,7 @@ void utillib_unordered_map_init_from_array(struct utillib_unordered_map *self,
 }
 
 static void destroy_free_owning(struct utillib_unordered_map *self,
-                                utillib_destroy_func_t *destroy) {
+                                void (*destroy)(void*)) {
   while (self->un_free) {
     struct utillib_pair_t *p = self->un_free;
     self->un_free = UTILLIB_PAIR_SECOND(p);
@@ -163,7 +163,7 @@ static void destroy_free_owning(struct utillib_unordered_map *self,
 
 static void destroy_free(struct utillib_unordered_map *self) {
   while (self->un_free) {
-    struct utillib_pair_t *p = self->un_free;
+    struct utillib_pair_t const *p = self->un_free;
     self->un_free = UTILLIB_PAIR_SECOND(p);
     free(p);
   }
@@ -178,7 +178,7 @@ static void destroy_bucket(struct utillib_unordered_map *self) {
 }
 
 void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *self,
-                                          utillib_destroy_func_t *destroy) {
+                                          void (*destroy)(void*)) {
   utillib_unordered_map_clear(self);
   destroy_free_owning(self, destroy);
   destroy_bucket(self);
@@ -192,7 +192,7 @@ void utillib_unordered_map_destroy(struct utillib_unordered_map *self) {
 
 static struct utillib_pair_t *
 linear_search_list(struct utillib_unordered_map *self,
-                   struct utillib_slist *list, utillib_key_t key,
+                   struct utillib_slist *list, void const *key,
                    struct utillib_slist_node **pos) {
   struct utillib_slist_node *node = UTILLIB_SLIST_HEAD(list);
   for (; node != NULL; node = UTILLIB_SLIST_NODE_NEXT(node)) {
@@ -207,8 +207,8 @@ linear_search_list(struct utillib_unordered_map *self,
   return NULL;
 }
 
-static int find_impl(struct utillib_unordered_map *self, utillib_key_t key,
-                     utillib_value_t value, int mode,
+static int find_impl(struct utillib_unordered_map *self, void const *key,
+                     void const *value, int mode,
                      struct utillib_slist **plist,
                      struct utillib_slist_node **pos,
                      struct utillib_pair_t **retv) {
@@ -237,8 +237,8 @@ static int find_impl(struct utillib_unordered_map *self, utillib_key_t key,
   }
 }
 
-static int insert_impl(struct utillib_unordered_map *self, utillib_key_t key,
-                       utillib_value_t value) {
+static int insert_impl(struct utillib_unordered_map *self, void const *key,
+                       void const *value) {
   if (self->un_max_lf - utillib_unordered_map_load_factor(self) < DBL_EPSILON) {
     rehash_impl(self, self->un_nbucket << 1); // use fast modulo
   }
@@ -251,20 +251,20 @@ int utillib_unordered_map_insert(struct utillib_unordered_map *self,
 }
 
 int utillib_unordered_map_emplace(struct utillib_unordered_map *self,
-                                  utillib_key_t key, utillib_value_t value) {
+                                  void const *key, void const *value) {
   return insert_impl(self, key, value);
 }
 
 struct utillib_pair_t *
 utillib_unordered_map_find(struct utillib_unordered_map *self,
-                           utillib_key_t key) {
+                           void const *key) {
   struct utillib_pair_t *p;
   find_impl(self, key, NULL, FIND_ONLY, NULL, NULL, &p);
   return p;
 }
 
 int utillib_unordered_map_erase(struct utillib_unordered_map *self,
-                                utillib_key_t key) {
+                                void const *key) {
   struct utillib_slist *l;
   struct utillib_slist_node *n;
   switch (find_impl(self, key, NULL, FIND_ONLY, &l, &n, NULL)) {
