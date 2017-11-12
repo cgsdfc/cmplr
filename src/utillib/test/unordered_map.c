@@ -1,29 +1,30 @@
 #include <utillib/test.h>
 #include <utillib/unordered_map.h>
+#include <utillib/pair.h>
 
 static void test_unordered_map(void) {
-  utillib_unordered_map map;
-  utillib_pair_t stu[] = {
-      {"Tony", (utillib_value_t)1},    {"John", (utillib_value_t)2},
-      {"Amy", (utillib_value_t)3},     {"Tom", (utillib_value_t)4},
-      {"Sam", (utillib_value_t)5},     {"Johnson", (utillib_value_t)6},
-      {"Simpson", (utillib_value_t)7}, {"Adison", (utillib_value_t)8},
-      {"Sipson", (utillib_value_t)7},  {"Adison", (utillib_value_t)8},
-      {"Simpson", (utillib_value_t)7}, {"Adison", (utillib_value_t)8},
-      {"Smpson", (utillib_value_t)7},  {"Adison", (utillib_value_t)8},
-      {"Simpon", (utillib_value_t)7},  {"Adison", (utillib_value_t)8},
-      {"Simpson", (utillib_value_t)7}, {"Adison", (utillib_value_t)8},
-      {"Siso", (utillib_value_t)7},    {"Adison", (utillib_value_t)8},
-      {"Wang", (utillib_value_t)9},    {NULL, NULL}};
+  struct utillib_unordered_map map;
+  struct utillib_pair_t stu[] = {
+      {"Tony", 1},    {"John", 2},
+      {"Amy", 3},     {"Tom", 4},
+      {"Sam", 5},     {"Johnson", 6},
+      {"Simpson", 7}, {"Adison", 8},
+      {"Sipson", 7},  {"Adison", 8},
+      {"Simpson", 7}, {"Adison", 8},
+      {"Smpson", 7},  {"Adison", 8},
+      {"Simpon", 7},  {"Adison", 8},
+      {"Simpson", 7}, {"Adison", 8},
+      {"Siso", 7},    {"Adison", 8},
+      {"Wang", 9},    {NULL, NULL}};
 
   utillib_unordered_map_init(&map, utillib_unordered_map_const_charp_ft());
   for (int i = 0; i < 100000; i++) {
-    for (utillib_pair_t *p = stu; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
+    for (struct utillib_pair_t *p = stu; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
       utillib_unordered_map_insert(&map, p);
     }
   }
-  for (utillib_pair_t *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
-    utillib_pair_t *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
+  for (struct utillib_pair_t *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
+    struct utillib_pair_t *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
 
     if (p) {
       printf("found %s:%ld in map\n", (char *)UTILLIB_PAIR_FIRST(p),
