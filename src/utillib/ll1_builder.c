@@ -317,44 +317,6 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
  */
 
 /**
- * \function ll1_builder_FOLLOW_has_tailing
- * Helper to judge whether the right hand side of the rule is in the form
- * required by FOLLOW evaluation, i.e., `aBb', where `B' is of non-terminal
- * symbol.
- */
-
-static bool ll1_builder_FOLLOW_has_tailing(struct utillib_vector const *RHS) {
-  size_t RHS_size = utillib_vector_size(RHS);
-  assert(RHS_size > 0 && "Right hand side of rule should not be empty");
-  if (RHS_size < 2)
-    return false;
-  struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
-  return utillib_symbol_kind(PREV) == UT_SYMBOL_NON_TERMINAL;
-}
-
-/**
- * \function ll1_builder_FOLLOW_last_epsilon
- * Helper to judge whether the last symbol of a rule
- * has anything to do with `epsilon'.
- * \param LAST A symbol at the last of a `RHS'.
- * \return True if `LAST' is directly `epsilon'
- * or a non-terminal symbol whose `FIRST' contains
- * `epsilon'.
- */
-static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
-                                            struct utillib_symbol const *LAST) {
-  size_t LAST_value = utillib_symbol_value(LAST);
-  if (LAST_value == UT_SYM_EPS)
-    return true;
-  if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL)
-    return false;
-  struct utillib_ll1_set const *LAST_FIRST = ll1_builder_FIRST_get(self, LAST);
-  if (LAST_FIRST->flag)
-    return true;
-  return false;
-}
-
-/**
  * \function ll1_builder_FOLLOW_partial_eval
  * Partial-evaluates the `FOLLOW's of all the non-terminal symbols.
  * First, Simply adds the special `end-of-input' symbol into the `FOLLOW'
@@ -364,6 +326,7 @@ static bool ll1_builder_FOLLOW_last_epsilon(struct utillib_ll1_builder *self,
  * adds all the symbols in `First(b)' excluding `epsilon' into `FOLLOW(B)'.
  * Since `FIRST' is known now, this evaluation can be done in partial
  * evaluation.
+ * Notes `b' here is a sequence of symbols rather than one single symbol.
  *
  */
 #define ll1_builder_check_not_eof(value)                                       \
@@ -384,23 +347,30 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_vector const *RHS = &rule->RHS;
     /* The form of rule does not match */
-    if (!ll1_builder_FOLLOW_has_tailing(RHS))
-      continue;
     size_t RHS_size = utillib_vector_size(RHS);
-    struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
-    struct utillib_symbol const *LAST = utillib_vector_back(RHS);
-    size_t LAST_value = utillib_symbol_value(LAST);
-    ll1_builder_check_not_eof(LAST);
-    if (LAST_value == UT_SYM_EPS)
-      /* Do not let bitset see `epsilon'. It hurts */
+    if (RHS_size < 2) {
       continue;
-    struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
-    if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
-      utillib_ll1_set_insert(PREV_FOLLOW, LAST_value);
-    } else { /* non terminal */
-      struct utillib_ll1_set const *LAST_FIRST =
-          ll1_builder_FIRST_get(self, LAST);
-      utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
+    }
+    for (int i=0; i<RHS_size-1; ++i) {
+      struct utillib_symbol const *PREV = utillib_vector_at(RHS, i);
+      if (PREV->kind == UT_SYMBOL_TERMINAL)
+        continue;
+      struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
+      struct utillib_symbol const *LAST = utillib_vector_at(RHS, i+1);
+      if (LAST->value == UT_SYM_EPS)
+        /* Do not let bitset see `epsilon'. It hurts */
+        continue;
+      if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
+        struct utillib_json_value_t * val=ll1_builder_set_json_array_create(
+            PREV_FOLLOW, rule_index, false);
+        utillib_json_pretty_print(val, stderr);
+        utillib_ll1_set_insert(PREV_FOLLOW, LAST->value);
+        puts(LAST->name);
+      } else { /* non terminal */
+        struct utillib_ll1_set const *LAST_FIRST =
+        ll1_builder_FIRST_get(self, LAST);
+        utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
+      }
     }
   }
 }
@@ -443,9 +413,8 @@ static bool ll1_builder_FIRST_contains_eps(struct utillib_ll1_builder *self,
 /**
  * \function ll1_builder_FOLLOW_incremental
  * Based on the following algorithm:
- * If the rule has form `A := aBb' and `b' satisfies
- * `ll1_builder_FOLLOW_last_epsilon' implying `epsilon'
- * can be derived from `b' (or `b' is epsilon itself), then what follows `A' can
+ * If the rule has form `A := aBb' and `epsilon'
+ * can be derived from `b', then what follows `A' can
  * also follows `B'.
  * Otherwise, if the rule has the form `A := aB', then
  * what follows `A' can also follows `B'.
