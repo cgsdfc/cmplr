@@ -38,7 +38,7 @@ struct utillib_ll1_parser_error {
 };
 
 typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, int code, void const * semantic);
-typedef void (* utillib_ll1_parser_rule_handler) (void *client_data);
+typedef void (* utillib_ll1_parser_rule_handler) (void *client_data, struct utillib_rule const *);
 typedef void (* utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
 
 
@@ -51,17 +51,14 @@ typedef void (* utillib_ll1_parser_error_handler)(void *client_data, struct util
 struct utillib_ll1_parser {
   /* LL1 parsing related */
   struct utillib_vector symbol_stack;
-  struct utillib_vector errors;
   struct utillib_rule_index const *rule_index;
   struct utillib_vector2 const *table;
 
   /* Semantic actions related */
   void *client_data;
-  utillib_ll1_parser_terminal_handler  
-  terminal_handler;
-  utillib_ll1_parser_error_handler 
-  error_handler;
-  utillib_ll1_parser_rule_handler * rule_handlers;
+  utillib_ll1_parser_terminal_handler terminal_handler;
+  utillib_ll1_parser_error_handler error_handler;
+  utillib_ll1_parser_rule_handler  rule_handler;
 };
 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
@@ -69,7 +66,7 @@ void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_vector2 const *table, 
                              void *client_data,
                              utillib_ll1_parser_terminal_handler  terminal_handler,
-                             utillib_ll1_parser_rule_handler * rule_handlers,
+                             utillib_ll1_parser_rule_handler rule_handler,
                              utillib_ll1_parser_error_handler  error_handler);
 
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);

@@ -111,14 +111,6 @@ noinst_PROGRAMS += pascal_ll1_table
 pascal_ll1_table_SOURCES = src/pascal/ll1_generator.c 
 pascal_ll1_table_LDADD = libutillib.la libpascal.la
 
-BUILT_SOURCES = src/pascal/pascal_ll1_table.c
-CLEANFILES = src/pascal/pascal_ll1_table.c
-
-src/pascal/pascal_ll1_table.c:
-	@echo "Generating LL(1) table for pascal..."
-	@pascal_ll1_table
-	@mv -f $(builddir)/pascal_ll1_table.c $(top_srcdir)/pascal
-
 noinst_pascalincludedir = $(includedir)/pascal
 
 lib_LTLIBRARIES += libpascal.la

@@ -47,11 +47,7 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
-  utillib_ll1_parser_rule_handler handler=self->rule_handlers[rule->id];
-  if (handler)
-    handler(self->client_data);
-  
-
+  self->rule_handler(self->client_data, rule);
   utillib_vector_pop_back(&self->symbol_stack);
   struct utillib_vector const * RHS=&rule->RHS;
   size_t RHS_size=utillib_vector_size(RHS);
@@ -133,41 +129,32 @@ void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_vector2 const*table, 
                              void *client_data,
                              utillib_ll1_parser_terminal_handler terminal_handler,
-                             utillib_ll1_parser_rule_handler * rule_handlers,
+                             utillib_ll1_parser_rule_handler  rule_handler,
                              utillib_ll1_parser_error_handler  error_handler)
 {
   utillib_vector_init(&self->symbol_stack);
-  utillib_vector_init(&self->errors);
   self->rule_index = rule_index;
   self->table = table;
   self->client_data = client_data;
   self->terminal_handler=terminal_handler;
-  self->rule_handlers=rule_handlers;
+  self->rule_handler=rule_handler;
   self->error_handler=error_handler;
 }
 
-static struct utillib_ll1_parser_error *
-ll1_parser_error_create(int kind, 
+static void ll1_parser_error_init(struct utillib_ll1_parser_error * self,
+    int kind, 
   struct utillib_symbol const * lookahead_symbol,
   struct utillib_symbol const * stack_top_symbol)
 {
-  struct utillib_ll1_parser_error * self=malloc(sizeof *self);
   self->lookahead_symbol=lookahead_symbol;
   self->stack_top_symbol=stack_top_symbol;
   self->kind=kind;
-  return self;
-}
-
-static void ll1_parser_error_destroy(struct utillib_ll1_parser_error *self)
-{
-  free(self);
 }
 
 static void ll1_parser_error_handle(struct utillib_ll1_parser *self, 
     struct utillib_ll1_parser_error const *err)
 {
   self->error_handler(self->client_data, err); 
-  utillib_vector_push_back(&self->errors, err);
 }
 
 /*
@@ -179,8 +166,6 @@ static void ll1_parser_error_handle(struct utillib_ll1_parser *self,
  */
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self) {
   utillib_vector_destroy(&self->symbol_stack);
-  utillib_vector_destroy_owning(&self->errors, 
-      (void*) ll1_parser_error_destroy);
 }
 
 /**
@@ -195,40 +180,44 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
   struct utillib_symbol const *input_symbol;
   struct utillib_rule const * rule;
   void const * semantic;
+  struct utillib_ll1_parser_error error;
+  bool result=true;
 
   while (true) {
     input_symbol_value = scanner->lookahead(input);
     top_symbol = utillib_vector_back(&self->symbol_stack);
-    if (input_symbol_value == UT_SYM_EOF && 
-      input_symbol_value == top_symbol->value) {
-        printf("Parser matches final EOF, accepted!!\n");
-        return true;
+    if (input_symbol_value) {
+      input_symbol =  utillib_rule_index_symbol_at(rule_index, input_symbol_value);
+    } else {
+      input_symbol=UTILLIB_SYMBOL_EOF;
     }
-    input_symbol = utillib_rule_index_symbol_at(rule_index, input_symbol_value);
-
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
       if (top_symbol->value == input_symbol_value) {
-        printf("Parser matches stack top symbol with input terminal!\n"
-            "terminal_handler was called!\n");
         semantic=scanner->semantic(input);
         self->terminal_handler(self->client_data,
             input_symbol_value, semantic);
       } else {
-        printf("Input terminal failed to match stack top symbol!!\n");
-        ll1_parser_error_handle(self, ll1_parser_error_create(
-              UT_LL1_EBADTOKEN, input_symbol, top_symbol));
+        result=false;
+        ll1_parser_error_init(&error, UT_LL1_EBADTOKEN,
+            input_symbol, top_symbol);
+        self->error_handler(self->client_data, &error); 
       }
       utillib_vector_pop_back(&self->symbol_stack);
       scanner->shiftaway(input);
+      if (input_symbol_value == UT_SYM_EOF) {
+        return result;
+      }
     } else { /* non-terminal */
       rule = ll1_parser_table_lookup(self, input_symbol, top_symbol);
       if (rule) {
         ll1_parser_expand_rule(self, rule);
       } else { /* rule == NULL */
-        ll1_parser_error_handle(self, 
-            ll1_parser_error_create(UT_LL1_ENORULE,
-              input_symbol, top_symbol));
+        result=false;
+        ll1_parser_error_init(&error, UT_LL1_ENORULE,
+            input_symbol, top_symbol);
+        self->error_handler(self->client_data, &error); 
         scanner->shiftaway(input);
+        utillib_vector_pop_back(&self->symbol_stack);
       }
     }
   }

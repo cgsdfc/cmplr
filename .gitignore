@@ -34,3 +34,9 @@ Makefile.in
 .deps
 .libs
 Makefile
+*.log
+*.rst
+.dirstamp
+example-*
+*_test
+
