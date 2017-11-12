@@ -32,7 +32,7 @@
 #include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
-typedef struct utillib_json_value_t *(utillib_json_value_create_func_t)(void const *,
+typedef struct utillib_json_value_t *(* utillib_json_value_create_func_t)(void const *,
                                                                  size_t);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
@@ -95,7 +95,7 @@ UTILLIB_ENUM_END(utillib_json_kind);
  * Meta information about a C structure.
  */
 struct utillib_json_object_field_t {
-  utillib_json_value_create_func_t *create_func;
+  utillib_json_value_create_func_t create_func;
   char const *key;
   size_t offset;
   size_t size;
@@ -106,7 +106,7 @@ struct utillib_json_object_field_t {
  * Meta information about a C array.
  */
 struct utillib_json_array_desc_t {
-  utillib_json_value_create_func_t *create_func;
+  utillib_json_value_create_func_t create_func;
   size_t elemsz;
 };
 

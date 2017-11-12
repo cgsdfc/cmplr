@@ -41,7 +41,9 @@ UTILLIB_TEST_SET_UP() {
   utillib_ll1_parser_init(UT_FIXTURE, 
       &rule_index, &ll1_table, 
       &semantic,
-      NULL, ll1_sample_1_rule_handlers, NULL);
+      ll1_sample_1_terminal_handler,
+      ll1_sample_1_rule_handlers, 
+      ll1_sample_1_error_handler);
 
 }
 

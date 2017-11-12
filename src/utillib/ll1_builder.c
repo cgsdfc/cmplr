@@ -144,6 +144,8 @@ static void ll1_set_destroy(struct utillib_ll1_set *self) {
 static struct utillib_ll1_set *
 ll1_builder_FIRST_get(struct utillib_ll1_builder *self,
                       struct utillib_symbol const *symbol) {
+  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
+      "Only non terminal symbols can have FIRST set");
   return &self->FIRST[utillib_rule_index_symbol_index(self->rule_index,
                                                       symbol)];
 }
@@ -156,6 +158,8 @@ ll1_builder_FIRST_get(struct utillib_ll1_builder *self,
 static struct utillib_ll1_set *
 ll1_builder_FOLLOW_get(struct utillib_ll1_builder const *self,
                        struct utillib_symbol const *symbol) {
+  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
+      "Only non terminal symbols can have FOLLOW set");
   return &self->FOLLOW[utillib_rule_index_symbol_index(self->rule_index,
                                                        symbol)];
 }
@@ -195,6 +199,8 @@ static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self) {
     struct utillib_symbol const *FIRST = utillib_vector_front(RHS);
     struct utillib_ll1_set *LHS_FIRST = ll1_builder_FIRST_get(self, LHS);
     if (utillib_symbol_value(FIRST) == UT_SYM_EPS) {
+      printf("ll1_builder_FIRST_partial_eval: RHS has eps, LHS %s\n",
+          utillib_symbol_name(LHS));
       /* Do not test existence of `epsilon' in the bitset way, it hurts */
       LHS_FIRST->flag = true;
     } else if (utillib_symbol_kind(FIRST) == UT_SYMBOL_TERMINAL) {
@@ -299,6 +305,10 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
       }
     }
     FIRST->flag = last_eps;
+    if (FIRST->flag) {
+      printf("ll1_builder_FIRST_finalize: This FIRST has eps, LHS %s\n",
+          utillib_symbol_name(rule->LHS));
+    }
   }
 }
 
@@ -411,6 +421,26 @@ static bool ll1_builder_FOLLOW_update(struct utillib_ll1_set *self,
 }
 
 /**
+ * \function ll1_builder_FIRST_contains_eps
+ * Judges whether the FIRST of symbol contains epsilon.
+ * Notes that the FIRST is not computed.
+ * \param symbol The symbol whose FIRST is to judge.
+ */
+
+static bool ll1_builder_FIRST_contains_eps(struct utillib_ll1_builder *self,
+  struct utillib_symbol const* symbol)
+{
+  if (symbol->value==UT_SYM_EPS)
+    return true;
+  /* terminal other than epsilon */
+  if (symbol->kind==UT_SYMBOL_TERMINAL)
+    return false;
+  struct utillib_ll1_set const * FIRST=ll1_builder_FIRST_get(self, symbol);
+  return FIRST->flag;
+}
+
+
+/**
  * \function ll1_builder_FOLLOW_incremental
  * Based on the following algorithm:
  * If the rule has form `A := aBb' and `b' satisfies
@@ -420,6 +450,8 @@ static bool ll1_builder_FOLLOW_update(struct utillib_ll1_set *self,
  * Otherwise, if the rule has the form `A := aB', then
  * what follows `A' can also follows `B'.
  * Thus, we merge `FOLLOW' for `A' into that of `B'.
+ * Notes that `b' here is in fact a sequence of symbol of any length
+ * and FIRST(b) is computed on the fly rather than pre-computed.
  */
 
 static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self) {
@@ -433,18 +465,28 @@ static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self) {
     struct utillib_vector const *RHS = &rule->RHS;
     struct utillib_symbol const *LHS = rule->LHS;
     struct utillib_symbol const *LAST = utillib_vector_back(RHS);
-    struct utillib_ll1_set const *LHS_FOLLOW =
-        ll1_builder_FOLLOW_get(self, LHS);
+    struct utillib_ll1_set const *LHS_FOLLOW = ll1_builder_FOLLOW_get(self, LHS);
     if (utillib_symbol_kind(LAST) == UT_SYMBOL_NON_TERMINAL) {
       struct utillib_ll1_set *LAST_FOLLOW = ll1_builder_FOLLOW_get(self, LAST);
       changed = ll1_builder_FOLLOW_update(LAST_FOLLOW, LHS_FOLLOW);
     }
-    if (ll1_builder_FOLLOW_has_tailing(RHS) &&
-        ll1_builder_FOLLOW_last_epsilon(self, LAST)) {
-      size_t RHS_size = utillib_vector_size(RHS);
-      struct utillib_symbol const *PREV = utillib_vector_at(RHS, RHS_size - 2);
-      struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
-      changed = ll1_builder_FOLLOW_update(PREV_FOLLOW, LHS_FOLLOW);
+    size_t RHS_size = utillib_vector_size(RHS);
+    for (int i=0; i<RHS_size-1; ++i ) {
+      struct utillib_symbol const *PREV = utillib_vector_at(RHS, i);
+      if (PREV->kind==UT_SYMBOL_TERMINAL)
+        continue; /* Only non terminal haves FOLLOW */
+      bool is_eps=true;
+      for (int j=i+1; j<RHS_size; ++j) {
+        struct utillib_symbol const * symbol=utillib_vector_at(RHS, j);
+        if (!ll1_builder_FIRST_contains_eps(self, symbol)) {
+          is_eps=false;
+          break;
+        }
+      }
+      if (is_eps) {
+        struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
+        changed = ll1_builder_FOLLOW_update(PREV_FOLLOW, LHS_FOLLOW);
+      }
     }
   }
   return changed;
@@ -546,6 +588,9 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
       }
     } /* epsilon */
     if (FIRST->flag) {
+      printf("utillib_ll1_builder_build_table: This FIRST set "
+          "has eps, so look into its FOLLOW set: %s\n", utillib_symbol_name(rule->LHS));
+
       struct utillib_ll1_set const *FOLLOW = ll1_builder_FOLLOW_get(self, LHS);
       for (size_t symbol_id = 1; symbol_id < symbols_size; ++symbol_id) {
         if (utillib_ll1_set_contains(FOLLOW, symbol_id)) {
@@ -557,6 +602,8 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
         }
       }
       if (FOLLOW->flag) { /* special `eof' */
+        printf("utillib_ll1_builder_build_table: "
+            "this guy has eof in its FOLLOW: %s\n", utillib_symbol_name(LHS));
         utillib_vector2_set(table, LHS_index, UT_SYM_EOF, UTILLIB_RULE_EPS);
       }
     }

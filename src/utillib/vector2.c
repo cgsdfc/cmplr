@@ -95,7 +95,7 @@ void utillib_vector2_destroy(struct utillib_vector2 *self) {
 
 struct utillib_json_value_t *utillib_vector2_json_array_create(
     struct utillib_vector2 const *self,
-    utillib_json_value_create_func_t *create_func) {
+    utillib_json_value_create_func_t create_func) {
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (int i = 0; i < self->nrow; ++i) {
     struct utillib_json_value_t *row_array = utillib_json_array_create_empty();

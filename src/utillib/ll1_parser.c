@@ -166,7 +166,6 @@ static void ll1_parser_error_destroy(struct utillib_ll1_parser_error *self)
 static void ll1_parser_error_handle(struct utillib_ll1_parser *self, 
     struct utillib_ll1_parser_error const *err)
 {
-  printf("this is not called\n");
   self->error_handler(self->client_data, err); 
   utillib_vector_push_back(&self->errors, err);
 }
@@ -199,25 +198,23 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
 
   while (true) {
     input_symbol_value = scanner->lookahead(input);
-    input_symbol = utillib_rule_index_symbol_at(rule_index, input_symbol_value);
     top_symbol = utillib_vector_back(&self->symbol_stack);
-    if (input_symbol_value == UT_SYM_EOF) {
-      if (input_symbol_value == top_symbol->value) {
+    if (input_symbol_value == UT_SYM_EOF && 
+      input_symbol_value == top_symbol->value) {
+        printf("Parser matches final EOF, accepted!!\n");
         return true;
-      }
-      ll1_parser_error_handle(self, ll1_parser_error_create(
-            UT_LL1_EBADTOKEN, input_symbol, top_symbol));
-      return false;
     }
-    assert(input_symbol->kind == UT_SYMBOL_TERMINAL
-        && "Input can only be terminal");
+    input_symbol = utillib_rule_index_symbol_at(rule_index, input_symbol_value);
 
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
       if (top_symbol->value == input_symbol_value) {
+        printf("Parser matches stack top symbol with input terminal!\n"
+            "terminal_handler was called!\n");
         semantic=scanner->semantic(input);
         self->terminal_handler(self->client_data,
             input_symbol_value, semantic);
       } else {
+        printf("Input terminal failed to match stack top symbol!!\n");
         ll1_parser_error_handle(self, ll1_parser_error_create(
               UT_LL1_EBADTOKEN, input_symbol, top_symbol));
       }
