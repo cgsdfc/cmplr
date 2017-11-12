@@ -16,32 +16,33 @@ AM_LDFLAGS = -no-undefined
 lib_LTLIBRARIES = 
 noinst_PROGRAMS = 
 bin_PROGRAMS =
-include_HEADERS =
+nobase_include_HEADERS =
 TESTS =
+utillibincludedir = $(includedir)/utillib
 
 lib_LTLIBRARIES += libutillib.la
 
-libutillib_la_headers =  src/utillib/ll1_generator.h \
-												 src/utillib/flags.h \
-												 src/utillib/opg_builder.h \
-												 src/utillib/scanner.h \
-												 src/utillib/ll1_parser.h \
-												 src/utillib/vector2.h \
-												 src/utillib/bitset.h \
-												 src/utillib/unordered_op.h \
-												 src/utillib/ll1_builder.h \
-												 src/utillib/symbol.h \
-												 src/utillib/rule.h \
-												 src/utillib/pair.h \
-												 src/utillib/json.h \
-												 src/utillib/test.h \
-												 src/utillib/print.h \
-												 src/utillib/equal.h \
-												 src/utillib/hash.h \
-												 src/utillib/unordered_map.h \
-												 src/utillib/slist.h \
-												 src/utillib/vector.h \
-												 src/utillib/string.c
+utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
+													src/utillib/flags.h \
+													src/utillib/opg_builder.h \
+													src/utillib/scanner.h \
+													src/utillib/ll1_parser.h \
+													src/utillib/vector2.h \
+													src/utillib/bitset.h \
+													src/utillib/unordered_op.h \
+													src/utillib/ll1_builder.h \
+													src/utillib/symbol.h \
+													src/utillib/rule.h \
+													src/utillib/pair.h \
+													src/utillib/json.h \
+													src/utillib/test.h \
+													src/utillib/print.h \
+													src/utillib/equal.h \
+													src/utillib/hash.h \
+													src/utillib/unordered_map.h \
+													src/utillib/slist.h \
+													src/utillib/vector.h \
+													src/utillib/string.c
 
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
@@ -66,7 +67,6 @@ libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/vector.c \
 												 src/utillib/string.c
 
-include_HEADERS += $(libutillib_la_headers)
 noinst_PROGRAMS += utillib_test
 TESTS += utillib_test
 utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
@@ -111,18 +111,21 @@ noinst_PROGRAMS += pascal_ll1_table
 pascal_ll1_table_SOURCES = src/pascal/ll1_generator.c 
 pascal_ll1_table_LDADD = libutillib.la libpascal.la
 
-# Currently this is broken
+BUILT_SOURCES = src/pascal/pascal_ll1_table.c
+CLEANFILES = src/pascal/pascal_ll1_table.c
+
 src/pascal/pascal_ll1_table.c:
 	@echo "Generating LL(1) table for pascal..."
 	@pascal_ll1_table
 	@mv -f $(builddir)/pascal_ll1_table.c $(top_srcdir)/pascal
 
+noinst_pascalincludedir = $(includedir)/pascal
 
 lib_LTLIBRARIES += libpascal.la
-libpascal_la_headers =  src/pascal/symbols.h \
-												src/pascal/rules.h \
-												src/pascal/scanner.h \
-												src/pascal/parser.h
+noinst_pascalinclude_HEADERS =  src/pascal/symbols.h \
+																src/pascal/rules.h \
+																src/pascal/scanner.h \
+																src/pascal/parser.h
 
 libpascal_la_SOURCES = src/pascal/symbols.c \
 											 src/pascal/rules.c \
