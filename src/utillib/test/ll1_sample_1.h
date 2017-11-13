@@ -68,10 +68,12 @@ extern const size_t ll1_sample_1_table[][LL1_SAMPLE_1_EXTEND];
 
 extern const size_t ll1_sample_1_input_1[];
 extern const size_t ll1_sample_1_input_2[];
-extern utillib_ll1_parser_rule_handler ll1_sample_1_rule_handlers[];
-void ll1_sample_1_error_handler(struct ll1_sample_1_semantic *self,
-    struct utillib_ll1_parser_error const *error);
-void ll1_sample_1_terminal_handler(struct ll1_sample_1_semantic *self,
-    int code, void const * semantic);
 
+void ll1_sample_1_rule_handler (void *self, struct utillib_rule const *rule);
+
+void ll1_sample_1_error_handler(void *self,
+    struct utillib_ll1_parser_error const *error);
+
+void ll1_sample_1_terminal_handler(void *self,
+    struct utillib_symbol const *terminal,void const * semantic);
 #endif // UTILLIB_TEST_LL1_SAMPLE_1_H

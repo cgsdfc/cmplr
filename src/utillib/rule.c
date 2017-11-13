@@ -304,3 +304,16 @@ struct utillib_json_value_t *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
   return utillib_json_object_create(self, 0, RuleIndex_Fields);
 }
+
+/**
+ * \function utillib_rule_json_pretty_print
+ * Convenient helper to print a rule to stderr
+ * Mainly for ease of debug.
+ */
+void utillib_rule_json_pretty_print(struct utillib_rule const *self)
+{
+  struct utillib_json_value_t *val=utillib_rule_json_object_create(self, sizeof *self);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+

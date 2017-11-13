@@ -53,6 +53,8 @@ struct utillib_symbol {
 extern struct utillib_symbol utillib_symbol_epsilon;
 extern struct utillib_symbol utillib_symbol_eof;
 extern struct utillib_symbol utillib_symbol_error;
+extern struct utillib_symbol utillib_symbol_null;
+
 struct utillib_json_value_t *utillib_symbol_json_object_create(void const *data,
                                                                size_t offset);
 struct utillib_json_value_t *

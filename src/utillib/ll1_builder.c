@@ -199,8 +199,6 @@ static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self) {
     struct utillib_symbol const *FIRST = utillib_vector_front(RHS);
     struct utillib_ll1_set *LHS_FIRST = ll1_builder_FIRST_get(self, LHS);
     if (utillib_symbol_value(FIRST) == UT_SYM_EPS) {
-      printf("ll1_builder_FIRST_partial_eval: RHS has eps, LHS %s\n",
-          utillib_symbol_name(LHS));
       /* Do not test existence of `epsilon' in the bitset way, it hurts */
       LHS_FIRST->flag = true;
     } else if (utillib_symbol_kind(FIRST) == UT_SYMBOL_TERMINAL) {
@@ -306,8 +304,6 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
     }
     FIRST->flag = last_eps;
     if (FIRST->flag) {
-      printf("ll1_builder_FIRST_finalize: This FIRST has eps, LHS %s\n",
-          utillib_symbol_name(rule->LHS));
     }
   }
 }
@@ -356,20 +352,21 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
       if (PREV->kind == UT_SYMBOL_TERMINAL)
         continue;
       struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
-      struct utillib_symbol const *LAST = utillib_vector_at(RHS, i+1);
-      if (LAST->value == UT_SYM_EPS)
-        /* Do not let bitset see `epsilon'. It hurts */
-        continue;
-      if (utillib_symbol_kind(LAST) == UT_SYMBOL_TERMINAL) {
-        struct utillib_json_value_t * val=ll1_builder_set_json_array_create(
-            PREV_FOLLOW, rule_index, false);
-        utillib_json_pretty_print(val, stderr);
-        utillib_ll1_set_insert(PREV_FOLLOW, LAST->value);
-        puts(LAST->name);
-      } else { /* non terminal */
+      for (int j=i+1; j<RHS_size; ++j) {
+        struct utillib_symbol const *LAST = utillib_vector_at(RHS, j);
+        if (LAST->value == UT_SYM_EPS)
+          continue;
+        if (LAST->kind == UT_SYMBOL_TERMINAL) {
+          utillib_ll1_set_insert(PREV_FOLLOW, LAST->value);
+          break;
+        }
+        /* non terminal */
         struct utillib_ll1_set const *LAST_FIRST =
         ll1_builder_FIRST_get(self, LAST);
         utillib_ll1_set_union(PREV_FOLLOW, LAST_FIRST);
+        if (!LAST_FIRST->flag)
+          break;
+
       }
     }
   }
@@ -557,8 +554,6 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
       }
     } /* epsilon */
     if (FIRST->flag) {
-      printf("utillib_ll1_builder_build_table: This FIRST set "
-          "has eps, so look into its FOLLOW set: %s\n", utillib_symbol_name(rule->LHS));
 
       struct utillib_ll1_set const *FOLLOW = ll1_builder_FOLLOW_get(self, LHS);
       for (size_t symbol_id = 1; symbol_id < symbols_size; ++symbol_id) {
@@ -571,8 +566,6 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
         }
       }
       if (FOLLOW->flag) { /* special `eof' */
-        printf("utillib_ll1_builder_build_table: "
-            "this guy has eof in its FOLLOW: %s\n", utillib_symbol_name(LHS));
         utillib_vector2_set(table, LHS_index, UT_SYM_EOF, UTILLIB_RULE_EPS);
       }
     }

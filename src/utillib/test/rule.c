@@ -67,7 +67,7 @@ UTILLIB_TEST(rule_index_rule_id) {
   struct utillib_vector const *RULES = utillib_rule_index_rules(self);
   for (int i = 0; i < test_rules_size; ++i) {
     struct utillib_rule const *rule = utillib_vector_at(RULES, i);
-    UTILLIB_TEST_EXPECT_EQ(utillib_rule_id(rule), i);
+    UTILLIB_TEST_EXPECT_EQ(rule->id, i);
   }
 }
 

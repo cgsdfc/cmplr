@@ -147,10 +147,7 @@ void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self);
 void utillib_rule_index_load_table(struct utillib_rule_index const *self,
                                    struct utillib_vector2 *table,
                                    int const *array);
-
-#define utillib_rule_rhs(self) (&(self)->RHS)
-#define utillib_rule_lhs(self) ((self)->LHS)
-#define utillib_rule_id(self) ((self)->id)
+void utillib_rule_json_pretty_print(struct utillib_rule const *self);
 
 #define utillib_rule_index_terminals_size(self) ((self)->terminals_size)
 #define utillib_rule_index_non_terminals_size(self) ((self)->non_terminals_size)

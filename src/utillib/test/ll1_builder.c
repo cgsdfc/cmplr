@@ -137,10 +137,10 @@ UTILLIB_TEST(ll1_builder_build_table_correct) {
           struct utillib_rule const *Expected_Rule =
               utillib_rule_index_rule_at(&rule_index, Expected_RuleID);
           struct utillib_symbol const *x =
-              utillib_vector_front(utillib_rule_rhs(Expected_Rule));
+              utillib_vector_front(&Expected_Rule->RHS);
           UTILLIB_TEST_EXPECT_EQ(x, UTILLIB_SYMBOL_EPS);
         } else {
-          Actual_RuleID = utillib_rule_id(Actual_Rule);
+          Actual_RuleID = Actual_Rule->id;
           UTILLIB_TEST_EXPECT_EQ(Actual_RuleID, Expected_RuleID);
         }
       } else {

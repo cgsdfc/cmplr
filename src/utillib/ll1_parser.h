@@ -29,6 +29,7 @@
 UTILLIB_ENUM_BEGIN(utillib_ll1_parser_error_kind)
 UTILLIB_ENUM_ELEM_INIT(UT_LL1_ENORULE, 1)
 UTILLIB_ENUM_ELEM(UT_LL1_EBADTOKEN)
+UTILLIB_ENUM_ELEM(UT_LL1_EEMPTY)
 UTILLIB_ENUM_END(utillib_ll1_parser_error_kind);
 
 struct utillib_ll1_parser_error {
@@ -37,7 +38,7 @@ struct utillib_ll1_parser_error {
   struct utillib_symbol const * stack_top_symbol;
 };
 
-typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, int code, void const * semantic);
+typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, struct utillib_symbol const *, void const * semantic);
 typedef void (* utillib_ll1_parser_rule_handler) (void *client_data, struct utillib_rule const *);
 typedef void (* utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
 

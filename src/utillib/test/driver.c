@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
                        /* Utillib_Scanner, */
                        /* Utillib_Vector2, Utillib_Rule, */
                        /* Utillib_LL1Builder */
-                       /* Utillib_LL1Generator */
-                       Utillib_LL1Parser
+                       Utillib_LL1Generator
                        );
 }
