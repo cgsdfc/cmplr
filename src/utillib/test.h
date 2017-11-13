@@ -87,7 +87,7 @@
 
 #include "enum.h"
 #include "vector.h"
-#include <stdbool.h>
+#include "config.h"
 #include <stdio.h>  /* for FILE* */
 #include <string.h> /* for strcmp */
 #include <time.h>   /* for time_t */

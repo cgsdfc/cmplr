@@ -22,7 +22,7 @@
 #define UTILLIB_STRING_H
 #define UTILLIB_C_STR(S) ((S)->c_str)
 #include "enum.h"
-#include <stdbool.h> /* for bool */
+#include "config.h" /* for bool */
 #include <stddef.h>  /* for size_t */
 #include <stdio.h>   /* FILE* */
                      /**

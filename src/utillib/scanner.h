@@ -20,7 +20,7 @@
 */
 #ifndef UTILLIB_ABSTRACT_SCANNER_H
 #define UTILLIB_ABSTRACT_SCANNER_H
-#include <stdbool.h> /* for bool */
+#include "config.h" /* for bool */
 #include <stddef.h>  /* size_t */
 #include <stdio.h>
 

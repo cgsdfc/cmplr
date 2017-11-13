@@ -29,7 +29,7 @@
  * the tail of the array for back insertion
  * and storage tail for resizing.
  */
-#include <stdbool.h> /* for bool */
+#include "config.h" /* for bool */
 #include <stddef.h>  /* size_t */
 
 #define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))

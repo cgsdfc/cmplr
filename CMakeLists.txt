@@ -17,14 +17,22 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
 #  02110-1301 USA
 
+project(cmplr C)
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_C_FLAGS "-g3 -std=c99")
-include_directories(${CMAKE_SOURCE_DIR})
-# add_subdirectory(lexer)
-# add_subdirectory(parser)
-# add_subdirectory(experiment)
-# add_subdirectory(recursive)
-add_subdirectory(utillib)
-add_subdirectory(pascal)
+file (STRINGS "VERSION" CMPLR_VERSION)
+include_directories(src)
+
+if (MSVC OR WIN32)
+  set(CMPLR_PLATFORM "WINDOWS")
+else(MSVC OR WIN32)
+  set(CMPLR_PLATFORM "LINUX")
+endif(MSVC OR WIN32)
+
+if (CMPLR_PLATFORM STREQUAL "LINUX")
+  set(CMAKE_C_FLAGS "-g3 -std=c99")
+endif(CMPLR_PLATFORM STREQUAL "LINUX")
+
+add_subdirectory(src/utillib)
+add_subdirectory(src/pascal)
 

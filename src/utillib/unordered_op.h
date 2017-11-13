@@ -1,7 +1,7 @@
 #ifndef UTILLIB_UNORDERED_OP_H
 #define UTILLIB_UNORDERED_OP_H
 
-#include <stdbool.h>
+#include "config.h"
 #include <stddef.h> /* for size_t */
 struct utillib_unordered_op {
   size_t (*hash)(void const *);

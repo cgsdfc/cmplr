@@ -30,7 +30,7 @@
 #include "slist.h"
 #include "unordered_op.h"
 #include "vector.h"
-#include <stdbool.h>
+#include "config.h"
 #include <stddef.h>
 #include <stdlib.h>
 

@@ -22,7 +22,7 @@
 #define UTILLIB_BITSET_H
 
 #include "json.h"
-#include <stdbool.h> /* bool */
+#include "config.h" /* bool */
 #include <stddef.h>  /* size_t */
 #define utillib_bitset_N(self) ((self)->N)
 

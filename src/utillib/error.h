@@ -23,7 +23,7 @@
 #include "enum.h"
 #include "position.h"
 #include "slist.h"
-#include <stdbool.h>
+#include "config.h"
 #include <stddef.h>
 #include <stdio.h>
 #define COLOR_STRING(C, S) COLOR_STRING_BOLD(C, S)
