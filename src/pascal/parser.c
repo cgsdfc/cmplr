@@ -144,8 +144,13 @@ static void pascal_parser_var_callback(struct pascal_parser_var_decl *self,
  * handlers for rule, termianl and error
  */
 
-static void parser_error_handler(void *self,
+static void parser_error_handler(void *self, void * input,
     struct utillib_ll1_parser_error const*error) {
+  size_t row;
+  size_t col;
+  pascal_scanner_getpos(input, &row, &col);
+
+  utillib_error_printf("At %lu:%lu: ", row, col);
   switch (error->kind) {
     case UT_LL1_EBADTOKEN:
       utillib_error_printf("ERROR: expected `%s', got `%s'\n",

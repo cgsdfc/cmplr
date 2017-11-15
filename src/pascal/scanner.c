@@ -311,3 +311,11 @@ size_t pascal_scanner_check(struct pascal_scanner *self) {
   }
   return size;
 }
+
+void pascal_scanner_getpos(struct pascal_scanner const *self,
+    size_t *row, size_t *col)
+{
+  *row=self->scanner.row;
+  *col=self->scanner.col;
+}
+

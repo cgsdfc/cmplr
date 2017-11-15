@@ -28,26 +28,30 @@ extern size_t const pascaL_follows[][15];
 /* program := subprogram
  * first(program) = 'const' 'var' 'procedure' 
  * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
- * 
  * follow(program) := eof
+ * # OK
  */
 
 /* subprogram := [ const_decl ] [ var_decl ] [ proc_decl ] stmt 
  * first(subprogram) = 'const' 'var' 'procedure'  
  * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
  * follow(subprogram) = ';' eof 
+ * # union first(stmt).
+ * # FXXK
  */
 
-/* const_decl := 'const' const_def {',' const_def } ';'
- * first(const_decl) = 'const' 
+/* const_decl := 'const' const_def {',' const_def } ';' | eps
+ * first(const_decl) = 'const' eps
  * follow(const_decl) = 'var' 'procedure' 
  * iden 'if' 'while' 'call' 'begin' 'read' 'write'
  * eof
+ * # OK
  */
 
-/* const_def := iden '=' uint 
- * first(const_def) = iden 
+/* const_def := iden '=' uint | eps
+ * first(const_def) = iden eps
  * follow(const_def) = ',' ';'
+ * # OK
  */
 
 /* var_decl := 'var' iden {, iden } ';' 
@@ -55,23 +59,27 @@ extern size_t const pascaL_follows[][15];
  * follow(var_decl) = 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write'
  * eof
- */
-
-/* proc_decl := proc_head subprogram { ';' subprogram } ';' 
- * first(proc_decl) = 'procedure'
- * follow(proc_decl) = 
- * iden 'if' 'while' 'call' 'begin' 'read' 'write' 
- * eof
+ * # OK
  */
 
 /* proc_head := 'procedure' iden ';' 
  * first(proc_head) = 'procedure'
- * follow(proc_head) = 'const' 'var' 'procedure'
+ * follow(proc_head) =
+ * 'const' 'var' 'procedure'  
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write' eof
+ */
+
+/* proc_decl := proc_head subprogram { ';' subprogram } ';' 
+ * first(proc_decl) = 'procedure' eps
+ * follow(proc_decl) = 
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write' 
+ * eof
+ * # OK
  */
 
 /* stmt := assign | cond | loop | call | composite | read | write | eps */
 /* first(stmt) = iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
- * follow(stmt) = eof ';' 'end'
+ * follow(stmt) = eof ';' 'end' # WRONG
  */
 
 /* assign := iden ':=' expr 
