@@ -173,12 +173,23 @@ static void parser_terminal_handler(void *self,
     struct utillib_symbol const * terminal,
                                     void const *semantic) {
   puts(terminal->name);
-
+  switch (terminal->value) {
+  case SYM_IDEN:
+    puts(semantic);
+    free(semantic);
+    break;
+  case SYM_UINT:
+    printf("%lu\n", *(size_t const*) semantic);
+    free(semantic);
+    break;
+  }
 }
 
 static void parser_rule_handler(void *self, struct utillib_rule const *rule)
 {
-  utillib_rule_json_pretty_print(rule);
+  struct utillib_json_value_t *val=utillib_rule_json_object_create(rule, 0);
+  utillib_json_pretty_print(val, stdout);
+  utillib_json_value_destroy(val);
 }
 
 /*

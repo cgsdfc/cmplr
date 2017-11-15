@@ -128,6 +128,9 @@ static int scanner_gettoken(struct utillib_char_scanner *scanner,
   case '=':
     code = SYM_EQ;
     break;
+  case '.':
+    code = SYM_DOT;
+    break;
   }
   if (code != UT_SYM_NULL) {
     utillib_char_scanner_shiftaway(scanner);
@@ -147,15 +150,16 @@ static int scanner_gettoken(struct utillib_char_scanner *scanner,
     switch (utillib_char_scanner_lookahead(scanner)) {
     case '>':
       code = SYM_NE;
+      utillib_char_scanner_shiftaway(scanner);
       break;
     case '=':
       code = SYM_LE;
+      utillib_char_scanner_shiftaway(scanner);
       break;
     default:
       code = SYM_LT;
       break;
     }
-    utillib_char_scanner_shiftaway(scanner);
     return code;
   case '>':
     utillib_char_scanner_shiftaway(scanner);

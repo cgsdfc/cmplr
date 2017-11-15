@@ -15,13 +15,14 @@ begin
   y := b;
   call mod;
   while x <> 0 do
-    begin
-      call swap;
-      call mod
-    end;
+  begin
+    call swap;
+    call mod
   end;
-  g := y;
-  m := a * b / g;
-  write (g, m);
+end;
+
+g := y;
+m := a * b / g;
+write (g, m);
 end;
 

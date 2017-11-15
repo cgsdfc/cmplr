@@ -189,7 +189,7 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     if (utillib_vector_empty(&self->symbol_stack)) {
       ll1_parser_error_init(&error, UT_LL1_EEMPTY, 
           input_symbol, UTILLIB_SYMBOL_ERR);
-      self->error_handler(self->client_data, &error);
+      self->error_handler(self->client_data, input, &error);
       return result;
     }
     top_symbol = utillib_vector_back(&self->symbol_stack);
@@ -202,7 +202,7 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
         result=false;
         ll1_parser_error_init(&error, UT_LL1_EBADTOKEN,
             input_symbol, top_symbol);
-        self->error_handler(self->client_data, &error); 
+        self->error_handler(self->client_data, input, &error); 
       }
       utillib_vector_pop_back(&self->symbol_stack);
       scanner->shiftaway(input);
@@ -217,7 +217,7 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
         result=false;
         ll1_parser_error_init(&error, UT_LL1_ENORULE,
             input_symbol, top_symbol);
-        self->error_handler(self->client_data, &error); 
+        self->error_handler(self->client_data, input, &error); 
         scanner->shiftaway(input);
         utillib_vector_pop_back(&self->symbol_stack);
       }

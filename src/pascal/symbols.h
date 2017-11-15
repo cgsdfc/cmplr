@@ -86,6 +86,7 @@ UTILLIB_ENUM_ELEM(SYM_MINUS)
 UTILLIB_ENUM_ELEM(SYM_COMMA)
 UTILLIB_ENUM_ELEM(SYM_LP)
 UTILLIB_ENUM_ELEM(SYM_RP)
+UTILLIB_ENUM_ELEM(SYM_DOT)
 UTILLIB_ENUM_END(pascal_symbol_kind);
 
 extern struct utillib_symbol const pascal_symbols[];

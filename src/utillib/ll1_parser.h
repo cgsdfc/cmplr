@@ -40,7 +40,7 @@ struct utillib_ll1_parser_error {
 
 typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, struct utillib_symbol const *, void const * semantic);
 typedef void (* utillib_ll1_parser_rule_handler) (void *client_data, struct utillib_rule const *);
-typedef void (* utillib_ll1_parser_error_handler)(void *client_data, struct utillib_ll1_parser_error const*);
+typedef void (* utillib_ll1_parser_error_handler)(void *client_data, void *input, struct utillib_ll1_parser_error const*);
 
 
 /**

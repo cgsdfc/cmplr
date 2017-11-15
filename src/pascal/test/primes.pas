@@ -19,6 +19,7 @@ begin
   begin
     write (m);
     pf := true;
+    write(m);
   end;
 end;
 begin
@@ -37,4 +38,4 @@ begin
     read (n);
   end;
   if pf = false then write (0);
-end;
+end.

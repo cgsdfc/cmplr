@@ -410,24 +410,13 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
 }
 
 /**
- * \function ll1_builder_check_impl
- * Checks whether fundamental conditions for a grammar to be LL(1) hold.
- * They are:
- * (a) Different rules having the same non terminal symbol on the left hand
- * side,
- * the FIRST of one rule does not intersect with another.
- *
- * (b) If `epsilon' can be deducted from one rule, then the FOLLOW of the LHS
- * symbol should not overlap the FIRST set of any other rules.
- *
- * In plain words, when the parser sees that the lookaheaded token
- * can make rule `A := epsilon' applied to the stack-top symbol `A',
- * the grammar should not surprise us with that same lookahead token
- * leading to a different rule.
+ * \function ll1_builder_check_EFIRST
+ * Checks for the FIRST/FIRST conflict.
+ * The FIRST of rules with the same LHS should not intersect with each other.
  */
 
 static void
-ll1_builder_check_impl(struct utillib_ll1_builder *self,
+ll1_builder_check_EFIRST(struct utillib_ll1_builder *self,
                        struct utillib_vector const *same_LHS_rules) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, foo_rule,
@@ -440,21 +429,51 @@ ll1_builder_check_impl(struct utillib_ll1_builder *self,
           ll1_builder_FIRST_RULE_get(self, foo_rule);
       struct utillib_ll1_set const *bar_FIRST =
           ll1_builder_FIRST_RULE_get(self, bar_rule);
-      struct utillib_ll1_set const *LHS_FOLLOW =
-          ll1_builder_FOLLOW_get(self, foo_rule->LHS);
       if (utillib_ll1_set_intersect(foo_FIRST, bar_FIRST, true)) {
         utillib_vector_push_back(
             &self->errors,
             ll1_builder_error_create_as_EFIRST(rule_index, foo_FIRST, bar_FIRST,
                                                foo_rule, bar_rule));
       }
-      if (foo_FIRST->flag &&
-          utillib_ll1_set_intersect(bar_FIRST, LHS_FOLLOW, false)) {
-        utillib_vector_push_back(
-            &self->errors,
-            ll1_builder_error_create_as_EFOLLOW(rule_index, bar_rule, bar_FIRST,
-                                                foo_rule->LHS, LHS_FOLLOW));
-      }
+    }
+  }
+}
+
+/**
+ * \function ll1_builder_check_EFOLLOW
+ * Checks that if one rule deducts epsilon, the FOLLOWs of other rule
+ * should intersect with its FIRST.
+ */
+
+static void 
+ll1_builder_check_EFOLLOW(struct utillib_ll1_builder *self,
+    struct utillib_vector const *same_LHS_rules) {
+  struct utillib_rule_index const *rule_index = self->rule_index;
+  bool deducts_eps=false;
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, foo_rule,
+      same_LHS_rules) {
+    struct utillib_ll1_set const *foo_FIRST =
+    ll1_builder_FIRST_RULE_get(self, foo_rule);
+    if (foo_FIRST->flag) {
+      deducts_eps=true;
+      break;
+    }
+  }
+  if (!deducts_eps)
+    return;
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, bar_rule,
+          same_LHS_rules) {
+    struct utillib_ll1_set const *bar_FIRST=
+    ll1_builder_FIRST_get(self, bar_rule->LHS);
+    struct utillib_symbol const *LHS=bar_rule->LHS;
+    struct utillib_ll1_set const * LHS_FOLLOW = ll1_builder_FOLLOW_get(self, LHS);
+
+    if (utillib_ll1_set_intersect(bar_FIRST, LHS_FOLLOW, false)) {
+      utillib_vector_push_back(
+          &self->errors,
+          ll1_builder_error_create_as_EFOLLOW(rule_index,
+            bar_rule, bar_FIRST,
+            LHS, LHS_FOLLOW));
     }
   }
 }
@@ -470,7 +489,8 @@ int utillib_ll1_builder_check(struct utillib_ll1_builder *self) {
   utillib_rule_index_build_LHS_index(rule_index);
   for (size_t i = 0; i < rule_index->non_terminals_size; ++i) {
     struct utillib_vector const *same_LHS_rules = &rule_index->LHS_index[i];
-    ll1_builder_check_impl(self, same_LHS_rules);
+    ll1_builder_check_EFIRST(self, same_LHS_rules);
+    ll1_builder_check_EFOLLOW(self, same_LHS_rules);
   }
   return utillib_vector_size(&self->errors);
 }

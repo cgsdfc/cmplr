@@ -43,16 +43,16 @@ ll1_generator_print_EFOLLOW(struct utillib_json_value_t *const *errs) {
     char const *msg = utillib_string_c_str(&str);
     switch (i) {
     case 0:
-      utillib_error_printf("Production in conflict is %s\n", msg);
+      utillib_error_printf("Rule: %s\n", msg);
       break;
     case 1:
-      utillib_error_printf("The FIRST set of which is %s\n", msg);
+      utillib_error_printf("The FIRST set of it is %s\n", msg);
       break;
     case 2:
-      utillib_error_printf("The Symbol in conflict is %s\n", msg);
+      utillib_error_printf("The Symbol: %s\n", msg);
       break;
     case 3:
-      utillib_error_printf("The FOLLOW set of which is %s\n", msg);
+      utillib_error_printf("The FOLLOW set of it is %s\n", msg);
       break;
     }
   }

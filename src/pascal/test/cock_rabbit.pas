@@ -15,4 +15,4 @@ begin
     cock := cock + 1;
   end;
   if n = 0 then write (0, 0);
-end
+end.
