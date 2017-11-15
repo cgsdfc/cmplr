@@ -121,7 +121,7 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
     }
     if (value < *pvalue)
       *pvalue = value;
-    utillib_vector_push_back(pvector, (void const*)symbol);
+    utillib_vector_push_back(pvector, symbol);
   }
   /* counts EOF */
   self->non_terminals_size = utillib_vector_size(&self->non_terminals);

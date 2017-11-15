@@ -22,6 +22,7 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file (STRINGS "VERSION" CMPLR_VERSION)
 include_directories(src)
+add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test\")
 
 if (MSVC OR WIN32)
   set(CMPLR_PLATFORM "WINDOWS")

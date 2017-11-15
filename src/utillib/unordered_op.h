@@ -8,6 +8,7 @@ struct utillib_unordered_op {
   bool (*equal)(void const *, void const *);
 };
 
-struct utillib_unordered_op *utillib_unordered_op_get_c_str(void);
+extern struct utillib_unordered_op const utillib_unordered_strop;
+
 
 #endif /* UTILLIB_UNORDERED_OP_H */

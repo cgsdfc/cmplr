@@ -29,6 +29,7 @@ struct utillib_ll1_generator {
   struct utillib_rule_index rule_index;
   struct utillib_ll1_builder builder;
   struct utillib_vector2 table;
+  struct utillib_json_value_t * builder_val;
 };
 
 void utillib_ll1_generator_init_from_code(
@@ -39,5 +40,8 @@ bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
                                     char const *filename);
 
 void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self);
+void utillib_ll1_generator_dump_set(struct utillib_ll1_generator *self,
+    int kind, int symbol_id);
 
+void utillib_ll1_generator_dump_all(struct utillib_ll1_generator *self);
 #endif /* UTILLIB_LL1_GENERATOR_H */

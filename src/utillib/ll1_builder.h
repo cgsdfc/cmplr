@@ -23,6 +23,11 @@
 #include "vector.h"
 #include "vector2.h"
 
+UTILLIB_ENUM_BEGIN(utillib_ll1_set_kind)
+  UTILLIB_ENUM_ELEM(UT_LL1_FIRST)
+  UTILLIB_ENUM_ELEM(UT_LL1_FOLLOW)
+UTILLIB_ENUM_END(utillib_ll1_set_kind);
+
 /**
  * \struct utillib_ll1_builder
  * Builder of the LL(1) parser table.

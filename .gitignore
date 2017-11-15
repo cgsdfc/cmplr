@@ -4,7 +4,6 @@ autoscan.log
 compile
 compile_commands.json
 config.guess
-config.h
 config.log
 config.status
 config.sub

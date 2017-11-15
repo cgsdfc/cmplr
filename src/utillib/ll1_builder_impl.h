@@ -34,11 +34,6 @@ UTILLIB_ENUM_ELEM(UT_LL1_EFIRST)
 UTILLIB_ENUM_ELEM(UT_LL1_EFOLLOW)
 UTILLIB_ENUM_END(utillib_ll1_error_kind);
 
-UTILLIB_ENUM_BEGIN(utillib_ll1_set_kind)
-  UTILLIB_ENUM_ELEM(UT_LL1_FIRST)
-  UTILLIB_ENUM_ELEM(UT_LL1_FOLLOW)
-UTILLIB_ENUM_END(utillib_ll1_set_kind);
-
 struct utillib_ll1_builder_error {
   int kind;
   struct utillib_json_value_t *values[UT_LL1_ERR_VAL_MAX];
@@ -90,6 +85,9 @@ bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
 struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
 
+struct utillib_json_value_t *
+ll1_builder_set_json_object_create(struct utillib_ll1_builder const *self,
+    int kind, struct utillib_symbol const *symbol);
 
 struct utillib_ll1_builder_error *
 ll1_builder_error_create_as_EFIRST(struct utillib_rule_index const *rule_index,

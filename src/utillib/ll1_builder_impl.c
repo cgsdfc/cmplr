@@ -162,13 +162,12 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
 }
 
 struct utillib_json_value_t *
-ll1_build_set_json_object_create(
+ll1_builder_set_json_object_create(
     struct utillib_ll1_builder const *self,
     int kind,
-    struct utillib_rule const *rule)
+    struct utillib_symbol const *LHS)
 {
   struct utillib_json_value_t *object=utillib_json_object_create_empty();
-  struct utillib_symbol const *LHS=rule->LHS;
   struct utillib_ll1_set const *set=NULL;
 
   switch(kind) {
@@ -193,14 +192,14 @@ ll1_build_set_json_object_create(
 struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
-  struct utillib_vector const *rules_vector = &rule_index->rules;
+  struct utillib_vector const *symbol_vector = &rule_index->non_terminals;
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
 
-  UTILLIB_VECTOR_FOREACH(struct utillib_rule const * , rule, rules_vector) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const * , symbol, symbol_vector) {
     utillib_json_array_push_back(array,
-        ll1_build_set_json_object_create(self, UT_LL1_FIRST, rule));
+        ll1_builder_set_json_object_create(self, UT_LL1_FIRST, symbol));
     utillib_json_array_push_back(array,
-        ll1_build_set_json_object_create(self, UT_LL1_FOLLOW, rule));
+        ll1_builder_set_json_object_create(self, UT_LL1_FOLLOW, symbol));
   }
   return array;
 }

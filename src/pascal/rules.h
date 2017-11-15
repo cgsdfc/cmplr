@@ -22,6 +22,8 @@
 #define PASCAL_RULES_H
 #include <utillib/rule.h>
 extern struct utillib_rule_literal const pascal_rules[];
+extern size_t const pascaL_firsts[][15];
+extern size_t const pascaL_follows[][15];
 
 /* program := subprogram
  * first(program) = 'const' 'var' 'procedure' 
@@ -80,6 +82,7 @@ extern struct utillib_rule_literal const pascal_rules[];
 /* expr := ['+'|'-'] term { add_op term } */
 /* first(expr) = '+' '-' iden uint '('
  * follow(expr) = ')'  '<>'  '<'  '>'  '<='  '>=' ','
+ * '='
  * ';' eof 'end'
  * 
  */
@@ -113,8 +116,8 @@ extern struct utillib_rule_literal const pascal_rules[];
  */
 
 
-/* rel_op := '<>' | '<' | '>' | '<=' | '>='
- * first(rel_op) = '<>'  '<'  '>'  '<='  '>=' 
+/* rel_op := '<>' | '<' | '>' | '<=' | '>=' | '='
+ * first(rel_op) = '<>'  '<'  '>'  '<='  '>='  | '='
  * follow(rel_op) = iden uint '('
  */
 

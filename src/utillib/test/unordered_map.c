@@ -17,7 +17,7 @@ static void test_unordered_map(void) {
       {"Siso", 7},    {"Adison", 8},
       {"Wang", 9},    {NULL, NULL}};
 
-  utillib_unordered_map_init(&map, utillib_unordered_map_const_charp_ft());
+  utillib_unordered_map_init(&map, &utillib_unordered_strop);
   for (int i = 0; i < 100000; i++) {
     for (struct utillib_pair_t *p = stu; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
       utillib_unordered_map_insert(&map, p);

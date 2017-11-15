@@ -18,7 +18,6 @@
    02110-1301 USA
 
 */
-#include "config.h"
 #include "rules.h"
 #include "symbols.h"
 #include <utillib/ll1_generator.h>

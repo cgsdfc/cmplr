@@ -64,6 +64,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
+												 src/utillib/ll1_builder_impl.c \
 												 src/utillib/ll1_generator.c \
 												 src/utillib/opg_builder.c \
 												 src/utillib/scanner.c \
