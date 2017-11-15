@@ -22,6 +22,7 @@
 #ifndef UTILLIB_LL1_BUILDER_IMPL_H
 #define UTILLIB_LL1_BUILDER_IMPL_H
 
+#include "ll1_builder.h"
 #include "bitset.h"
 #include "symbol.h"
 #include "enum.h"
@@ -68,6 +69,30 @@ bool utillib_ll1_set_equal(struct utillib_ll1_set const *self,
 bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
                                struct utillib_ll1_set const *rhs,
                                bool about_flag);
+
+struct utillib_json_value_t *
+ll1_builder_set_json_array2_create(struct utillib_ll1_set const *self,
+                                   struct utillib_rule_index const *rule_index,
+                                   bool is_eps);
+
+struct utillib_json_value_t *
+utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
+
+struct utillib_ll1_builder_error *
+ll1_builder_error_create_as_EFIRST(struct utillib_rule_index const *rule_index,
+                                   struct utillib_ll1_set const *lhs_FIRST,
+                                   struct utillib_ll1_set const *rhs_FIRST,
+                                   struct utillib_rule const *lhs_rule,
+                                   struct utillib_rule const *rhs_rule);
+
+struct utillib_ll1_builder_error *
+ll1_builder_error_create_as_EFOLLOW(struct utillib_rule_index const *rule_index,
+                                    struct utillib_rule const *lhs_rule,
+                                    struct utillib_ll1_set const *lhs_FIRST,
+                                    struct utillib_symbol const *rhs_symbol,
+                                    struct utillib_ll1_set const *rhs_FOLLOW);
+ 
+void utillib_ll1_builder_error_destroy(struct utillib_ll1_builder_error *self);
 
 #endif /* UTILLIB_LL1_BUILDER_IMPL_H */
 

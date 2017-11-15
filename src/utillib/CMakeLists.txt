@@ -1,6 +1,7 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./ll1_builder_impl.c
   ./ll1_generator.c
   ./opg_builder.c
   ./scanner.c
