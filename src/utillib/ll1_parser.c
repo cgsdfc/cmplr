@@ -152,12 +152,6 @@ static void ll1_parser_error_init(struct utillib_ll1_parser_error * self,
   self->kind=kind;
 }
 
-static void ll1_parser_error_handle(struct utillib_ll1_parser *self, 
-    struct utillib_ll1_parser_error const *err)
-{
-  self->error_handler(self->client_data, err); 
-}
-
 /*
  * Public interface
  */

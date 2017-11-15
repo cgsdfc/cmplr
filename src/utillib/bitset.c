@@ -54,10 +54,10 @@ void utillib_bitset_destroy(struct utillib_bitset *self) {
   assert(pos < self->N && "Index out of range")
 
 /**
- * \function utillib_bitset_test
+ * \function utillib_bitset_contains
  * Tests membership of element at `pos' against the bitset.
  */
-bool utillib_bitset_test(struct utillib_bitset const *self, size_t pos) {
+bool utillib_bitset_contains(struct utillib_bitset const *self, size_t pos) {
   bitset_index_check(pos, self);
   return self->bits[bit_index(pos, self)] & (1 << bit_offset(pos, self));
 }
@@ -66,7 +66,7 @@ bool utillib_bitset_test(struct utillib_bitset const *self, size_t pos) {
  * \function utillib_bitset_set
  * Marks that element at `pos' belongs to the bitset.
  */
-void utillib_bitset_set(struct utillib_bitset *self, size_t pos) {
+void utillib_bitset_insert(struct utillib_bitset *self, size_t pos) {
   bitset_index_check(pos, self);
   self->bits[bit_index(pos, self)] |= (1 << bit_offset(pos, self));
 }
@@ -75,18 +75,55 @@ void utillib_bitset_set(struct utillib_bitset *self, size_t pos) {
  * \function utillib_bitset_reset
  * Erases element from the bitset.
  */
-void utillib_bitset_reset(struct utillib_bitset *self, size_t pos) {
+void utillib_bitset_remove(struct utillib_bitset *self, size_t pos) {
   bitset_index_check(pos, self);
   self->bits[bit_index(pos, self)] &= ~(1 << bit_offset(pos, self));
 }
 
-/**
+/*
  * \function utillib_bitset_union
- * Puts all the bits of `other' into `self'.
- * \return Whether the content of `self' was different
- * from before the union was done.
+ * Unions `other' into `self.
  */
-bool utillib_bitset_union(struct utillib_bitset *self,
+void utillib_bitset_union(struct utillib_bitset *self, struct utillib_bitset 
+    const * other)
+{
+  for (int i=0; i<self->size; ++i) {
+    self->bits[i] |= other->bits[i];
+  }
+}
+
+/*
+ * The following interfaces with `_updated' as postfix
+ * do the same thing as their counterparts except that 
+ * they returns boolean to indicate whether `self' was
+ * updated by these operations.
+ * They are useful for fixed-pointed computation, but will
+ * be slower than their counterparts.
+ */
+
+bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t value)
+{
+  if (utillib_bitset_contains(self, value))
+    return false;
+  utillib_bitset_insert(self, value);
+  return true;
+}
+
+bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t value)
+{
+  if (!utillib_bitset_contains(self, value))
+    return false;
+  utillib_bitset_remove(self, value);
+  return true;
+}
+
+/**
+ * \function utillib_bitset_union_updated
+ * Unions `other' into `self' and returns
+ * true if `self' is updated by this operation.
+ * \return True if `other' updates `self'.
+ */
+bool utillib_bitset_union_updated(struct utillib_bitset *self,
                           struct utillib_bitset const *other) {
   bool changed = false;
   for (size_t i = 0; i < self->size; ++i) {
@@ -125,16 +162,10 @@ struct utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
   struct utillib_bitset const *self = base;
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {
-    if (utillib_bitset_test(self, i)) {
+    if (utillib_bitset_contains(self, i)) {
       utillib_json_array_push_back(array,
                                    utillib_json_size_t_create(&i, sizeof i));
     }
   }
   return array;
-}
-
-struct utillib_bitset *utillib_bitset_create(size_t N) {
-  struct utillib_bitset *self = malloc(sizeof *self);
-  utillib_bitset_init(self, N);
-  return self;
 }

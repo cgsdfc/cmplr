@@ -34,22 +34,22 @@ UTILLIB_TEST(bitset_init) {
                        expected_size);
 }
 
-UTILLIB_TEST(bitset_test_and_set) {
+UTILLIB_TEST(bitset_contains_and_insert) {
   UTILLIB_TEST_CONST(N, 32);
   utillib_bitset_init(UT_FIXTURE, N);
   for (size_t i = 0; i < N; ++i) {
-    utillib_bitset_set(UT_FIXTURE, i);
-    bool Expected = utillib_bitset_test(UT_FIXTURE, i);
+    utillib_bitset_insert(UT_FIXTURE, i);
+    bool Expected = utillib_bitset_contains(UT_FIXTURE, i);
     UTILLIB_TEST_ASSERT(Expected);
   }
 }
 
-UTILLIB_TEST(bitset_reset) {
+UTILLIB_TEST(bitset_remove) {
   utillib_bitset_init(UT_FIXTURE, 4);
-  utillib_bitset_set(UT_FIXTURE, 2);
-  UTILLIB_TEST_ASSERT_TRUE(utillib_bitset_test(UT_FIXTURE, 2));
-  utillib_bitset_reset(UT_FIXTURE, 2);
-  UTILLIB_TEST_ASSERT_FALSE(utillib_bitset_test(UT_FIXTURE, 2));
+  utillib_bitset_insert(UT_FIXTURE, 2);
+  UTILLIB_TEST_ASSERT_TRUE(utillib_bitset_contains(UT_FIXTURE, 2));
+  utillib_bitset_remove(UT_FIXTURE, 2);
+  UTILLIB_TEST_ASSERT_FALSE(utillib_bitset_contains(UT_FIXTURE, 2));
 }
 
 UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) {
@@ -58,7 +58,7 @@ UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) {
   utillib_bitset_init(UT_FIXTURE, N);
   for (size_t i = 0; i < N; ++i) {
     if (i & 1)
-      utillib_bitset_set(UT_FIXTURE, i);
+      utillib_bitset_insert(UT_FIXTURE, i);
   }
 }
 
@@ -96,8 +96,8 @@ UTILLIB_TEST(bitset_equal) {
   UTILLIB_TEST_AUX_INVOKE(bitset_init2, &b0, &b1, N);
   UTILLIB_TEST_ASSERT(utillib_bitset_equal(&b0, &b1));
   for (size_t i = 0; i < N; i += 3) {
-    utillib_bitset_set(&b0, i);
-    utillib_bitset_set(&b1, i);
+    utillib_bitset_insert(&b0, i);
+    utillib_bitset_insert(&b1, i);
   }
   UTILLIB_TEST_EXPECT(utillib_bitset_equal(&b0, &b1));
   UTILLIB_TEST_AUX_INVOKE(bitset_destroy2, &b0, &b1);
@@ -109,9 +109,9 @@ UTILLIB_TEST(bitset_is_interset) {
   UTILLIB_TEST_AUX_INVOKE(bitset_init2, &b0, &b1, N);
   for (size_t i = 0; i < N; ++i) {
     if (i % 2)
-      utillib_bitset_set(&b0, i);
+      utillib_bitset_insert(&b0, i);
     else
-      utillib_bitset_set(&b1, i);
+      utillib_bitset_insert(&b1, i);
   }
   UTILLIB_TEST_EXPECT_FALSE(utillib_bitset_is_intersect(&b0, &b1));
   UTILLIB_TEST_AUX_INVOKE(bitset_destroy2, &b0, &b1);
@@ -120,8 +120,8 @@ UTILLIB_TEST(bitset_is_interset) {
 UTILLIB_TEST_DEFINE(Utillib_Bitset) {
   UTILLIB_TEST_BEGIN(Utillib_Bitset)
   UTILLIB_TEST_RUN(bitset_init)
-  UTILLIB_TEST_RUN(bitset_test_and_set)
-  UTILLIB_TEST_RUN(bitset_reset)
+  UTILLIB_TEST_RUN(bitset_contains_and_insert)
+  UTILLIB_TEST_RUN(bitset_remove)
   UTILLIB_TEST_RUN(bitset_equal)
   UTILLIB_TEST_RUN(bitset_is_interset)
   UTILLIB_TEST_RUN(bitset_json_array)

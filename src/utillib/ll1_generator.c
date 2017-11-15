@@ -20,8 +20,9 @@
 */
 
 #include "ll1_generator.h"
-#include "json.h"
 #include "ll1_builder.h"
+#include "ll1_builder_impl.h"
+#include "json.h"
 #include "print.h"
 #include "rule.h"
 #include "string.h"
@@ -179,6 +180,12 @@ bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
   ll1_generator_write(self, file);
   fclose(file);
   return true;
+}
+
+void utillib_ll1_generator_dump(struct utillib_ll1_generator *self,
+    const char *filename)
+{
+
 }
 
 void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self) {

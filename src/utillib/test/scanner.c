@@ -42,13 +42,14 @@ enum {
 
 /* Copied from K&R book */
 static const struct utillib_keyword_pair keywords[] = {
-    "auto",    SYM_KW_AUTO,    "break",    SYM_KW_BREAK,
-    "case",    SYM_KW_CASE,    "char",     SYM_KW_CHAR,
-    "const",   SYM_KW_CONST,   "continue", SYM_KW_CONTINUE,
-    "default", SYM_KW_DEFAULT, "unsigned", SYM_KW_UNSIGNED,
-    "void",    SYM_KW_VOID,    "volatile", SYM_KW_VOLATILE,
-    "while",   SYM_KW_WHILE,
+  {"auto",    SYM_KW_AUTO} ,    {"break",    SYM_KW_BREAK} ,
+  { "case",    SYM_KW_CASE} ,   {"char",     SYM_KW_CHAR} ,
+  { "const",   SYM_KW_CONST} ,  {"continue", SYM_KW_CONTINUE} ,
+  { "default", SYM_KW_DEFAULT} ,{"unsigned", SYM_KW_UNSIGNED} ,
+  { "void",    SYM_KW_VOID} ,   {"volatile", SYM_KW_VOLATILE} ,
+  { "while",   SYM_KW_WHILE} ,
 };
+
 static const size_t keywords_size = sizeof keywords / sizeof keywords[0];
 
 UTILLIB_TEST(symbol_scanner_lookahead) {

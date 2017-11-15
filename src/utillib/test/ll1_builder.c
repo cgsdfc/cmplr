@@ -20,6 +20,7 @@
 */
 #include "symbol_rule.h"
 #include <utillib/ll1_builder.h>
+#include <utillib/ll1_builder_impl.h>
 #include <utillib/test.h>
 
 /* Must have private copy */
@@ -48,7 +49,7 @@ UTILLIB_TEST_TEAR_DOWN() {
  * \param expected_set Built-from set.
  *
  */
-UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
+UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set, 
                  size_t symbols_size, size_t const expected_set[]) {
   utillib_ll1_set_init(set, symbols_size);
   for (size_t j = 0; expected_set[j] != UT_SYM_NULL; ++j) {
@@ -56,7 +57,7 @@ UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
     if (sym == UT_SYM_EPS || sym == UT_SYM_EOF)
       set->flag = true;
     else
-      utillib_ll1_set_insert(set, sym);
+      utillib_bitset_insert(&set->bitset, sym);
   }
 }
 

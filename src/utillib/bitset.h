@@ -29,14 +29,14 @@
 /**
  * \struct utillib_bitset
  * A bitset implementation using dynamic memory.
- * Bitsets provides a way to "test-and-set" a range
- * of elements which can be represented by integers.
+ * Bitsets provides "test-set-reset" or "contains-insert-remove"
+ * operations for a fixed range of elements.
  * In terms of memory usage, bitset is absolutely more
- * conpact than any hash set implementation but please
- * notice that the modulo and division it takes to locate
- * a single bit may make the operations slower.
- * Also notice that it can only representes non-negative
- * integers.
+ * conpact than any hash set implementation.
+ * However, the modulo and division it takes to locate
+ * a single bit may take longer.
+ * Also notice that it can only representes what can be
+ * descripted by a range of non negative integers.
  */
 struct utillib_bitset {
   size_t *bits;
@@ -44,14 +44,24 @@ struct utillib_bitset {
   size_t N;
 };
 
-struct utillib_bitset *utillib_bitset_create(size_t N);
+/* constructor and destructor */
 void utillib_bitset_init(struct utillib_bitset *self, size_t N);
 void utillib_bitset_destroy(struct utillib_bitset *self);
-bool utillib_bitset_test(struct utillib_bitset const *self, size_t pos);
-void utillib_bitset_set(struct utillib_bitset *self, size_t pos);
-void utillib_bitset_reset(struct utillib_bitset *self, size_t pos);
-bool utillib_bitset_union(struct utillib_bitset *self,
+
+
+bool utillib_bitset_contains(struct utillib_bitset const *self, size_t pos);
+void utillib_bitset_insert(struct utillib_bitset *self, size_t pos);
+void utillib_bitset_remove(struct utillib_bitset *self, size_t pos);
+void utillib_bitset_union(struct utillib_bitset *self,
                           struct utillib_bitset const *other);
+
+bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t pos);
+bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t pos);
+bool utillib_bitset_union_updated(struct utillib_bitset *self,
+                          struct utillib_bitset const *other);
+
+
+
 bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
                                  struct utillib_bitset const *other);
 bool utillib_bitset_equal(struct utillib_bitset const *self,

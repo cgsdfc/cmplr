@@ -258,17 +258,6 @@ struct Boolean_Array {
   size_t size;
 } ;
 
-UTILLIB_TEST(json_array_pointer) {
-  bool bools[] = {false, true, false};
-  UTILLIB_TEST_CONST(LEN, UTILLIB_TEST_LEN(bools));
-  struct Boolean_Array ba;
-  ba.barr = bools;
-  ba.size = LEN;
-  size_t offsetof_size = offsetof(struct Boolean_Array, size);
-  size_t offsetof_base = offsetof(struct Boolean_Array, barr);
-  void *psize = (char *)&ba.barr - offsetof_base + offsetof_size;
-}
-
 static struct utillib_json_value_t *status_string_create(void const *base,
                                                   size_t offset) {
   int status = *(int *)base;

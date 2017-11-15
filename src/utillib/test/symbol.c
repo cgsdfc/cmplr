@@ -40,6 +40,7 @@ UTILLIB_TEST_DEFINE(Utillib_Symbol) {
   UTILLIB_TEST_RUN(symbol_redefined)
   UTILLIB_TEST_RUN(json_object_create)
   UTILLIB_TEST_RUN(json_array_create)
+  UTILLIB_TEST_RUN(symbol_redefined)
   UTILLIB_TEST_END(Utillib_Symbol)
   UTILLIB_TEST_RETURN(Utillib_Symbol)
 }
