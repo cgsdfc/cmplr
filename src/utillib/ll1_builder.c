@@ -29,58 +29,13 @@
  * Engine for building LL(1) parser table.
  */
 
-/*
- * Getter for different sets given
- * an symbol or a rule.
- * Simply for better readability and maintainness
- * because FOLLOW and FIRST are represented with the same
- * struct namely `utillib_ll1_set'.
- */
-
-/**
- * \function ll1_builder_FIRST_get
- * Helper to get the `FIRST' for a particular non-terminal
- * symbol.
- */
-static struct utillib_ll1_set *
-ll1_builder_FIRST_get(struct utillib_ll1_builder *self,
-                      struct utillib_symbol const *symbol) {
-  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
-      "Only non terminal symbols can have FIRST set");
-  return &self->FIRST[utillib_rule_index_symbol_index(self->rule_index,
-                                                      symbol)];
-}
-
-/**
- * \function ll1_builder_FOLLOW_get
- * Helper to get the `FOLLOW' for a particular non-terminal
- * symbol.
- */
-static struct utillib_ll1_set *
-ll1_builder_FOLLOW_get(struct utillib_ll1_builder const *self,
-                       struct utillib_symbol const *symbol) {
-  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
-      "Only non terminal symbols can have FOLLOW set");
-  return &self->FOLLOW[utillib_rule_index_symbol_index(self->rule_index,
-                                                       symbol)];
-}
-
-/**
- * \function ll1_builder_FIRST_RULE_get
- * Helper to get the `FIRST' for a particular rule.
- */
-static struct utillib_ll1_set *
-ll1_builder_FIRST_RULE_get(struct utillib_ll1_builder const *self,
-                           struct utillib_rule const *rule) {
-  return &self->FIRST_RULE[rule->id];
-}
 
 /*
  * FIRST sets construction
  */
 
 /**
- * \function ll1_builder_union_FIRST_updated
+ * \function ll1_builder_FIRST_updated
  * This function treats the sequence of symbols represented
  * by `RHS' as a whole and union its FIRST into `self'. It
  * returns whether `self' was updated.
@@ -90,7 +45,7 @@ ll1_builder_FIRST_RULE_get(struct utillib_ll1_builder const *self,
  * \return Whether self was updated.
  */
 
-bool ll1_builder_union_FIRST_updated(
+bool ll1_builder_FIRST_updated(
     struct utillib_ll1_builder *self,
     struct utillib_ll1_set *updated_set,
     struct utillib_vector const * RHS)
@@ -163,7 +118,7 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self) {
     struct utillib_symbol const *LHS = rule->LHS;
     struct utillib_vector const *RHS = &rule->RHS;
     struct utillib_ll1_set *LHS_FIRST = ll1_builder_FIRST_get(self, LHS);
-    if (ll1_builder_union_FIRST_updated(self, LHS_FIRST, RHS))
+    if (ll1_builder_FIRST_updated(self, LHS_FIRST, RHS))
       changed=true;
   }
   return changed;
@@ -186,7 +141,7 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_ll1_set *FIRST = ll1_builder_FIRST_RULE_get(self, rule);
     struct utillib_vector const *RHS = &rule->RHS;
-    ll1_builder_union_FIRST_updated(self, FIRST, RHS);
+    ll1_builder_FIRST_updated(self, FIRST, RHS);
   }
 }
 
@@ -200,7 +155,7 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
  * First, Simply adds the special `end-of-input' symbol into the `FOLLOW'
  * of the special TOP symbol which starts the whole grammar.
  * Second, for all the rules of the form `A := aBb' where `b' is a sequence
- * of symbols * and `B' is a non-terminal symbol,
+ * of symbols and `B' is a non-terminal symbol,
  * adds all the symbols in `First(b)' excluding `epsilon' into `FOLLOW(B)'.
  * 
  * Notes that `b' is an arbitrary sequence of symbols and we emulate its
@@ -237,7 +192,7 @@ static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
       struct utillib_ll1_set *PREV_FOLLOW = ll1_builder_FOLLOW_get(self, PREV);
       for (int j=i+1; j<RHS_size; ++j) {
         struct utillib_symbol const *LAST = utillib_vector_at(RHS, j);
-        if (LAST->value == UT_SYM_EPS)
+        if (LAST == UTILLIB_SYMBOL_EPS)
           continue;
         if (LAST->kind == UT_SYMBOL_TERMINAL) {
           utillib_ll1_set_insert_updated(PREV_FOLLOW, LAST);

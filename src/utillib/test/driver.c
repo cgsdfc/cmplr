@@ -51,6 +51,7 @@ int main(int argc, char **argv) {
                        /* Utillib_Print, Utillib_Flags, */
                        /* Utillib_Scanner, */
                        /* Utillib_Vector2, Utillib_Rule, */
-                       Utillib_LL1Builder
+                       /* Utillib_LL1Builder */
+      Utillib_LL1Generator
                        );
 }
