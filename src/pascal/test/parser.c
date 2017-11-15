@@ -21,10 +21,14 @@
 
 #include "pascal/parser.h"
 #include "pascal/symbols.h"
+#include <pascal/scanner.h>
+
 #include <utillib/scanner.h>
+#include <utillib/print.h>
 #include <utillib/test.h>
 
 static struct utillib_symbol_scanner symbol_scanner;
+static struct pascal_scanner file_scanner;
 
 UTILLIB_TEST_SET_UP() { pascal_parser_init(UT_FIXTURE); }
 
@@ -145,6 +149,19 @@ UTILLIB_TEST(parser_stmt_write) {
   UTILLIB_TEST_AUX_INVOKE(parser_stmt_write);
 }
     
+UTILLIB_TEST_AUX(parser_file_input, char const *filename) {
+  char const * abspath=utillib_static_sprintf("%s/%s", PASCAL_TEST_DIR, filename);
+  FILE *file=fopen(abspath, "r");
+  pascal_scanner_init(&file_scanner, file);
+  UTILLIB_TEST_ASSERT(pascal_parser_parse(UT_FIXTURE, 
+        &file_scanner, &pascal_scanner_op));
+}
+
+UTILLIB_TEST(parser_cock_rabbit) 
+{
+  UTILLIB_TEST_AUX_INVOKE(parser_file_input, "./cock_rabbit.pas")
+}
+
 UTILLIB_TEST_DEFINE(Pascal_Parser) {
   UTILLIB_TEST_BEGIN(Pascal_Parser)
   UTILLIB_TEST_RUN(parser_const_decl)
@@ -155,6 +172,7 @@ UTILLIB_TEST_DEFINE(Pascal_Parser) {
   UTILLIB_TEST_RUN(parser_var_decl_reject)
   UTILLIB_TEST_RUN(parser_procedure_decl)
   UTILLIB_TEST_RUN(parser_stmt_assign)
+  UTILLIB_TEST_RUN(parser_cock_rabbit)
   UTILLIB_TEST_END(Pascal_Parser)
   UTILLIB_TEST_FIXTURE(struct pascal_parser)
   UTILLIB_TEST_RETURN(Pascal_Parser)

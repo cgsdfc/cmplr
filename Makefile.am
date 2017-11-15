@@ -21,7 +21,8 @@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects foreign
 
-# This is so we can #include <utillib/xxx>
+AM_CPPFLAGS = -DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test\"
+
 AM_CFLAGS = -I$(top_srcdir)/src
 AM_CFLAGS += -g3
 
@@ -47,6 +48,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/bitset.h \
 													src/utillib/unordered_op.h \
 													src/utillib/ll1_builder.h \
+													src/utillib/ll1_builder_impl.h \
 													src/utillib/symbol.h \
 													src/utillib/rule.h \
 													src/utillib/pair.h \

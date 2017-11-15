@@ -23,26 +23,131 @@
 #include <utillib/rule.h>
 extern struct utillib_rule_literal const pascal_rules[];
 
-/* program := subprogram */
-/* subprogram := [ const_decl ] [ var_decl ] [ proc_decl ] stmt */
-/* const_decl := 'const' const_def {',' const_def } ';' */
-/* const_def := iden '=' uint */
-/* var_decl := 'var' iden {, iden } ';' */
-/* proc_decl := proc_head subprogram { ';' subprogram } ';' */
-/* proc_head := 'procedure' iden ';' */
+/* program := subprogram
+ * first(program) = 'const' 'var' 'procedure' 
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
+ * 
+ * follow(program) := eof
+ */
+
+/* subprogram := [ const_decl ] [ var_decl ] [ proc_decl ] stmt 
+ * first(subprogram) = 'const' 'var' 'procedure'  
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
+ * follow(subprogram) = ';' eof 
+ */
+
+/* const_decl := 'const' const_def {',' const_def } ';'
+ * first(const_decl) = 'const' 
+ * follow(const_decl) = 'var' 'procedure' 
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write'
+ * eof
+ */
+
+/* const_def := iden '=' uint 
+ * first(const_def) = iden 
+ * follow(const_def) = ',' ';'
+ */
+
+/* var_decl := 'var' iden {, iden } ';' 
+ * first(var_decl) = var 
+ * follow(var_decl) = 'procedure'
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write'
+ * eof
+ */
+
+/* proc_decl := proc_head subprogram { ';' subprogram } ';' 
+ * first(proc_decl) = 'procedure'
+ * follow(proc_decl) = 
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write' 
+ * eof
+ */
+
+/* proc_head := 'procedure' iden ';' 
+ * first(proc_head) = 'procedure'
+ * follow(proc_head) = 'const' 'var' 'procedure'
+ */
+
 /* stmt := assign | cond | loop | call | composite | read | write | eps */
-/* assign := iden ':=' expr */
+/* first(stmt) = iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
+ * follow(stmt) = eof ';' 'end'
+ */
+
+/* assign := iden ':=' expr 
+ * first(assign) = iden
+ * follow(assign) = ';' eof 'end'
+ */
+
 /* expr := ['+'|'-'] term { add_op term } */
-/* term := factor { mul_op factor } */
-/* factor := iden | uint | '(' expr ')' */
-/* add_op := '+' | '-' */
-/* mul_op := '*' | '/' */
-/* condition := expr rel_op expr | 'odd' expr */
-/* rel_op := '<>' | '<' | '>' | '<=' | '>=' */
-/* cond := 'if' condition 'then' stmt */
-/* loop := 'while' condition 'do' stmt */
-/* call := 'call' iden */
-/* composite := 'begin' stmt {; stmt} 'end' */
-/* read := 'read' '(' iden { , iden } ')' */
-/* write := 'write' '(' expr {, expr } ')' */
+/* first(expr) = '+' '-' iden uint '('
+ * follow(expr) = ')'  '<>'  '<'  '>'  '<='  '>=' ','
+ * ';' eof 'end'
+ * 
+ */
+
+/* term := factor { mul_op factor } 
+ * first(term) = iden uint '(' 
+ * follow(term) = '+' '-'
+ * ';' eof 'end'
+ * 
+ */
+
+/* factor := iden | uint | '(' expr ')' 
+ * first(factor) = iden uint '('
+ * follow(factor) = '*' '/'
+ * ';' eof 'end'
+ */
+
+/* add_op := '+' | '-' 
+ * first(add_op) = '+', '-'
+ * follow(add_op)=iden uint '(' 
+ */
+
+/* mul_op := '*' | '/' 
+ * first(mul_op) = '*', '/'
+ * follow(mul_op) = iden uint '('
+ */
+
+/* condition := expr rel_op expr | 'odd' expr 
+ * first(condition) = 'odd' iden uint '('
+ * follow(condition) = 'do' 'then'
+ */
+
+
+/* rel_op := '<>' | '<' | '>' | '<=' | '>='
+ * first(rel_op) = '<>'  '<'  '>'  '<='  '>=' 
+ * follow(rel_op) = iden uint '('
+ */
+
+/* cond := 'if' condition 'then' stmt 
+ * first(cond) = 'if' 
+ * follow(cond) = eof ';' 'end'
+ */
+
+/* loop := 'while' condition 'do' stmt 
+ * first(loop) = 'while' 
+ * follow(loop) = eof ';' 'end'
+ */
+
+/* call := 'call' iden 
+ * first(call) = 'call'
+ * follow(call) = eof ';' end
+ */
+
+/* composite := 'begin' stmt {; stmt} 'end' 
+ * first(composite) = 'begin'
+ * follow(composite) = 'end' ';' eof
+ */
+
+/* read := 'read' '(' iden { , iden } ')'
+ * first(read) = 'read' 
+ * follow(read) = eof 'end' ';'
+ *  */
+
+/* write := 'write' '(' expr {, expr } ')' 
+ * first(write) = 'write' 
+ * follow(read) = eof 'end' ';'
+ */
+
+/* end of rules */
+
 #endif /* PASCAL_RULES_H */
