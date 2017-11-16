@@ -20,6 +20,7 @@
 */
 #include "json_parser_impl.h"
 #include "scanner.h"
+#include <ctype.h>
 
 UTILLIB_SYMBOL_BEGIN(utillib_json_symbols)
   UTILLIB_SYMBOL_NON_TERMINAL(UT_JSON_SYM_VAL)
@@ -30,8 +31,8 @@ UTILLIB_SYMBOL_BEGIN(utillib_json_symbols)
   UTILLIB_SYMBOL_NON_TERMINAL(UT_JSON_SYM_VAL_)
   UTILLIB_SYMBOL_NON_TERMINAL(UT_JSON_SYM_VAL_LS)
 
-  UTILLIB_SYMBOL_NON_TERMINAL(UT_JSON_SYM_STR)
-  UTILLIB_SYMBOL_NON_TERMINAL(UT_JSON_SYM_NUM)
+  UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_STR)
+  UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_NUM)
   UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_KW_TRUE)
   UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_KW_FALSE)
   UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_KW_NULL)
@@ -42,12 +43,6 @@ UTILLIB_SYMBOL_BEGIN(utillib_json_symbols)
   UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_COMMA)
   UTILLIB_SYMBOL_TERMINAL(UT_JSON_SYM_COLON)
 UTILLIB_SYMBOL_END(utillib_json_symbols);
-
-static struct utillib_keyword_pair const json_keywords[]={
-  { "false", UT_JSON_SYM_KW_FALSE},
-  { "null", UT_JSON_SYM_KW_NULL},
-  { "true", UT_JSON_SYM_KW_TRUE },
-};
 
 /*
  * Rules for JSON:
@@ -84,6 +79,160 @@ UTILLIB_RULE_BEGIN(utillib_json_rules)
   UTILLIB_RULE_ELEM(UT_JSON_SYM_STRVAL_LS, UT_SYM_EPS)
 UTILLIB_RULE_END(utillib_json_rules);
 
+const struct utillib_scanner_op utillib_json_scanner_op={
+  .lookahead=utillib_json_scanner_lookahead,
+  .shiftaway=utillib_json_scanner_shiftaway,
+  .semantic=utillib_json_scanner_semantic,
+};
+
+static int json_scanner_read_str(char const ** input,  struct utillib_string * buffer)
+{
+  char specail;
+  char const * str=*input;
+  assert (*str == '\"' && "Should be called when a `\"' was seen");
+  for (; *str != '\"'; ++str) {
+    if (*str == '\0' || *str == '\n' || *str == '\r') {
+      *input=str;
+      return -UT_JSON_ESTRING;
+    }
+
+    if (*str == '\\') {
+      ++str;
+      switch (*str) {
+        case '\"': ++str; specail='\"'; break;
+        case '\\': ++str; specail='\\'; break;
+        case '/': ++str; specail='/'; break;
+        case 'b': ++str; specail='\b'; break;
+        case 'f': ++str; specail='\f'; break;
+        case 'n': ++str; specail='\n'; break;
+        case 'r': ++str; specail='\r'; break;
+        case 't': ++str; specail='\t'; break;
+        default: *input=str; return -UT_JSON_EESCAPE;
+      }
+      utillib_string_append_char(buffer, specail);
+      continue;
+    } 
+    utillib_string_append_char(buffer, *str);
+  }
+  ++str;
+  *input=str;
+  return UT_JSON_SYM_STR;
+}
+
+/**
+ * \function json_scanner_read_number
+ *
+number
+    int
+    int frac
+    int exp
+    int frac exp 
+int
+    digit
+    digit1-9 digits
+    - digit
+    - digit1-9 digits 
+frac
+    . digits
+exp
+    e digits
+digits
+    digit
+    digit digits
+e
+    e
+    e+
+    e-
+    E
+    E+
+    E-
+*/
+
+static int json_scanner_read_number(char const **input, struct utillib_string *buffer)
+{
+  if (**input == '.') {
+    utillib_string_append(buffer, "0.");
+    ++*input;
+    goto fraction;
+  }
+  if (**input == '+' || **input == '-') {
+    utillib_string_append(
+fraction:
+
+
+
+
+}
+
+static int json_scanner_read(char const ** str, struct utillib_string * buffer)
+{
+  char const * keyword;
+  while (isspace(**str))
+    ++*str;
+  if (**str == '\0') 
+    return UT_SYM_EOF;
+  switch (**str) {
+  case '[': ++*str; return UT_JSON_SYM_LK;
+  case ']': ++*str; return UT_JSON_SYM_RK;
+  case '{': ++*str; return UT_JSON_SYM_LB;
+  case '}': ++*str; return UT_JSON_SYM_RB;
+  case ',': ++*str; return UT_JSON_SYM_COMMA;
+  case ':': ++*str; return UT_JSON_SYM_COLON;
+  case 't': 
+  case 'f': 
+  case 'n':
+            utillib_string_append_char(buffer, **str);
+            while(isalpha(**str)) {
+              utillib_string_append_char(buffer, **str);
+              ++*str;
+            }
+            keyword=utillib_string_c_str(buffer);
+            if (strcmp(keyword, "true")==0)
+              return UT_JSON_SYM_KW_TRUE;
+            if (strcmp(keyword, "false")==0)
+              return UT_JSON_SYM_KW_FALSE;
+            if (strcmp(keyword, "null")==0)
+              return UT_JSON_SYM_KW_NULL;
+            return -UT_JSON_EUNKNOWN;
+  default: break;
+  }
+  if (**str == '\"') {
+    return json_scanner_read_str(str, buffer);
+  }
+  if (**str == '-' || **str=='+' || **str == '.' || isdigit(**str)) {
+    return json_scanner_read_number(str, buffer);
+  }
+  return -UT_JSON_EUNKNOWN;
+}
+
+void utillib_json_scanner_init(struct utillib_json_scanner *self, char const *str)
+{
+  utillib_string_init(&self->buffer);
+  self->str=str;
+  self->code=0;
+}
+
+size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self)
+{
+
+
+}
+
+void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self)
+{
+
+
+}
+
+void const * utillib_json_scanner_semantic(struct utillib_json_scanner *self)
+{
+
+}
+
+void utillib_json_scanner_destroy(struct utillib_json_scanner *self)
+{
+  utillib_string_destroy(&self->buffer);
+}
 
 
 

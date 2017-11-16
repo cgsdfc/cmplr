@@ -25,24 +25,27 @@
 static void json_parser_rule_handler(struct utillib_json_parser *self,
     struct utillib_rule const * rule)
 {
-  struct utillib_symbol const * lhs=rule->LHS;
-  struct utillib_json_value_t const * val;
-  switch(lhs->value) {
-  case UT_JSON_SYM_ARR:
-    val=utillib_json_array_create_empty();
-    utillib_vector_push_back(&self->values, val);
-    return;
-  case UT_JSON_SYM_OBJ:
-    val=utillib_json_object_create_empty();
-    utillib_vector_push_back(&self->values, val);
-    return;
-  }
+  utillib_rule_json_pretty_print(rule);
+
+  /* struct utillib_symbol const * lhs=rule->LHS; */
+  /* struct utillib_json_value_t const * val; */
+  /* switch(lhs->value) { */
+  /* case UT_JSON_SYM_ARR: */
+  /*   val=utillib_json_array_create_empty(); */
+  /*   utillib_vector_push_back(&self->values, val); */
+  /*   return; */
+  /* case UT_JSON_SYM_OBJ: */
+  /*   val=utillib_json_object_create_empty(); */
+  /*   utillib_vector_push_back(&self->values, val); */
+  /*   return; */
+  /* } */
 
 }
 
 static void json_parser_terminal_handler(struct utillib_json_parser *self,
     struct utillib_symbol const *symbol)
 {
+  puts(symbol->name);
   switch (symbol->value) {
 
 
@@ -54,8 +57,7 @@ static void json_parser_terminal_handler(struct utillib_json_parser *self,
 static void json_parser_error_handler(struct utillib_json_parser *self,
     struct utillib_ll1_parser_error const *error)
 {
-
-
+  puts("ERROR");
 }
 
 static const struct utillib_ll1_parser_op json_parser_op={
@@ -68,6 +70,11 @@ static const struct utillib_ll1_parser_op json_parser_op={
 void utillib_json_parser_factory_init(struct utillib_json_parser_factory *self)
 {
   utillib_ll1_factory_init(&self->factory, utillib_json_symbols, utillib_json_rules);
+}
+
+void utillib_json_parser_factory_destroy(struct utillib_json_parser_factory *self)
+{
+  utillib_ll1_factory_destroy(&self->factory);
 }
 
 void utillib_json_parser_init(struct utillib_json_parser *self, struct utillib_json_parser_factory *factory)
@@ -84,8 +91,9 @@ void utillib_json_parser_destroy(struct utillib_json_parser *self)
 
 int utillib_json_parser_parse(struct utillib_json_parser *self, char const * str)
 {
-
-
+  struct utillib_json_scanner scanner;
+  utillib_json_scanner_init(&scanner, str);
+  utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_json_scanner_op);
 }
 
 struct utillib_json_value_t * utillib_json_parser_value(struct utillib_json_parser *self)

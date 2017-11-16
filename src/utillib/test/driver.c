@@ -43,16 +43,6 @@ UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
 
 int main(int argc, char **argv) {
   UTILLIB_TEST_RUN_ALL(argc, argv, 
-                       /* Failing */
-                       /* Utillib_Test, */
-                       /* Utillib_String, */
-                       /* Utillib_JSON, */
-                       /* Utillib_Symbol, */
-                       /* Utillib_Bitset, */
-                       /* Utillib_Print, Utillib_Flags, */
-                       /* Utillib_Scanner, */
-                       /* Utillib_Vector2, Utillib_Rule, */
-                       /* Utillib_LL1Builder */
-      Utillib_LL1Generator
-                       );
+      Utillib_JSON_Parser
+      );
 }

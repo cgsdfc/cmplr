@@ -20,13 +20,30 @@
 */
 
 #include <utillib/json_parser.h>
+#include <utillib/ll1_generator.h>
+#include <utillib/json_parser_impl.h>
 #include <utillib/test.h>
 
-UTILLIB_TEST_SET_UP() {
+static struct utillib_json_parser_factory parser_factory;
 
+UTILLIB_TEST_AUX(json_parser_dump_all)
+{
+  struct utillib_ll1_generator gen;
+  utillib_ll1_generator_init_from_code(&gen, utillib_json_symbols,
+      utillib_json_rules);
+  utillib_ll1_generator_dump_all(&gen);
+  utillib_ll1_generator_destroy(&gen);
+}
+
+UTILLIB_TEST_SET_UP() {
+  if (!utillib_symbol_check(utillib_json_symbols, utillib_json_symbol_kind_N)) {
+    UTILLIB_TEST_ABORT("utillib_json_symbols definition error");
+  }
+  utillib_json_parser_factory_init(&parser_factory);
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
+  utillib_json_parser_factory_destroy(&parser_factory);
 }
 
 UTILLIB_TEST(json_parser_parse) {

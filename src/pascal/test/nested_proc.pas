@@ -8,8 +8,17 @@ var kk;
 procedure level_2;
 const zzz=2;
 var kkk;
+
+procedure level_3;
+const zzzz=3;
+var kkkk;
+
 begin 
- write(2);
+ write(3);
+end;
+
+begin
+  write(2);
 end;
 
 begin

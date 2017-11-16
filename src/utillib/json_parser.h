@@ -25,6 +25,12 @@
 #include "vector.h"
 #include "json.h"
 
+UTILLIB_ENUM_BEGIN(utillib_json_parser_error_kind)
+  UTILLIB_ENUM_ELEM(UT_JSON_ESTRING)
+  UTILLIB_ENUM_ELEM(UT_JSON_EESCAPE)
+  UTILLIB_ENUM_ELEM(UT_JSON_EUNKNOWN)
+UTILLIB_ENUM_END(utillib_json_parser_error_kind);
+
 struct utillib_json_parser_factory {
   struct utillib_ll1_factory factory;
 };

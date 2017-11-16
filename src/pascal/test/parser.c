@@ -29,10 +29,17 @@
 
 static struct utillib_symbol_scanner symbol_scanner;
 static struct pascal_scanner file_scanner;
+static struct utillib_ll1_factory  parser_factory;
 
-UTILLIB_TEST_SET_UP() { pascal_parser_init(UT_FIXTURE); }
+UTILLIB_TEST_SET_UP() { 
+  pascal_parser_factory_init(&parser_factory);
+  pascal_parser_init(UT_FIXTURE, &parser_factory);
+}
 
-UTILLIB_TEST_TEAR_DOWN() { pascal_parser_destroy(UT_FIXTURE); }
+UTILLIB_TEST_TEAR_DOWN() { 
+  utillib_ll1_factory_destroy(&parser_factory);
+  pascal_parser_destroy(UT_FIXTURE); 
+}
 
 UTILLIB_TEST_AUX(parser_assert_accepted, size_t const *input) {
   utillib_symbol_scanner_init(&symbol_scanner, input, pascal_symbols);
