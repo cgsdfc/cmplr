@@ -19,6 +19,7 @@
 
 */
 #include "parser.h"
+#include "scanner.h"
 #include "pascal_ll1_table.c" // ll1_parser_table
 #include "rules.h"            // pascal_rules
 #include "symbols.h"          // pascal_symbols

@@ -3,8 +3,8 @@ var x, y, m, n, pf;
 procedure prime;
 var i, f;
 procedure mod;
-x := x - x/y * y;
 begin
+  x := x - x/y * y;
   f := true;
   i := 3;
   while i<m do
@@ -22,6 +22,7 @@ begin
     write(m);
   end;
 end;
+
 begin
   pf := false;
   read (n);
@@ -38,4 +39,8 @@ begin
     read (n);
   end;
   if pf = false then write (0);
+end;
+
+begin
+  call prime;
 end.

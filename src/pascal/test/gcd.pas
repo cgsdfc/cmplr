@@ -1,5 +1,6 @@
 const a = 45, b = 27;
 var x, y, g, m;
+
 procedure swap;
 var temp;
 begin
@@ -9,7 +10,8 @@ begin
 end;
 
 procedure mod;
-x := x - x / y * y;
+begin
+  x := x - x / y * y;
 begin
   x := a;
   y := b;
@@ -17,12 +19,13 @@ begin
   while x <> 0 do
   begin
     call swap;
-    call mod
+    call mod;
   end;
 end;
+end;
 
+begin
 g := y;
 m := a * b / g;
 write (g, m);
-end;
-
+end.
