@@ -62,3 +62,10 @@ void ll1_sample_1_terminal_handler(void *self,
 void ll1_sample_1_rule_handler(void *self,
     struct utillib_rule const *rule)
 {}
+
+const struct utillib_ll1_parser_op ll1_sample_1_parser_op={
+  .terminal_handler=ll1_sample_1_terminal_handler,
+  .rule_handler=ll1_sample_1_rule_handler,
+  .error_handler=ll1_sample_1_error_handler,
+};
+

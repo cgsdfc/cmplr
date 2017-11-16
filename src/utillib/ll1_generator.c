@@ -29,94 +29,17 @@
 #include <assert.h>
 
 /**
- * \function ll1_generator_print_EFOLLOW
- * Prints formated error information about the `FIRST/FOLLOW' conflicts
- * of the grammar.
- * The layout should be:
- * Rule A, FIRST A, Symbol B, FOLLOW B
- */
-static void
-ll1_generator_print_EFOLLOW(struct utillib_json_value_t *const *errs) {
-  struct utillib_string str;
-  for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
-    utillib_json_tostring(errs[i], &str);
-    char const *msg = utillib_string_c_str(&str);
-    switch (i) {
-    case 0:
-      utillib_error_printf("Rule: %s\n", msg);
-      break;
-    case 1:
-      utillib_error_printf("The FIRST set of it is %s\n", msg);
-      break;
-    case 2:
-      utillib_error_printf("The Symbol: %s\n", msg);
-      break;
-    case 3:
-      utillib_error_printf("The FOLLOW set of it is %s\n", msg);
-      break;
-    }
-  }
-}
-
-/**
- * \function ll1_generator_print_EFIRST
- * Prints formated error information about the `FIRST/FIRST' conflicts
- * of the grammar.
- * The layout of the fixed-size array `errs' should be:
- * Rule A, FIRST A, Rule B, FIRST B.
- */
-
-static void
-ll1_generator_print_EFIRST(struct utillib_json_value_t *const *errs) {
-  struct utillib_string str;
-  for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
-    utillib_json_tostring(errs[i], &str);
-    char const *msg = utillib_string_c_str(&str);
-    switch (i) {
-    case 0:
-    case 2:
-      utillib_error_printf("Production in conflict is %s\n", msg);
-      break;
-    case 3:
-    case 1:
-      utillib_error_printf("FIRST set of which is %s\n", msg);
-      break;
-    }
-    utillib_string_destroy(&str);
-  }
-}
-
-/**
- * \file utillib/ll1_generator.c
+ * \file utillib/ll1_builder.c
  * Frontend of the Utillib.LL(1).
  */
 
-static void
-ll1_generator_print_error(struct utillib_ll1_builder_error const *error) {
-  utillib_error_printf("ERROR: %s\n",
-                       utillib_ll1_error_kind_tostring(error->kind));
-  switch (error->kind) {
-  case UT_LL1_EFIRST:
-    ll1_generator_print_EFIRST(error->values);
-    break;
-  case UT_LL1_EFOLLOW:
-    ll1_generator_print_EFOLLOW(error->values);
-    break;
-  }
-  utillib_error_printf("\n");
-}
 
 static bool ll1_generator_check_table(struct utillib_ll1_generator *self) {
   struct utillib_ll1_builder *builder = &self->builder;
   size_t error_size = utillib_ll1_builder_check(builder);
   if (0 == error_size)
     return true;
-  struct utillib_vector const *errors = &builder->errors;
-  UTILLIB_VECTOR_FOREACH(struct utillib_ll1_builder_error const *, err,
-                         errors) {
-    ll1_generator_print_error(err);
-  }
-  utillib_error_printf("%lu errors detected.\n", error_size);
+  utillib_ll1_builder_print_errors(builder);
   return false;
 }
 

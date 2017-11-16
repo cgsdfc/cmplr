@@ -60,6 +60,8 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
 
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
 
+void utillib_ll1_builder_print_errors(struct utillib_ll1_builder *self);
+
 struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
 

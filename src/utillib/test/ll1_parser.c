@@ -27,30 +27,21 @@
 #include <utillib/scanner.h>
 #include <utillib/test.h>
 
-static struct utillib_rule_index rule_index;
-static struct utillib_vector2 ll1_table;
-static struct utillib_ll1_builder ll1_builder;
+static struct utillib_ll1_factory ll1_factory;
 static struct utillib_symbol_scanner symbol_scanner;
 static struct ll1_sample_1_semantic semantic;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_rule_index_init(&rule_index, ll1_sample_1_symbols, ll1_sample_1_rules);
-  utillib_ll1_builder_init(&ll1_builder, &rule_index);
-  utillib_ll1_builder_build_table(&ll1_builder, &ll1_table);
-  utillib_ll1_builder_destroy(&ll1_builder);
-  utillib_ll1_parser_init(UT_FIXTURE, 
-      &rule_index, &ll1_table, 
+  utillib_ll1_factory_init(&ll1_factory,ll1_sample_1_symbols, ll1_sample_1_rules); 
+  utillib_ll1_factory_parser_init(&ll1_factory, 
+      UT_FIXTURE, 
       &semantic,
-      ll1_sample_1_terminal_handler,
-      ll1_sample_1_rule_handler, 
-      ll1_sample_1_error_handler);
-
+      &ll1_sample_1_parser_op);
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
-  utillib_rule_index_destroy(&rule_index);
-  utillib_vector2_destroy(&ll1_table);
   utillib_ll1_parser_destroy(UT_FIXTURE);
+  utillib_ll1_factory_destroy(&ll1_factory);
 }
 
 UTILLIB_TEST(ll1_parser_parse) {
@@ -70,7 +61,7 @@ UTILLIB_TEST(ll1_parser_parse) {
  * 
  * XXX Use feature of build system to do this cleaner
  */
-
+#if 0
 UTILLIB_TEST(rule_index_load_table)
 {
   struct utillib_vector2 loaded_table;
@@ -87,10 +78,10 @@ UTILLIB_TEST(rule_index_load_table)
     }
   }
 }
+#endif 
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Parser) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Parser)
-  UTILLIB_TEST_RUN(rule_index_load_table)
   UTILLIB_TEST_RUN(ll1_parser_parse)
   UTILLIB_TEST_END(Utillib_LL1Parser)
   UTILLIB_TEST_FIXTURE(struct utillib_ll1_parser)

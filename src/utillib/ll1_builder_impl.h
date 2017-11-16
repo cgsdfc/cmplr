@@ -105,5 +105,7 @@ ll1_builder_error_create_as_EFOLLOW(struct utillib_rule_index const *rule_index,
  
 void utillib_ll1_builder_error_destroy(struct utillib_ll1_builder_error *self);
 
+void ll1_builder_print_error(struct utillib_ll1_builder_error const *error);
+
 #endif /* UTILLIB_LL1_BUILDER_IMPL_H */
 

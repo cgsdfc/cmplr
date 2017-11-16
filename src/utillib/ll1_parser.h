@@ -38,10 +38,17 @@ struct utillib_ll1_parser_error {
   struct utillib_symbol const * stack_top_symbol;
 };
 
-typedef void (* utillib_ll1_parser_terminal_handler) (void *client_data, struct utillib_symbol const *, void const * semantic);
-typedef void (* utillib_ll1_parser_rule_handler) (void *client_data, struct utillib_rule const *);
-typedef void (* utillib_ll1_parser_error_handler)(void *client_data, void *input, struct utillib_ll1_parser_error const*);
+struct utillib_ll1_parser_op {
+  void (* terminal_handler) (void *client_data, struct utillib_symbol const *, void const * semantic);
+  void (* rule_handler) (void *client_data, struct utillib_rule const *);
+  void (* error_handler)(void *client_data, void *input, struct utillib_ll1_parser_error const*);
+}; 
 
+
+struct utillib_ll1_factory {
+  struct utillib_rule_index rule_index;
+  struct utillib_vector2 table;
+};
 
 /**
  * \struct utillib_ll1_parser
@@ -57,18 +64,24 @@ struct utillib_ll1_parser {
 
   /* Semantic actions related */
   void *client_data;
-  utillib_ll1_parser_terminal_handler terminal_handler;
-  utillib_ll1_parser_error_handler error_handler;
-  utillib_ll1_parser_rule_handler  rule_handler;
+  struct utillib_ll1_parser_op const * op;
 };
+
+void utillib_ll1_factory_init(struct utillib_ll1_factory *self,
+    struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules);
+
+void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self);
+
+void utillib_ll1_factory_parser_init(struct utillib_ll1_factory *self,
+    struct utillib_ll1_parser *parser, void *client_data, 
+    struct utillib_ll1_parser_op const *op);
 
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 const *table, 
+                             struct utillib_vector2 const*table, 
                              void *client_data,
-                             utillib_ll1_parser_terminal_handler  terminal_handler,
-                             utillib_ll1_parser_rule_handler rule_handler,
-                             utillib_ll1_parser_error_handler  error_handler);
+                             struct utillib_ll1_parser_op const *op);
 
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
 bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,

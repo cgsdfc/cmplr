@@ -20,6 +20,7 @@
 */
 #include "ll1_builder.h"
 #include "ll1_builder_impl.h"
+#include "print.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -517,3 +518,14 @@ void utillib_ll1_builder_destroy(struct utillib_ll1_builder *self) {
   free(self->FOLLOW);
   free(self->FIRST_RULE);
 }
+
+void utillib_ll1_builder_print_errors(struct utillib_ll1_builder *self) {
+  struct utillib_vector const *errors = &self->errors;
+  UTILLIB_VECTOR_FOREACH(struct utillib_ll1_builder_error const *, err,
+                         errors) {
+    ll1_builder_print_error(err);
+  }
+  size_t error_size = utillib_vector_size(errors);
+  utillib_error_printf("%lu errors detected.\n", error_size);
+}
+
