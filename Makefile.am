@@ -22,6 +22,7 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects foreign
 
 AM_CPPFLAGS = -DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test/\"
+AM_CPPFLAGS += -DPASCAL_SOURCE_DIR=\"$(abs_srcdir)/src/pascal/\"
 AM_CPPFLAGS += -DUTILLIB_SOURCE_DIR=\"$(abs_srcdir)/src/utillib/\"
 
 AM_CFLAGS = -I$(top_srcdir)/src
@@ -31,14 +32,9 @@ AM_CFLAGS += -Wall -Wwrite-strings \
 						 -Wno-sign-compare \
 						 -std=c11
 
-lib_LTLIBRARIES = 
-noinst_PROGRAMS = 
-bin_PROGRAMS =
-nobase_include_HEADERS =
-TESTS =
 utillibincludedir = $(includedir)/utillib
 
-lib_LTLIBRARIES += libutillib.la
+lib_LTLIBRARIES = libutillib.la
 
 utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/flags.h \
@@ -91,8 +87,8 @@ libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/vector.c \
 												 src/utillib/string.c
 
-noinst_PROGRAMS += utillib_test
-TESTS += utillib_test
+noinst_PROGRAMS = utillib_test
+TESTS = utillib_test
 utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/ll1_sample_1.c \
 											 src/utillib/test/ll1_sample_2.c \
@@ -134,9 +130,9 @@ noinst_PROGRAMS += example-vector
 example_vector_SOURCES = src/utillib/example/vector.c
 example_vector_LDADD = libutillib.la
 
-noinst_PROGRAMS += pascal_ll1_table
-pascal_ll1_table_SOURCES = src/pascal/ll1_generator.c 
-pascal_ll1_table_LDADD = libutillib.la libpascal.la
+noinst_PROGRAMS += pascal_ll1_table_gen
+pascal_ll1_table_gen_SOURCES = src/pascal/ll1_table_gen.c 
+pascal_ll1_table_gen_LDADD = libutillib.la libpascal.la
 
 noinst_pascalincludedir = $(includedir)/pascal
 
@@ -156,7 +152,7 @@ libpascal_la_SOURCES = src/pascal/symbols.c \
 
 libpascal_la_LIBADD = libutillib.la
 
-bin_PROGRAMS += pascal
+bin_PROGRAMS = pascal
 pascal_SOURCES = src/pascal/main.c
 pascal_LDADD = libpascal.la
 

@@ -45,6 +45,6 @@ target_link_libraries(pascal_test
   utillib
 )
 
-add_executable(ll1_generator ./ll1_generator.c)
+add_executable(pascal_ll1_table_gen ./ll1_table_gen.c)
 target_link_libraries(ll1_generator pascal utillib)
 
