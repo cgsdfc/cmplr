@@ -21,6 +21,7 @@
 
 #include "json_parser.h"
 #include "json_parser_impl.h"
+#include "json_parser_table.c" /* generated */
 
 static void json_parser_rule_handler(struct utillib_json_parser *self,
     struct utillib_rule const * rule)
@@ -69,7 +70,8 @@ static const struct utillib_ll1_parser_op json_parser_op={
 
 void utillib_json_parser_factory_init(struct utillib_json_parser_factory *self)
 {
-  utillib_ll1_factory_init(&self->factory, utillib_json_symbols, utillib_json_rules);
+  utillib_ll1_factory_gen_init(&self->factory, ll1_parser_table,
+      utillib_json_symbols, utillib_json_rules);
 }
 
 void utillib_json_parser_factory_destroy(struct utillib_json_parser_factory *self)
@@ -94,6 +96,13 @@ int utillib_json_parser_parse(struct utillib_json_parser *self, char const * str
   struct utillib_json_scanner scanner;
   utillib_json_scanner_init(&scanner, str);
   utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_json_scanner_op);
+}
+
+int utillib_json_parser_parse_dbg(struct utillib_json_parser *self, size_t const * symbols)
+{
+  struct utillib_symbol_scanner scanner;
+  utillib_symbol_scanner_init(&scanner, symbols, utillib_json_symbols);
+  return utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_symbol_scanner_op);
 }
 
 struct utillib_json_value_t * utillib_json_parser_value(struct utillib_json_parser *self)

@@ -49,6 +49,8 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/unordered_op.h \
 													src/utillib/ll1_builder.h \
 													src/utillib/ll1_builder_impl.h \
+													src/utillib/json_parser_impl.h \
+													src/utillib/json_parser.h \
 													src/utillib/symbol.h \
 													src/utillib/rule.h \
 													src/utillib/pair.h \
@@ -65,6 +67,8 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/ll1_builder_impl.c \
+												 src/utillib/json_parser.c \
+												 src/utillib/json_parser_impl.c \
 												 src/utillib/ll1_generator.c \
 												 src/utillib/opg_builder.c \
 												 src/utillib/scanner.c \
@@ -95,6 +99,7 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/ll1_sample_2.h \
 											 src/utillib/test/non_ll1_sample_1.c \
 											 src/utillib/test/scanner.c \
+											 src/utillib/test/json_parser.c \
 											 src/utillib/test/ll1_parser.c \
 											 src/utillib/test/vector2.c \
 											 src/utillib/test/bitset.c \

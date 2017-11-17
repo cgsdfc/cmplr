@@ -25,6 +25,7 @@
 #include <utillib/test.h>
 
 static struct utillib_json_parser_factory parser_factory;
+static struct utillib_json_scanner scanner;
 
 UTILLIB_TEST_AUX(json_parser_dump_all)
 {
@@ -36,23 +37,36 @@ UTILLIB_TEST_AUX(json_parser_dump_all)
 }
 
 UTILLIB_TEST_SET_UP() {
-  if (!utillib_symbol_check(utillib_json_symbols, utillib_json_symbol_kind_N)) {
-    UTILLIB_TEST_ABORT("utillib_json_symbols definition error");
-  }
   utillib_json_parser_factory_init(&parser_factory);
+  utillib_json_parser_init(UT_FIXTURE, &parser_factory);
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
   utillib_json_parser_factory_destroy(&parser_factory);
+  utillib_json_parser_destroy(UT_FIXTURE);
 }
 
-UTILLIB_TEST(json_parser_parse) {
+UTILLIB_TEST(json_parser_parse_str) {
+  size_t const input[]={ 
+    JSON_SYM_STR, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
+UTILLIB_TEST(json_parser_parse_array) {
+  /*
+   * [ true, "string", null ] 
+   */
+  size_t const input[]={
+    JSON_SYM_LK, JSON_SYM_TRUE, JSON_SYM_COMMA, JSON_SYM_STR,
+    JSON_SYM_COMMA, JSON_SYM_NULL, JSON_SYM_RK, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
 
 UTILLIB_TEST_DEFINE(Utillib_JSON_Parser) {
   UTILLIB_TEST_BEGIN(Utillib_JSON_Parser)
-  UTILLIB_TEST_RUN(json_parser_parse)
+  UTILLIB_TEST_RUN(json_parser_parse_str)
   UTILLIB_TEST_END(Utillib_JSON_Parser)
   UTILLIB_TEST_FIXTURE(struct utillib_json_parser)
   UTILLIB_TEST_RETURN(Utillib_JSON_Parser)

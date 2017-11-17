@@ -32,7 +32,7 @@ static struct utillib_symbol_scanner symbol_scanner;
 static struct ll1_sample_1_semantic semantic;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_ll1_factory_init(&ll1_factory,ll1_sample_1_symbols, ll1_sample_1_rules); 
+  utillib_ll1_factory_build_init(&ll1_factory,ll1_sample_1_symbols, ll1_sample_1_rules); 
   utillib_ll1_factory_parser_init(&ll1_factory, 
       UT_FIXTURE, 
       &semantic,

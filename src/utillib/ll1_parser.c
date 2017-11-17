@@ -33,7 +33,7 @@ UTILLIB_ETAB_END(utillib_ll1_parser_error_kind);
   assert ((HANDLER) && "Rule handler should not be NULL");\
 } while (0)
 
-void utillib_ll1_factory_init(struct utillib_ll1_factory *self,
+void utillib_ll1_factory_build_init(struct utillib_ll1_factory *self,
     struct utillib_symbol const *symbols,
     struct utillib_rule_literal const *rules)
 {
@@ -47,6 +47,14 @@ void utillib_ll1_factory_init(struct utillib_ll1_factory *self,
   }
   utillib_ll1_builder_build_table(&builder, &self->table);
   utillib_ll1_builder_destroy(&builder);
+}
+
+void utillib_ll1_factory_gen_init(struct utillib_ll1_factory *self,
+    int const * gentable, struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules)
+{
+  utillib_rule_index_init(&self->rule_index, symbols, rules);
+  utillib_rule_index_load_table(&self->rule_index, &self->table, gentable);
 }
 
 void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self)
