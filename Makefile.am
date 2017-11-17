@@ -21,7 +21,8 @@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects foreign
 
-AM_CPPFLAGS = -DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test\"
+AM_CPPFLAGS = -DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test/\"
+AM_CPPFLAGS += -DUTILLIB_SOURCE_DIR=\"$(abs_srcdir)/src/utillib/\"
 
 AM_CFLAGS = -I$(top_srcdir)/src
 AM_CFLAGS += -g3
@@ -117,7 +118,9 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/driver.c 
 
 utillib_test_LDADD = libutillib.la
-
+noinst_PROGRAMS += json_parser_table_gen
+json_parser_table_gen_SOURCES = src/utillib/json_parser_table_gen.c
+json_parser_table_gen_LDADD = libutillib.la
 
 noinst_PROGRAMS += example-json
 example_json_SOURCES = src/utillib/example/json.c

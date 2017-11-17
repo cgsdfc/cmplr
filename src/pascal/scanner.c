@@ -275,9 +275,9 @@ void const *pascal_scanner_semantic(struct pascal_scanner *self) {
     return strdup(str);
   }
   if (self->code == SYM_UINT) {
-    size_t *uint_val = malloc(sizeof *uint_val);
-    *uint_val = strtoul(str, NULL, 10);
-    return uint_val;
+    size_t uint_val;
+    uint_val = strtoul(str, NULL, 10);
+    return (void const*) uint_val;
   }
   return NULL;
 }

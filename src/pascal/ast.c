@@ -20,21 +20,55 @@
 */
 
 #include "ast.h"
+#include <stdlib.h> // strtoul free
+#include <string.h>
 
 
 
-/**
- * \function parser_ast_node_create
- * Creates an AST node wrapping another node
- * or terminal semantic.
- */
-static struct pascal_parser_ast_node *parser_ast_node_create(int kind,
-                                                             void const *data) {
-  struct pascal_parser_ast_node *self = malloc(sizeof *self);
-  self->kind = kind;
+struct pascal_ast_node *pascal_ast_node_create_empty(int kind) 
+{
+  struct pascal_ast_node const* self=malloc(sizeof *self);
+  self->kind=kind;
+  void const *aux;
+  union pascal_ast_union  node;
+
   switch (kind) {
+    case PAS_AST_CONST:
+      self->as_ptr = malloc (sizeof (struct pascal_ast_const_decl));
+      utillib_vector_init(self->as_ptr);
+      return self;
+    case PAS_AST_VAR:
+      self->as_ptr = malloc (sizeof (struct pascal_ast_var_decl));
+      utillib_vector_init(self->as_ptr);
+      return self;
+    case PAS_AST_ASSIGN:
+      self->as_ptr=malloc(sizeof (struct pascal_ast_assign_stmt));
+      memset(self->as_ptr, 0, sizeof (struct pascal_ast_assign_stmt));
+      return self;
+    case PAS_AST_READ:
+      self->as_ptr = malloc (sizeof (struct pascal_ast_read_stmt));
+      utillib_vector_init(self->as_ptr);
+      return self;
+    case PAS_AST_WRITE:
+      self->as_ptr = malloc (sizeof (struct pascal_ast_write_stmt));
+      utillib_vector_init(self->as_ptr);
+      return self;
+    case PAS_AST_TERM:
+      self->as_ptr=malloc(sizeof (struct pascal_ast_term));
+      memset(self->as_ptr, 0,sizeof (struct pascal_ast_term)); 
+      return self;
+    case PAS_AST_EXPR:
+      self->as_ptr=malloc(sizeof (struct pascal_ast_expr));
+      memset(self->as_ptr, 0,sizeof (struct pascal_ast_expr)); 
+      return self;
+
+
+      
+    case PAS_AST_CALL:
+      self->as_ptr=malloc(sizeof (struct pascal_ast_call_stmt));
+      pascal_ast_call_stmt_init(self->as_ptr);
+      return self;
   case PAS_AST_UINT:
-    self->as_uint = *(size_t const *)data;
     return self;
   default:
     self->as_ptr = (void *)data;
@@ -42,96 +76,32 @@ static struct pascal_parser_ast_node *parser_ast_node_create(int kind,
   }
 }
 
-/**
- * \function parser_const_decl_create
- * Creates a const declaration node.
- */
-static struct pascal_parser_ast_node *parser_const_decl_create(void) {
-  struct pascal_parser_const_decl *self = malloc(sizeof *self);
-  utillib_vector_init(&self->items);
-  return parser_ast_node_create(PAS_AST_CONST, self);
-}
+void pascal_ast_node_destroy(struct pascal_ast_node *self)
+{
+  struct utillib_vector * items;
+  switch (self->kind) {
+  case PAS_AST_IDEN:
+    free(self->as_iden);
+    break;
+  case PAS_AST_UINT:
+    free(self->as_uint);
+    break;
+  case PAS_AST_CONST:
+    items=self->as_ptr;
+    UTILLIB_VECTOR_FOREACH(struct utillib_pair *, pair, items) {
+      pascal_ast_node_destroy(pair->up_first);
+      pascal_ast_node_destroy(pair->up_second);
+      free(pair);
+    }
+    utillib_vector_destroy(items);
+    break;
 
-static struct pascal_parser_ast_node *parser_var_decl_create(void) {
-  struct pascal_parser_var_decl *self = malloc(sizeof *self);
-  utillib_vector_init(&self->items);
-  return parser_ast_node_create(PAS_AST_VAR, self);
-}
 
-static struct pascal_parser_ast_node *parser_subprogram_create(void) {
-  struct pascal_parser_subprogram *self = malloc(sizeof *self);
-  return parser_ast_node_create(PAS_AST_SUBPROG, self);
-}
 
-static void parser_handle_program(struct pascal_parser *self) {
-  utillib_error_printf("parser_handle_program!!!\n");
-  self->program = parser_subprogram_create();
-  utillib_vector_push_back(&self->ast_nodes, self->program);
-}
+  
 
-static void parser_handle_subprogram(struct pascal_parser *self) {
-  utillib_vector_push_back(&self->ast_nodes, parser_subprogram_create());
-}
 
-static void pascal_parser_handle_const_decl(struct pascal_parser *self) {
-  struct pascal_parser_ast_node *const_decl = parser_const_decl_create();
-  utillib_vector_push_back(&self->ast_nodes, const_decl);
-}
 
-static void pascal_parser_handle_var_decl(struct pascal_parser *self) {
-  struct pascal_parser_ast_node *var_decl = parser_var_decl_create();
-  utillib_vector_push_back(&self->ast_nodes, var_decl);
-}
-
-static void pascal_parser_procedure_add(struct pascal_parser_procedure *self,
-                                        struct pascal_parser *parser, int code,
-                                        void const *semantic) {}
-
-static void
-pascal_parser_subprogram_callback(struct pascal_parser_subprogram *self,
-                                  struct pascal_parser *parser, int code,
-                                  void const *semantic) {
-}
-
-static void
-pascal_parser_const_decl_callback(struct pascal_parser_const_decl *self,
-                                  struct pascal_parser *parser, int code,
-                                  void const *semantic) {
-  struct utillib_pair_t *pair;
-  struct pascal_parser_subprogram *subprogram;
-  switch (code) {
-  case SYM_IDEN:
-    pair = utillib_make_pair(semantic, NULL);
-    utillib_vector_push_back(&self->items, pair);
-    return;
-  case SYM_UINT:
-    pair = utillib_vector_back(&self->items);
-    pair->up_second = semantic;
-    return;
-  case SYM_SEMI:
-    utillib_vector_pop_back(&parser->ast_nodes);
-    subprogram = utillib_vector_back(&parser->ast_nodes);
-    subprogram->const_decl = self;
-    return;
-  case UT_SYM_EPS:
-    subprogram = utillib_vector_back(&parser->ast_nodes);
-    subprogram->const_decl = NULL;
-    return;
   }
-}
 
-static void pascal_parser_var_callback(struct pascal_parser_var_decl *self,
-                                       struct pascal_parser *parser, int code,
-                                       void const *semantic) {
-  struct pascal_parser_subprogram *subprogram;
-  switch (code) {
-  case SYM_IDEN:
-    utillib_vector_push_back(&self->items, semantic);
-    return;
-  case SYM_SEMI:
-    utillib_vector_pop_back(&parser->ast_nodes);
-    subprogram = utillib_vector_back(&parser->ast_nodes);
-    subprogram->var_decl = self;
-    return;
-  }
 }

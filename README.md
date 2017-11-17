@@ -29,7 +29,7 @@ If you use autoconf way, please make sure you have autotool tool chains installe
 
 Currently `make check` is supported only with autoconf, so there is no check if you use cmake way.
 
-## Develop
+## Development
 The topics of current development includes:
 - Finish the JSON parser and integrate it with the JSON dumper.
 - Make an ll1_testing module to aid testing of ll1_parser.

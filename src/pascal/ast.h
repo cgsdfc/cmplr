@@ -25,12 +25,20 @@
 #include <utillib/vector.h>
 
 UTILLIB_ENUM_BEGIN(pascal_ast_kind)
+
 UTILLIB_ENUM_ELEM(PAS_AST_UINT)
 UTILLIB_ENUM_ELEM(PAS_AST_IDEN)
 UTILLIB_ENUM_ELEM(PAS_AST_PROC)
 UTILLIB_ENUM_ELEM(PAS_AST_SUBPROG)
 UTILLIB_ENUM_ELEM(PAS_AST_CONST)
 UTILLIB_ENUM_ELEM(PAS_AST_VAR)
+UTILLIB_ENUM_ELEM(PAS_AST_CONST)
+UTILLIB_ENUM_ELEM(PAS_AST_WRITE)
+UTILLIB_ENUM_ELEM(PAS_AST_READ)
+UTILLIB_ENUM_ELEM(PAS_AST_CALL)
+UTILLIB_ENUM_ELEM(PAS_AST_EXPR)
+UTILLIB_ENUM_ELEM(PAS_AST_LOOP)
+
 UTILLIB_ENUM_END(pascal_ast_kind);
 
 /**
@@ -161,7 +169,10 @@ struct pascal_ast_loop_stmt {
   void const *cond;
   void const *do_;
 };
-/* CALL is stored directly in ast_node */
+
+struct pascal_ast_call_stmt {
+  char const * proc;
+};
 
 /**
  * \struct pascal_ast_condition
@@ -193,8 +204,8 @@ struct pascal_ast_condition {
 struct pascal_ast_subprogram {
   void const *const_decl;
   void const *var_decl;
-  void const *proc_decl;
-  void const *stmt;
+  struct utillib_vector proc_list;
+  struct pascal_ast_comp_stmt comp_stmt;
 };
 
 /**
@@ -206,6 +217,25 @@ struct pascal_ast_procedure {
   char const *name;
   struct utillib_vector subprogram;
 }
+
+union pascal_ast_union {
+  struct pascal_ast_node *ast_node;
+  struct pascal_ast_const_decl *const_decl;
+  struct pascal_ast_var_decl * var_decl;
+  struct pascal_ast_cond_stmt * cond_stmt;
+  struct pascal_ast_assign_stmt * assign_stmt;
+  struct pascal_ast_read_stmt * read_stmt;
+  struct pascal_ast_write_stmt * write_stmt;
+  struct pascal_ast_comp_stmt * comp_stmt;
+  struct pascal_ast_loop_stmt * loop_stmt;
+  struct pascal_ast_call_stmt * call_stmt;
+
+  struct pascal_ast_term * term;
+  struct pascal_ast_expr * expr;
+  struct pascal_ast_condition * cond;
+  struct pascal_ast_subprogram * subprogram;
+};
+
 
 #endif /* PASCAL_AST_H */
 

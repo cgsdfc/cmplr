@@ -23,6 +23,7 @@
 #include "pascal_ll1_table.c" // ll1_parser_table
 #include "rules.h"            // pascal_rules
 #include "symbols.h"          // pascal_symbols
+#include "ast.h"
 #include <stdlib.h>
 #include <utillib/pair.h>
 #include <utillib/print.h> // utillib_error_printf
@@ -57,24 +58,85 @@ static void parser_error_handler(void *self, void * input,
   }
 }
 
-static void parser_terminal_handler(void *self, 
+static void parser_terminal_handler(struct pascal_parser *self, 
     struct utillib_symbol const * terminal,
                                     void const *semantic) {
+  struct pascal_ast_node * prev_node;
+  struct utillib_vector * ast_nodes=&self->ast_nodes;
+  union pascal_ast_union node;
+
   puts(terminal->name);
   switch (terminal->value) {
   case SYM_IDEN:
+    prev_node=utillib_vector_back(ast_nodes);
+    switch(prev_node->kind) {
+      case PAS_AST_CONST:
+        node.const_decl=prev_node->as_ptr;
+        utillib_vector_push_back(&node.const_decl->idens, semantic);
+        break;
+      case PAS_AST_VAR:
+        node.var_decl=prev_node->as_ptr;
+        utillib_vector_push_back(&node.var_decl->idens, semantic);
+        break;
+      case PAS_AST_PROC:
+        node.proc_decl=prev_node->as_ptr;
+        proc_decl->name=semantic;
+        break;
+      case PAS_AST_ASSIGN:
+        node.assign_stmt=prev_node->as_ptr;
+        node.assign_stmt->lhs=semantic;
+        break;
+      default:
+        assert("SYM_IDEN:prev_node: unimpled");
+    }
+  case SYM_UINT:
+    prev_node=utillib_vector_back(ast_nodes);
+    switch(prev_node->kind) {
+      case PAS_AST_FACT:
+        node.fact=
+
+
+
+
+
     puts(semantic);
-    free(semantic);
     break;
   case SYM_UINT:
-    printf("%lu\n", *(size_t const*) semantic);
-    free(semantic);
+    printf("%lu\n", (size_t) semantic);
     break;
   }
 }
 
-static void parser_rule_handler(void *self, struct utillib_rule const *rule)
+static void parser_rule_handler(struct pascal_parser *self, struct utillib_rule const *rule)
 {
+  struct utillib_symbol const * symbol=rule->LHS;
+  struct utillib_vector ast_nodes=&self->ast_nodes;
+  int kind;
+
+  switch (symbol->value) {
+  case SYM_PROGRAM:
+    kind=PAS_AST_PROGRAM;
+    break;
+  case SYM_PROC:
+    kind=PAS_AST_PROC;
+    break;
+  case SYM_CONST_DECL:
+    kind=PAS_AST_CONST;
+    break;
+  case SYM_WRITE_STMT:
+    kind=PAS_AST_WRITE;
+    break;
+  case SYM_READ_STMT:
+    kind=PAS_AST_READ;
+    break;
+  case SYM_ASS_STMT:
+    kind=PAS_AST_ASSIGN;
+    break;
+  case SYM_LOOP_STMT:
+    kind=PAS_AST_LOOP;
+    break;
+  }
+  utillib_vector_push_back(ast_nodes, pascal_ast_node_create_empty(kind));
   struct utillib_json_value_t *val=utillib_rule_json_object_create(rule, 0);
   utillib_json_pretty_print(val, stdout);
   utillib_json_value_destroy(val);
