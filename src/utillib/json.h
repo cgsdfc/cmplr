@@ -186,10 +186,20 @@ void utillib_json_array_push_back(struct utillib_json_value_t *self,
 void utillib_json_object_push_back(struct utillib_json_value_t *self,
                                    char const *key,
                                    struct utillib_json_value_t const *value);
+struct utillib_pair *
+utillib_json_object_back(struct utillib_json_value_t *self);
+
+struct utillib_json_value_t *
+utillib_json_array_back(struct utillib_json_value_t *self);
+
 
 struct utillib_json_value_t *utillib_json_object_create_empty(void);
 
 struct utillib_json_value_t *utillib_json_array_create_empty(void);
+
+extern const struct utillib_json_value_t utillib_json_true;
+extern const struct utillib_json_value_t utillib_json_false;
+extern const struct utillib_json_value_t utillib_json_null;
 
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_real_create)
 UTILLIB_JSON_CREATE_FUNC_DECLARE(utillib_json_bool_create)

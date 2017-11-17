@@ -33,11 +33,9 @@
  * data format.
  */
 
-/**
- * \variable static_json_null
- */
-
-static struct utillib_json_value_t static_json_null = {.kind = UT_JSON_NULL};
+const struct utillib_json_value_t utillib_json_true={.kind=UT_JSON_BOOL};
+const struct utillib_json_value_t utillib_json_false={.kind=UT_JSON_BOOL};
+const struct utillib_json_value_t utillib_json_null={.kind=UT_JSON_NULL};
 
 UTILLIB_ETAB_BEGIN(utillib_json_kind)
 UTILLIB_ETAB_ELEM(UT_JSON_REAL)
@@ -146,6 +144,7 @@ void utillib_json_value_destroy(struct utillib_json_value_t *self) {
     free(self);
     return;
   case UT_JSON_NULL:
+  case UT_JSON_BOOL:
     /* static */
     return;
   default:
@@ -163,6 +162,12 @@ static struct utillib_json_value_t *json_value_create_ptr(int kind,
   self->as_ptr = data;
   self->kind = kind;
   return self;
+}
+
+struct utillib_json_value_t * utillib_json_bool_create(void const *base, size_t size)
+{
+  bool b=*(bool const*) base;
+  return b? &utillib_json_true : &utillib_json_false;
 }
 
 /**
@@ -191,8 +196,6 @@ static struct utillib_json_value_t *json_value_create_ptr(int kind,
 
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_real_create, as_double,
                                         double, UT_JSON_REAL)
-UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_bool_create, as_bool, bool,
-                                        UT_JSON_BOOL)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_size_t_create, as_size_t,
                                         size_t, UT_JSON_SIZE_T)
 UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_int_create, as_int, int,
@@ -219,7 +222,7 @@ struct utillib_json_value_t *utillib_json_null_array_create(size_t size) {
   struct utillib_json_array_t *self = malloc(sizeof *self);
   utillib_vector_init(&self->elements);
   for (size_t i = 0; i < size; ++i) {
-    utillib_vector_push_back(&self->elements, &static_json_null);
+    utillib_vector_push_back(&self->elements, &utillib_json_null);
   }
   return json_value_create_ptr(UT_JSON_ARRAY, self);
 }
@@ -228,7 +231,7 @@ struct utillib_json_value_t *utillib_json_null_array_create(size_t size) {
  * \function utillib_json_null_create
  */
 struct utillib_json_value_t *utillib_json_null_create(void) {
-  return &static_json_null;
+  return &utillib_json_null;
 }
 
 /**
@@ -431,7 +434,7 @@ static void json_value_tostring(struct utillib_json_value_t const *self,
     utillib_string_append(string, str);
     return;
   case UT_JSON_BOOL:
-    str = self->as_bool ? "true" : "false";
+    str = self == &utillib_json_true ? "true":"false";
     utillib_string_append(string, str);
     return;
   case UT_JSON_NULL:
@@ -504,6 +507,21 @@ void utillib_json_object_push_back(struct utillib_json_value_t *self,
   struct utillib_json_object_t *object = self->as_ptr;
   utillib_vector_push_back(&object->members,
                            utillib_make_pair(key, (void *)value));
+}
+
+struct utillib_pair *
+utillib_json_object_back(struct utillib_json_value_t *self)
+{
+  struct utillib_json_object_t *object = self->as_ptr;
+  return utillib_vector_back(&object->members);
+}
+
+struct utillib_json_value_t *
+utillib_json_array_back(struct utillib_json_value_t *self)
+{
+  struct utillib_json_array_t *array = self->as_ptr;
+  return utillib_vector_back(&array->elements);
+
 }
 
 /**
