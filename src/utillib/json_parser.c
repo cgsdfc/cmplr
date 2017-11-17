@@ -58,8 +58,6 @@ json_parser_values_pop_back(struct utillib_vector *values)
  */
 static void json_parser_object_addval(struct utillib_vector *values)
 {
-  if (utillib_vector_size(values) == 1)
-    return;
   struct utillib_json_value_t *val=json_parser_values_pop_back(values);
   struct utillib_json_value_t *object=utillib_vector_back(values);
   struct utillib_pair *pair=utillib_json_object_back(object);
@@ -74,8 +72,6 @@ static void json_parser_object_addval(struct utillib_vector *values)
  */
 static void json_parser_object_addkey(struct utillib_vector *values)
 {
-  if (utillib_vector_size(values) == 1)
-    return;
   struct utillib_json_value_t *keyval=json_parser_values_pop_back(values);
   json_parser_check_str(keyval); /* It should be a json string */
   char const *key=keyval->as_str;
@@ -90,8 +86,6 @@ static void json_parser_object_addkey(struct utillib_vector *values)
  */
 static void json_parser_array_addval(struct utillib_vector *values)
 {
-  if (utillib_vector_size(values) == 1)
-    return;
   struct utillib_json_value_t *val=json_parser_values_pop_back(values);
   struct utillib_json_value_t *array=utillib_vector_back(values);
   utillib_json_array_push_back(array, val);
@@ -144,8 +138,6 @@ static void json_parser_terminal_handler(void *_self,
   struct utillib_json_parser *self=_self;
   struct utillib_vector *values=&self->values;
   struct utillib_json_value_t *val=NULL;
-  puts(symbol->name);
-
   switch (symbol->value) {
   case JSON_SYM_TRUE:
     val=&utillib_json_true;
@@ -154,7 +146,7 @@ static void json_parser_terminal_handler(void *_self,
     val=&utillib_json_false;
     break;
   case JSON_SYM_NULL:
-    val=&utillib_json_true;
+    val=&utillib_json_null;
     break;
 #ifdef NODEBUG
   case JSON_SYM_NUM:
@@ -177,18 +169,47 @@ static void json_parser_terminal_handler(void *_self,
     return;
   }
 
+  /*
+   * This switch is so complicated
+   * because empty case should handle
+   * correctly. The strategy is as follow:
+   * 1. Handles the `UT_SYM_EPS' by pushing 
+   * `NULL' into `values'.
+   * 2. It is known that `JSON_SYM_RB' or
+   * `JSON_SYM_RK' must follow `UT_SYM_EPS'
+   * so we pop off the `NULL' in these cases.
+   * 3. if after (2), the top is `NULL', we
+   * know that sth empty here, so we simpily
+   * pop off the `NULL'.
+   * 4. Otherwise, there is a meaningful value
+   * on the top and we add it to the top-1 value
+   * which should be an array or object.
+   */
   switch (symbol->value) {
     case JSON_SYM_RB:
-      json_parser_object_addval(values);
+      utillib_vector_pop_back(values);
+      if (utillib_vector_back(values)) {
+        json_parser_object_addval(values);
+        return;
+      }
+      utillib_vector_pop_back(values);
       return;
     case JSON_SYM_RK:
-      json_parser_array_addval(values);
+      utillib_vector_pop_back(values);
+      if (utillib_vector_back(values)) {
+        json_parser_array_addval(values);
+        return;
+      }
+      utillib_vector_pop_back(values);
       return;
     case JSON_SYM_COMMA:
       json_parser_addval(values);
       return;
     case JSON_SYM_COLON:
       json_parser_object_addkey(values);
+      return;
+    case UT_SYM_EPS:
+      utillib_vector_push_back(values, NULL);
       return;
   }
 }
