@@ -4,7 +4,7 @@
 
 static void test_unordered_map(void) {
   struct utillib_unordered_map map;
-  struct utillib_pair_t stu[] = {
+  struct utillib_pair stu[] = {
       {"Tony", 1},    {"John", 2},
       {"Amy", 3},     {"Tom", 4},
       {"Sam", 5},     {"Johnson", 6},
@@ -19,12 +19,12 @@ static void test_unordered_map(void) {
 
   utillib_unordered_map_init(&map, &utillib_unordered_strop);
   for (int i = 0; i < 100000; i++) {
-    for (struct utillib_pair_t *p = stu; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
+    for (struct utillib_pair *p = stu; UTILLIB_PAIR_FIRST(p) != NULL; ++p) {
       utillib_unordered_map_insert(&map, p);
     }
   }
-  for (struct utillib_pair_t *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
-    struct utillib_pair_t *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
+  for (struct utillib_pair *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
+    struct utillib_pair *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
 
     if (p) {
       printf("found %s:%ld in map\n", (char *)UTILLIB_PAIR_FIRST(p),

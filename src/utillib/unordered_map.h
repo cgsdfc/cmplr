@@ -49,8 +49,8 @@ struct utillib_unordered_map {
   double un_max_lf;
   size_t un_nbucket;
   size_t un_size;
-  /* manage memory of utillib_pair_t */
-  struct utillib_pair_t *un_free;
+  /* manage memory of utillib_pair */
+  struct utillib_pair *un_free;
 };
 
 struct utillib_unordered_map_iterator {
@@ -65,13 +65,13 @@ bool utillib_unordered_map_iterator_has_next(
     struct utillib_unordered_map_iterator *);
 void utillib_unordered_map_iterator_next(
     struct utillib_unordered_map_iterator *);
-struct utillib_pair_t *
+struct utillib_pair *
 utillib_unordered_map_iterator_get(struct utillib_unordered_map_iterator *);
 
 /* constructor destructor */
 void utillib_unordered_map_init_from_array(
     struct utillib_unordered_map *, struct utillib_unordered_op *,
-    struct utillib_pair_t const *); /* NULL teminated */
+    struct utillib_pair const *); /* NULL teminated */
 void utillib_unordered_map_init(struct utillib_unordered_map *,
                                 struct utillib_unordered_op *);
 void utillib_unordered_map_destroy(struct utillib_unordered_map *);
@@ -82,7 +82,7 @@ void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *,
 int utillib_unordered_map_emplace(struct utillib_unordered_map *, void const*,
                                   void const*);
 int utillib_unordered_map_insert(struct utillib_unordered_map *,
-                                 struct utillib_pair_t const *);
+                                 struct utillib_pair const *);
 int utillib_unordered_map_erase(struct utillib_unordered_map *,void const* );
 void utillib_unordered_map_set_max_load_factor(struct utillib_unordered_map *,
                                                double);
@@ -90,7 +90,7 @@ void utillib_unordered_map_rehash(struct utillib_unordered_map *, size_t);
 void utillib_unordered_map_clear(struct utillib_unordered_map *);
 
 /* observer */
-struct utillib_pair_t *
+struct utillib_pair *
 utillib_unordered_map_find(struct utillib_unordered_map *, void const*);
 size_t utillib_unordered_map_size(struct utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);

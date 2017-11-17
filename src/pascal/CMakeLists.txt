@@ -18,17 +18,18 @@
 #  02110-1301 USA
 
 project(pascal  C)
-# set(CMAKE_C_COMPILER clang)
 
 include_directories(${CMAKE_SOURCE_DIR})
 set(PASCAL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(PASCAL_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/)
+add_definitions(-DPASCAL_TEST_DIR=\"${PASCAL_TEST_DIR}\")
 
 add_library(pascal
   ./parser.c
   ./scanner.c
   ./symbols.c
   ./rules.c
+  ./ast.c
 )
 
 add_executable(pascal_test
@@ -47,4 +48,3 @@ target_link_libraries(pascal_test
 add_executable(ll1_generator ./ll1_generator.c)
 target_link_libraries(ll1_generator pascal utillib)
 
-configure_file(config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/config.h)

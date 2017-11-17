@@ -1,6 +1,8 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./json_parser.c
+  ./json_parser_impl.c
   ./ll1_builder_impl.c
   ./ll1_generator.c
   ./opg_builder.c
@@ -14,14 +16,11 @@ add_library(utillib
   ./rule.c
   ./pair.c
   ./json.c
-# ./logging.c
-# ./strref.c
   ./test.c
   ./print.c
   ./equal.c
   ./hash.c
   ./unordered_map.c
-# ./error.c
   ./slist.c
   ./vector.c
   ./string.c
@@ -51,8 +50,7 @@ add_executable(utillib_test
   ./test/slist.c
   ./test/flags.c
   ./test/vector.c
-# ./test/strref.c
-# ./test/logging.c
+  ./test/json_parser.c
   ./test/driver.c
   )
 

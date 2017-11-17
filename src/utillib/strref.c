@@ -6,11 +6,11 @@
 /**
  * \function free_str_in_pair
  * Take the first of the `pair' as a string and dispose it by `free'.
- * \param pair the utillib_pair_t that holds the string.
+ * \param pair the utillib_pair that holds the string.
  * \return void.
  */
 
-static void free_str_in_pair(struct utillib_pair_t *pair) {
+static void free_str_in_pair(struct utillib_pair *pair) {
   free((void*)UTILLIB_PAIR_FIRST(pair));
 }
 
@@ -35,7 +35,7 @@ void utillib_strref_init(struct utillib_strref *self) {
  */
 
 char const *utillib_strref_incr(struct utillib_strref *self, char const *str) {
-  struct utillib_pair_t *pair =
+  struct utillib_pair *pair =
       utillib_unordered_map_find(&self->strref_map, str);
   if (pair) {
     size_t cur_refcnt = (size_t)UTILLIB_PAIR_SECOND(pair);
@@ -58,7 +58,7 @@ char const *utillib_strref_incr(struct utillib_strref *self, char const *str) {
  */
 
 void utillib_strref_decr(struct utillib_strref *self, char const *str) {
-  struct utillib_pair_t *pair =
+  struct utillib_pair *pair =
       utillib_unordered_map_find(&self->strref_map, str);
   if (pair) {
     size_t cur_refcnt = (size_t)UTILLIB_PAIR_SECOND(pair);
@@ -80,7 +80,7 @@ void utillib_strref_decr(struct utillib_strref *self, char const *str) {
  */
 
 size_t utillib_strref_getcnt(struct utillib_strref *self, char const *str) {
-  struct utillib_pair_t *pair =
+  struct utillib_pair *pair =
       utillib_unordered_map_find(&self->strref_map, str);
   if (!pair) {
     return 0;

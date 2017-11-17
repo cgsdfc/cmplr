@@ -30,11 +30,13 @@ UTILLIB_ENUM_ELEM(PAS_AST_UINT)
 UTILLIB_ENUM_ELEM(PAS_AST_IDEN)
 UTILLIB_ENUM_ELEM(PAS_AST_PROC)
 UTILLIB_ENUM_ELEM(PAS_AST_SUBPROG)
-UTILLIB_ENUM_ELEM(PAS_AST_CONST)
+UTILLIB_ENUM_ELEM(PAS_AST_PROGRAM)
+UTILLIB_ENUM_ELEM(PAS_AST_TERM)
 UTILLIB_ENUM_ELEM(PAS_AST_VAR)
 UTILLIB_ENUM_ELEM(PAS_AST_CONST)
 UTILLIB_ENUM_ELEM(PAS_AST_WRITE)
 UTILLIB_ENUM_ELEM(PAS_AST_READ)
+UTILLIB_ENUM_ELEM(PAS_AST_ASSIGN)
 UTILLIB_ENUM_ELEM(PAS_AST_CALL)
 UTILLIB_ENUM_ELEM(PAS_AST_EXPR)
 UTILLIB_ENUM_ELEM(PAS_AST_LOOP)
@@ -171,7 +173,7 @@ struct pascal_ast_loop_stmt {
 };
 
 struct pascal_ast_call_stmt {
-  char const * proc;
+  char const * proc_name;
 };
 
 /**
@@ -210,17 +212,17 @@ struct pascal_ast_subprogram {
 
 /**
  * \struct pascal_ast_procedure
- * Procedure has a name a list of
- * subprograms.
+ * Procedure has a name a subprogram.
  */
-struct pascal_ast_procedure {
+struct pascal_ast_proc_decl {
   char const *name;
-  struct utillib_vector subprogram;
-}
+  void const * subprogram;
+};
 
 union pascal_ast_union {
   struct pascal_ast_node *ast_node;
   struct pascal_ast_const_decl *const_decl;
+  struct pascal_ast_proc_decl * proc_decl;
   struct pascal_ast_var_decl * var_decl;
   struct pascal_ast_cond_stmt * cond_stmt;
   struct pascal_ast_assign_stmt * assign_stmt;
@@ -236,6 +238,9 @@ union pascal_ast_union {
   struct pascal_ast_subprogram * subprogram;
 };
 
+struct pascal_ast_node *pascal_ast_node_create_empty(int kind);
+
+void pascal_ast_node_destroy(struct pascal_ast_node *self);
 
 #endif /* PASCAL_AST_H */
 

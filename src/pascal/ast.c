@@ -22,12 +22,13 @@
 #include "ast.h"
 #include <stdlib.h> // strtoul free
 #include <string.h>
+#include <utillib/pair.h>
 
 
 
 struct pascal_ast_node *pascal_ast_node_create_empty(int kind) 
 {
-  struct pascal_ast_node const* self=malloc(sizeof *self);
+  struct pascal_ast_node * self=malloc(sizeof *self);
   self->kind=kind;
   void const *aux;
   union pascal_ast_union  node;
@@ -61,17 +62,12 @@ struct pascal_ast_node *pascal_ast_node_create_empty(int kind)
       self->as_ptr=malloc(sizeof (struct pascal_ast_expr));
       memset(self->as_ptr, 0,sizeof (struct pascal_ast_expr)); 
       return self;
-
-
-      
     case PAS_AST_CALL:
       self->as_ptr=malloc(sizeof (struct pascal_ast_call_stmt));
-      pascal_ast_call_stmt_init(self->as_ptr);
       return self;
-  case PAS_AST_UINT:
-    return self;
+    case PAS_AST_UINT:
+      return self;
   default:
-    self->as_ptr = (void *)data;
     return self;
   }
 }
@@ -95,13 +91,6 @@ void pascal_ast_node_destroy(struct pascal_ast_node *self)
     }
     utillib_vector_destroy(items);
     break;
-
-
-
-  
-
-
-
   }
 
 }

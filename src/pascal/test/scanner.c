@@ -20,7 +20,6 @@
 */
 
 #include "pascal/scanner.h"
-#include "pascal/config.h"
 #include "pascal/symbols.h"
 #include <stdlib.h>         // free
 #include <utillib/print.h>  // utillib_static_sprintf

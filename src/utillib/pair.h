@@ -28,10 +28,10 @@
 #define UTILLIB_PAIR_FIRST(P) ((P)->up_first)
 #define UTILLIB_PAIR_SECOND(P) ((P)->up_second)
 
-struct utillib_pair_t {
+struct utillib_pair {
   void const *up_first;
   void const *up_second;
 };
 
-struct utillib_pair_t *utillib_make_pair(void const *,  void const *);
+struct utillib_pair *utillib_make_pair(void const *,  void const *);
 #endif /* UTILLIB_PAIR_H */

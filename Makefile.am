@@ -100,7 +100,6 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/ll1_sample_2.h \
 											 src/utillib/test/non_ll1_sample_1.c \
 											 src/utillib/test/scanner.c \
-											 src/utillib/test/json_parser.c \
 											 src/utillib/test/ll1_parser.c \
 											 src/utillib/test/vector2.c \
 											 src/utillib/test/bitset.c \
@@ -108,6 +107,7 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/symbol.c \
 											 src/utillib/test/rule.c \
 											 src/utillib/test/json.c \
+											 src/utillib/test/json_parser.c \
 											 src/utillib/test/test.c \
 											 src/utillib/test/print.c \
 											 src/utillib/test/unordered_map.c \

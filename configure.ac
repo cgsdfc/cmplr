@@ -50,6 +50,5 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset pow strdup strerror strtoul])
 
-AC_SUBST([PASCAL_TEST_DIR])
 AC_OUTPUT
 

@@ -59,7 +59,7 @@ json_object_register(struct utillib_json_object_t *self, char const *base,
        field->create_func != NULL; ++field) {
     struct utillib_json_value_t *value =
         field->create_func(base + field->offset, field->size);
-    struct utillib_pair_t *mem = utillib_make_pair(field->key, value);
+    struct utillib_pair *mem = utillib_make_pair(field->key, value);
     utillib_vector_push_back(&self->members, mem);
   }
 }
@@ -102,7 +102,7 @@ static void json_array_init(struct utillib_json_array_t *self) {
  * Destructs a single member of a larger object.
  * Recursively desctructs the value of the member.
  */
-static void json_object_member_destroy(struct utillib_pair_t *self) {
+static void json_object_member_destroy(struct utillib_pair *self) {
   utillib_json_value_destroy((void*) self->up_second);
   free(self);
 }
@@ -397,7 +397,7 @@ static void json_object_tostring(struct utillib_json_object_t const *self,
     utillib_string_append(string, "}");
     return;
   }
-  UTILLIB_VECTOR_FOREACH(struct utillib_pair_t *, mem, &self->members) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_pair *, mem, &self->members) {
     utillib_string_append(string, "\"");
     utillib_string_append(string, (char const *)UTILLIB_PAIR_FIRST(mem));
     utillib_string_append(string, "\":");
