@@ -89,7 +89,7 @@ const struct utillib_scanner_op utillib_json_scanner_op={
 
 static int json_scanner_read_str(char const ** input,  struct utillib_string * buffer)
 {
-  char specail;
+  char special;
   char const * str=*input;
   assert (*str == '\"' && "Should be called when a `\"' was seen");
   for (; *str != '\"'; ++str) {
@@ -101,17 +101,17 @@ static int json_scanner_read_str(char const ** input,  struct utillib_string * b
     if (*str == '\\') {
       ++str;
       switch (*str) {
-        case '\"': ++str; specail='\"'; break;
-        case '\\': ++str; specail='\\'; break;
-        case '/': ++str; specail='/'; break;
-        case 'b': ++str; specail='\b'; break;
-        case 'f': ++str; specail='\f'; break;
-        case 'n': ++str; specail='\n'; break;
-        case 'r': ++str; specail='\r'; break;
-        case 't': ++str; specail='\t'; break;
+        case '\"': ++str; special='\"'; break;
+        case '\\': ++str; special='\\'; break;
+        case '/': ++str; special='/'; break;
+        case 'b': ++str; special='\b'; break;
+        case 'f': ++str; special='\f'; break;
+        case 'n': ++str; special='\n'; break;
+        case 'r': ++str; special='\r'; break;
+        case 't': ++str; special='\t'; break;
         default: *input=str; return -JSON_EESCAPE;
       }
-      utillib_string_append_char(buffer, specail);
+      utillib_string_append_char(buffer, special);
       continue;
     } 
     utillib_string_append_char(buffer, *str);

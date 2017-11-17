@@ -46,11 +46,32 @@ UTILLIB_TEST_TEAR_DOWN() {
   utillib_json_parser_destroy(UT_FIXTURE);
 }
 
+UTILLIB_TEST(json_parser_parse_null) {
+  size_t const input[]={ 
+    JSON_SYM_NULL, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
 UTILLIB_TEST(json_parser_parse_str) {
   size_t const input[]={ 
     JSON_SYM_STR, UT_SYM_EOF
   };
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_parse_number) {
+  size_t const input[]={ 
+    JSON_SYM_NUM, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_parse_bool) {
+  size_t const input_1[]={ 
+    JSON_SYM_TRUE, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input_1));
 }
 
 UTILLIB_TEST(json_parser_parse_array) {
@@ -64,9 +85,65 @@ UTILLIB_TEST(json_parser_parse_array) {
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
+/* Empty array is a special case we are interested in */
+
+UTILLIB_TEST(json_parser_empty_array) {
+  size_t const input[]={
+    JSON_SYM_LK, JSON_SYM_RK, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_parse_object) {
+  size_t const input[]={
+    JSON_SYM_LB, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_NULL,
+    JSON_SYM_COMMA, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_NUM,
+    JSON_SYM_COMMA, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_TRUE,
+    JSON_SYM_RB, UT_SYM_EOF 
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_empty_object) {
+  size_t const input[]={
+    JSON_SYM_LB, JSON_SYM_RB, UT_SYM_EOF
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_one_elem_array) {
+  /* [ null ] */
+  size_t const input [] = {
+    JSON_SYM_LK, JSON_SYM_NULL, JSON_SYM_RK, 
+    UT_SYM_EOF 
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
+UTILLIB_TEST(json_parser_nested_array) {
+  /* [ [null], [ null, null], [null, null, null] ] */
+  size_t const input [] = {
+    JSON_SYM_LK, JSON_SYM_LK, JSON_SYM_NULL, JSON_SYM_RK,
+    JSON_SYM_COMMA, JSON_SYM_LK, JSON_SYM_NULL, JSON_SYM_COMMA,
+    JSON_SYM_NULL, JSON_SYM_RK, JSON_SYM_COMMA, JSON_SYM_LK,
+    JSON_SYM_NULL, JSON_SYM_COMMA, JSON_SYM_NULL, JSON_SYM_COMMA,
+    JSON_SYM_NULL, JSON_SYM_RK, JSON_SYM_RK,
+    UT_SYM_EOF 
+  };
+  UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
+}
+
 UTILLIB_TEST_DEFINE(Utillib_JSON_Parser) {
   UTILLIB_TEST_BEGIN(Utillib_JSON_Parser)
   UTILLIB_TEST_RUN(json_parser_parse_str)
+  UTILLIB_TEST_RUN(json_parser_parse_null)
+  UTILLIB_TEST_RUN(json_parser_parse_number)
+  UTILLIB_TEST_RUN(json_parser_parse_bool)
+  UTILLIB_TEST_RUN(json_parser_parse_array)
+  UTILLIB_TEST_RUN(json_parser_empty_array)
+  UTILLIB_TEST_RUN(json_parser_parse_object)
+  UTILLIB_TEST_RUN(json_parser_empty_object)
+  UTILLIB_TEST_RUN(json_parser_nested_array)
   UTILLIB_TEST_END(Utillib_JSON_Parser)
   UTILLIB_TEST_FIXTURE(struct utillib_json_parser)
   UTILLIB_TEST_RETURN(Utillib_JSON_Parser)

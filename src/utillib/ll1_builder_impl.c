@@ -147,17 +147,17 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
     }
   }
   if (self->flag) {
-    char const * specail=NULL;
+    char const * special=NULL;
     switch(kind) {
     case UT_LL1_FIRST:
-      specail=UTILLIB_SYMBOL_EPS->name;
+      special=UTILLIB_SYMBOL_EPS->name;
       break;
     case UT_LL1_FOLLOW:
-      specail=UTILLIB_SYMBOL_EOF->name;
+      special=UTILLIB_SYMBOL_EOF->name;
       break;
     }
     utillib_json_array_push_back(array,
-        utillib_json_string_create(&specail, 0));
+        utillib_json_string_create(&special, 0));
   }
   return array;
 }
