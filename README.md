@@ -42,4 +42,8 @@ There is already an application of `utillib`. It is a toy language called `PL-0`
 the Pascal programming language. Currently needed implementation are some semantic actions during parsing and the 
 interpreter to execute the so called `PCODE`, which is again a set of over-simplified intermediate instruction.
 
+## About
+The name of this project is the abbreviation of compiler but it can also be pronunced as different abbreviations,
+such as 'Cannot Make Programs Link Recursively', which is a major problem of my life when I did not know how to
+link programs with complicated inter-library dependencies and make them work.
 
