@@ -24,7 +24,6 @@ build
 *.zip
 autoscan.log
 configure.scan
-*_table.c
 *.o
 *.lo
 *.la
