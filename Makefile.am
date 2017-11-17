@@ -144,9 +144,11 @@ lib_LTLIBRARIES += libpascal.la
 noinst_pascalinclude_HEADERS =  src/pascal/symbols.h \
 																src/pascal/rules.h \
 																src/pascal/scanner.h \
+																src/pascal/ast.h \
 																src/pascal/parser.h
 
 libpascal_la_SOURCES = src/pascal/symbols.c \
+											 src/pascal/ast.c \
 											 src/pascal/rules.c \
 											 src/pascal/scanner.c \
 											 src/pascal/parser.c \
