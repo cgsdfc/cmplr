@@ -34,6 +34,7 @@ The topics of current development includes:
 - Finish the JSON parser and integrate it with the JSON dumper.
 - Make an ll1_testing module to aid testing of ll1_parser.
 - Write a hash map that is more space friendly.
+- Implement the LALR generator.
 - More enhancement of testings and documents.
 
 ## Application
