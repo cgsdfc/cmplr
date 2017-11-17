@@ -46,7 +46,8 @@ struct pascal_parser {
 };
 
 void pascal_parser_factory_init(struct utillib_ll1_factory *self);
-void pascal_parser_init(struct pascal_parser *self, struct utillib_ll1_factory const *factory);
+void pascal_parser_init(struct pascal_parser *self,
+                        struct utillib_ll1_factory const *factory);
 void pascal_parser_destroy(struct pascal_parser *self);
 bool pascal_parser_parse(struct pascal_parser *self, void *input,
                          struct utillib_scanner_op const *scanner);

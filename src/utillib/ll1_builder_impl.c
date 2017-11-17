@@ -21,10 +21,10 @@
  * symbol.
  */
 struct utillib_ll1_set *
-ll1_builder_FIRST_get(struct utillib_ll1_builder const*self,
+ll1_builder_FIRST_get(struct utillib_ll1_builder const *self,
                       struct utillib_symbol const *symbol) {
-  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
-      "Only non terminal symbols can have FIRST set");
+  assert(symbol->kind == UT_SYMBOL_NON_TERMINAL &&
+         "Only non terminal symbols can have FIRST set");
   return &self->FIRST[utillib_rule_index_symbol_index(self->rule_index,
                                                       symbol)];
 }
@@ -37,8 +37,8 @@ ll1_builder_FIRST_get(struct utillib_ll1_builder const*self,
 struct utillib_ll1_set *
 ll1_builder_FOLLOW_get(struct utillib_ll1_builder const *self,
                        struct utillib_symbol const *symbol) {
-  assert (symbol->kind == UT_SYMBOL_NON_TERMINAL &&
-      "Only non terminal symbols can have FOLLOW set");
+  assert(symbol->kind == UT_SYMBOL_NON_TERMINAL &&
+         "Only non terminal symbols can have FOLLOW set");
   return &self->FOLLOW[utillib_rule_index_symbol_index(self->rule_index,
                                                        symbol)];
 }
@@ -65,13 +65,12 @@ void utillib_ll1_set_init(struct utillib_ll1_set *self, size_t symbols_size) {
   utillib_bitset_init(&self->bitset, symbols_size);
 }
 
-void utillib_ll1_set_destroy(struct utillib_ll1_set *self)
-{
+void utillib_ll1_set_destroy(struct utillib_ll1_set *self) {
   utillib_bitset_destroy(&self->bitset);
 }
 
 bool utillib_ll1_set_union_updated(struct utillib_ll1_set *self,
-                           struct utillib_ll1_set const *other) {
+                                   struct utillib_ll1_set const *other) {
   return utillib_bitset_union_updated(&self->bitset, &other->bitset);
 }
 
@@ -82,14 +81,15 @@ bool utillib_ll1_set_union_updated(struct utillib_ll1_set *self,
  * \return Whether `self' was updated.
  */
 
-bool utillib_ll1_set_insert_updated(struct utillib_ll1_set *self,struct utillib_symbol const *symbol)
-{
-  assert (symbol->kind == UT_SYMBOL_TERMINAL && "Only terminal symbol can be inserted");
+bool utillib_ll1_set_insert_updated(struct utillib_ll1_set *self,
+                                    struct utillib_symbol const *symbol) {
+  assert(symbol->kind == UT_SYMBOL_TERMINAL &&
+         "Only terminal symbol can be inserted");
 
-  if (symbol == UTILLIB_SYMBOL_EOF || symbol==UTILLIB_SYMBOL_EPS) {
-    if (self->flag) 
+  if (symbol == UTILLIB_SYMBOL_EOF || symbol == UTILLIB_SYMBOL_EPS) {
+    if (self->flag)
       return false;
-    self->flag=true;
+    self->flag = true;
     return true;
   }
   return utillib_bitset_insert_updated(&self->bitset, symbol->value);
@@ -133,62 +133,57 @@ bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
  */
 
 static struct utillib_json_value_t *
-ll1_builder_set_json_array_create(struct utillib_ll1_set const *self, 
-    struct utillib_rule_index const *rule_index,
-    int kind)
-{
+ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
+                                  struct utillib_rule_index const *rule_index,
+                                  int kind) {
   struct utillib_vector const *terminals =
       utillib_rule_index_terminals(rule_index);
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, terminals) {
     if (utillib_ll1_set_contains(self, symbol->value)) {
-      utillib_json_array_push_back(
-          array, utillib_symbol_json_string_create(symbol));
+      utillib_json_array_push_back(array,
+                                   utillib_symbol_json_string_create(symbol));
     }
   }
   if (self->flag) {
-    char const * special=NULL;
-    switch(kind) {
+    char const *special = NULL;
+    switch (kind) {
     case UT_LL1_FIRST:
-      special=UTILLIB_SYMBOL_EPS->name;
+      special = UTILLIB_SYMBOL_EPS->name;
       break;
     case UT_LL1_FOLLOW:
-      special=UTILLIB_SYMBOL_EOF->name;
+      special = UTILLIB_SYMBOL_EOF->name;
       break;
     }
     utillib_json_array_push_back(array,
-        utillib_json_string_create(&special, 0));
+                                 utillib_json_string_create(&special, 0));
   }
   return array;
 }
 
 struct utillib_json_value_t *
-ll1_builder_set_json_object_create(
-    struct utillib_ll1_builder const *self,
-    int kind,
-    struct utillib_symbol const *LHS)
-{
-  struct utillib_json_value_t *object=utillib_json_object_create_empty();
-  struct utillib_ll1_set const *set=NULL;
+ll1_builder_set_json_object_create(struct utillib_ll1_builder const *self,
+                                   int kind, struct utillib_symbol const *LHS) {
+  struct utillib_json_value_t *object = utillib_json_object_create_empty();
+  struct utillib_ll1_set const *set = NULL;
 
-  switch(kind) {
+  switch (kind) {
   case UT_LL1_FIRST:
     utillib_json_object_push_back(object, "FIRST",
-        utillib_symbol_json_string_create(LHS));
-    set=ll1_builder_FIRST_get(self, LHS);
+                                  utillib_symbol_json_string_create(LHS));
+    set = ll1_builder_FIRST_get(self, LHS);
     break;
   case UT_LL1_FOLLOW:
     utillib_json_object_push_back(object, "FOLLOW",
-        utillib_json_string_create(&LHS->name, 0));
-    set=ll1_builder_FOLLOW_get(self, LHS);
+                                  utillib_json_string_create(&LHS->name, 0));
+    set = ll1_builder_FOLLOW_get(self, LHS);
     break;
   }
-  utillib_json_object_push_back(object, "elements",
+  utillib_json_object_push_back(
+      object, "elements",
       ll1_builder_set_json_array_create(set, self->rule_index, kind));
   return object;
 }
-
-
 
 struct utillib_json_value_t *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self) {
@@ -196,11 +191,11 @@ utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self) {
   struct utillib_vector const *symbol_vector = &rule_index->non_terminals;
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
 
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const * , symbol, symbol_vector) {
-    utillib_json_array_push_back(array,
-        ll1_builder_set_json_object_create(self, UT_LL1_FIRST, symbol));
-    utillib_json_array_push_back(array,
-        ll1_builder_set_json_object_create(self, UT_LL1_FOLLOW, symbol));
+  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, symbol_vector) {
+    utillib_json_array_push_back(
+        array, ll1_builder_set_json_object_create(self, UT_LL1_FIRST, symbol));
+    utillib_json_array_push_back(
+        array, ll1_builder_set_json_object_create(self, UT_LL1_FOLLOW, symbol));
   }
   return array;
 }
@@ -213,7 +208,6 @@ UTILLIB_ETAB_BEGIN(utillib_ll1_error_kind)
 UTILLIB_ETAB_ELEM_INIT(UT_LL1_EFIRST, "FIRST/FIRST conflict")
 UTILLIB_ETAB_ELEM_INIT(UT_LL1_EFOLLOW, "FIRST/FOLLOW conflict")
 UTILLIB_ETAB_END(utillib_ll1_error_kind);
-
 
 /**
  * \function ll1_builder_error_create_as_EFIRST
@@ -306,8 +300,7 @@ ll1_builder_print_EFOLLOW(struct utillib_json_value_t *const *errs) {
  * Rule A, FIRST A, Rule B, FIRST B.
  */
 
-static void
-ll1_builder_print_EFIRST(struct utillib_json_value_t *const *errs) {
+static void ll1_builder_print_EFIRST(struct utillib_json_value_t *const *errs) {
   struct utillib_string str;
   for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
     utillib_json_tostring(errs[i], &str);
@@ -339,4 +332,3 @@ void ll1_builder_print_error(struct utillib_ll1_builder_error const *error) {
   }
   utillib_error_printf("\n");
 }
-

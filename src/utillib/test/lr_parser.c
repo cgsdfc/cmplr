@@ -19,8 +19,5 @@
 
 */
 
-#include <utillib/test.h>
 #include <utillib/lr_parser.h>
-
-
-
+#include <utillib/test.h>

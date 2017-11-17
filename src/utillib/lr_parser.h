@@ -27,4 +27,3 @@ struct utillib_lr_parser {
 };
 
 #endif /* UTILLIB_LR_PARSER_H */
-

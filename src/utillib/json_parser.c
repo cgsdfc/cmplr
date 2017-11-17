@@ -24,8 +24,7 @@
 #include "json_parser_table.c" /* generated */
 
 static void json_parser_rule_handler(struct utillib_json_parser *self,
-    struct utillib_rule const * rule)
-{
+                                     struct utillib_rule const *rule) {
   utillib_rule_json_pretty_print(rule);
 
   /* struct utillib_symbol const * lhs=rule->LHS; */
@@ -40,77 +39,60 @@ static void json_parser_rule_handler(struct utillib_json_parser *self,
   /*   utillib_vector_push_back(&self->values, val); */
   /*   return; */
   /* } */
-
 }
 
 static void json_parser_terminal_handler(struct utillib_json_parser *self,
-    struct utillib_symbol const *symbol)
-{
+                                         struct utillib_symbol const *symbol) {
   puts(symbol->name);
-  switch (symbol->value) {
-
-
-
-  }
-
+  switch (symbol->value) {}
 }
 
-static void json_parser_error_handler(struct utillib_json_parser *self,
-    struct utillib_ll1_parser_error const *error)
-{
+static void
+json_parser_error_handler(struct utillib_json_parser *self,
+                          struct utillib_ll1_parser_error const *error) {
   puts("ERROR");
 }
 
-static const struct utillib_ll1_parser_op json_parser_op={
-  .terminal_handler=json_parser_terminal_handler,
-  .rule_handler=json_parser_rule_handler,
-  .error_handler=json_parser_rule_handler,
+static const struct utillib_ll1_parser_op json_parser_op = {
+    .terminal_handler = (void *)json_parser_terminal_handler,
+    .rule_handler = (void *)json_parser_rule_handler,
+    .error_handler = (void *)json_parser_rule_handler,
 };
 
-
-void utillib_json_parser_factory_init(struct utillib_json_parser_factory *self)
-{
+void utillib_json_parser_factory_init(
+    struct utillib_json_parser_factory *self) {
   utillib_ll1_factory_gen_init(&self->factory, ll1_parser_table,
-      utillib_json_symbols, utillib_json_rules);
+                               utillib_json_symbols, utillib_json_rules);
 }
 
-void utillib_json_parser_factory_destroy(struct utillib_json_parser_factory *self)
-{
+void utillib_json_parser_factory_destroy(
+    struct utillib_json_parser_factory *self) {
   utillib_ll1_factory_destroy(&self->factory);
 }
 
-void utillib_json_parser_init(struct utillib_json_parser *self, struct utillib_json_parser_factory *factory)
-{
-  utillib_ll1_factory_parser_init(&factory->factory, &self->parser, self, &json_parser_op);
+void utillib_json_parser_init(struct utillib_json_parser *self,
+                              struct utillib_json_parser_factory *factory) {
+  utillib_ll1_factory_parser_init(&factory->factory, &self->parser, self,
+                                  &json_parser_op);
   utillib_vector_init(&self->values);
 }
 
-void utillib_json_parser_destroy(struct utillib_json_parser *self)
-{
+void utillib_json_parser_destroy(struct utillib_json_parser *self) {
   utillib_vector_destroy(&self->values);
   utillib_ll1_parser_destroy(&self->parser);
 }
 
-int utillib_json_parser_parse(struct utillib_json_parser *self, char const * str)
-{
+struct utillib_json_value_t *
+utillib_json_parser_parse(struct utillib_json_parser *self, char const *str) {
   struct utillib_json_scanner scanner;
   utillib_json_scanner_init(&scanner, str);
   utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_json_scanner_op);
 }
 
-int utillib_json_parser_parse_dbg(struct utillib_json_parser *self, size_t const * symbols)
-{
+bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
+                                   size_t const *symbols) {
   struct utillib_symbol_scanner scanner;
   utillib_symbol_scanner_init(&scanner, symbols, utillib_json_symbols);
-  return utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_symbol_scanner_op);
+  return utillib_ll1_parser_parse(&self->parser, &scanner,
+                                  &utillib_symbol_scanner_op);
 }
-
-struct utillib_json_value_t * utillib_json_parser_value(struct utillib_json_parser *self)
-{
-
-
-
-
-}
-
-

@@ -103,7 +103,7 @@ static void json_array_init(struct utillib_json_array_t *self) {
  * Recursively desctructs the value of the member.
  */
 static void json_object_member_destroy(struct utillib_pair *self) {
-  utillib_json_value_destroy((void*) self->up_second);
+  utillib_json_value_destroy((void *)self->up_second);
   free(self);
 }
 
@@ -112,8 +112,8 @@ static void json_object_member_destroy(struct utillib_pair *self) {
  * Destructs a JSON object.
  */
 static void json_object_destroy(struct utillib_json_object_t *self) {
-  utillib_vector_destroy_owning(
-      &self->members, (void*)json_object_member_destroy);
+  utillib_vector_destroy_owning(&self->members,
+                                (void *)json_object_member_destroy);
   free(self);
 }
 
@@ -124,8 +124,8 @@ static void json_object_destroy(struct utillib_json_object_t *self) {
  * 2. And the vector holding them.
  */
 static void json_array_destroy(struct utillib_json_array_t *self) {
-  utillib_vector_destroy_owning(
-      &self->elements, (void*)utillib_json_value_destroy);
+  utillib_vector_destroy_owning(&self->elements,
+                                (void *)utillib_json_value_destroy);
   free(self);
 }
 
@@ -171,7 +171,7 @@ static struct utillib_json_value_t *json_value_create_ptr(int kind,
  */
 #define UTILLIB_JSON_PRIMARY_CREATE_FUNC_DEFINE(NAME, FIELD, TYPE, KIND)       \
   struct utillib_json_value_t *NAME(void const *base, size_t not_used) {       \
-    struct utillib_json_value_t *self = malloc(sizeof *self);                         \
+    struct utillib_json_value_t *self = malloc(sizeof *self);                  \
     self->FIELD = *(TYPE *)base;                                               \
     self->kind = KIND;                                                         \
     return self;                                                               \

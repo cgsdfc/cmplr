@@ -11,7 +11,7 @@
  */
 
 static void free_str_in_pair(struct utillib_pair *pair) {
-  free((void*)UTILLIB_PAIR_FIRST(pair));
+  free((void *)UTILLIB_PAIR_FIRST(pair));
 }
 
 /**
@@ -44,7 +44,7 @@ char const *utillib_strref_incr(struct utillib_strref *self, char const *str) {
     return UTILLIB_PAIR_FIRST(pair);
   }
   char const *dup = strdup(str);
-  utillib_unordered_map_emplace(&self->strref_map, dup, (void const*)1);
+  utillib_unordered_map_emplace(&self->strref_map, dup, (void const *)1);
   return dup;
 }
 
@@ -64,7 +64,7 @@ void utillib_strref_decr(struct utillib_strref *self, char const *str) {
     size_t cur_refcnt = (size_t)UTILLIB_PAIR_SECOND(pair);
     if (cur_refcnt) {
       --cur_refcnt;
-      UTILLIB_PAIR_SECOND(pair) = (void const*)(cur_refcnt);
+      UTILLIB_PAIR_SECOND(pair) = (void const *)(cur_refcnt);
       return;
     }
     utillib_unordered_map_erase(&self->strref_map, str);
@@ -96,6 +96,6 @@ size_t utillib_strref_getcnt(struct utillib_strref *self, char const *str) {
  * return void.
  */
 void utillib_strref_destroy(struct utillib_strref *self) {
-  utillib_unordered_map_destroy_owning(
-      &self->strref_map, (void*)free_str_in_pair);
+  utillib_unordered_map_destroy_owning(&self->strref_map,
+                                       (void *)free_str_in_pair);
 }

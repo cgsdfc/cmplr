@@ -33,5 +33,5 @@ struct utillib_pair {
   void const *up_second;
 };
 
-struct utillib_pair *utillib_make_pair(void const *,  void const *);
+struct utillib_pair *utillib_make_pair(void const *, void const *);
 #endif /* UTILLIB_PAIR_H */

@@ -10,5 +10,4 @@ struct utillib_unordered_op {
 
 extern struct utillib_unordered_op const utillib_unordered_strop;
 
-
 #endif /* UTILLIB_UNORDERED_OP_H */

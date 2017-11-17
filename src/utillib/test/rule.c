@@ -17,7 +17,8 @@ UTILLIB_TEST(rule_index_init) {
 }
 
 UTILLIB_TEST(rule_index_json) {
-  struct utillib_json_value_t *val = utillib_rule_index_json_object_create(UT_FIXTURE);
+  struct utillib_json_value_t *val =
+      utillib_rule_index_json_object_create(UT_FIXTURE);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
@@ -71,14 +72,7 @@ UTILLIB_TEST(rule_index_rule_id) {
   }
 }
 
-UTILLIB_TEST(rule_index_build_LHS_index)
-{
-
-
-
-
-
-}
+UTILLIB_TEST(rule_index_build_LHS_index) {}
 
 UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_BEGIN(Utillib_Rule)

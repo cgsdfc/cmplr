@@ -21,32 +21,33 @@
 #ifndef UTILLIB_JSON_IMPL_H
 #define UTILLIB_JSON_IMPL_H
 
-#include "symbol.h"
+#include "enum.h"
+#include "json_parser.h"
+#include "rule.h"
 #include "scanner.h"
 #include "string.h"
-#include "enum.h"
-#include "rule.h"
+#include "symbol.h"
 
 UTILLIB_ENUM_BEGIN(utillib_json_symbol_kind)
-  UTILLIB_ENUM_ELEM_INIT(JSON_SYM_VAL, 1)
-  UTILLIB_ENUM_ELEM(JSON_SYM_OBJ)
-  UTILLIB_ENUM_ELEM(JSON_SYM_ARR)
-  UTILLIB_ENUM_ELEM(JSON_SYM_STRVAL)
-  UTILLIB_ENUM_ELEM(JSON_SYM_STRVAL_LS)
-  UTILLIB_ENUM_ELEM(JSON_SYM_VAL_)
-  UTILLIB_ENUM_ELEM(JSON_SYM_VAL_LS)
+UTILLIB_ENUM_ELEM_INIT(JSON_SYM_VAL, 1)
+UTILLIB_ENUM_ELEM(JSON_SYM_OBJ)
+UTILLIB_ENUM_ELEM(JSON_SYM_ARR)
+UTILLIB_ENUM_ELEM(JSON_SYM_STRVAL)
+UTILLIB_ENUM_ELEM(JSON_SYM_STRVAL_LS)
+UTILLIB_ENUM_ELEM(JSON_SYM_VAL_)
+UTILLIB_ENUM_ELEM(JSON_SYM_VAL_LS)
 
-  UTILLIB_ENUM_ELEM(JSON_SYM_STR)
-  UTILLIB_ENUM_ELEM(JSON_SYM_NUM)
-  UTILLIB_ENUM_ELEM(JSON_SYM_TRUE)
-  UTILLIB_ENUM_ELEM(JSON_SYM_FALSE)
-  UTILLIB_ENUM_ELEM(JSON_SYM_NULL)
-  UTILLIB_ENUM_ELEM(JSON_SYM_LB)
-  UTILLIB_ENUM_ELEM(JSON_SYM_RB)
-  UTILLIB_ENUM_ELEM(JSON_SYM_LK)
-  UTILLIB_ENUM_ELEM(JSON_SYM_RK)
-  UTILLIB_ENUM_ELEM(JSON_SYM_COMMA)
-  UTILLIB_ENUM_ELEM(JSON_SYM_COLON)
+UTILLIB_ENUM_ELEM(JSON_SYM_STR)
+UTILLIB_ENUM_ELEM(JSON_SYM_NUM)
+UTILLIB_ENUM_ELEM(JSON_SYM_TRUE)
+UTILLIB_ENUM_ELEM(JSON_SYM_FALSE)
+UTILLIB_ENUM_ELEM(JSON_SYM_NULL)
+UTILLIB_ENUM_ELEM(JSON_SYM_LB)
+UTILLIB_ENUM_ELEM(JSON_SYM_RB)
+UTILLIB_ENUM_ELEM(JSON_SYM_LK)
+UTILLIB_ENUM_ELEM(JSON_SYM_RK)
+UTILLIB_ENUM_ELEM(JSON_SYM_COMMA)
+UTILLIB_ENUM_ELEM(JSON_SYM_COLON)
 UTILLIB_ENUM_END(utillib_json_symbol_kind);
 
 extern struct utillib_symbol const utillib_json_symbols[];
@@ -54,17 +55,16 @@ extern struct utillib_rule_literal const utillib_json_rules[];
 extern const struct utillib_scanner_op utillib_json_scanner_op;
 
 struct utillib_json_scanner {
-  char const * str;
+  char const *str;
   struct utillib_string buffer;
   size_t code;
 };
 
-void utillib_json_scanner_init(struct utillib_json_scanner *self, char const *str);
+void utillib_json_scanner_init(struct utillib_json_scanner *self,
+                               char const *str);
 size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self);
 void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self);
-void const * utillib_json_scanner_semantic(struct utillib_json_scanner *self);
+void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self);
 void utillib_json_scanner_destroy(struct utillib_json_scanner *self);
 
-
 #endif /* UTILLIB_JSON_IMPL_H */
-

@@ -39,7 +39,7 @@ struct utillib_printer_t {
   FILE *file;
   size_t level;
   char const *padstr;
-} ;
+};
 
 void utillib_printer_init(struct utillib_printer_t *, FILE *, size_t);
 void utillib_printer_print_json(struct utillib_printer_t *, char const *);

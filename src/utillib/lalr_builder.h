@@ -25,4 +25,3 @@
 struct utillib_lalr_builder {};
 
 #endif /* UTILLIB_LALR_BUILDER_H */
-

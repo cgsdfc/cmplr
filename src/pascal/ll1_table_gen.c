@@ -26,7 +26,8 @@ int main(void) {
   struct utillib_ll1_generator ll1_generator;
   utillib_ll1_generator_init_from_code(&ll1_generator, pascal_symbols,
                                        pascal_rules);
-  utillib_ll1_generator_generate(&ll1_generator, PASCAL_SOURCE_DIR "pascal_ll1_table.c");
+  utillib_ll1_generator_generate(&ll1_generator,
+                                 PASCAL_SOURCE_DIR "pascal_ll1_table.c");
   utillib_ll1_generator_destroy(&ll1_generator);
   return 0;
 }

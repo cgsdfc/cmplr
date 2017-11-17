@@ -49,7 +49,7 @@ UTILLIB_TEST_TEAR_DOWN() {
  * \param expected_set Built-from set.
  *
  */
-UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set, 
+UTILLIB_TEST_AUX(build_expected_set, struct utillib_ll1_set *set,
                  size_t symbols_size, size_t const expected_set[]) {
   utillib_ll1_set_init(set, symbols_size);
   for (size_t j = 0; expected_set[j] != UT_SYM_NULL; ++j) {

@@ -19,8 +19,8 @@
 
 */
 
-#include <utillib/vector.h>
 #include <stdio.h>
+#include <utillib/vector.h>
 
 /**
  * Since there is no resizable array that
@@ -33,21 +33,17 @@
  * Also due to the frequency it is used, a
  * foreach loop implemented as macro is also
  * available.
- * 
+ *
  */
 
-int main(void)
-{
+int main(void) {
   struct utillib_vector vector;
   utillib_vector_init(&vector);
-  int const int_vals[]={1,3,4,5,6,-1};
+  int const int_vals[] = {1, 3, 4, 5, 6, -1};
 
-  for (int const *pi=int_vals; *pi != -1; ++pi) {
-    utillib_vector_push_back(&vector, (void const*) *pi);
+  for (int const *pi = int_vals; *pi != -1; ++pi) {
+    utillib_vector_push_back(&vector, (void const *)*pi);
   }
-  UTILLIB_VECTOR_FOREACH(int, val, &vector) {
-    printf("Value is %d\n", val);
-  }
+  UTILLIB_VECTOR_FOREACH(int, val, &vector) { printf("Value is %d\n", val); }
   utillib_vector_destroy(&vector);
 }
-

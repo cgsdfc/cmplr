@@ -65,16 +65,14 @@ UTILLIB_TEST(pop_back) {
 
 UTILLIB_TEST(front) {
   utillib_vector_push_back(UT_FIXTURE, UTILLIB_TEST_DUMMY);
-  UTILLIB_TEST_ASSERT_EQ(utillib_vector_front(UT_FIXTURE),
-                         UTILLIB_TEST_DUMMY);
+  UTILLIB_TEST_ASSERT_EQ(utillib_vector_front(UT_FIXTURE), UTILLIB_TEST_DUMMY);
 }
 
 UTILLIB_TEST(back) {
   int N = 20;
   for (size_t i = 0; i < N; ++i) {
-    utillib_vector_push_back(UT_FIXTURE, (void const*)i);
-    UTILLIB_TEST_EXPECT_EQ(utillib_vector_back(UT_FIXTURE),
-                           (void const*)i);
+    utillib_vector_push_back(UT_FIXTURE, (void const *)i);
+    UTILLIB_TEST_EXPECT_EQ(utillib_vector_back(UT_FIXTURE), (void const *)i);
   }
 }
 
@@ -120,7 +118,7 @@ UTILLIB_TEST(foreach) {
   int N = 100;
   size_t i = 0;
   for (i = 0; i < N; ++i) {
-    utillib_vector_push_back(UT_FIXTURE, (void const*)i);
+    utillib_vector_push_back(UT_FIXTURE, (void const *)i);
   }
   i = 0;
   UTILLIB_VECTOR_FOREACH(size_t, elem, (struct utillib_vector *)UT_FIXTURE) {

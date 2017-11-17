@@ -153,8 +153,8 @@ UTILLIB_ETAB_END(utillib_test_status_kind)
  * \param expr_str The stringized expression.
  * \param severity The severity of the failure.
  */
-void utillib_test_predicate_init(struct utillib_test_predicate_t *self, bool result,
-                                 size_t line, char const *expr_str,
+void utillib_test_predicate_init(struct utillib_test_predicate_t *self,
+                                 bool result, size_t line, char const *expr_str,
                                  int severity) {
   self->result = result;
   self->line = line;
@@ -342,7 +342,8 @@ static void utillib_test_summary(struct utillib_test_env_t *self) {
  */
 int utillib_test_run_suite(struct utillib_test_env_t *self) {
   utillib_test_setup(self);
-  for (struct utillib_test_entry_t *test = self->cases; test->func != NULL; ++test) {
+  for (struct utillib_test_entry_t *test = self->cases; test->func != NULL;
+       ++test) {
     if (US_ABORT == utillib_test_run_test(test, self)) {
       break;
     }
@@ -373,7 +374,7 @@ void utillib_test_suite_init(struct utillib_test_suite_t *self, ...) {
   va_list ap;
   va_start(ap, self);
   while (true) {
-    struct utillib_test_env_t * (* getenv_func) (void) =va_arg(ap, void *);
+    struct utillib_test_env_t *(*getenv_func)(void) = va_arg(ap, void *);
     if (!getenv_func) {
       break;
     }
@@ -389,8 +390,8 @@ void utillib_test_suite_init(struct utillib_test_suite_t *self, ...) {
  */
 void utillib_test_env_set_fixture(struct utillib_test_env_t *self,
                                   utillib_test_fixture_t fixture,
-                                 void(  *setup ) (void*),
-                                 void(  *teardown ) (void*)) {
+                                  void (*setup)(void *),
+                                  void (*teardown)(void *)) {
   self->fixture = fixture;
   self->setup_func = setup;
   self->teardown_func = teardown;
@@ -419,7 +420,7 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
  * \param offset No used.
  */
 static struct utillib_json_value_t *json_status_string_create(void const *base,
-                                                       size_t offset) {
+                                                              size_t offset) {
   int status = *(int *)base;
   char const *str = utillib_test_status_kind_tostring(status);
   return utillib_json_string_create(&str, 0);
@@ -432,12 +433,12 @@ static struct utillib_json_value_t *json_status_string_create(void const *base,
  * It depends on `json_status_string_create'.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEntry_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "test_name", func_name,
-                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "test_name",
+                               func_name, utillib_json_string_create)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "status", status,
                                json_status_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "succeeded", succeeded,
-                               utillib_json_bool_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_entry_t, "succeeded",
+                               succeeded, utillib_json_bool_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
 
 /**
@@ -447,7 +448,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEntry_Fields)
  * It depends on `TestEntry_Fields'.
  */
 static struct utillib_json_value_t *json_test_entry_create(void const *base,
-                                                    size_t offset) {
+                                                           size_t offset) {
   return utillib_json_object_create(base, offset, TestEntry_Fields);
 }
 
@@ -457,7 +458,8 @@ static struct utillib_json_value_t *json_test_entry_create(void const *base,
  * a `utillib_json_array_t'.
  * It depends on `json_test_entry_create'.
  */
-UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc, sizeof(struct utillib_test_entry_t),
+UTILLIB_JSON_ARRAY_DESC(TestEntry_ArrayDesc,
+                        sizeof(struct utillib_test_entry_t),
                         json_test_entry_create);
 
 /**
@@ -486,25 +488,26 @@ json_test_entry_array_pointer_create(void const *base, size_t offset) {
  * \variable TestEnv_Fields
  * Description of `utillib_test_env_t' when used in `utillib_json_object_t'.
  * The tricky part of it is the `tests' field which is a pointer to an array
- * of `struct utillib_test_entry_t's. With the `ntests' recording the size of this
+ * of `struct utillib_test_entry_t's. With the `ntests' recording the size of
+ * this
  * array, we can use `utillib_json_array_pointer_create' to create the JSON
  * array out of this C array in form of a `base, size' pair.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestEnv_Fields)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "filename", filename,
                                utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "case_name", case_name,
-                               utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_tests", ntests,
-                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "case_name",
+                               case_name, utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_tests",
+                               ntests, utillib_json_long_create)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_run", nrun,
                                utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_skipped", nskipped,
-                               utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_passed", nsuccess,
-                               utillib_json_long_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_failed", nfailure,
-                               utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_skipped",
+                               nskipped, utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_passed",
+                               nsuccess, utillib_json_long_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "number_failed",
+                               nfailure, utillib_json_long_create)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_env_t, "tests", cases,
                                json_test_entry_array_pointer_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
@@ -514,18 +517,19 @@ UTILLIB_JSON_OBJECT_FIELD_END(TestEnv_Fields)
  * Wraps `TestEnv_Fields'.
  */
 static struct utillib_json_value_t *json_test_env_create(void const *base,
-                                                  size_t offset) {
+                                                         size_t offset) {
   return utillib_json_object_create(base, offset, TestEnv_Fields);
 }
 
 /**
  * \function json_test_suite_test_create
- * Creates a JSON array out of a `utillib_vector' of `struct utillib_test_env_t's.
+ * Creates a JSON array out of a `utillib_vector' of `struct
+ * utillib_test_env_t's.
  * \param base Points to a `utillib_vector'.
  * \param offset Useless.
  */
-static struct utillib_json_value_t *json_test_suite_test_create(void const *base,
-                                                         size_t offset) {
+static struct utillib_json_value_t *
+json_test_suite_test_create(void const *base, size_t offset) {
   return utillib_json_array_create_from_vector(base, json_test_env_create);
 }
 
@@ -535,8 +539,8 @@ static struct utillib_json_value_t *json_test_suite_test_create(void const *base
  * in `utillib_json_object_t'.
  */
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(TestSuite_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_suite_t, "filename", filename,
-                               utillib_json_string_create)
+UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_suite_t, "filename",
+                               filename, utillib_json_string_create)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_test_suite_t, "tests", tests,
                                json_test_suite_test_create)
 UTILLIB_JSON_OBJECT_FIELD_END(TestSuite_Fields)
@@ -563,7 +567,8 @@ static void test_suite_print_json(struct utillib_test_suite_t *self) {
   fclose(file);
 }
 
-static void utillib_test_suite_report_failure(struct utillib_test_suite_t *self) {
+static void
+utillib_test_suite_report_failure(struct utillib_test_suite_t *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
     utillib_test_report_failure(env);
   }

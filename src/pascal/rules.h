@@ -26,23 +26,23 @@ extern size_t const pascaL_firsts[][15];
 extern size_t const pascaL_follows[][15];
 
 /* program := subprogram
- * first(program) = 'const' 'var' 'procedure' 
+ * first(program) = 'const' 'var' 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
  * follow(program) := eof
  * # OK
  */
 
-/* subprogram := [ const_decl ] [ var_decl ] [ proc_decl ] stmt 
- * first(subprogram) = 'const' 'var' 'procedure'  
+/* subprogram := [ const_decl ] [ var_decl ] [ proc_decl ] stmt
+ * first(subprogram) = 'const' 'var' 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write' eps
- * follow(subprogram) = ';' eof 
+ * follow(subprogram) = ';' eof
  * # union first(stmt).
  * # FXXK
  */
 
 /* const_decl := 'const' const_def {',' const_def } ';' | eps
  * first(const_decl) = 'const' eps
- * follow(const_decl) = 'var' 'procedure' 
+ * follow(const_decl) = 'var' 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write'
  * eof
  * # OK
@@ -54,25 +54,25 @@ extern size_t const pascaL_follows[][15];
  * # OK
  */
 
-/* var_decl := 'var' iden {, iden } ';' 
- * first(var_decl) = var 
+/* var_decl := 'var' iden {, iden } ';'
+ * first(var_decl) = var
  * follow(var_decl) = 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write'
  * eof
  * # OK
  */
 
-/* proc_head := 'procedure' iden ';' 
+/* proc_head := 'procedure' iden ';'
  * first(proc_head) = 'procedure'
  * follow(proc_head) =
- * 'const' 'var' 'procedure'  
+ * 'const' 'var' 'procedure'
  * iden 'if' 'while' 'call' 'begin' 'read' 'write' eof
  */
 
-/* proc_decl := proc_head subprogram { ';' subprogram } ';' 
+/* proc_decl := proc_head subprogram { ';' subprogram } ';'
  * first(proc_decl) = 'procedure' eps
- * follow(proc_decl) = 
- * iden 'if' 'while' 'call' 'begin' 'read' 'write' 
+ * follow(proc_decl) =
+ * iden 'if' 'while' 'call' 'begin' 'read' 'write'
  * eof
  * # OK
  */
@@ -82,7 +82,7 @@ extern size_t const pascaL_follows[][15];
  * follow(stmt) = eof ';' 'end' # WRONG
  */
 
-/* assign := iden ':=' expr 
+/* assign := iden ':=' expr
  * first(assign) = iden
  * follow(assign) = ';' eof 'end'
  */
@@ -92,70 +92,69 @@ extern size_t const pascaL_follows[][15];
  * follow(expr) = ')'  '<>'  '<'  '>'  '<='  '>=' ','
  * '='
  * ';' eof 'end'
- * 
+ *
  */
 
-/* term := factor { mul_op factor } 
- * first(term) = iden uint '(' 
+/* term := factor { mul_op factor }
+ * first(term) = iden uint '('
  * follow(term) = '+' '-'
  * ';' eof 'end'
- * 
+ *
  */
 
-/* factor := iden | uint | '(' expr ')' 
+/* factor := iden | uint | '(' expr ')'
  * first(factor) = iden uint '('
  * follow(factor) = '*' '/'
  * ';' eof 'end'
  */
 
-/* add_op := '+' | '-' 
+/* add_op := '+' | '-'
  * first(add_op) = '+', '-'
- * follow(add_op)=iden uint '(' 
+ * follow(add_op)=iden uint '('
  */
 
-/* mul_op := '*' | '/' 
+/* mul_op := '*' | '/'
  * first(mul_op) = '*', '/'
  * follow(mul_op) = iden uint '('
  */
 
-/* condition := expr rel_op expr | 'odd' expr 
+/* condition := expr rel_op expr | 'odd' expr
  * first(condition) = 'odd' iden uint '('
  * follow(condition) = 'do' 'then'
  */
-
 
 /* rel_op := '<>' | '<' | '>' | '<=' | '>=' | '='
  * first(rel_op) = '<>'  '<'  '>'  '<='  '>='  | '='
  * follow(rel_op) = iden uint '('
  */
 
-/* cond := 'if' condition 'then' stmt 
- * first(cond) = 'if' 
+/* cond := 'if' condition 'then' stmt
+ * first(cond) = 'if'
  * follow(cond) = eof ';' 'end'
  */
 
-/* loop := 'while' condition 'do' stmt 
- * first(loop) = 'while' 
+/* loop := 'while' condition 'do' stmt
+ * first(loop) = 'while'
  * follow(loop) = eof ';' 'end'
  */
 
-/* call := 'call' iden 
+/* call := 'call' iden
  * first(call) = 'call'
  * follow(call) = eof ';' end
  */
 
-/* composite := 'begin' stmt {; stmt} 'end' 
+/* composite := 'begin' stmt {; stmt} 'end'
  * first(composite) = 'begin'
  * follow(composite) = 'end' ';' eof
  */
 
 /* read := 'read' '(' iden { , iden } ')'
- * first(read) = 'read' 
+ * first(read) = 'read'
  * follow(read) = eof 'end' ';'
  *  */
 
-/* write := 'write' '(' expr {, expr } ')' 
- * first(write) = 'write' 
+/* write := 'write' '(' expr {, expr } ')'
+ * first(write) = 'write'
  * follow(read) = eof 'end' ';'
  */
 

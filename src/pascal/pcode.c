@@ -21,36 +21,28 @@
 #include "pcode.h"
 
 UTILLIB_ETAB_BEGIN(pascal_pcode_kind)
-  UTILLIB_ETAB_ELEM(PCODE_LIT)
-  UTILLIB_ETAB_ELEM(PCODE_OPR)
-  UTILLIB_ETAB_ELEM(PCODE_LOD)
-  UTILLIB_ETAB_ELEM(PCODE_STO)
-  UTILLIB_ETAB_ELEM(PCODE_CAL)
-  UTILLIB_ETAB_ELEM(PCODE_INT)
-  UTILLIB_ETAB_ELEM(PCODE_JMP)
-  UTILLIB_ETAB_ELEM(PCODE_JPC)
-  UTILLIB_ETAB_ELEM(PCODE_RED)
-  UTILLIB_ETAB_ELEM(PCODE_WRT)
+UTILLIB_ETAB_ELEM(PCODE_LIT)
+UTILLIB_ETAB_ELEM(PCODE_OPR)
+UTILLIB_ETAB_ELEM(PCODE_LOD)
+UTILLIB_ETAB_ELEM(PCODE_STO)
+UTILLIB_ETAB_ELEM(PCODE_CAL)
+UTILLIB_ETAB_ELEM(PCODE_INT)
+UTILLIB_ETAB_ELEM(PCODE_JMP)
+UTILLIB_ETAB_ELEM(PCODE_JPC)
+UTILLIB_ETAB_ELEM(PCODE_RED)
+UTILLIB_ETAB_ELEM(PCODE_WRT)
 UTILLIB_ETAB_END(pascal_pcode_kind);
 
-void pascal_interp_exec(struct pascal_interp *self)
-{
-  struct pascal_pcode * code=utillib_vector_at(&self->mem_code, self->pc);
+void pascal_interp_exec(struct pascal_interp *self) {
+  struct pascal_pcode *code = utillib_vector_at(&self->mem_code, self->pc);
   switch (code->code[0]) {
     int uint;
-    case PCODE_LIT:
-      uint=code->code[2];
-      utillib_vector_push_back(&self->mem_data, uint);
-      break;
-    case PCODE_OPR:
-      interp_calculate(self, code->code[2]);
-      break;
-    case PCODE_LOD:
-
-
-
-
-
-}
-
-
+  case PCODE_LIT:
+    uint = code->code[2];
+    utillib_vector_push_back(&self->mem_data, uint);
+    break;
+  case PCODE_OPR:
+    interp_calculate(self, code->code[2]);
+    break;
+  case PCODE_LOD:
+  }

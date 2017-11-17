@@ -76,7 +76,7 @@ void const *pascal_scanner_semantic(struct pascal_scanner *self);
 void pascal_scanner_destroy(struct pascal_scanner *self);
 void pascal_scanner_error_print(struct pascal_scanner_error const *self);
 size_t pascal_scanner_check(struct pascal_scanner *self);
-void pascal_scanner_getpos(struct pascal_scanner const *self,
-    size_t *row, size_t *col);
+void pascal_scanner_getpos(struct pascal_scanner const *self, size_t *row,
+                           size_t *col);
 
 #endif /* PASCAL_SCANNER_H */

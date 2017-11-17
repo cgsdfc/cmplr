@@ -84,33 +84,30 @@ void utillib_bitset_remove(struct utillib_bitset *self, size_t pos) {
  * \function utillib_bitset_union
  * Unions `other' into `self.
  */
-void utillib_bitset_union(struct utillib_bitset *self, struct utillib_bitset 
-    const * other)
-{
-  for (int i=0; i<self->size; ++i) {
+void utillib_bitset_union(struct utillib_bitset *self,
+                          struct utillib_bitset const *other) {
+  for (int i = 0; i < self->size; ++i) {
     self->bits[i] |= other->bits[i];
   }
 }
 
 /*
  * The following interfaces with `_updated' as postfix
- * do the same thing as their counterparts except that 
+ * do the same thing as their counterparts except that
  * they returns boolean to indicate whether `self' was
  * updated by these operations.
  * They are useful for fixed-pointed computation, but will
  * be slower than their counterparts.
  */
 
-bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t value)
-{
+bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t value) {
   if (utillib_bitset_contains(self, value))
     return false;
   utillib_bitset_insert(self, value);
   return true;
 }
 
-bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t value)
-{
+bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t value) {
   if (!utillib_bitset_contains(self, value))
     return false;
   utillib_bitset_remove(self, value);
@@ -124,7 +121,7 @@ bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t value)
  * \return True if `other' updates `self'.
  */
 bool utillib_bitset_union_updated(struct utillib_bitset *self,
-                          struct utillib_bitset const *other) {
+                                  struct utillib_bitset const *other) {
   bool changed = false;
   for (size_t i = 0; i < self->size; ++i) {
     size_t prev = self->bits[i];
@@ -158,7 +155,7 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
  * Dumps the elements that is in the bitset.
  */
 struct utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
-                                                       size_t offset) {
+                                                              size_t offset) {
   struct utillib_bitset const *self = base;
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {

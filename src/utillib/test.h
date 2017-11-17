@@ -85,9 +85,9 @@
  * It may also be nice if a GUI based runner is implemented.
  */
 
+#include "config.h"
 #include "enum.h"
 #include "vector.h"
-#include "config.h"
 #include <stdio.h>  /* for FILE* */
 #include <string.h> /* for strcmp */
 #include <time.h>   /* for time_t */
@@ -99,7 +99,7 @@
  */
 #define UTILLIB_TEST_DUMMY (NULL)
 
-typedef void *utillib_test_fixture_t ;
+typedef void *utillib_test_fixture_t;
 /**
  * \macro UTILLIB_TEST_ZERO_BASE
  * Converts a `one-based' number, .i.e.,
@@ -129,7 +129,7 @@ typedef void *utillib_test_fixture_t ;
 #define UTILLIB_TEST_STR(NAME, VALUE) static const char *NAME = VALUE;
 
 /**
- * \enum utillib_test_status_kind 
+ * \enum utillib_test_status_kind
  * Describe the status of a test: run it or skip it.
  * \value UT_STATUS_SKIP Skip this test.
  * \value UT_STATUS_RUN Run this test.
@@ -179,7 +179,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_RUN_ALL(ARGC, ARGV, ...)                                  \
   do {                                                                         \
-    static struct utillib_test_suite_t static_suite = {.filename = __FILE__};         \
+    static struct utillib_test_suite_t static_suite = {.filename = __FILE__};  \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
     size_t rc = utillib_test_suite_run_all(&static_suite, (ARGC), (ARGV));     \
     utillib_test_suite_destroy(&static_suite);                                 \
@@ -197,7 +197,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  * whatever arguments it likes.
  */
 #define UTILLIB_TEST_AUX(NAME, ...)                                            \
-  static void NAME(struct utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF,             \
+  static void NAME(struct utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF,      \
                    utillib_test_fixture_t UT_FIXTURE, ##__VA_ARGS__)
 /*
  * \macro UTILLIB_TEST_AUX_INVOKE
@@ -233,7 +233,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  * \param NAME The name of the test function.
  */
 #define UTILLIB_TEST(NAME)                                                     \
-  static void NAME(struct utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF,             \
+  static void NAME(struct utillib_test_entry_t *_UTILLIB_TEST_ENTRY_SELF,      \
                    utillib_test_fixture_t UT_FIXTURE)
 /**
  * \macro UTILLIB_TEST_DEFINE
@@ -261,7 +261,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
   { 0 }                                                                        \
   }                                                                            \
   ;                                                                            \
-  static struct utillib_test_env_t static_test_env = {                                \
+  static struct utillib_test_env_t static_test_env = {                         \
       .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__};
 /*
  * \macro UTILLIB_TEST_RETURN
@@ -321,7 +321,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_ASSERT(EXPR)                                              \
   do {                                                                         \
-    struct utillib_test_predicate_t predicate;                                        \
+    struct utillib_test_predicate_t predicate;                                 \
     _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_ASSERT);                  \
     if (utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate)) {        \
       break;                                                                   \
@@ -335,7 +335,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_EXPECT(EXPR)                                              \
   do {                                                                         \
-    struct utillib_test_predicate_t predicate;                                        \
+    struct utillib_test_predicate_t predicate;                                 \
     _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                  \
     (void)utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);        \
   } while (0)
@@ -346,7 +346,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_ABORT(MSG)                                                \
   do {                                                                         \
-    struct utillib_test_predicate_t predicate;                                        \
+    struct utillib_test_predicate_t predicate;                                 \
     _UTILLIB_INIT_PRED(&predicate, false, (MSG), US_ABORT);                    \
     utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);              \
     return;                                                                    \
@@ -398,7 +398,7 @@ struct utillib_test_predicate_t {
   char const *expr_str;
   /* The severity of the failure if happened */
   int severity;
-} ;
+};
 
 /**
  * \struct utillib_test_entry_t
@@ -409,7 +409,7 @@ struct utillib_test_predicate_t {
 
 struct utillib_test_entry_t {
   /* Function pointer to this test */
-  void ( *func)(struct utillib_test_entry_t *, utillib_test_fixture_t);
+  void (*func)(struct utillib_test_entry_t *, utillib_test_fixture_t);
   /* Name of the test function */
   char const *func_name;
   int status;
@@ -422,7 +422,7 @@ struct utillib_test_entry_t {
   bool succeeded;
   /* Time in seconds spent in this test */
   time_t duration;
-} ;
+};
 
 /**
  * \struct utillib_test_env_t
@@ -451,11 +451,11 @@ struct utillib_test_env_t {
   size_t nsuccess;
   /* The fixture associated with this env */
   utillib_test_fixture_t fixture;
-  void (*setup_func)(void*);
-  void ( *teardown_func) (void *);
+  void (*setup_func)(void *);
+  void (*teardown_func)(void *);
   /* The sum of seconds spent in each test that was run */
   time_t total_duration;
-} ;
+};
 
 /**
  * \struct utillib_test_suite_t
@@ -471,17 +471,18 @@ struct utillib_test_suite_t {
   char const *filename;
   struct utillib_vector tests;
   char const *json_output;
-} ;
+};
 
 /**
  * Initilizes a predicate.
  */
-void utillib_test_predicate_init(struct utillib_test_predicate_t *, bool, size_t,
-                                 char const *, int);
+void utillib_test_predicate_init(struct utillib_test_predicate_t *, bool,
+                                 size_t, char const *, int);
 /**
  * Do pass-or-fail on a predicate.
  */
-bool utillib_test_predicate(struct utillib_test_entry_t *, struct utillib_test_predicate_t *);
+bool utillib_test_predicate(struct utillib_test_entry_t *,
+                            struct utillib_test_predicate_t *);
 
 /**
  * Initilizes a test suite.
@@ -500,8 +501,9 @@ int utillib_test_suite_run_all(struct utillib_test_suite_t *, int, char **);
 /**
  * Sets fixture for this utillib_test_env_t.
  */
-void utillib_test_env_set_fixture(struct utillib_test_env_t *, utillib_test_fixture_t,
-    void (*setup) (void*), void (*teardown)(void*));
+void utillib_test_env_set_fixture(struct utillib_test_env_t *,
+                                  utillib_test_fixture_t, void (*setup)(void *),
+                                  void (*teardown)(void *));
 
 /**
  * Prints a message to stderr.

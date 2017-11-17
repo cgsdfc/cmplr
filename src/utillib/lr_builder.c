@@ -28,45 +28,39 @@
  * utillib_lr_item
  */
 
-static size_t lr_item_hash(void const *item)
-{
-  struct utillib_lr_item const *self=item;
-  size_t hash=self->pos;
-  uintptr_t rule_addr=self->rule;
+static size_t lr_item_hash(void const *item) {
+  struct utillib_lr_item const *self = item;
+  size_t hash = self->pos;
+  uintptr_t rule_addr = self->rule;
   return rule_addr ^ hash;
 }
 
-static bool lr_item_equal(void const *lhs, void const *rhs)
-{
-  struct utillib_lr_item const * lhs_item=lhs;
-  struct utillib_lr_item const * rhs_item=rhs;
+static bool lr_item_equal(void const *lhs, void const *rhs) {
+  struct utillib_lr_item const *lhs_item = lhs;
+  struct utillib_lr_item const *rhs_item = rhs;
   return lhs_item->pos == rhs_item->pos && lhs_item->rule == rhs_item->rule;
 }
 
-static const struct utillib_unordered_op 
-lr_item_unordered_op={
-  .hash=lr_item_hash,
-  .equal=lr_item_equal,
+static const struct utillib_unordered_op lr_item_unordered_op = {
+    .hash = lr_item_hash, .equal = lr_item_equal,
 };
 
 static void lr_item_init(struct utillib_lr_item *self,
-    struct utillib_rule const *rule)
-{
-  self->pos=0;
-  self->rule=rule;
+                         struct utillib_rule const *rule) {
+  self->pos = 0;
+  self->rule = rule;
 }
 
 /*
  * utillib_lr_itemset
  */
 
-static size_t lr_itemset_hash(void const * itemset)
-{
-  struct utillib_lr_itemset const *self=itemset;
-  size_t hash=0;
-  UTILLIB_VECTOR_FOREACH(struct utillib_lr_item const*, item, &self->itemset) {
-    uintptr_t item_addr=item;
-    hash+=item_addr;
+static size_t lr_itemset_hash(void const *itemset) {
+  struct utillib_lr_itemset const *self = itemset;
+  size_t hash = 0;
+  UTILLIB_VECTOR_FOREACH(struct utillib_lr_item const *, item, &self->itemset) {
+    uintptr_t item_addr = item;
+    hash += item_addr;
   }
   return hash;
 }
@@ -75,16 +69,13 @@ static size_t lr_itemset_hash(void const * itemset)
  * Public interface
  */
 
-
-void utillib_lr_item_init(struct utillib_lr_item *self, struct utillib_rule const * rule)
-{
-  self->rule_index=rule_index;
-
-
+void utillib_lr_item_init(struct utillib_lr_item *self,
+                          struct utillib_rule const *rule) {
+  self->rule_index = rule_index;
 }
 
-void utillib_lr_builder_init(struct utillib_lr_builder *self, struct utillib_rule_index * rule_index);
+void utillib_lr_builder_init(struct utillib_lr_builder *self,
+                             struct utillib_rule_index *rule_index);
 void utillib_lr_builder_build_table(struct utillib_lr_builder *self);
 int utillib_lr_builder_check(struct utillib_lr_builder *self);
 void utillib_lr_builder_destroy(struct utillib_lr_builder *self);
-

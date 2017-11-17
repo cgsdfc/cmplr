@@ -27,7 +27,7 @@ utillib_logging_core_set_stderr_threshold(utillib_logging_core_t *self,
 
 static void utillib_logging_core_set_cleanup(utillib_logging_core_t *self,
                                              void *toclean,
-                                             void (*cleanup) (void*) ) {
+                                             void (*cleanup)(void *)) {
   self->lco_toclean = toclean;
   self->lco_cleanup = cleanup;
 }
@@ -71,7 +71,7 @@ static void utillib_logging_msg_destroy(utillib_logging_msg_t *self) {
 }
 
 static void core_destroy(utillib_logging_core_t *self) {
-  utillib_vector_destroy_owning(&self->lco_msgs, (void*) free);
+  utillib_vector_destroy_owning(&self->lco_msgs, (void *)free);
   utillib_strref_destroy(&self->lco_strref);
 }
 
@@ -121,8 +121,7 @@ void utillib_logging_init(char const *prog) {
 
 void utillib_logging_destroy(void) { core_destroy(&static_logging_core); }
 
-void utillib_logging_set_cleanup(void *toclean, void ( *cleanup ) (void*))
-{
+void utillib_logging_set_cleanup(void *toclean, void (*cleanup)(void *)) {
   utillib_logging_core_set_cleanup(&static_logging_core, toclean, cleanup);
 }
 

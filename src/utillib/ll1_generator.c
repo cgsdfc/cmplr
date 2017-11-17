@@ -20,9 +20,9 @@
 */
 
 #include "ll1_generator.h"
+#include "json.h"
 #include "ll1_builder.h"
 #include "ll1_builder_impl.h"
-#include "json.h"
 #include "print.h"
 #include "rule.h"
 #include "string.h"
@@ -32,7 +32,6 @@
  * \file utillib/ll1_builder.c
  * Frontend of the Utillib.LL(1).
  */
-
 
 static bool ll1_generator_check_table(struct utillib_ll1_generator *self) {
   struct utillib_ll1_builder *builder = &self->builder;
@@ -87,7 +86,7 @@ static void ll1_generator_write(struct utillib_ll1_generator *self,
 void utillib_ll1_generator_init_from_code(
     struct utillib_ll1_generator *self, struct utillib_symbol const *symbols,
     struct utillib_rule_literal const *rules) {
-  self->builder_val=NULL;
+  self->builder_val = NULL;
   utillib_rule_index_init(&self->rule_index, symbols, rules);
   utillib_ll1_builder_init(&self->builder, &self->rule_index);
   utillib_ll1_builder_build_table(&self->builder, &self->table);
@@ -108,26 +107,28 @@ bool utillib_ll1_generator_generate(struct utillib_ll1_generator *self,
 }
 
 void utillib_ll1_generator_dump_set(struct utillib_ll1_generator *self,
-    int kind, int symbol_id)
-{
+                                    int kind, int symbol_id) {
   if (symbol_id <= 0) {
-    utillib_error_printf("ERROR: Negative symbol_id `%d' has no LL1 set\n", symbol_id);
+    utillib_error_printf("ERROR: Negative symbol_id `%d' has no LL1 set\n",
+                         symbol_id);
     return;
   }
-  struct utillib_symbol const* symbol=utillib_rule_index_symbol_at(&self->rule_index, symbol_id);
+  struct utillib_symbol const *symbol =
+      utillib_rule_index_symbol_at(&self->rule_index, symbol_id);
   if (symbol->kind != UT_SYMBOL_NON_TERMINAL) {
-    utillib_error_printf("ERROR: Only non terminal symbols have FIRST/FOLLOW\n");
+    utillib_error_printf(
+        "ERROR: Only non terminal symbols have FIRST/FOLLOW\n");
     return;
   }
-  struct utillib_json_value_t *val=ll1_builder_set_json_object_create(&self->builder, kind, symbol);
+  struct utillib_json_value_t *val =
+      ll1_builder_set_json_object_create(&self->builder, kind, symbol);
   utillib_json_pretty_print(val, stdout);
   utillib_json_value_destroy(val);
 }
 
-void utillib_ll1_generator_dump_all(struct utillib_ll1_generator *self)
-{
+void utillib_ll1_generator_dump_all(struct utillib_ll1_generator *self) {
   if (!self->builder_val) {
-    self->builder_val=utillib_ll1_builder_json_object_create(&self->builder);
+    self->builder_val = utillib_ll1_builder_json_object_create(&self->builder);
   }
   utillib_json_pretty_print(self->builder_val, stdout);
 }

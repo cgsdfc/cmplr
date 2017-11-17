@@ -21,13 +21,12 @@
 #include "json_parser_impl.h"
 #include "ll1_generator.h"
 
-int main(void)
-{
+int main(void) {
   struct utillib_ll1_generator gen;
-  utillib_ll1_generator_init_from_code(&gen,
-      utillib_json_symbols,
-      utillib_json_rules);
-  bool good = utillib_ll1_generator_generate(&gen, UTILLIB_SOURCE_DIR "json_parser_table.c");
+  utillib_ll1_generator_init_from_code(&gen, utillib_json_symbols,
+                                       utillib_json_rules);
+  bool good = utillib_ll1_generator_generate(&gen, UTILLIB_SOURCE_DIR
+                                             "json_parser_table.c");
   utillib_ll1_generator_destroy(&gen);
   return !good;
 }

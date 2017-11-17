@@ -71,7 +71,7 @@ static struct utillib_rule *rule_index_rule_create_from_literal(
       symbol = UTILLIB_SYMBOL_EPS;
     else
       symbol = &symbols[*RHS_LIT];
-    utillib_vector_push_back(&self->RHS, (void const*)symbol);
+    utillib_vector_push_back(&self->RHS, (void const *)symbol);
   }
   return self;
 }
@@ -144,8 +144,7 @@ static void rule_index_LHS_index_destroy(struct utillib_rule_index *self) {
 void utillib_rule_index_destroy(struct utillib_rule_index *self) {
   utillib_vector_destroy(&self->terminals);
   utillib_vector_destroy(&self->non_terminals);
-  utillib_vector_destroy_owning(
-      &self->rules, (void*)rule_index_rule_destroy);
+  utillib_vector_destroy_owning(&self->rules, (void *)rule_index_rule_destroy);
   rule_index_LHS_index_destroy(self);
 }
 
@@ -310,10 +309,9 @@ utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
  * Convenient helper to print a rule to stderr
  * Mainly for ease of debug.
  */
-void utillib_rule_json_pretty_print(struct utillib_rule const *self)
-{
-  struct utillib_json_value_t *val=utillib_rule_json_object_create(self, sizeof *self);
+void utillib_rule_json_pretty_print(struct utillib_rule const *self) {
+  struct utillib_json_value_t *val =
+      utillib_rule_json_object_create(self, sizeof *self);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
-

@@ -30,12 +30,11 @@
  * and storage tail for resizing.
  */
 #include "config.h" /* for bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h> /* size_t */
 
 #define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))
 #define UTILLIB_VECTOR_BEGIN(V) ((V)->begin)
 #define UTILLIB_VECTOR_END(V) ((V)->end)
-
 
 /**
  * \macro UTILLIB_VECTOR_FOREACH
@@ -78,7 +77,7 @@ void utillib_vector_init_fill(struct utillib_vector *self, size_t,
                               void const *);
 void utillib_vector_destroy(struct utillib_vector *self);
 void utillib_vector_destroy_owning(struct utillib_vector *self,
-    void ( *destroy) (void*));
+                                   void (*destroy)(void *));
 
 /** \brief observer */
 size_t utillib_vector_size(struct utillib_vector const *self);
@@ -98,6 +97,6 @@ void utillib_vector_fill(struct utillib_vector *self, void const *data);
 
 struct utillib_json_value_t *utillib_json_array_create_from_vector(
     struct utillib_vector const *self,
-    struct utillib_json_value_t *(*create_func)(void const*, size_t));
+    struct utillib_json_value_t *(*create_func)(void const *, size_t));
 
 #endif /* UTILLIB_VECTOR_H */

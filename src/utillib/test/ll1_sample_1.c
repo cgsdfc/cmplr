@@ -52,20 +52,16 @@ const size_t ll1_sample_1_input_1[] = {
 };
 
 void ll1_sample_1_error_handler(void *self,
-    struct utillib_ll1_parser_error const *error)
-{}
+                                struct utillib_ll1_parser_error const *error) {}
 
 void ll1_sample_1_terminal_handler(void *self,
-    struct utillib_symbol const *terminal, void const * semantic)
-{}
+                                   struct utillib_symbol const *terminal,
+                                   void const *semantic) {}
 
-void ll1_sample_1_rule_handler(void *self,
-    struct utillib_rule const *rule)
-{}
+void ll1_sample_1_rule_handler(void *self, struct utillib_rule const *rule) {}
 
-const struct utillib_ll1_parser_op ll1_sample_1_parser_op={
-  .terminal_handler=ll1_sample_1_terminal_handler,
-  .rule_handler=ll1_sample_1_rule_handler,
-  .error_handler=ll1_sample_1_error_handler,
+const struct utillib_ll1_parser_op ll1_sample_1_parser_op = {
+    .terminal_handler = ll1_sample_1_terminal_handler,
+    .rule_handler = ll1_sample_1_rule_handler,
+    .error_handler = ll1_sample_1_error_handler,
 };
-

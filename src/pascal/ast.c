@@ -24,57 +24,53 @@
 #include <string.h>
 #include <utillib/pair.h>
 
-
-
-struct pascal_ast_node *pascal_ast_node_create_empty(int kind) 
-{
-  struct pascal_ast_node * self=malloc(sizeof *self);
-  self->kind=kind;
+struct pascal_ast_node *pascal_ast_node_create_empty(int kind) {
+  struct pascal_ast_node *self = malloc(sizeof *self);
+  self->kind = kind;
   void const *aux;
-  union pascal_ast_union  node;
+  union pascal_ast_union node;
 
   switch (kind) {
-    case PAS_AST_CONST:
-      self->as_ptr = malloc (sizeof (struct pascal_ast_const_decl));
-      utillib_vector_init(self->as_ptr);
-      return self;
-    case PAS_AST_VAR:
-      self->as_ptr = malloc (sizeof (struct pascal_ast_var_decl));
-      utillib_vector_init(self->as_ptr);
-      return self;
-    case PAS_AST_ASSIGN:
-      self->as_ptr=malloc(sizeof (struct pascal_ast_assign_stmt));
-      memset(self->as_ptr, 0, sizeof (struct pascal_ast_assign_stmt));
-      return self;
-    case PAS_AST_READ:
-      self->as_ptr = malloc (sizeof (struct pascal_ast_read_stmt));
-      utillib_vector_init(self->as_ptr);
-      return self;
-    case PAS_AST_WRITE:
-      self->as_ptr = malloc (sizeof (struct pascal_ast_write_stmt));
-      utillib_vector_init(self->as_ptr);
-      return self;
-    case PAS_AST_TERM:
-      self->as_ptr=malloc(sizeof (struct pascal_ast_term));
-      memset(self->as_ptr, 0,sizeof (struct pascal_ast_term)); 
-      return self;
-    case PAS_AST_EXPR:
-      self->as_ptr=malloc(sizeof (struct pascal_ast_expr));
-      memset(self->as_ptr, 0,sizeof (struct pascal_ast_expr)); 
-      return self;
-    case PAS_AST_CALL:
-      self->as_ptr=malloc(sizeof (struct pascal_ast_call_stmt));
-      return self;
-    case PAS_AST_UINT:
-      return self;
+  case PAS_AST_CONST:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_const_decl));
+    utillib_vector_init(self->as_ptr);
+    return self;
+  case PAS_AST_VAR:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_var_decl));
+    utillib_vector_init(self->as_ptr);
+    return self;
+  case PAS_AST_ASSIGN:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_assign_stmt));
+    memset(self->as_ptr, 0, sizeof(struct pascal_ast_assign_stmt));
+    return self;
+  case PAS_AST_READ:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_read_stmt));
+    utillib_vector_init(self->as_ptr);
+    return self;
+  case PAS_AST_WRITE:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_write_stmt));
+    utillib_vector_init(self->as_ptr);
+    return self;
+  case PAS_AST_TERM:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_term));
+    memset(self->as_ptr, 0, sizeof(struct pascal_ast_term));
+    return self;
+  case PAS_AST_EXPR:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_expr));
+    memset(self->as_ptr, 0, sizeof(struct pascal_ast_expr));
+    return self;
+  case PAS_AST_CALL:
+    self->as_ptr = malloc(sizeof(struct pascal_ast_call_stmt));
+    return self;
+  case PAS_AST_UINT:
+    return self;
   default:
     return self;
   }
 }
 
-void pascal_ast_node_destroy(struct pascal_ast_node *self)
-{
-  struct utillib_vector * items;
+void pascal_ast_node_destroy(struct pascal_ast_node *self) {
+  struct utillib_vector *items;
   switch (self->kind) {
   case PAS_AST_IDEN:
     free(self->as_iden);
@@ -83,7 +79,7 @@ void pascal_ast_node_destroy(struct pascal_ast_node *self)
     free(self->as_uint);
     break;
   case PAS_AST_CONST:
-    items=self->as_ptr;
+    items = self->as_ptr;
     UTILLIB_VECTOR_FOREACH(struct utillib_pair *, pair, items) {
       pascal_ast_node_destroy(pair->up_first);
       pascal_ast_node_destroy(pair->up_second);
@@ -92,5 +88,4 @@ void pascal_ast_node_destroy(struct pascal_ast_node *self)
     utillib_vector_destroy(items);
     break;
   }
-
 }

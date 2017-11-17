@@ -21,14 +21,14 @@
 
 #ifndef UTILLIB_JSON_PARSER_H
 #define UTILLIB_JSON_PARSER_H
+#include "json.h"
 #include "ll1_parser.h"
 #include "vector.h"
-#include "json.h"
 
 UTILLIB_ENUM_BEGIN(utillib_json_parser_error_kind)
-  UTILLIB_ENUM_ELEM(JSON_ESTRING)
-  UTILLIB_ENUM_ELEM(JSON_EESCAPE)
-  UTILLIB_ENUM_ELEM(JSON_EUNKNOWN)
+UTILLIB_ENUM_ELEM(JSON_ESTRING)
+UTILLIB_ENUM_ELEM(JSON_EESCAPE)
+UTILLIB_ENUM_ELEM(JSON_EUNKNOWN)
 UTILLIB_ENUM_END(utillib_json_parser_error_kind);
 
 struct utillib_json_parser_factory {
@@ -42,16 +42,17 @@ struct utillib_json_parser {
 
 void utillib_json_parser_factory_init(struct utillib_json_parser_factory *self);
 
-void utillib_json_parser_factory_destroy(struct utillib_json_parser_factory *self);
+void utillib_json_parser_factory_destroy(
+    struct utillib_json_parser_factory *self);
 
-void utillib_json_parser_init(struct utillib_json_parser *self, 
-    struct utillib_json_parser_factory *factory);
+void utillib_json_parser_init(struct utillib_json_parser *self,
+                              struct utillib_json_parser_factory *factory);
 
 void utillib_json_parser_destroy(struct utillib_json_parser *self);
 
-int utillib_json_parser_parse(struct utillib_json_parser *self, char const * str);
+struct utillib_json_value_t *
+utillib_json_parser_parse(struct utillib_json_parser *self, char const *str);
 
-struct utillib_json_value_t * utillib_json_parser_value(struct utillib_json_parser *self);
-
+bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
+                                   size_t const *input);
 #endif /* UTILLIB_JSON_PARSER_H */
-

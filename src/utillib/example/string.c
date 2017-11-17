@@ -19,21 +19,19 @@
 
 */
 
-#include <utillib/string.h>
 #include <stdio.h>
+#include <utillib/string.h>
 
 /*
  * A string that has varying length.
  */
 
-int main(void)
-{
-  struct utillib_string  string;
+int main(void) {
+  struct utillib_string string;
   utillib_string_init_c_str(&string, "initialized with a c str");
 
-  char const * c_str=utillib_string_c_str(&string);
+  char const *c_str = utillib_string_c_str(&string);
   puts(c_str);
   utillib_string_destroy(&string);
   return 0;
 }
-

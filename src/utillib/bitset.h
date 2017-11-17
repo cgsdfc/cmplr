@@ -21,9 +21,9 @@
 #ifndef UTILLIB_BITSET_H
 #define UTILLIB_BITSET_H
 
-#include "json.h"
 #include "config.h" /* bool */
-#include <stddef.h>  /* size_t */
+#include "json.h"
+#include <stddef.h> /* size_t */
 #define utillib_bitset_N(self) ((self)->N)
 
 /**
@@ -48,7 +48,6 @@ struct utillib_bitset {
 void utillib_bitset_init(struct utillib_bitset *self, size_t N);
 void utillib_bitset_destroy(struct utillib_bitset *self);
 
-
 bool utillib_bitset_contains(struct utillib_bitset const *self, size_t pos);
 void utillib_bitset_insert(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_remove(struct utillib_bitset *self, size_t pos);
@@ -58,14 +57,12 @@ void utillib_bitset_union(struct utillib_bitset *self,
 bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t pos);
 bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t pos);
 bool utillib_bitset_union_updated(struct utillib_bitset *self,
-                          struct utillib_bitset const *other);
-
-
+                                  struct utillib_bitset const *other);
 
 bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
                                  struct utillib_bitset const *other);
 bool utillib_bitset_equal(struct utillib_bitset const *self,
                           struct utillib_bitset const *other);
 struct utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
-                                                       size_t offset);
+                                                              size_t offset);
 #endif /* UTILLIB_BITSET_H */

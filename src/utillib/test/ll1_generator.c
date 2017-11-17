@@ -41,18 +41,16 @@ UTILLIB_TEST(ll1_generator_non_ll1_sample) {
   utillib_ll1_generator_generate(UT_FIXTURE, "this_should_not_be_generated");
 }
 
-UTILLIB_TEST(ll1_generator_dump_set)
-{
+UTILLIB_TEST(ll1_generator_dump_set) {
   utillib_ll1_generator_init_from_code(UT_FIXTURE, ll1_sample_1_symbols,
-      ll1_sample_1_rules);
+                                       ll1_sample_1_rules);
   utillib_ll1_generator_dump_set(UT_FIXTURE, UT_LL1_FIRST, SYM_E);
   utillib_ll1_generator_dump_set(UT_FIXTURE, UT_LL1_FOLLOW, SYM_E);
 }
 
-UTILLIB_TEST(ll1_generator_dump_all)
-{
+UTILLIB_TEST(ll1_generator_dump_all) {
   utillib_ll1_generator_init_from_code(UT_FIXTURE, ll1_sample_1_symbols,
-      ll1_sample_1_rules);
+                                       ll1_sample_1_rules);
   utillib_ll1_generator_dump_all(UT_FIXTURE);
 }
 

@@ -20,6 +20,3 @@
 */
 
 #include "lalr_builder.h"
-
-
-

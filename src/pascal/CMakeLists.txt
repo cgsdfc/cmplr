@@ -23,6 +23,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(PASCAL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/)
 set(PASCAL_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/)
 add_definitions(-DPASCAL_TEST_DIR=\"${PASCAL_TEST_DIR}\")
+add_definitions(-DPASCAL_SOURCE_DIR=\"${PASCAL_SOURCE_DIR}\")
 
 add_library(pascal
   ./parser.c
@@ -46,5 +47,5 @@ target_link_libraries(pascal_test
 )
 
 add_executable(pascal_ll1_table_gen ./ll1_table_gen.c)
-target_link_libraries(ll1_generator pascal utillib)
+target_link_libraries(pascal_ll1_table_gen pascal utillib)
 

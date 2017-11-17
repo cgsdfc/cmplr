@@ -25,12 +25,12 @@
  * Linked hash map.
  */
 
+#include "config.h"
 #include "enum.h"
 #include "pair.h"
 #include "slist.h"
 #include "unordered_op.h"
 #include "vector.h"
-#include "config.h"
 #include <stddef.h>
 #include <stdlib.h>
 
@@ -76,22 +76,22 @@ void utillib_unordered_map_init(struct utillib_unordered_map *,
                                 struct utillib_unordered_op *);
 void utillib_unordered_map_destroy(struct utillib_unordered_map *);
 void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *,
-                                          void (*destroy)(void*));
+                                          void (*destroy)(void *));
 
 /* modifier */
-int utillib_unordered_map_emplace(struct utillib_unordered_map *, void const*,
-                                  void const*);
+int utillib_unordered_map_emplace(struct utillib_unordered_map *, void const *,
+                                  void const *);
 int utillib_unordered_map_insert(struct utillib_unordered_map *,
                                  struct utillib_pair const *);
-int utillib_unordered_map_erase(struct utillib_unordered_map *,void const* );
+int utillib_unordered_map_erase(struct utillib_unordered_map *, void const *);
 void utillib_unordered_map_set_max_load_factor(struct utillib_unordered_map *,
                                                double);
 void utillib_unordered_map_rehash(struct utillib_unordered_map *, size_t);
 void utillib_unordered_map_clear(struct utillib_unordered_map *);
 
 /* observer */
-struct utillib_pair *
-utillib_unordered_map_find(struct utillib_unordered_map *, void const*);
+struct utillib_pair *utillib_unordered_map_find(struct utillib_unordered_map *,
+                                                void const *);
 size_t utillib_unordered_map_size(struct utillib_unordered_map *);
 size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);
 bool utillib_unordered_map_empty(struct utillib_unordered_map *);

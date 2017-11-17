@@ -1,20 +1,15 @@
+#include <utillib/pair.h>
 #include <utillib/test.h>
 #include <utillib/unordered_map.h>
-#include <utillib/pair.h>
 
 static void test_unordered_map(void) {
   struct utillib_unordered_map map;
   struct utillib_pair stu[] = {
-      {"Tony", 1},    {"John", 2},
-      {"Amy", 3},     {"Tom", 4},
-      {"Sam", 5},     {"Johnson", 6},
-      {"Simpson", 7}, {"Adison", 8},
-      {"Sipson", 7},  {"Adison", 8},
-      {"Simpson", 7}, {"Adison", 8},
-      {"Smpson", 7},  {"Adison", 8},
-      {"Simpon", 7},  {"Adison", 8},
-      {"Simpson", 7}, {"Adison", 8},
-      {"Siso", 7},    {"Adison", 8},
+      {"Tony", 1},    {"John", 2},    {"Amy", 3},     {"Tom", 4},
+      {"Sam", 5},     {"Johnson", 6}, {"Simpson", 7}, {"Adison", 8},
+      {"Sipson", 7},  {"Adison", 8},  {"Simpson", 7}, {"Adison", 8},
+      {"Smpson", 7},  {"Adison", 8},  {"Simpon", 7},  {"Adison", 8},
+      {"Simpson", 7}, {"Adison", 8},  {"Siso", 7},    {"Adison", 8},
       {"Wang", 9},    {NULL, NULL}};
 
   utillib_unordered_map_init(&map, &utillib_unordered_strop);
@@ -24,7 +19,8 @@ static void test_unordered_map(void) {
     }
   }
   for (struct utillib_pair *x = stu; UTILLIB_PAIR_FIRST(x) != NULL; ++x) {
-    struct utillib_pair *p = utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
+    struct utillib_pair *p =
+        utillib_unordered_map_find(&map, UTILLIB_PAIR_FIRST(x));
 
     if (p) {
       printf("found %s:%ld in map\n", (char *)UTILLIB_PAIR_FIRST(p),

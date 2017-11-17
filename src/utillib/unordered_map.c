@@ -78,13 +78,12 @@ void utillib_unordered_map_clear(struct utillib_unordered_map *self) {
 
 static struct utillib_pair *pop_free(struct utillib_unordered_map *self) {
   struct utillib_pair const *pair = self->un_free;
-  self->un_free = (void*) UTILLIB_PAIR_SECOND(pair);
-  return (void*) self->un_free;
+  self->un_free = (void *)UTILLIB_PAIR_SECOND(pair);
+  return (void *)self->un_free;
 }
 
 static struct utillib_pair *make_pair(struct utillib_unordered_map *self,
-                                        void const *key,
-                                        void const *value) {
+                                      void const *key, void const *value) {
   struct utillib_pair *pair;
   if (self->un_free) {
     pair = pop_free(self);
@@ -149,10 +148,10 @@ void utillib_unordered_map_init_from_array(struct utillib_unordered_map *self,
 }
 
 static void destroy_free_owning(struct utillib_unordered_map *self,
-                                void (*destroy)(void*)) {
+                                void (*destroy)(void *)) {
   while (self->un_free) {
     struct utillib_pair *p = self->un_free;
-    self->un_free = (void*) UTILLIB_PAIR_SECOND(p);
+    self->un_free = (void *)UTILLIB_PAIR_SECOND(p);
     destroy(p);
     free(p);
   }
@@ -161,8 +160,8 @@ static void destroy_free_owning(struct utillib_unordered_map *self,
 static void destroy_free(struct utillib_unordered_map *self) {
   while (self->un_free) {
     struct utillib_pair const *p = self->un_free;
-    self->un_free =  (void*)UTILLIB_PAIR_SECOND(p);
-    free((void*) p);
+    self->un_free = (void *)UTILLIB_PAIR_SECOND(p);
+    free((void *)p);
   }
 }
 
@@ -175,7 +174,7 @@ static void destroy_bucket(struct utillib_unordered_map *self) {
 }
 
 void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *self,
-                                          void (*destroy)(void*)) {
+                                          void (*destroy)(void *)) {
   utillib_unordered_map_clear(self);
   destroy_free_owning(self, destroy);
   destroy_bucket(self);
@@ -205,8 +204,7 @@ linear_search_list(struct utillib_unordered_map *self,
 }
 
 static int find_impl(struct utillib_unordered_map *self, void const *key,
-                     void const *value, int mode,
-                     struct utillib_slist **plist,
+                     void const *value, int mode, struct utillib_slist **plist,
                      struct utillib_slist_node **pos,
                      struct utillib_pair **retv) {
   size_t hashv = do_hash(self, key);

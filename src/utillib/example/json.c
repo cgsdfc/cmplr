@@ -49,7 +49,8 @@ int main(void) {
   struct compilatioin_entry entry = {
       .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"};
 
-  /* To get the JOSN string, first you need to create a `utillib_json_value_t'. */ 
+  /* To get the JOSN string, first you need to create a `utillib_json_value_t'.
+   */
   struct utillib_json_value_t *val =
       utillib_json_object_create(&entry, sizeof entry, CompilationEntry_Fields);
 

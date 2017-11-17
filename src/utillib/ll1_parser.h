@@ -40,7 +40,8 @@
  * An ll1_factory can be shared among all the parsers that parse the same
  * grammar but may have different semantic actions.
  * This kind of sharing is enabled by calling `utillib_ll1_factory_parser_init'
- * to initialize a parser from a factory instead of calling `utillib_ll1_parser_init'
+ * to initialize a parser from a factory instead of calling
+ * `utillib_ll1_parser_init'
  * directly.
  */
 
@@ -69,30 +70,32 @@ UTILLIB_ENUM_END(utillib_ll1_parser_error_kind);
  */
 struct utillib_ll1_parser_error {
   int kind;
-  struct utillib_symbol const * lookahead_symbol;
-  struct utillib_symbol const * stack_top_symbol;
+  struct utillib_symbol const *lookahead_symbol;
+  struct utillib_symbol const *stack_top_symbol;
 };
 
 /**
  * \struct utillib_ll1_parser_op
- * Function table that defines the semantic behaviour 
+ * Function table that defines the semantic behaviour
  * of the parser.
  * \field terminal_handler Called when an input token matches the token on top.
- * Passes in the symbol just matched and the semantic of it return by 
+ * Passes in the symbol just matched and the semantic of it return by
  * `utillib_scanner_op->semantic'.
  * \field rule_handler Called when the parser decides to replace the top symbol
  * with the rhs symbols of a certain rule. Passes in the rule that defines this
  * replacement.
- * \field error_handler Called when the parser encounters an error. Passes in the
+ * \field error_handler Called when the parser encounters an error. Passes in
+ * the
  * scanner which has more knowledge about the input and therefore called `input'
  * and the error.
  */
 struct utillib_ll1_parser_op {
-  void (* terminal_handler) (void *client_data, struct utillib_symbol const *, void const * semantic);
-  void (* rule_handler) (void *client_data, struct utillib_rule const *);
-  void (* error_handler)(void *client_data, void *input, struct utillib_ll1_parser_error const*);
-}; 
-
+  void (*terminal_handler)(void *client_data, struct utillib_symbol const *,
+                           void const *semantic);
+  void (*rule_handler)(void *client_data, struct utillib_rule const *);
+  void (*error_handler)(void *client_data, void *input,
+                        struct utillib_ll1_parser_error const *);
+};
 
 /**
  * \struct utillib_ll1_factory
@@ -113,7 +116,7 @@ struct utillib_ll1_parser {
   struct utillib_rule_index const *rule_index;
   struct utillib_vector2 const *table;
   void *client_data;
-  struct utillib_ll1_parser_op const * op;
+  struct utillib_ll1_parser_op const *op;
 };
 
 /**
@@ -122,8 +125,8 @@ struct utillib_ll1_parser {
  * the symbols and rules and build the table on the fly.
  */
 void utillib_ll1_factory_build_init(struct utillib_ll1_factory *self,
-    struct utillib_symbol const *symbols,
-    struct utillib_rule_literal const *rules);
+                                    struct utillib_symbol const *symbols,
+                                    struct utillib_rule_literal const *rules);
 
 /**
  * \function utillib_ll1_factory_gen_init
@@ -131,8 +134,9 @@ void utillib_ll1_factory_build_init(struct utillib_ll1_factory *self,
  * by ll1_generator.
  */
 void utillib_ll1_factory_gen_init(struct utillib_ll1_factory *self,
-    int const * gentable, struct utillib_symbol const *symbols,
-    struct utillib_rule_literal const *rules);
+                                  int const *gentable,
+                                  struct utillib_symbol const *symbols,
+                                  struct utillib_rule_literal const *rules);
 
 void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self);
 
@@ -144,14 +148,15 @@ void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self);
  * \param client_data The data of client that parser may access.
  * \param op The function table of the client that parser may call.
  */
-void utillib_ll1_factory_parser_init(struct utillib_ll1_factory *self,
-    struct utillib_ll1_parser *parser, void *client_data, 
-    struct utillib_ll1_parser_op const *op);
+void utillib_ll1_factory_parser_init(struct utillib_ll1_factory const *self,
+                                     struct utillib_ll1_parser *parser,
+                                     void *client_data,
+                                     struct utillib_ll1_parser_op const *op);
 
 /* Uses utillib_ll1_factory_parser_init instead */
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 const*table, 
+                             struct utillib_vector2 const *table,
                              void *client_data,
                              struct utillib_ll1_parser_op const *op);
 
@@ -166,5 +171,5 @@ void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
  * \param scanner The function table of the scanner.
  */
 bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
-                             struct utillib_scanner_op const *scanner);
+                              struct utillib_scanner_op const *scanner);
 #endif /* UTILLIB_LL1_PARSER_H */

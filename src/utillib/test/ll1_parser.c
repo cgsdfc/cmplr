@@ -32,11 +32,10 @@ static struct utillib_symbol_scanner symbol_scanner;
 static struct ll1_sample_1_semantic semantic;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_ll1_factory_build_init(&ll1_factory,ll1_sample_1_symbols, ll1_sample_1_rules); 
-  utillib_ll1_factory_parser_init(&ll1_factory, 
-      UT_FIXTURE, 
-      &semantic,
-      &ll1_sample_1_parser_op);
+  utillib_ll1_factory_build_init(&ll1_factory, ll1_sample_1_symbols,
+                                 ll1_sample_1_rules);
+  utillib_ll1_factory_parser_init(&ll1_factory, UT_FIXTURE, &semantic,
+                                  &ll1_sample_1_parser_op);
 }
 
 UTILLIB_TEST_TEAR_DOWN() {
@@ -45,20 +44,22 @@ UTILLIB_TEST_TEAR_DOWN() {
 }
 
 UTILLIB_TEST(ll1_parser_parse) {
-  utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1, ll1_sample_1_symbols);
-  utillib_ll1_parser_parse(UT_FIXTURE, &symbol_scanner, &utillib_symbol_scanner_op);
+  utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1,
+                              ll1_sample_1_symbols);
+  utillib_ll1_parser_parse(UT_FIXTURE, &symbol_scanner,
+                           &utillib_symbol_scanner_op);
 }
 
 /**
  * \test rule_index_load_table
  * Tests if the loaded table (from generated source)
  * is the same with the directly built one.
- * To achieves this, the generated source must be 
+ * To achieves this, the generated source must be
  * compiled into this test.
  * Notes since the built one and generated/loaded one
  * share the same rule index, comparing their elements
  * as pointer suffices.
- * 
+ *
  * XXX Use feature of build system to do this cleaner
  */
 #if 0
@@ -78,7 +79,7 @@ UTILLIB_TEST(rule_index_load_table)
     }
   }
 }
-#endif 
+#endif
 
 UTILLIB_TEST_DEFINE(Utillib_LL1Parser) {
   UTILLIB_TEST_BEGIN(Utillib_LL1Parser)

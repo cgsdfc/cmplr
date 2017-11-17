@@ -158,7 +158,7 @@ void utillib_vector_destroy(struct utillib_vector *self) {
  */
 
 void utillib_vector_destroy_owning(struct utillib_vector *self,
-                                   void (*destroy)(void*)) {
+                                   void (*destroy)(void *)) {
   UTILLIB_VECTOR_FOREACH(void const *, elem, self) { destroy((void *)elem); }
   free(self->begin);
 }
@@ -319,8 +319,8 @@ struct utillib_json_value_t *utillib_json_array_create_from_vector(
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (void const **pelem = self->begin; pelem != self->end; ++pelem) {
     struct utillib_json_value_t *val = (*pelem && create_func)
-                                    ? create_func(*pelem, sizeof *pelem)
-                                    : utillib_json_null_create();
+                                           ? create_func(*pelem, sizeof *pelem)
+                                           : utillib_json_null_create();
     utillib_json_array_push_back(array, val);
   }
   return array;

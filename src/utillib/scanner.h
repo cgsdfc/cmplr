@@ -21,7 +21,7 @@
 #ifndef UTILLIB_ABSTRACT_SCANNER_H
 #define UTILLIB_ABSTRACT_SCANNER_H
 #include "config.h" /* for bool */
-#include <stddef.h>  /* size_t */
+#include <stddef.h> /* size_t */
 #include <stdio.h>
 
 struct utillib_keyword_pair {

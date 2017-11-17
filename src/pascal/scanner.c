@@ -277,7 +277,7 @@ void const *pascal_scanner_semantic(struct pascal_scanner *self) {
   if (self->code == SYM_UINT) {
     size_t uint_val;
     uint_val = strtoul(str, NULL, 10);
-    return (void const*) uint_val;
+    return (void const *)uint_val;
   }
   return NULL;
 }
@@ -316,10 +316,8 @@ size_t pascal_scanner_check(struct pascal_scanner *self) {
   return size;
 }
 
-void pascal_scanner_getpos(struct pascal_scanner const *self,
-    size_t *row, size_t *col)
-{
-  *row=self->scanner.row;
-  *col=self->scanner.col;
+void pascal_scanner_getpos(struct pascal_scanner const *self, size_t *row,
+                           size_t *col) {
+  *row = self->scanner.row;
+  *col = self->scanner.col;
 }
-
