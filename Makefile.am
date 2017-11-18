@@ -21,9 +21,10 @@
 ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = subdir-objects foreign
 
-AM_CPPFLAGS = -DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test/\"
-AM_CPPFLAGS += -DPASCAL_SOURCE_DIR=\"$(abs_srcdir)/src/pascal/\"
-AM_CPPFLAGS += -DUTILLIB_SOURCE_DIR=\"$(abs_srcdir)/src/utillib/\"
+
+PASCAL_TEST_DIR=-DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test/\"
+PASCAL_SOURCE_DIR=-DPASCAL_SOURCE_DIR=\"$(abs_srcdir)/src/pascal/\"
+UTILLIB_SOURCE_DIR=-DUTILLIB_SOURCE_DIR=\"$(abs_srcdir)/src/utillib/\"
 
 AM_CFLAGS = -I$(top_srcdir)/src
 AM_CFLAGS += -g3
@@ -32,6 +33,7 @@ AM_CFLAGS += -Wall -Wwrite-strings \
 						 -Wno-sign-compare \
 						 -std=c11
 
+## Utillib
 utillibincludedir = $(includedir)/utillib
 
 lib_LTLIBRARIES = libutillib.la
@@ -117,6 +119,7 @@ utillib_test_LDADD = libutillib.la
 noinst_PROGRAMS += json_parser_table_gen
 json_parser_table_gen_SOURCES = src/utillib/json_parser_table_gen.c
 json_parser_table_gen_LDADD = libutillib.la
+json_parser_table_gen_CPPFLAGS = $(UTILLIB_SOURCE_DIR)
 
 noinst_PROGRAMS += example-json
 example_json_SOURCES = src/utillib/example/json.c
@@ -130,9 +133,11 @@ noinst_PROGRAMS += example-vector
 example_vector_SOURCES = src/utillib/example/vector.c
 example_vector_LDADD = libutillib.la
 
+## Pascal
 noinst_PROGRAMS += pascal_ll1_table_gen
 pascal_ll1_table_gen_SOURCES = src/pascal/ll1_table_gen.c 
 pascal_ll1_table_gen_LDADD = libutillib.la libpascal.la
+pascal_ll1_table_gen_CPPFLAGS = $(PASCAL_SOURCE_DIR)
 
 noinst_pascalincludedir = $(includedir)/pascal
 
@@ -164,3 +169,19 @@ pascal_test_SOURCES = src/pascal/test/symbols.c \
 											src/pascal/test/parser.c \
 											src/pascal/test/driver.c
 pascal_test_LDADD = libutillib.la libpascal.la
+pascal_test_CPPFLAGS = $(PASCAL_TEST_DIR)
+
+## Cling
+noinst_clingincludedir = $(includedir)/cling
+
+lib_LTLIBRARIES += libcling.la
+noinst_clinginclude_HEADERS = src/cling/symbols.h \
+															src/cling/rules.h
+
+libcling_la_SOURCES = src/cling/symbols.c \
+											src/cling/rules.c \
+											$(noinst_clinginclude_HEADERS)
+
+libcling_la_LIBADD = libutillib.la
+
+

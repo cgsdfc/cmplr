@@ -133,7 +133,7 @@ UTILLIB_TEST(parser_stmt_assign) {
 UTILLIB_TEST(parser_stmt_write) {
   size_t const stmt_input[] = {SYM_KW_WHILE, SYM_LP, SYM_IDEN, SYM_COMMA,
                                SYM_IDEN,     SYM_RP, SYM_DOT,  UT_SYM_EOF};
-  UTILLIB_TEST_AUX_INVOKE(parser_stmt_write);
+  UTILLIB_TEST_AUX_INVOKE(parser_assert_accepted, stmt_input);
 }
 
 UTILLIB_TEST_AUX(parser_file_input, char const *filename) {
@@ -171,6 +171,8 @@ UTILLIB_TEST_DEFINE(Pascal_Parser) {
   UTILLIB_TEST_SKIP(parser_var_decl_reject)
   UTILLIB_TEST_SKIP(parser_procedure_decl)
   UTILLIB_TEST_SKIP(parser_stmt_assign)
+  UTILLIB_TEST_SKIP(parser_empty_input)
+  UTILLIB_TEST_SKIP(parser_stmt_write)
   UTILLIB_TEST_RUN(parser_cock_rabbit)
   UTILLIB_TEST_RUN(parser_primes)
   UTILLIB_TEST_RUN(parser_gcd)
