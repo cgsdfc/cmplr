@@ -1,6 +1,7 @@
 set(CMAKE_C_FLAGS "-g3 -std=c99")
 include_directories(${CMAKE_SOURCE_DIR})
 add_library(utillib
+  ./test_impl.c
   ./json_parser.c
   ./json_parser_impl.c
   ./ll1_builder_impl.c

@@ -172,7 +172,7 @@ struct utillib_json_value_t {
     char const *as_str;
     int as_int;
     size_t as_size_t;
-    void const *as_ptr;
+    void *as_ptr;
   };
 };
 
@@ -226,12 +226,11 @@ void utillib_json_pretty_print(struct utillib_json_value_t const *self, FILE *fi
 
 struct utillib_json_value_t * utillib_json_string_create(void const *base);
 struct utillib_json_value_t *utillib_json_real_create(void const *base);
-struct utillib_json_value_t *utillib_json_size_t_create(void const *base);
+struct utillib_json_value_t * utillib_json_size_t_create(void const *base);
 struct utillib_json_value_t* utillib_json_int_create(void const *base);
-struct utillib_json_value_t* utillib_json_bool_create(void const *base);
-struct utillib_json_value_t*utillib_json_long_create(void const *base);
-struct utillib_json_value_t* utillib_json_string_create(void const *base);
-struct utillib_json_value_t*utillib_json_null_create(void);
+struct utillib_json_value_t const * utillib_json_bool_create(void const *base);
+struct utillib_json_value_t* utillib_json_long_create(void const *base);
+struct utillib_json_value_t* utillib_json_null_create(void);
 
 
 #endif /* UTILLIB_JSON_H */

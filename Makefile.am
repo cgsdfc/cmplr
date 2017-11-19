@@ -39,6 +39,7 @@ utillibincludedir = $(includedir)/utillib
 lib_LTLIBRARIES = libutillib.la
 
 utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
+													src/utillib/json_impl.h \
 													src/utillib/flags.h \
 													src/utillib/opg_builder.h \
 													src/utillib/scanner.h \
@@ -65,6 +66,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
+												 src/utillib/test_impl.c \
 												 src/utillib/ll1_builder_impl.c \
 												 src/utillib/json_parser.c \
 												 src/utillib/json_parser_impl.c \
@@ -183,5 +185,7 @@ libcling_la_SOURCES = src/cling/symbols.c \
 											$(noinst_clinginclude_HEADERS)
 
 libcling_la_LIBADD = libutillib.la
-
+noinst_PROGRAMS += cling_ll1_table
+cling_ll1_table_SOURCES = src/cling/ll1_gen.c
+cling_ll1_table_LDADD = libcling.la libutillib.la
 

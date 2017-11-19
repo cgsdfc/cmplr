@@ -30,19 +30,20 @@ UTILLIB_ETAB_END(utillib_symbol_kind);
 struct utillib_json_value_t *
 utillib_symbol_json_string_create(struct utillib_symbol const *self)
 {
-  return utillib_json_string_create(self->name);
+  return utillib_json_string_create(&self->name);
 }
 
 struct utillib_json_value_t *
 utillib_symbol_json_object_create(struct utillib_symbol const *self)
 {
+  char const *kind_str=utillib_symbol_kind_tostring(self->kind);
   struct utillib_json_value_t * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "kind", 
-      utillib_json_string_create(utillib_symbol_kind_tostring(self->kind)));
+      utillib_json_string_create(&kind_str));
   utillib_json_object_push_back(object, "value",
       utillib_json_int_create(&self->value));
   utillib_json_object_push_back(object, "name",
-      utillib_json_string_create(self->name));
+      utillib_json_string_create(&self->name));
   return object;
 }
 

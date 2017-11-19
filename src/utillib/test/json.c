@@ -106,7 +106,7 @@ UTILLIB_TEST(json_string_create) {
 
   for (int i = 0; i < LEN; ++i) {
     struct utillib_json_value_t *val =
-        utillib_json_string_create(strings[i]);
+        utillib_json_string_create(&strings[i]);
     UTILLIB_TEST_ASSERT_STREQ(strings[i], val->as_ptr);
     UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_STRING);
     UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
@@ -172,12 +172,6 @@ UTILLIB_TEST(json_object_create_nested_object) {
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, L_val);
 }
 
-UTILLIB_TEST(json_null_create) {
-  struct utillib_json_value_t *null = utillib_json_null_create();
-  UTILLIB_TEST_ASSERT_EQ(null->kind, UT_JSON_NULL);
-  UTILLIB_TEST_AUX_INVOKE(tostring_helper, null);
-}
-
 UTILLIB_TEST(json_null_array_create) {
   void *null_array[] = {NULL, NULL};
   struct utillib_json_value_t *val =
@@ -211,7 +205,6 @@ UTILLIB_TEST_DEFINE(Utillib_JSON) {
   UTILLIB_TEST_RUN(json_array_create)
   UTILLIB_TEST_RUN(json_object_create)
   UTILLIB_TEST_RUN(json_object_create_nested_object)
-  UTILLIB_TEST_RUN(json_null_create)
   UTILLIB_TEST_RUN(json_null_array_create)
   UTILLIB_TEST_END(Utillib_JSON)
   UTILLIB_TEST_RETURN(Utillib_JSON)

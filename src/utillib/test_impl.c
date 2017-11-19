@@ -25,11 +25,12 @@ static struct utillib_json_value_t const*
 test_entry_json_object_create(void const *_self)
 {
   struct utillib_test_entry_t const *self=_self;
+  char const * kind_str=utillib_test_status_kind_tostring(self->status);
   struct utillib_json_value_t * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "name", 
-      utillib_json_string_create(self->func_name));
+      utillib_json_string_create(&self->func_name));
   utillib_json_object_push_back(object, "status",
-      utillib_json_string_create(utillib_test_status_kind_tostring(self->status)));
+      utillib_json_string_create(&kind_str));
   utillib_json_object_push_back(object, "result",
       utillib_json_bool_create(&self->succeeded));
   return object;
@@ -61,9 +62,9 @@ test_env_json_object_create(struct utillib_test_env_t const *self)
 {
   struct utillib_json_value_t *object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
-      utillib_json_string_create(self->filename));
+      utillib_json_string_create(&self->filename));
   utillib_json_object_push_back(object, "name",
-      utillib_json_string_create(self->case_name));
+      utillib_json_string_create(&self->case_name));
   utillib_json_object_push_back(object, "ntests",
       utillib_json_long_create(&self->ntests));
   utillib_json_object_push_back(object, "nskipped",
@@ -84,7 +85,7 @@ utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self)
 {
   struct utillib_json_value_t * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
-      utillib_json_string_create(self->filename));
+      utillib_json_string_create(&self->filename));
   utillib_json_object_push_back(object, "tests",
       utillib_vector_json_array_create(&self->tests, test_entry_json_object_create));
   return object;

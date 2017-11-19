@@ -22,7 +22,6 @@
 #define _GNU_SOURCE
 #include <utillib/test.h>
 
-UTILLIB_TEST_DECLARE(Utillib_Logging);
 UTILLIB_TEST_DECLARE(Utillib_Test);
 UTILLIB_TEST_DECLARE(Utillib_Vector);
 UTILLIB_TEST_DECLARE(Utillib_Slist);
@@ -42,5 +41,23 @@ UTILLIB_TEST_DECLARE(Utillib_LL1Generator);
 UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
 
 int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL(argc, argv, Utillib_JSON_Parser);
+  UTILLIB_TEST_RUN_ALL(argc, argv, 
+      Utillib_Test,
+      Utillib_Vector,
+      Utillib_Slist,
+      Utillib_String,
+      Utillib_JSON,
+      Utillib_Hash,
+      Utillib_Rule,
+      Utillib_Symbol,
+      Utillib_Bitset,
+      Utillib_Print,
+      Utillib_Flags,
+      Utillib_LL1Parser,
+      Utillib_LL1Builder,
+      Utillib_Scanner,
+      Utillib_Vector2,
+      Utillib_LL1Generator,
+      Utillib_JSON_Parser)
+  ;
 }

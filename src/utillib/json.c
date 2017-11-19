@@ -26,6 +26,7 @@
 #include <stdarg.h> // for va_list
 #include <stdlib.h> // for free
 #include <string.h>
+#include <strings.h>
 
 /**
  * \file utillib/json.c
@@ -155,6 +156,9 @@ void utillib_json_value_destroy(void * _self) {
     json_object_destroy(self->as_ptr);
     free(self);
     return;
+  case UT_JSON_STRING:
+    free(self->as_str);
+    return;
   case UT_JSON_NULL:
   case UT_JSON_BOOL:
     /* pass */
@@ -165,7 +169,7 @@ void utillib_json_value_destroy(void * _self) {
   }
 }
 
-struct utillib_json_value_t * 
+struct utillib_json_value_t const* 
 utillib_json_bool_create(void const *base)
 {
   bool b=*(bool const*) base;
@@ -175,7 +179,7 @@ utillib_json_bool_create(void const *base)
 struct utillib_json_value_t *
 utillib_json_string_create(void const *base)
 {
-  char const *str=base;
+  char const *str= *(char const ** ) base;
   struct utillib_json_value_t *self=malloc (sizeof *self);
   self->kind=UT_JSON_STRING;
   self->as_str=strdup(str);
@@ -203,14 +207,6 @@ utillib_json_null_array_create(size_t size) {
     utillib_vector_push_back(&self->elements, &utillib_json_null);
   }
   return json_value_create_ptr(UT_JSON_ARRAY, self);
-}
-
-/**
- * \function utillib_json_null_create
- */
-struct utillib_json_value_t *
-utillib_json_null_create(void) {
-  return &utillib_json_null;
 }
 
 struct utillib_json_value_t *
@@ -369,7 +365,7 @@ void utillib_json_object_push_back(struct utillib_json_value_t *self,
                                    struct utillib_json_value_t const *value) {
   json_value_check_kind(self, UT_JSON_OBJECT);
   struct utillib_json_object_t *object = self->as_ptr;
-  utillib_vector_push_back(&object->members, utillib_make_pair(key, value));
+  utillib_vector_push_back(&object->members, utillib_make_pair(strdup(key), value));
 }
 
 struct utillib_pair *

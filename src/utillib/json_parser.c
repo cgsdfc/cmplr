@@ -154,7 +154,7 @@ static void json_parser_terminal_handler(void *_self,
     val=utillib_json_real_create(semantic, 0);
     break;
   case JSON_SYM_STR:
-    val=utillib_json_string_create(&semantic, 0);
+    val=utillib_json_string_create(&semantic);
     break;
 #else
   case JSON_SYM_NUM:

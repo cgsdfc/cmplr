@@ -259,7 +259,8 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
 struct utillib_json_value_t *
 utillib_rule_json_object_create(struct utillib_rule const *self) {
   if (self == UTILLIB_RULE_EPS) {
-    return utillib_json_string_create("A := epsilon");
+    static const char * null_str="A := epsilon";
+    return utillib_json_string_create(&null_str);
   }
   struct utillib_json_value_t *object = utillib_json_object_create_empty();
   struct utillib_json_value_t *array = utillib_json_array_create_empty();

@@ -153,7 +153,7 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
       special = UTILLIB_SYMBOL_EOF->name;
       break;
     }
-    utillib_json_array_push_back(array, utillib_json_string_create(special));
+    utillib_json_array_push_back(array, utillib_json_string_create(&special));
   }
   return array;
 }
