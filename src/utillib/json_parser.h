@@ -50,7 +50,7 @@ void utillib_json_parser_init(struct utillib_json_parser *self,
 
 void utillib_json_parser_destroy(struct utillib_json_parser *self);
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_json_parser_parse(struct utillib_json_parser *self, char const *str);
 
 bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,

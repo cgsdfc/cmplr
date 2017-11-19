@@ -29,7 +29,7 @@ struct utillib_ll1_generator {
   struct utillib_rule_index rule_index;
   struct utillib_ll1_builder builder;
   struct utillib_vector2 table;
-  struct utillib_json_value_t *builder_val;
+  struct utillib_json_value *builder_val;
 };
 
 void utillib_ll1_generator_init_from_code(

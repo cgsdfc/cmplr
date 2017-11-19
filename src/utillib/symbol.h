@@ -55,9 +55,9 @@ extern struct utillib_symbol const utillib_symbol_eof;
 extern struct utillib_symbol const utillib_symbol_error;
 extern struct utillib_symbol const utillib_symbol_null;
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_symbol_json_object_create(struct utillib_symbol const *self);
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_symbol_json_string_create(struct utillib_symbol const *self);
 
 bool utillib_symbol_check(struct utillib_symbol const *symbols, size_t size);

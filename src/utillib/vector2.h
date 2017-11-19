@@ -34,7 +34,7 @@ void *utillib_vector2_at(struct utillib_vector2 const *, size_t, size_t);
 void *utillib_vector2_set(struct utillib_vector2 *, size_t, size_t,
                           void const *);
 void utillib_vector2_destroy(struct utillib_vector2 *);
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_vector2_json_array_create(struct utillib_vector2 const *self,
                                   utillib_json_value_create_func_t create_func);
 

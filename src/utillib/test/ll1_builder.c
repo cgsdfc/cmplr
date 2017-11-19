@@ -156,7 +156,7 @@ UTILLIB_TEST(ll1_builder_build_table_correct) {
  * Outputs JSON of the built LL(1) table.
  */
 UTILLIB_TEST(ll1_builder_build_table_json) {
-  struct utillib_json_value_t *val = utillib_vector2_json_array_create(
+  struct utillib_json_value *val = utillib_vector2_json_array_create(
       &ll1_table, utillib_rule_json_object_create);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
@@ -168,7 +168,7 @@ UTILLIB_TEST(ll1_builder_build_table_json) {
  * Mainly its SETs.
  */
 UTILLIB_TEST(ll1_builder_json) {
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_ll1_builder_json_object_create(UT_FIXTURE);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);

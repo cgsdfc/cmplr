@@ -28,9 +28,9 @@
 
 
 #define JSON_PRIMARY_CREATE_FUNC_DEFINE(NAME, FIELD, TYPE, VALUE) \
-struct utillib_json_value_t *  NAME(void const *base) \
+struct utillib_json_value *  NAME(void const *base) \
 {\
-  struct utillib_json_value_t *self=malloc(sizeof *self);\
+  struct utillib_json_value *self=malloc(sizeof *self);\
   self->FIELD=*(TYPE*) base;\
   self->kind=(VALUE);\
   return self;\

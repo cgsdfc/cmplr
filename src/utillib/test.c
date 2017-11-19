@@ -334,7 +334,7 @@ static void test_suite_print_json(struct utillib_test_suite_t *self) {
                   self->json_output);
     return;
   }
-  struct utillib_json_value_t const*val = utillib_test_suite_json_object_create(self);
+  struct utillib_json_value const*val = utillib_test_suite_json_object_create(self);
   utillib_json_pretty_print(val, file);
   utillib_json_value_destroy(val);
   fclose(file);

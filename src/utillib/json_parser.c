@@ -43,11 +43,11 @@
  * Pops off the top of `values' as return value.
  * Assuming `values' is no empty.
  */
-static struct utillib_json_value_t *
+static struct utillib_json_value *
 json_parser_values_pop_back(struct utillib_vector *values)
 {
   json_parser_check_nonempty(values);
-  struct utillib_json_value_t *val=utillib_vector_back(values);
+  struct utillib_json_value *val=utillib_vector_back(values);
   utillib_vector_pop_back(values);
   return val;
 }
@@ -59,8 +59,8 @@ json_parser_values_pop_back(struct utillib_vector *values)
  */
 static void json_parser_object_addval(struct utillib_vector *values)
 {
-  struct utillib_json_value_t *val=json_parser_values_pop_back(values);
-  struct utillib_json_value_t *object=utillib_vector_back(values);
+  struct utillib_json_value *val=json_parser_values_pop_back(values);
+  struct utillib_json_value *object=utillib_vector_back(values);
   struct utillib_pair *pair=utillib_json_object_back(object);
   assert(pair->up_first && "The key of a strval should not be NULL");
   pair->up_second=val;
@@ -73,11 +73,11 @@ static void json_parser_object_addval(struct utillib_vector *values)
  */
 static void json_parser_object_addkey(struct utillib_vector *values)
 {
-  struct utillib_json_value_t *keyval=json_parser_values_pop_back(values);
+  struct utillib_json_value *keyval=json_parser_values_pop_back(values);
   json_parser_check_str(keyval); /* It should be a json string */
   char const *key=keyval->as_str;
   free(keyval); /* It may be cached */
-  struct utillib_json_value_t *object=utillib_vector_back(values);
+  struct utillib_json_value *object=utillib_vector_back(values);
   utillib_json_object_push_back(object, key, NULL);
 }
 
@@ -87,8 +87,8 @@ static void json_parser_object_addkey(struct utillib_vector *values)
  */
 static void json_parser_array_addval(struct utillib_vector *values)
 {
-  struct utillib_json_value_t *val=json_parser_values_pop_back(values);
-  struct utillib_json_value_t *array=utillib_vector_back(values);
+  struct utillib_json_value *val=json_parser_values_pop_back(values);
+  struct utillib_json_value *array=utillib_vector_back(values);
   utillib_json_array_push_back(array, val);
 }
 
@@ -100,7 +100,7 @@ static void json_parser_array_addval(struct utillib_vector *values)
 static void json_parser_addval(struct utillib_vector *values)
 {
   size_t size=utillib_vector_size(values);
-  struct utillib_json_value_t *entity=utillib_vector_at(values, size-2);
+  struct utillib_json_value *entity=utillib_vector_at(values, size-2);
   switch(entity->kind) {
     case UT_JSON_ARRAY:
       json_parser_array_addval(values);
@@ -118,7 +118,7 @@ static void json_parser_rule_handler(void *_self,
 
   struct utillib_json_parser *self=_self;
   struct utillib_symbol const * LHS=rule->LHS;
-  struct utillib_json_value_t const * val=NULL;
+  struct utillib_json_value const * val=NULL;
   switch(LHS->value) {
   case JSON_SYM_ARR:
     val=utillib_json_array_create_empty();
@@ -138,7 +138,7 @@ static void json_parser_terminal_handler(void *_self,
     void const *semantic) {
   struct utillib_json_parser *self=_self;
   struct utillib_vector *values=&self->values;
-  struct utillib_json_value_t const*val=NULL;
+  struct utillib_json_value const*val=NULL;
   switch (symbol->value) {
   case JSON_SYM_TRUE:
     val=&utillib_json_true;
@@ -250,13 +250,13 @@ void utillib_json_parser_destroy(struct utillib_json_parser *self) {
   utillib_ll1_parser_destroy(&self->parser);
 }
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_json_parser_parse(struct utillib_json_parser *self, char const *str) {
   struct utillib_json_scanner scanner;
   utillib_json_scanner_init(&scanner, str);
   if (!utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_json_scanner_op))
     return NULL;
-  struct utillib_json_value_t * val=json_parser_values_pop_back(&self->values);
+  struct utillib_json_value * val=json_parser_values_pop_back(&self->values);
   return val;
 }
 
@@ -266,7 +266,7 @@ bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
   utillib_symbol_scanner_init(&scanner, symbols, utillib_json_symbols);
   bool good=utillib_ll1_parser_parse(&self->parser, &scanner,
                                   &utillib_symbol_scanner_op);
-  UTILLIB_VECTOR_FOREACH(struct utillib_json_value_t const*, val, &self->values) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_json_value const*, val, &self->values) {
     utillib_json_pretty_print(val, stderr);
   }
   return good;

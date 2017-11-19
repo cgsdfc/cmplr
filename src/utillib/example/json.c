@@ -49,9 +49,9 @@ int main(void) {
   struct compilatioin_entry entry = {
       .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"};
 
-  /* To get the JOSN string, first you need to create a `utillib_json_value_t'.
+  /* To get the JOSN string, first you need to create a `utillib_json_value'.
    */
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_json_object_create(&entry, CompilationEntry_Fields);
 
   /* A convenient function to print json with indent. */

@@ -62,7 +62,7 @@ int utillib_ll1_builder_check(struct utillib_ll1_builder *self);
 
 void utillib_ll1_builder_print_errors(struct utillib_ll1_builder *self);
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
 
 #endif /* UTILLIB_LL1_BUILDER_H */

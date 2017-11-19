@@ -25,7 +25,7 @@ static const char *RED_BAD = COLOR_STRING_UNBOLD(RED, "[ BAD      ]");
 static const char *RED_FAILED = COLOR_STRING_UNBOLD(RED, "[  FAILED  ]");
 
 
-struct utillib_json_value_t const *
+struct utillib_json_value const *
 utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self);
 
 #endif /* UTILLIB_TEST_IMPL_H */

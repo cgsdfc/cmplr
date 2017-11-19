@@ -36,7 +36,7 @@ UTILLIB_ENUM_END(utillib_ll1_error_kind);
 
 struct utillib_ll1_builder_error {
   int kind;
-  struct utillib_json_value_t *values[UT_LL1_ERR_VAL_MAX];
+  struct utillib_json_value *values[UT_LL1_ERR_VAL_MAX];
 };
 
 /**
@@ -82,10 +82,10 @@ bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
                                struct utillib_ll1_set const *rhs,
                                bool about_flag);
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self);
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 ll1_builder_set_json_object_create(struct utillib_ll1_builder const *self,
                                    int kind,
                                    struct utillib_symbol const *symbol);

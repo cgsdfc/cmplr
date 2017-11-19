@@ -256,14 +256,14 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
  * Implements JSON format interface.
  */
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_rule_json_object_create(struct utillib_rule const *self) {
   if (self == UTILLIB_RULE_EPS) {
     static const char * null_str="A := epsilon";
     return utillib_json_string_create(&null_str);
   }
-  struct utillib_json_value_t *object = utillib_json_object_create_empty();
-  struct utillib_json_value_t *array = utillib_json_array_create_empty();
+  struct utillib_json_value *object = utillib_json_object_create_empty();
+  struct utillib_json_value *array = utillib_json_array_create_empty();
 
   utillib_json_object_push_back(object, "LHS",
                                 utillib_symbol_json_string_create(self->LHS));
@@ -275,9 +275,9 @@ utillib_rule_json_object_create(struct utillib_rule const *self) {
   return object;
 }
 
-struct utillib_json_value_t *
+struct utillib_json_value *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
-  struct utillib_json_value_t * object=utillib_json_object_create_empty();
+  struct utillib_json_value * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "min-termianls-value",
       utillib_json_size_t_create(&self->min_terminal));
   utillib_json_object_push_back(object, "min-non-termianls-value",
@@ -300,7 +300,7 @@ utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
  * Mainly for ease of debug.
  */
 void utillib_rule_json_pretty_print(struct utillib_rule const *self) {
-  struct utillib_json_value_t const*val =
+  struct utillib_json_value const*val =
       utillib_rule_json_object_create(self);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);

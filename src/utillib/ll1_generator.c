@@ -120,7 +120,7 @@ void utillib_ll1_generator_dump_set(struct utillib_ll1_generator *self,
         "ERROR: Only non terminal symbols have FIRST/FOLLOW\n");
     return;
   }
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       ll1_builder_set_json_object_create(&self->builder, kind, symbol);
   utillib_json_pretty_print(val, stdout);
   utillib_json_value_destroy(val);

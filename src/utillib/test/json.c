@@ -62,7 +62,7 @@ struct Student students[] = {{.name = "John", .id = 12, .gpa = 3.2},
  * Since it destroys the passed-in val,
  * it must be called in the end of the testing logic.
  */
-UTILLIB_TEST_AUX(tostring_helper, struct utillib_json_value_t *val) {
+UTILLIB_TEST_AUX(tostring_helper, struct utillib_json_value *val) {
   struct utillib_string s;
   utillib_json_tostring(val, &s);
   UTILLIB_TEST_MESSAGE("tostring: `%s'", utillib_string_c_str(&s));
@@ -72,7 +72,7 @@ UTILLIB_TEST_AUX(tostring_helper, struct utillib_json_value_t *val) {
 
 UTILLIB_TEST(json_real_create) {
   double v = 3.14;
-  struct utillib_json_value_t *val = utillib_json_real_create(&v);
+  struct utillib_json_value *val = utillib_json_real_create(&v);
   UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_REAL);
   UTILLIB_TEST_ASSERT_EQ(val->as_double, v);
   UTILLIB_TEST_MESSAGE("double value is `%lf'", val->as_double);
@@ -81,7 +81,7 @@ UTILLIB_TEST(json_real_create) {
 
 UTILLIB_TEST(json_bool_create) {
   bool b = true;
-  struct utillib_json_value_t *val = utillib_json_bool_create(&b);
+  struct utillib_json_value *val = utillib_json_bool_create(&b);
   UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_BOOL);
   UTILLIB_TEST_ASSERT_EQ(val , &utillib_json_true);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
@@ -92,7 +92,7 @@ UTILLIB_TEST(json_long_create) {
   size_t LEN = UTILLIB_TEST_LEN(longs);
 
   for (int i = 0; i < LEN; ++i) {
-    struct utillib_json_value_t *val = utillib_json_long_create(&longs[i]);
+    struct utillib_json_value *val = utillib_json_long_create(&longs[i]);
     UTILLIB_TEST_ASSERT_EQ(longs[i], val->as_long);
     UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_LONG);
     UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
@@ -105,7 +105,7 @@ UTILLIB_TEST(json_string_create) {
   size_t LEN = UTILLIB_TEST_LEN(strings);
 
   for (int i = 0; i < LEN; ++i) {
-    struct utillib_json_value_t *val =
+    struct utillib_json_value *val =
         utillib_json_string_create(&strings[i]);
     UTILLIB_TEST_ASSERT_STREQ(strings[i], val->as_ptr);
     UTILLIB_TEST_ASSERT_EQ(val->kind, UT_JSON_STRING);
@@ -119,7 +119,7 @@ UTILLIB_TEST(json_real_array_create) {
   utillib_json_array_desc_init(&desc, 
       sizeof (double), UTILLIB_TEST_LEN(reals), 
       utillib_json_real_create);
-  struct utillib_json_value_t *val = utillib_json_array_create(reals, &desc);
+  struct utillib_json_value *val = utillib_json_array_create(reals, &desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
@@ -129,7 +129,7 @@ UTILLIB_TEST(json_bool_array_create) {
   utillib_json_array_desc_init(&desc, 
       sizeof (bool), UTILLIB_TEST_LEN(bools), 
       utillib_json_bool_create);
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
     utillib_json_array_create(bools, &desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
@@ -141,18 +141,18 @@ UTILLIB_TEST(json_string_array_create) {
   utillib_json_array_desc_init(&desc, sizeof (char const*),
       UTILLIB_TEST_LEN(strings),
       utillib_json_string_create);
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_json_array_create(strings, &desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
 UTILLIB_TEST(json_object_create) {
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_json_object_create(&John, Student_Fields);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
-static struct utillib_json_value_t *Point_JSON_create(void const *base) {
+static struct utillib_json_value *Point_JSON_create(void const *base) {
   return utillib_json_object_create(base, Point_JSON);
 }
 
@@ -163,23 +163,23 @@ UTILLIB_JSON_OBJECT_FIELD_END(Line_JSON)
 
 UTILLIB_TEST(json_object_create_nested_object) {
   struct Point A = {.x = 2.11, .y = 3.14};
-  struct utillib_json_value_t *A_val = Point_JSON_create(&A);
+  struct utillib_json_value *A_val = Point_JSON_create(&A);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, A_val);
 
   struct Line L = {{1.0, 2.0}, {3.4, 3.2}};
-  struct utillib_json_value_t *L_val =
+  struct utillib_json_value *L_val =
       utillib_json_object_create(&L, Line_JSON);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, L_val);
 }
 
 UTILLIB_TEST(json_null_array_create) {
   void *null_array[] = {NULL, NULL};
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_json_null_array_create(UTILLIB_TEST_LEN(null_array));
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }
 
-struct utillib_json_value_t *Student_Create(void const *base) {
+struct utillib_json_value *Student_Create(void const *base) {
   return utillib_json_object_create(base, Student_Fields);
 }
 
@@ -188,7 +188,7 @@ UTILLIB_TEST(json_array_create) {
   utillib_json_array_desc_init(&desc, sizeof students[0],
       UTILLIB_TEST_LEN(students),
       Student_Create);
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_json_array_create(students,  &desc);
   UTILLIB_TEST_AUX_INVOKE(tostring_helper, val);
 }

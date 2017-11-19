@@ -31,7 +31,7 @@ UTILLIB_TEST(vector2_set) {}
 
 UTILLIB_TEST(vector2_json) {
   utillib_vector2_init(UT_FIXTURE, 2, 3);
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_vector2_json_array_create(UT_FIXTURE, NULL);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
