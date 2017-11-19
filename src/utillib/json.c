@@ -145,8 +145,8 @@ void utillib_json_array_desc_init(struct utillib_json_array_desc_t *self, size_t
  * \function utillib_json_value_destroy
  * Destructs a JSON value according to its type.
  */
-void utillib_json_value_destroy(void * _self) {
-  struct utillib_json_value *self=_self;
+void utillib_json_value_destroy(struct utillib_json_value *self)
+{
   switch (self->kind) {
   case UT_JSON_ARRAY:
     json_array_destroy(self->as_ptr);
@@ -157,7 +157,7 @@ void utillib_json_value_destroy(void * _self) {
     free(self);
     return;
   case UT_JSON_STRING:
-    free(self->as_str);
+    free(self->as_ptr);
     return;
   case UT_JSON_NULL:
   case UT_JSON_BOOL:
@@ -169,21 +169,28 @@ void utillib_json_value_destroy(void * _self) {
   }
 }
 
-struct utillib_json_value const* 
-utillib_json_bool_create(void const *base)
+struct utillib_json_value * 
+utillib_json_bool_create(bool const *base)
 {
-  bool b=*(bool const*) base;
-  return b? &utillib_json_true : &utillib_json_false;
+  return *base ? &utillib_json_true : &utillib_json_false;
 }
 
 struct utillib_json_value *
-utillib_json_string_create(void const *base)
+utillib_json_string_create(char const *const *str)
 {
-  char const *str= *(char const ** ) base;
   struct utillib_json_value *self=malloc (sizeof *self);
   self->kind=UT_JSON_STRING;
-  self->as_str=strdup(str);
+  self->as_ptr=strdup(*str);
   return self;
+}
+
+#define JSON_PRIMARY_CREATE_FUNC_DEFINE(NAME, FIELD, TYPE, VALUE) \
+struct utillib_json_value *  NAME(TYPE const *base) \
+{\
+  struct utillib_json_value *self=malloc(sizeof *self);\
+  self->FIELD=* base;\
+  self->kind=(VALUE);\
+  return self;\
 }
 
 JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_real_create, as_double, double, UT_JSON_REAL)
@@ -201,12 +208,11 @@ JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_long_create, as_long, long, UT_JSON
  */
 struct utillib_json_value *
 utillib_json_null_array_create(size_t size) {
-  struct utillib_json_array *self = malloc(sizeof *self);
-  utillib_vector_init(&self->elements);
+  struct utillib_json_value *array=utillib_json_array_create_empty();
   for (size_t i = 0; i < size; ++i) {
-    utillib_vector_push_back(&self->elements, &utillib_json_null);
+    utillib_json_array_push_back(array, &utillib_json_null);
   }
-  return json_value_create_ptr(UT_JSON_ARRAY, self);
+  return array;
 }
 
 struct utillib_json_value *
@@ -250,9 +256,9 @@ static void json_arrayostring(struct utillib_json_array const *self,
 }
 
 /**
- * \function json_objectostring
+ * \function json_object_tostring
  */
-static void json_objectostring(struct utillib_json_object const *self,
+static void json_object_tostring(struct utillib_json_object const *self,
                                  struct utillib_string *string) {
   utillib_string_append(string, "{");
   if (utillib_vector_empty(&self->members)) {
@@ -299,14 +305,14 @@ static void json_value_tostring(struct utillib_json_value const *self,
     utillib_string_append(string, "null");
     return;
   case UT_JSON_STRING:
-    str = utillib_static_sprintf("\"%s\"", self->as_str);
+    str = utillib_static_sprintf("\"%s\"", self->as_ptr);
     utillib_string_append(string, str);
     return;
   case UT_JSON_ARRAY:
     json_arrayostring(self->as_ptr, string);
     return;
   case UT_JSON_OBJECT:
-    json_objectostring(self->as_ptr, string);
+    json_object_tostring(self->as_ptr, string);
     return;
   }
 }

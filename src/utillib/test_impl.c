@@ -21,10 +21,9 @@ UTILLIB_ETAB_END(utillib_test_status_kind)
  * \function json_test_entry_create
  * Creates JSON value from `struct utillib_test_entry_t'.
  */
-static struct utillib_json_value const*
-test_entry_json_object_create(void const *_self)
+static struct utillib_json_value *
+test_entry_json_object_create(struct utillib_test_entry_t const *self)
 {
-  struct utillib_test_entry_t const *self=_self;
   char const * kind_str=utillib_test_status_kind_tostring(self->status);
   struct utillib_json_value * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "name", 
@@ -41,7 +40,7 @@ test_entry_json_object_create(void const *_self)
  * Creates the JSON array of `struct utillib_test_entry_t'
  */
 
-static struct utillib_json_value const*
+static struct utillib_json_value *
 test_entry_json_array_create(struct utillib_test_env_t const *self)
 {
   struct utillib_json_value *array=utillib_json_array_create_empty();
@@ -57,7 +56,7 @@ test_entry_json_array_create(struct utillib_test_env_t const *self)
  * \function json_test_env_create
  * Wraps `TestEnv_Fields'.
  */
-static struct utillib_json_value const*
+static struct utillib_json_value *
 test_env_json_object_create(struct utillib_test_env_t const *self)
 {
   struct utillib_json_value *object=utillib_json_object_create_empty();
@@ -66,15 +65,15 @@ test_env_json_object_create(struct utillib_test_env_t const *self)
   utillib_json_object_push_back(object, "name",
       utillib_json_string_create(&self->case_name));
   utillib_json_object_push_back(object, "ntests",
-      utillib_json_long_create(&self->ntests));
+      utillib_json_size_t_create(&self->ntests));
   utillib_json_object_push_back(object, "nskipped",
-      utillib_json_long_create(&self->nskipped));
+      utillib_json_size_t_create(&self->nskipped));
   utillib_json_object_push_back(object, "nrun",
-      utillib_json_long_create(&self->nrun));
+      utillib_json_size_t_create(&self->nrun));
   utillib_json_object_push_back(object, "npassed",
-      utillib_json_long_create(&self->nsuccess));
+      utillib_json_size_t_create(&self->nsuccess));
   utillib_json_object_push_back(object, "nfailed",
-      utillib_json_long_create(&self->nfailure));
+      utillib_json_size_t_create(&self->nfailure));
   utillib_json_object_push_back(object, "details",
       test_entry_json_array_create(self));
   return object;

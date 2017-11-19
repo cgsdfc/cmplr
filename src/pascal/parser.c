@@ -129,7 +129,7 @@ static void parser_rule_handler(struct pascal_parser *self,
     break;
   }
   utillib_vector_push_back(ast_nodes, pascal_ast_node_create_empty(kind));
-  struct utillib_json_value_t *val = utillib_rule_json_object_create(rule, 0);
+  struct utillib_json_value *val = utillib_rule_json_object_create(rule);
   utillib_json_pretty_print(val, stdout);
   utillib_json_value_destroy(val);
 }

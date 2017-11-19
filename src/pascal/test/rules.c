@@ -102,14 +102,14 @@ UTILLIB_TEST_TEAR_DOWN() {
 }
 
 UTILLIB_TEST(pascal_ll1_table_correct) {
-  struct utillib_json_value_t *val = utillib_vector2_json_array_create(
+  struct utillib_json_value *val = utillib_vector2_json_array_create(
       &LL1Table, utillib_rule_json_object_create);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }
 
 UTILLIB_TEST(pascal_ll1_set_correct) {
-  struct utillib_json_value_t *val =
+  struct utillib_json_value *val =
       utillib_ll1_builder_json_object_create(&LL1Builder);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);

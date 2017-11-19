@@ -76,7 +76,6 @@ void pascal_ast_node_destroy(struct pascal_ast_node *self) {
     free(self->as_iden);
     break;
   case PAS_AST_UINT:
-    free(self->as_uint);
     break;
   case PAS_AST_CONST:
     items = self->as_ptr;

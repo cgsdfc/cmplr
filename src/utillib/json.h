@@ -164,12 +164,10 @@ struct utillib_json_array {
  * of JSON's different kinds value.
  */
 struct utillib_json_value {
-  /* Takes value from `utillib_json_kind'. */
   int kind;
   union {
     double as_double;
     long as_long;
-    char const *as_str;
     int as_int;
     size_t as_size_t;
     void *as_ptr;
@@ -202,8 +200,7 @@ utillib_json_array_create(void const *base, struct utillib_json_array_desc_t con
 void utillib_json_array_desc_init(struct utillib_json_array_desc_t *self, size_t elemsz,
     size_t size, utillib_json_value_create_func_t create_func);
 
-void utillib_json_value_destroy(void *_self);
-
+void utillib_json_value_destroy(struct utillib_json_value *self);
 
 struct utillib_json_value *utillib_json_object_create_empty(void);
 struct utillib_json_value *utillib_json_array_create_empty(void);
@@ -224,13 +221,13 @@ void utillib_json_tostring(struct utillib_json_value const * self, struct utilli
 
 void utillib_json_pretty_print(struct utillib_json_value const *self, FILE *file);
 
-struct utillib_json_value * utillib_json_string_create(void const *base);
-struct utillib_json_value *utillib_json_real_create(void const *base);
-struct utillib_json_value * utillib_json_size_t_create(void const *base);
-struct utillib_json_value* utillib_json_int_create(void const *base);
-struct utillib_json_value const * utillib_json_bool_create(void const *base);
-struct utillib_json_value* utillib_json_long_create(void const *base);
+struct utillib_json_value * utillib_json_string_create(char const *const *base);
+struct utillib_json_value *utillib_json_real_create(double const *base);
+struct utillib_json_value * utillib_json_size_t_create(size_t const *base);
+struct utillib_json_value* utillib_json_int_create(int const *base);
+struct utillib_json_value * utillib_json_bool_create(bool const *base);
+struct utillib_json_value* utillib_json_long_create(long const *base);
 struct utillib_json_value* utillib_json_null_create(void);
-
+struct utillib_json_value * utillib_json_null_array_create(size_t size);
 
 #endif /* UTILLIB_JSON_H */

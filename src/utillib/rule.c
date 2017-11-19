@@ -300,7 +300,7 @@ utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
  * Mainly for ease of debug.
  */
 void utillib_rule_json_pretty_print(struct utillib_rule const *self) {
-  struct utillib_json_value const*val =
+  struct utillib_json_value *val =
       utillib_rule_json_object_create(self);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);

@@ -87,7 +87,7 @@ bool utillib_symbol_check(struct utillib_symbol const *symbols,
   if (actual_size != expected_size) {
     struct utillib_symbol const *prev = symbol - 1;
     printf("Empty Entry at `%d' detected\n", prev->value + 1);
-    struct utillib_json_value const*val =
+    struct utillib_json_value *val =
         utillib_symbol_json_object_create(prev);
     puts("\tPrevious symbol is");
     utillib_json_pretty_print(val, stdout);

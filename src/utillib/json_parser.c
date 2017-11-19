@@ -75,7 +75,7 @@ static void json_parser_object_addkey(struct utillib_vector *values)
 {
   struct utillib_json_value *keyval=json_parser_values_pop_back(values);
   json_parser_check_str(keyval); /* It should be a json string */
-  char const *key=keyval->as_str;
+  char const *key=keyval->as_ptr;
   free(keyval); /* It may be cached */
   struct utillib_json_value *object=utillib_vector_back(values);
   utillib_json_object_push_back(object, key, NULL);
