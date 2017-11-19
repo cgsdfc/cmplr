@@ -52,7 +52,7 @@ int main(void) {
   /* To get the JOSN string, first you need to create a `utillib_json_value_t'.
    */
   struct utillib_json_value_t *val =
-      utillib_json_object_create(&entry, sizeof entry, CompilationEntry_Fields);
+      utillib_json_object_create(&entry, CompilationEntry_Fields);
 
   /* A convenient function to print json with indent. */
   utillib_json_pretty_print(val, stdout);

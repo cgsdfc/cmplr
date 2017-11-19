@@ -27,61 +27,35 @@ UTILLIB_ETAB_ELEM_INIT(UT_SYMBOL_TERMINAL, "terminal-symbol")
 UTILLIB_ETAB_ELEM_INIT(UT_SYMBOL_NON_TERMINAL, "non-terminal-symbol")
 UTILLIB_ETAB_END(utillib_symbol_kind);
 
-static struct utillib_json_value_t *json_symbol_kind_create(void const *data,
-                                                            size_t offset) {
-  char const *s = utillib_symbol_kind_tostring(*(int *)data);
-  return utillib_json_string_create(&s, sizeof s);
-}
-
-UTILLIB_JSON_OBJECT_FIELD_BEGIN(Symbol_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_symbol, "kind", kind,
-                               json_symbol_kind_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_symbol, "value", value,
-                               utillib_json_int_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_symbol, "name", name,
-                               utillib_json_string_create)
-UTILLIB_JSON_OBJECT_FIELD_END(Symbol_Fields);
-
-struct utillib_json_value_t *utillib_symbol_json_object_create(void const *data,
-                                                               size_t offset) {
-  return utillib_json_object_create(data, offset, Symbol_Fields);
+struct utillib_json_value_t *
+utillib_symbol_json_string_create(struct utillib_symbol const *self)
+{
+  return utillib_json_string_create(self->name);
 }
 
 struct utillib_json_value_t *
-utillib_symbol_json_object_pointer_create(void const *data, size_t offset) {
-  return utillib_json_object_pointer_create(data, offset, Symbol_Fields);
+utillib_symbol_json_object_create(struct utillib_symbol const *self)
+{
+  struct utillib_json_value_t * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "kind", 
+      utillib_json_string_create(utillib_symbol_kind_tostring(self->kind)));
+  utillib_json_object_push_back(object, "value",
+      utillib_json_int_create(&self->value));
+  utillib_json_object_push_back(object, "name",
+      utillib_json_string_create(self->name));
+  return object;
 }
 
-UTILLIB_JSON_ARRAY_DESC(Symbol_ArrayDesc, sizeof(struct utillib_symbol),
-                        utillib_symbol_json_object_create);
-
-struct utillib_json_value_t *utillib_symbol_json_array_create(void const *base,
-                                                              size_t offset) {
-  return utillib_json_array_create(base, offset, &Symbol_ArrayDesc);
-}
-
-struct utillib_json_value_t *
-utillib_symbol_json_array_create_from_vector(void const *base, size_t offset) {
-  return utillib_json_array_create_from_vector(
-      base, utillib_symbol_json_object_create);
-}
-
-struct utillib_json_value_t *
-utillib_symbol_json_string_create(struct utillib_symbol const *self) {
-  char const *name = utillib_symbol_name(self);
-  return utillib_json_string_create(&name, 0);
-}
-
-struct utillib_symbol utillib_symbol_eof = {
+struct utillib_symbol const utillib_symbol_eof = {
     /* following the convention that EOF is zero in bison */
     .value = UT_SYM_EOF,
     .kind = UT_SYMBOL_TERMINAL,
     .name = "end-of-input-symbol"};
 
-struct utillib_symbol utillib_symbol_error = {
+struct utillib_symbol const utillib_symbol_error = {
     .value = UT_SYM_ERR, .kind = UT_SYMBOL_TERMINAL, .name = "error-symbol"};
 
-struct utillib_symbol utillib_symbol_epsilon = {
+struct utillib_symbol const utillib_symbol_epsilon = {
     .value = UT_SYM_EPS, .kind = UT_SYMBOL_TERMINAL, .name = "epsilon-symbol"};
 
 /**
@@ -112,8 +86,8 @@ bool utillib_symbol_check(struct utillib_symbol const *symbols,
   if (actual_size != expected_size) {
     struct utillib_symbol const *prev = symbol - 1;
     printf("Empty Entry at `%d' detected\n", prev->value + 1);
-    struct utillib_json_value_t *val =
-        utillib_symbol_json_object_create(prev, sizeof *prev);
+    struct utillib_json_value_t const*val =
+        utillib_symbol_json_object_create(prev);
     puts("\tPrevious symbol is");
     utillib_json_pretty_print(val, stdout);
     utillib_json_value_destroy(val);

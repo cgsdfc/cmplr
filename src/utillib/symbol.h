@@ -50,22 +50,16 @@ struct utillib_symbol {
   char const *name;
 };
 
-extern struct utillib_symbol utillib_symbol_epsilon;
-extern struct utillib_symbol utillib_symbol_eof;
-extern struct utillib_symbol utillib_symbol_error;
-extern struct utillib_symbol utillib_symbol_null;
+extern struct utillib_symbol const utillib_symbol_epsilon;
+extern struct utillib_symbol const utillib_symbol_eof;
+extern struct utillib_symbol const utillib_symbol_error;
+extern struct utillib_symbol const utillib_symbol_null;
 
-struct utillib_json_value_t *utillib_symbol_json_object_create(void const *data,
-                                                               size_t offset);
 struct utillib_json_value_t *
-utillib_symbol_json_object_pointer_create(void const *data, size_t offset);
-struct utillib_json_value_t *utillib_symbol_json_array_create(void const *base,
-                                                              size_t offset);
+utillib_symbol_json_object_create(struct utillib_symbol const *self);
 struct utillib_json_value_t *
 utillib_symbol_json_string_create(struct utillib_symbol const *self);
 
-struct utillib_json_value_t *
-utillib_symbol_json_array_create_from_vector(void const *base, size_t offset);
 bool utillib_symbol_check(struct utillib_symbol const *symbols, size_t size);
 
 #endif /* UTILLIB_SYMBOL_H */

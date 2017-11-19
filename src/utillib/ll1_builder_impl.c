@@ -132,17 +132,15 @@ bool utillib_ll1_set_intersect(struct utillib_ll1_set const *lhs,
  * JSON interfaces
  */
 
-static struct utillib_json_value_t *
+struct utillib_json_value_t *
 ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
                                   struct utillib_rule_index const *rule_index,
                                   int kind) {
-  struct utillib_vector const *terminals =
-      utillib_rule_index_terminals(rule_index);
+  struct utillib_vector const *terminals = &rule_index->terminals;
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, terminals) {
     if (utillib_ll1_set_contains(self, symbol->value)) {
-      utillib_json_array_push_back(array,
-                                   utillib_symbol_json_string_create(symbol));
+      utillib_json_array_push_back(array, utillib_symbol_json_string_create(symbol));
     }
   }
   if (self->flag) {
@@ -155,8 +153,7 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
       special = UTILLIB_SYMBOL_EOF->name;
       break;
     }
-    utillib_json_array_push_back(array,
-                                 utillib_json_string_create(&special, 0));
+    utillib_json_array_push_back(array, utillib_json_string_create(special));
   }
   return array;
 }
@@ -175,7 +172,7 @@ ll1_builder_set_json_object_create(struct utillib_ll1_builder const *self,
     break;
   case UT_LL1_FOLLOW:
     utillib_json_object_push_back(object, "FOLLOW",
-                                  utillib_json_string_create(&LHS->name, 0));
+                                  utillib_json_string_create(&LHS->name));
     set = ll1_builder_FOLLOW_get(self, LHS);
     break;
   }
@@ -221,10 +218,10 @@ ll1_builder_error_create_as_EFIRST(struct utillib_rule_index const *rule_index,
                                    struct utillib_rule const *lhs_rule,
                                    struct utillib_rule const *rhs_rule) {
   struct utillib_ll1_builder_error *self = malloc(sizeof *self);
-  self->values[0] = utillib_rule_json_object_create(lhs_rule, 0);
+  self->values[0] = utillib_rule_json_object_create(lhs_rule);
   self->values[1] =
       ll1_builder_set_json_array_create(lhs_FIRST, rule_index, UT_LL1_FIRST);
-  self->values[2] = utillib_rule_json_object_create(rhs_rule, 0);
+  self->values[2] = utillib_rule_json_object_create(rhs_rule);
   self->values[3] =
       ll1_builder_set_json_array_create(rhs_FIRST, rule_index, UT_LL1_FIRST);
   self->kind = UT_LL1_EFIRST;
@@ -246,7 +243,7 @@ ll1_builder_error_create_as_EFOLLOW(struct utillib_rule_index const *rule_index,
                                     struct utillib_ll1_set const *rhs_FOLLOW) {
   struct utillib_ll1_builder_error *self = malloc(sizeof *self);
   self->kind = UT_LL1_EFOLLOW;
-  self->values[0] = utillib_rule_json_object_create(lhs_rule, 0);
+  self->values[0] = utillib_rule_json_object_create(lhs_rule);
   self->values[1] =
       ll1_builder_set_json_array_create(lhs_FIRST, rule_index, UT_LL1_FIRST);
   self->values[2] = utillib_symbol_json_string_create(rhs_symbol);
@@ -270,7 +267,7 @@ void utillib_ll1_builder_error_destroy(struct utillib_ll1_builder_error *self) {
  * Rule A, FIRST A, Symbol B, FOLLOW B
  */
 static void
-ll1_builder_print_EFOLLOW(struct utillib_json_value_t *const *errs) {
+ll1_builder_print_EFOLLOW(struct utillib_json_value_t * const * errs) {
   struct utillib_string str;
   for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
     utillib_json_tostring(errs[i], &str);

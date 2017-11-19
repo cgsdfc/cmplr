@@ -24,6 +24,7 @@
 #include "json_parser_table.c" /* generated */
 #include "pair.h"
 #include <assert.h>
+#include <stdlib.h>
 
 #define json_parser_check_object(val) do {\
   assert ((val)->kind == UT_JSON_OBJECT && "Val should be a JSON object");\
@@ -137,7 +138,7 @@ static void json_parser_terminal_handler(void *_self,
     void const *semantic) {
   struct utillib_json_parser *self=_self;
   struct utillib_vector *values=&self->values;
-  struct utillib_json_value_t *val=NULL;
+  struct utillib_json_value_t const*val=NULL;
   switch (symbol->value) {
   case JSON_SYM_TRUE:
     val=&utillib_json_true;
@@ -157,10 +158,10 @@ static void json_parser_terminal_handler(void *_self,
     break;
 #else
   case JSON_SYM_NUM:
-    val=utillib_json_real_create(&_PI, 0);
+    val=utillib_json_real_create(&_PI);
     break;
   case JSON_SYM_STR:
-    val=utillib_json_string_create(&(((struct utillib_symbol const*)semantic)->name), 0);
+    val=utillib_json_string_create(&(((struct utillib_symbol const*)semantic)->name));
     break;
 #endif
   }

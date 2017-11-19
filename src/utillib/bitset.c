@@ -160,8 +160,7 @@ struct utillib_json_value_t *utillib_bitset_json_array_create(void const *base,
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {
     if (utillib_bitset_contains(self, i)) {
-      utillib_json_array_push_back(array,
-                                   utillib_json_size_t_create(&i, sizeof i));
+      utillib_json_array_push_back(array, utillib_json_size_t_create(&i));
     }
   }
   return array;

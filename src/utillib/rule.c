@@ -19,7 +19,6 @@
 
 */
 #include "rule.h"
-#include "vector2.h"
 #include <assert.h>
 #include <limits.h> // ULONG_MAX
 #include <stdlib.h> // malloc
@@ -257,13 +256,11 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
  * Implements JSON format interface.
  */
 
-struct utillib_json_value_t *utillib_rule_json_object_create(void const *base,
-                                                             size_t offset) {
-  static const char *rule_null_str = "A := epsilon";
-  if (base == UTILLIB_RULE_EPS) {
-    return utillib_json_string_create(&rule_null_str, 0);
+struct utillib_json_value_t *
+utillib_rule_json_object_create(struct utillib_rule const *self) {
+  if (self == UTILLIB_RULE_EPS) {
+    return utillib_json_string_create("A := epsilon");
   }
-  struct utillib_rule const *self = base;
   struct utillib_json_value_t *object = utillib_json_object_create_empty();
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
 
@@ -277,31 +274,23 @@ struct utillib_json_value_t *utillib_rule_json_object_create(void const *base,
   return object;
 }
 
-static struct utillib_json_value_t *
-rule_index_rule_json_array_create_from_vector(void const *base, size_t offset) {
-  return utillib_json_array_create_from_vector(base,
-                                               utillib_rule_json_object_create);
-}
-
-UTILLIB_JSON_OBJECT_FIELD_BEGIN(RuleIndex_Fields)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "min-terminals-value",
-                               min_terminal, utillib_json_size_t_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index,
-                               "min-non-terminals-value", min_non_terminal,
-                               utillib_json_size_t_create)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "terminal-symbols",
-                               terminals,
-                               utillib_symbol_json_array_create_from_vector)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index,
-                               "non-terminal-symbols", non_terminals,
-                               utillib_symbol_json_array_create_from_vector)
-UTILLIB_JSON_OBJECT_FIELD_ELEM(struct utillib_rule_index, "rules", rules,
-                               rule_index_rule_json_array_create_from_vector)
-UTILLIB_JSON_OBJECT_FIELD_END(RuleIndex_Fields);
-
 struct utillib_json_value_t *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
-  return utillib_json_object_create(self, 0, RuleIndex_Fields);
+  struct utillib_json_value_t * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "min-termianls-value",
+      utillib_json_size_t_create(&self->min_terminal));
+  utillib_json_object_push_back(object, "min-non-termianls-value",
+      utillib_json_size_t_create(&self->min_non_terminal));
+  utillib_json_object_push_back(object, "termianl-symbols",
+      utillib_vector_json_array_create(&self->terminals,
+        utillib_symbol_json_object_create));
+  utillib_json_object_push_back(object, "non-terminal-symbols",
+      utillib_vector_json_array_create(&self->non_terminals,
+        utillib_symbol_json_object_create));
+  utillib_json_object_push_back(object, "rules",
+      utillib_vector_json_array_create(&self->rules,
+        utillib_rule_json_object_create));
+  return object;
 }
 
 /**
@@ -310,8 +299,8 @@ utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
  * Mainly for ease of debug.
  */
 void utillib_rule_json_pretty_print(struct utillib_rule const *self) {
-  struct utillib_json_value_t *val =
-      utillib_rule_json_object_create(self, sizeof *self);
+  struct utillib_json_value_t const*val =
+      utillib_rule_json_object_create(self);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }

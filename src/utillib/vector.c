@@ -313,14 +313,15 @@ void utillib_vector_iterator_next(struct utillib_vector_iterator *self) {
 /**
  * \function utillib_json_array_create_from_vector
  */
-struct utillib_json_value_t *utillib_json_array_create_from_vector(
-    struct utillib_vector const *self,
-    utillib_json_value_create_func_t create_func) {
+struct utillib_json_value_t *
+utillib_vector_json_array_create(struct utillib_vector const *self,
+    utillib_json_value_create_func_t create_func)
+{
   struct utillib_json_value_t *array = utillib_json_array_create_empty();
   for (void const **pelem = self->begin; pelem != self->end; ++pelem) {
-    struct utillib_json_value_t *val = (*pelem && create_func)
-                                           ? create_func(*pelem, sizeof *pelem)
-                                           : utillib_json_null_create();
+    struct utillib_json_value_t const *val = (*pelem && create_func)
+                                           ? create_func(*pelem)
+                                           : &utillib_json_null;
     utillib_json_array_push_back(array, val);
   }
   return array;

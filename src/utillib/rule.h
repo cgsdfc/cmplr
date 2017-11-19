@@ -40,7 +40,6 @@ UTILLIB_ENUM_END(utillib_rule_special_kind);
 /* Currently limit for the maximum size of right hand side */
 #define UTILLIB_RULE_MAX_RHS 10
 
-#define UTILLIB_RULE_SIZE(RULES) ((sizeof(RULES) / sizeof(RULES[0])) - 1)
 /**
  * \macro
  * UTILLIB_RULE_NULL
@@ -125,8 +124,7 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self);
 
-struct utillib_json_value_t *utillib_rule_json_object_create(void const *base,
-                                                             size_t offset);
+struct utillib_json_value_t *utillib_rule_json_object_create(struct utillib_rule const *self);
 
 struct utillib_json_value_t *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self);

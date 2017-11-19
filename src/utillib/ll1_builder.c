@@ -85,7 +85,7 @@ bool ll1_builder_FIRST_updated(struct utillib_ll1_builder *self,
 static void ll1_builder_FIRST_partial_eval(struct utillib_ll1_builder *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_symbol const *LHS = rule->LHS;
@@ -110,7 +110,7 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self) {
   bool changed = false;
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_symbol const *LHS = rule->LHS;
@@ -134,7 +134,7 @@ static bool ll1_builder_FIRST_increamental(struct utillib_ll1_builder *self) {
 static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
     struct utillib_ll1_set *FIRST = ll1_builder_FIRST_RULE_get(self, rule);
@@ -170,7 +170,7 @@ static void ll1_builder_FIRST_finalize(struct utillib_ll1_builder *self) {
 static void ll1_builder_FOLLOW_partial_eval(struct utillib_ll1_builder *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
   struct utillib_symbol const *TOP_symbol =
       utillib_rule_index_top_symbol(rule_index);
   struct utillib_ll1_set *TOP_FOLLOW = ll1_builder_FOLLOW_get(self, TOP_symbol);
@@ -255,7 +255,7 @@ utillib_ll1_set_FOLLOW_updated(struct utillib_ll1_set *self,
 static bool ll1_builder_FOLLOW_incremental(struct utillib_ll1_builder *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
   bool changed = false;
 
   UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules_vector) {
@@ -369,7 +369,7 @@ void utillib_ll1_builder_build_table(struct utillib_ll1_builder *self,
                                      struct utillib_vector2 *table) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *rules_vector =
-      utillib_rule_index_rules(rule_index);
+      &rule_index->rules;
   size_t symbols_size = rule_index->symbols_size;
   utillib_vector2_init(table, rule_index->non_terminals_size,
                        rule_index->terminals_size);
@@ -484,7 +484,7 @@ ll1_builder_check_EFOLLOW(struct utillib_ll1_builder *self,
 int utillib_ll1_builder_check(struct utillib_ll1_builder *self) {
   struct utillib_rule_index *rule_index = self->rule_index;
   utillib_rule_index_build_LHS_index(rule_index);
-  for (size_t i = 0; i < rule_index->non_terminals_size; ++i) {
+  for (int i = 0; i < rule_index->non_terminals_size; ++i) {
     struct utillib_vector const *same_LHS_rules = &rule_index->LHS_index[i];
     ll1_builder_check_EFIRST(self, same_LHS_rules);
     ll1_builder_check_EFOLLOW(self, same_LHS_rules);
