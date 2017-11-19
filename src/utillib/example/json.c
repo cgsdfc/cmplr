@@ -31,10 +31,6 @@ struct compilatioin_entry {
   char const *filename;
 };
 
-/*
- * First, defines a const array as meta information.
- */
-
 UTILLIB_JSON_OBJECT_FIELD_BEGIN(CompilationEntry_Fields)
 UTILLIB_JSON_OBJECT_FIELD_ELEM(struct compilatioin_entry, "directroy", dir_name,
                                utillib_json_string_create)
@@ -44,25 +40,61 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct compilatioin_entry, "file", filename,
                                utillib_json_string_create)
 UTILLIB_JSON_OBJECT_FIELD_END(CompilationEntry_Fields);
 
-int main(void) {
-  /* Prepares your C data */
-  struct compilatioin_entry entry = {
-      .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"};
-
-  /* To get the JOSN string, first you need to create a `utillib_json_value'.
-   */
-  struct utillib_json_value *val =
-      utillib_json_object_create(&entry, CompilationEntry_Fields);
-
-  /* A convenient function to print json with indent. */
+void print_json_stdout(char const *msg, struct utillib_json_value const *val)
+{
+  puts(msg);
   utillib_json_pretty_print(val, stdout);
-  /* Or you can use this:
-   * struct utillib_string str;
-   * utillib_json_tostring(val, &str);
-   * puts(utillib_string_c_str(&str));
-   */
+}
 
-  /* Cleans up */
+
+void use_primary_type(void) 
+{
+  puts("Use JSON with primary C types like int, double and bool");
+  int number=404;
+  struct utillib_json_value *val=utillib_json_int_create(&number);
+  print_json_stdout("int", val);
   utillib_json_value_destroy(val);
+
+  bool boolean=false;
+  val=utillib_json_bool_create(&boolean);
+  print_json_stdout("bool", val);
+  utillib_json_value_destroy(val);
+
+  char const * string="Hellow JSON";
+  val=utillib_json_bool_create(&boolean);
+  print_json_stdout("string", val);
+  utillib_json_value_destroy(val);
+
+}
+
+void use_pod_structure(void)
+{
+  puts("Use JSON with POD structure");
+  struct compilatioin_entry entry = {
+    .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"
+  };
+
+  struct utillib_json_value *val =
+  utillib_json_object_create(&entry, CompilationEntry_Fields);
+  print_json_stdout("struct compilatioin_entry", val);
+  utillib_json_value_destroy(val);
+}
+
+void use_builtin_array(void)
+{
+  char const * const strings[]={
+    "Use", "JSON", "in", "array","of", "strings"
+  };
+  struct utillib_json_array_desc desc;
+  utillib_json_array_desc_init(&desc, sizeof (char const*), sizeof strings / sizeof strings[0], utillib_json_string_create);
+  struct utillib_json_value *val=utillib_json_array_create(strings, &desc);
+  print_json_stdout("char const * const[]", val);
+  utillib_json_value_destroy(val);
+}
+
+int main(void) {
+  use_primary_type();
+  use_pod_structure();
+  use_builtin_array();
   return 0;
 }

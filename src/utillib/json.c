@@ -79,8 +79,8 @@ json_value_create_ptr(int kind, void *data) {
  */
 static void
 json_object_register(struct utillib_json_object *self, char const *base,
-                     struct utillib_json_object_field_t const *fields) {
-  for (struct utillib_json_object_field_t const *field = fields;
+                     struct utillib_json_object_field const *fields) {
+  for (struct utillib_json_object_field const *field = fields;
        field->create_func != NULL; ++field) {
     struct utillib_json_value const *value =
         field->create_func(base + field->offset);
@@ -95,7 +95,7 @@ json_object_register(struct utillib_json_object *self, char const *base,
  * \param desc Description of this array.
  */
 static void json_array_register(struct utillib_json_array *self, char const *base, 
-                                struct utillib_json_array_desc_t const *desc) {
+                                struct utillib_json_array_desc const *desc) {
   for (int i=0; i<desc->size; ++i, base += desc->elemsz) {
     utillib_vector_push_back(&self->elements, desc->create_func(base));
   }
@@ -133,7 +133,7 @@ static void json_array_destroy(struct utillib_json_array *self) {
   free(self);
 }
 
-void utillib_json_array_desc_init(struct utillib_json_array_desc_t *self, size_t elemsz,
+void utillib_json_array_desc_init(struct utillib_json_array_desc *self, size_t elemsz,
     size_t size, utillib_json_value_create_func_t create_func) 
 {
   self->elemsz=elemsz;
@@ -216,7 +216,7 @@ utillib_json_null_array_create(size_t size) {
 }
 
 struct utillib_json_value *
-utillib_json_object_create(void const *data, const struct utillib_json_object_field_t *fields) {
+utillib_json_object_create(void const *data, const struct utillib_json_object_field *fields) {
   struct utillib_json_object *self = malloc(sizeof *self);
   json_object_init(self);
   json_object_register(self, data, fields);
@@ -224,7 +224,7 @@ utillib_json_object_create(void const *data, const struct utillib_json_object_fi
 }
 
 struct utillib_json_value *
-utillib_json_array_create(void const *data, const struct utillib_json_array_desc_t *desc) {
+utillib_json_array_create(void const *data, const struct utillib_json_array_desc *desc) {
   struct utillib_json_array *self = malloc(sizeof *self);
   json_array_init(self);
   json_array_register(self, data, desc);

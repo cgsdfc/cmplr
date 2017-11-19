@@ -115,7 +115,7 @@ UTILLIB_TEST(json_string_create) {
 
 UTILLIB_TEST(json_real_array_create) {
   double reals[] = {3.1, 3.14, 3.149, 3.1492, 3.14926};
-  struct utillib_json_array_desc_t desc;
+  struct utillib_json_array_desc desc;
   utillib_json_array_desc_init(&desc, 
       sizeof (double), UTILLIB_TEST_LEN(reals), 
       utillib_json_real_create);
@@ -125,7 +125,7 @@ UTILLIB_TEST(json_real_array_create) {
 
 UTILLIB_TEST(json_bool_array_create) {
   bool bools[] = {true, true, false, false};
-  struct utillib_json_array_desc_t desc;
+  struct utillib_json_array_desc desc;
   utillib_json_array_desc_init(&desc, 
       sizeof (bool), UTILLIB_TEST_LEN(bools), 
       utillib_json_bool_create);
@@ -137,7 +137,7 @@ UTILLIB_TEST(json_bool_array_create) {
 UTILLIB_TEST(json_string_array_create) {
   char const *strings[] = {"C++", "C",    "Java", "Python",
                            "PHP", "Ruby", "Perl", "Go"};
-  struct utillib_json_array_desc_t desc;
+  struct utillib_json_array_desc desc;
   utillib_json_array_desc_init(&desc, sizeof (char const*),
       UTILLIB_TEST_LEN(strings),
       utillib_json_string_create);
@@ -184,7 +184,7 @@ struct utillib_json_value *Student_Create(void const *base) {
 }
 
 UTILLIB_TEST(json_array_create) {
-  struct utillib_json_array_desc_t desc;
+  struct utillib_json_array_desc desc;
   utillib_json_array_desc_init(&desc, sizeof students[0],
       UTILLIB_TEST_LEN(students),
       Student_Create);

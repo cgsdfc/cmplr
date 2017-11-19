@@ -37,8 +37,8 @@
  * Plain Old Data including primary type like bool, int, size_t, double, float
  * and char const* and built-in array that contains POD and struct that
  * contains POD as members. By using directly creating way, you either call
- * those XXX_create or make a `utillib_json_object_field_t' to descript your
- * POD struct or make a `utillib_json_array_desc_t' to descript your POD array
+ * those XXX_create or make a `utillib_json_object_field' to descript your
+ * POD struct or make a `utillib_json_array_desc' to descript your POD array
  * and then call `utillib_json_object_create' or `utillib_json_array_create'.
  * Thus, `struct utillib_vector' is not POD and so on.
  * 
@@ -58,10 +58,10 @@
 typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void const *);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
- * Begins to define an array of `struct utillib_json_object_field_t'.
+ * Begins to define an array of `struct utillib_json_object_field'.
  */
 #define UTILLIB_JSON_OBJECT_FIELD_BEGIN(NAME)                                  \
-  static const struct utillib_json_object_field_t NAME[] = {
+  static const struct utillib_json_object_field NAME[] = {
 #define UTILLIB_JSON_OBJECT_FIELD_END(NAME)                                    \
   { 0 }                                                                        \
   }                                                                            \
@@ -69,7 +69,7 @@ typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void con
 
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_ELEM
- * Initializer for `struct utillib_json_object_field_t'.
+ * Initializer for `struct utillib_json_object_field'.
  * \param STRUCT The identifier as the name of the struct.
  * \param KEY A string literal to name this field. It is not
  * necessarily the name of the field.
@@ -112,7 +112,7 @@ UTILLIB_ENUM_ELEM(UT_JSON_STRING)
 UTILLIB_ENUM_END(utillib_json_kind);
 
 /**
- * \struct utillib_json_object_field_t
+ * \struct utillib_json_object_field
  * Meta information about a C structure.
  * \field create_func Function to create
  * json value from each field of this struct.
@@ -121,21 +121,21 @@ UTILLIB_ENUM_END(utillib_json_kind);
  * \field offset offset of this field in
  * the struct.
  */
-struct utillib_json_object_field_t {
+struct utillib_json_object_field {
   utillib_json_value_create_func_t create_func;
   char const *key;
   size_t offset;
 };
 
 /**
- * \struct utillib_json_array_desc_t
+ * \struct utillib_json_array_desc
  * Meta information about a C array.
  * \field create_func Function to create json value from
  * each element.
  * \field elemsz The size of each element.
  * \field size The number of elements.
  */
-struct utillib_json_array_desc_t {
+struct utillib_json_array_desc {
   utillib_json_value_create_func_t create_func;
   size_t elemsz;
   size_t size;
@@ -187,7 +187,7 @@ extern const struct utillib_json_value utillib_json_null;
  * \return a json value.
  */
 struct utillib_json_value*
-utillib_json_object_create(void const *base, struct utillib_json_object_field_t const *fields);
+utillib_json_object_create(void const *base, struct utillib_json_object_field const *fields);
 /**
  * \function utillib_json_array_create
  * Creates a JOSN array from a POD array.
@@ -196,8 +196,8 @@ utillib_json_object_create(void const *base, struct utillib_json_object_field_t 
  * \return a json value.
  */
 struct utillib_json_value*
-utillib_json_array_create(void const *base, struct utillib_json_array_desc_t const *desc);
-void utillib_json_array_desc_init(struct utillib_json_array_desc_t *self, size_t elemsz,
+utillib_json_array_create(void const *base, struct utillib_json_array_desc const *desc);
+void utillib_json_array_desc_init(struct utillib_json_array_desc *self, size_t elemsz,
     size_t size, utillib_json_value_create_func_t create_func);
 
 void utillib_json_value_destroy(struct utillib_json_value *self);
