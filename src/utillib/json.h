@@ -101,6 +101,7 @@ typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void con
 
 UTILLIB_ENUM_BEGIN(utillib_json_kind)
 UTILLIB_ENUM_ELEM(UT_JSON_REAL)
+UTILLIB_ENUM_ELEM(UT_JSON_FLOAT)
 UTILLIB_ENUM_ELEM(UT_JSON_OBJECT)
 UTILLIB_ENUM_ELEM(UT_JSON_ARRAY)
 UTILLIB_ENUM_ELEM(UT_JSON_BOOL)
@@ -167,6 +168,7 @@ struct utillib_json_value {
   int kind;
   union {
     double as_double;
+    float as_float;
     long as_long;
     int as_int;
     size_t as_size_t;
@@ -227,6 +229,7 @@ struct utillib_json_value * utillib_json_size_t_create(size_t const *base);
 struct utillib_json_value* utillib_json_int_create(int const *base);
 struct utillib_json_value * utillib_json_bool_create(bool const *base);
 struct utillib_json_value* utillib_json_long_create(long const *base);
+struct utillib_json_value* utillib_json_float_create(float const *base);
 struct utillib_json_value* utillib_json_null_create(void);
 struct utillib_json_value * utillib_json_null_array_create(size_t size);
 

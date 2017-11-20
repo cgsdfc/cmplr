@@ -32,7 +32,7 @@ AM_CFLAGS += -g3
 AM_CFLAGS += -Wall -Wwrite-strings \
 						 -Wno-sign-compare \
 						 -std=c11
-
+AM_CXXFLAGS = -std=c++11
 ## Utillib
 utillibincludedir = $(includedir)/utillib
 
@@ -134,6 +134,20 @@ example_string_LDADD = libutillib.la
 noinst_PROGRAMS += example-vector
 example_vector_SOURCES = src/utillib/example/vector.c
 example_vector_LDADD = libutillib.la
+
+## Utillib_Cpp
+lib_LTLIBRARIES += libutillibcpp.la
+utilllibcppinclduedir = $(includedir)/utillib/cpp/
+utilllibcppincldue_HEADERS = src/utillib/cpp/json.h 
+
+libutillibcpp_la_SOURCES = src/utillib/cpp/json.cpp \
+													 $(utilllibcppincldue_HEADERS)
+
+libutillibcpp_la_LIBADD = libutillib.la
+
+noinst_PROGRAMS += example-json-cpp
+example_json_cpp_SOURCES = src/utillib/example-cpp/json.cpp
+example_json_cpp_LDADD = libutillibcpp.la
 
 ## Pascal
 noinst_PROGRAMS += pascal_ll1_table_gen

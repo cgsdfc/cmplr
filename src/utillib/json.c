@@ -38,16 +38,6 @@ const struct utillib_json_value utillib_json_true={.kind=UT_JSON_BOOL};
 const struct utillib_json_value utillib_json_false={.kind=UT_JSON_BOOL};
 const struct utillib_json_value utillib_json_null={.kind=UT_JSON_NULL};
 
-UTILLIB_ETAB_BEGIN(utillib_json_kind)
-UTILLIB_ETAB_ELEM(UT_JSON_REAL)
-UTILLIB_ETAB_ELEM(UT_JSON_OBJECT)
-UTILLIB_ETAB_ELEM(UT_JSON_ARRAY)
-UTILLIB_ETAB_ELEM(UT_JSON_BOOL)
-UTILLIB_ETAB_ELEM(UT_JSON_NULL)
-UTILLIB_ETAB_ELEM(UT_JSON_LONG)
-UTILLIB_ETAB_ELEM(UT_JSON_STRING)
-UTILLIB_ETAB_END(utillib_json_kind);
-
 static void
 json_array_init(struct utillib_json_array  *self) {
   utillib_vector_init(&self->elements);
@@ -158,6 +148,7 @@ void utillib_json_value_destroy(struct utillib_json_value *self)
     return;
   case UT_JSON_STRING:
     free(self->as_ptr);
+    free(self);
     return;
   case UT_JSON_NULL:
   case UT_JSON_BOOL:
@@ -197,6 +188,7 @@ JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_real_create, as_double, double, UT_
 JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_size_t_create, as_size_t, size_t, UT_JSON_SIZE_T)
 JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_int_create, as_int, int, UT_JSON_INT)
 JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_long_create, as_long, long, UT_JSON_LONG)
+JSON_PRIMARY_CREATE_FUNC_DEFINE(utillib_json_float_create, as_float, float, UT_JSON_FLOAT)
 
 /**
  * \function utillib_json_null_array_create
@@ -388,6 +380,12 @@ utillib_json_array_back(struct utillib_json_value *self)
   json_value_check_kind(self, UT_JSON_ARRAY);
   struct utillib_json_array *array = self->as_ptr;
   return utillib_vector_back(&array->elements);
+}
+
+struct utillib_json_value *
+utillib_json_null_create(void)
+{
+  return &utillib_json_null;
 }
 
 /**

@@ -21,5 +21,13 @@
 
 #ifndef UTILLIB_OPG_BUILDER_H
 #define UTILLIB_OPG_BUILDER_H
+#include "rule.h"
+
+struct utillib_opg_builder {
+  struct utillib_rule_index * rule_index;
+};
+
+void utillib_opg_builder_init(struct utillib_opg_builder *self, struct utillib_rule_index *rule_index);
+void utillib_opg_builder_destroy(struct utillib_opg_builder *self);
 
 #endif /* UTILLIB_OPG_BUILDER_H */

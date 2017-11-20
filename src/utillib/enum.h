@@ -27,8 +27,7 @@
 #define UTILLIB_ENUM_BEGIN(NAME) enum NAME {
 #define UTILLIB_ENUM_END(NAME)                                                 \
   NAME##_N                                                                     \
-  }                                                                            \
-  NAME;                                                                        \
+  };                                                                            \
   UTILLIB_ETAB_TOSTRING(NAME);
 /* ETAB */
 #define UTILLIB_ETAB_ELEM_ARRAY_IMPL(TAB, VAL) [TAB] = (VAL),
