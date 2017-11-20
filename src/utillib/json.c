@@ -402,3 +402,25 @@ utillib_json_pretty_print(struct utillib_json_value const *self, FILE *file) {
   utillib_printer_print_json(&print, utillib_string_c_str(&json));
   utillib_string_destroy(&json);
 }
+
+struct utillib_json_value *
+utillib_json_object_at(struct utillib_json_value *self, char const *key)
+{
+  json_value_check_kind(self, UT_JSON_OBJECT);
+  struct utillib_json_object * object=self->as_ptr;
+  UTILLIB_VECTOR_FOREACH(struct utillib_pair const*, pair, &object->members) {
+    if (0 == strcmp(key, pair->up_first)) {
+      return pair->up_second;
+    }
+  }
+  return NULL;
+}
+
+
+struct utillib_json_value *
+utillib_json_array_at(struct utillib_json_value *self, size_t index)
+{
+  json_value_check_kind(self, UT_JSON_ARRAY);
+  struct utillib_json_array * array=self->as_ptr;
+  return utillib_vector_at(&array->elements, index);
+}

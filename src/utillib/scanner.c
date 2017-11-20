@@ -103,3 +103,92 @@ void utillib_char_scanner_shiftaway(struct utillib_char_scanner *self) {
 bool utillib_char_scanner_reacheof(struct utillib_char_scanner *self) {
   return self->ch == EOF;
 }
+
+void utillib_char_scanner_destroy(struct utillib_char_scanner *self) {
+  fclose(self->file);
+}
+
+/*
+ * utillib_token_scanner
+ */
+const struct utillib_scanner_op utillib_token_scanner_op={
+  .lookahead=utillib_symbol_scanner_lookahead,
+  .shiftaway=utillib_symbol_scanner_shiftaway,
+  .semantic=utillib_symbol_scanner_semantic,
+};
+
+static void token_scanner_error_init(struct utillib_token_scanner_error *self,
+    int kind, char victim, size_t row, size_t col)
+{
+  self->kind=kind;
+  self->victim=victim;
+  self->row=row;
+  self->col=col;
+}
+
+static void token_scanner_read_input(struct utillib_token_scanner *self)
+{
+  struct utillib_string *buffer = &self->buffer;
+  struct utillib_char_scanner *chars = &self->chars;
+  struct utillib_token_scanner_callback const *callback=self->callback;
+  struct utillib_token_scanner_error error;
+
+  if (utillib_char_scanner_reacheof(chars)) {
+    self->code=UT_SYM_EOF;
+    return;
+  }
+
+  while (true) {
+    int code = callback->read_handler(chars, buffer);
+    if (code >= 0) { /* UT_SYM_EOF == 0 */
+      self->code = code;
+      return;
+    }
+    char victim = utillib_char_scanner_lookahead(chars);
+    token_scanner_error_init(&error, -code, victim, chars->row, chars->col);
+    int recovery=callback->error_handler(&error, chars);
+    if (0 == recovery)
+      continue;
+    self->code=UT_SYM_ERR;
+    return;
+  }
+}
+
+void utillib_token_scanner_init(struct utillib_token_scanner *self, FILE *file,
+    struct utillib_token_scanner_callback const *callback)
+{
+  utillib_char_scanner_init(&self->chars, file);
+  utillib_string_init(&self->buffer);
+  self->callback=callback;
+  token_scanner_read_input(self);
+}
+
+void utillib_token_scanner_destroy(struct utillib_token_scanner *self)
+{
+  utillib_string_destroy(&self->buffer);
+}
+
+size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
+  return self->code;
+}
+
+void const * utillib_token_scanner_semantic(struct utillib_token_scanner *self)
+{
+  if (!utillib_string_size(&self->buffer))
+    return NULL;
+  char const * str=utillib_string_c_str(&self->buffer);
+  void const * semantic=self->callback->semantic_handler(self->code, str);
+  return semantic;
+}
+
+void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self)
+{
+  utillib_string_clear(&self->buffer);
+  token_scanner_read_input(self);
+}
+
+bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self)
+{
+  return self->code == UT_SYM_EOF;
+}
+
