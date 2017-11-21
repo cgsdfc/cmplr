@@ -3,10 +3,8 @@ dist: trusty
 language: c
 
 script:
-- sudo apt install autoconf
-- sudo apt install automake
-- autoreconf -ivf
+# use cmake here, libtool requires 2.4.6
+- mkdir cmake-build
+- cd cmake-build
+- cmake ..
 - make
-- make check
-- make install
-

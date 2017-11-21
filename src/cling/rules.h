@@ -23,4 +23,26 @@
 #include <utillib/rule.h>
 extern struct utillib_rule_literal const cling_rules[];
 
+/*
+ * Rules:
+ * add_op : '+' | '-'
+ * mul_op : '*' | '/'
+ * rel_op : ...
+ * program : const_decl entity_decl
+ * expr_ : '(' expr ')'
+ * constant : integer | char
+ * 
+ * const_decl : 'const' const_def ';' const_decl | eps
+ * const_def : const_int_def | const_char_def
+ * const_int_def : 'int' iden '=' integer const_int_def_ls 
+ * const_char_def : 'char' iden '=' char const_char_def_ls
+ * const_int_def_ls : ',' iden '=' integer const_int_def_ls | eps
+ * const_char_def_ls : ',' iden '=' char const_char_def_ls | eps
+ * 
+ * entity_decl : decl_head var_or_func_decl | 'void' main_or_func_decl
+ * var_or_func_decl : 
+ * var_decl : var_def ';' var_decl | eps
+ * var_def : 
+ */
+
 #endif /* CLING_RULES_H */
