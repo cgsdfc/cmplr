@@ -23,6 +23,7 @@
 #include "json_parser_impl.h"
 #include "json_parser_table.c" /* generated */
 #include "json_impl.h" /* json_value_check_kind */
+#include "json_scanner.h"
 #include "pair.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -143,26 +144,37 @@ static void json_parser_terminal_handler(
   struct utillib_vector *values=&self->values;
  
   switch (symbol->value) {
+#ifndef NODEBUG
+    case JSON_SYM_FALSE:
+      utillib_vector_push_back(values,  &utillib_json_false);
+      return;
+    case JSON_SYM_TRUE:
+      utillib_vector_push_back(values,  &utillib_json_true);
+      return;
+    case JSON_SYM_NULL:
+      utillib_vector_push_back(values,  &utillib_json_null);
+      return;
+#else
   case JSON_SYM_TRUE:
   case JSON_SYM_FALSE:
   case JSON_SYM_NULL:
     utillib_vector_push_back(values, semantic);
     return;
-#ifdef NODEBUG
+#endif 
+
+#ifndef NODEBUG /* Debuging */
   case JSON_SYM_NUM:
-    val=utillib_json_real_create(&_PI);
+    utillib_vector_push_back(values,
+        utillib_json_real_create(&_PI));
     return;
   case JSON_SYM_STR:
-    val=utillib_json_string_create(&(((struct utillib_symbol const*)semantic)->name));
+    utillib_vector_push_back(values,
+        utillib_symbol_json_string_create(semantic));
     return;
 #else
   case JSON_SYM_NUM:
-    utillib_vector_push_back(values,  
-        utillib_json_real_create(semantic));
-    return;
   case JSON_SYM_STR:
-    utillib_vector_push_back(values, 
-        utillib_json_string_create(&semantic));
+    utillib_vector_push_back(values,semantic);
     return;
 #endif
   default:

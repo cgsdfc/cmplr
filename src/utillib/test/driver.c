@@ -38,9 +38,10 @@ UTILLIB_TEST_DECLARE(Utillib_Scanner);
 UTILLIB_TEST_DECLARE(Utillib_Vector2);
 UTILLIB_TEST_DECLARE(Utillib_LL1Generator);
 UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
+UTILLIB_TEST_DECLARE(Utillib_JSON_Scanner);
 
 int main(int argc, char **argv) {
   UTILLIB_TEST_RUN_ALL(argc, argv, 
-      Utillib_Scanner
+      Utillib_JSON_Scanner
       );
 }

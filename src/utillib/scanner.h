@@ -166,7 +166,6 @@ struct utillib_token_scanner {
  */
 struct utillib_string_scanner {
   char const * str;
-  char ch;
   size_t pos;
 };
 

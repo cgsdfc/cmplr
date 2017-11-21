@@ -149,7 +149,7 @@ static void token_scanner_read_input(struct utillib_token_scanner *self)
     }
     char victim = utillib_char_scanner_lookahead(chars);
     token_scanner_error_init(&error, -code, victim, chars->row, chars->col);
-    int recovery=callback->error_handler(&error, chars);
+    int recovery=callback->error_handler(chars, &error);
     if (0 == recovery)
       continue;
     self->code=UT_SYM_ERR;

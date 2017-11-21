@@ -22,11 +22,17 @@
 #define UTILLIB_JSON_PARSER_IMPL_H
 
 #include "enum.h"
-#include "json_parser.h"
-#include "rule.h"
-#include "scanner.h"
-#include "string.h"
 #include "symbol.h"
+#include "rule.h"
+
+UTILLIB_ENUM_BEGIN(utillib_json_parser_error_kind)
+UTILLIB_ENUM_ELEM_INIT(JSON_ESTRING, 1)
+UTILLIB_ENUM_ELEM(JSON_EESCAPE)
+UTILLIB_ENUM_ELEM(JSON_EUNKNOWN)
+UTILLIB_ENUM_ELEM(JSON_EFRACTION)
+UTILLIB_ENUM_ELEM(JSON_EEXPONENT)
+UTILLIB_ENUM_ELEM(JSON_ENODIGIT)
+UTILLIB_ENUM_END(utillib_json_parser_error_kind);
 
 UTILLIB_ENUM_BEGIN(utillib_json_symbol_kind)
 UTILLIB_ENUM_ELEM_INIT(JSON_SYM_VAL, 1)
@@ -52,19 +58,5 @@ UTILLIB_ENUM_END(utillib_json_symbol_kind);
 
 extern struct utillib_symbol const utillib_json_symbols[];
 extern struct utillib_rule_literal const utillib_json_rules[];
-extern const struct utillib_scanner_op utillib_json_scanner_op;
-
-struct utillib_json_scanner {
-  struct utillib_string_scanner scanner;
-  struct utillib_string buffer;
-  size_t code;
-};
-
-void utillib_json_scanner_init(struct utillib_json_scanner *self,
-                               char const *str);
-size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self);
-void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self);
-void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self);
-void utillib_json_scanner_destroy(struct utillib_json_scanner *self);
 
 #endif /* UTILLIB_JSON_PARSER_IMPL_H */

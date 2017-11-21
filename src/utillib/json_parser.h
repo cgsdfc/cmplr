@@ -21,18 +21,8 @@
 
 #ifndef UTILLIB_JSON_PARSER_H
 #define UTILLIB_JSON_PARSER_H
-#include "json.h"
 #include "ll1_parser.h"
 #include "vector.h"
-
-UTILLIB_ENUM_BEGIN(utillib_json_parser_error_kind)
-UTILLIB_ENUM_ELEM_INIT(JSON_ESTRING, 1)
-UTILLIB_ENUM_ELEM(JSON_EESCAPE)
-UTILLIB_ENUM_ELEM(JSON_EUNKNOWN)
-UTILLIB_ENUM_ELEM(JSON_EFRACTION)
-UTILLIB_ENUM_ELEM(JSON_EEXPONENT)
-UTILLIB_ENUM_ELEM(JSON_ENODIGIT)
-UTILLIB_ENUM_END(utillib_json_parser_error_kind);
 
 struct utillib_json_parser_factory {
   struct utillib_ll1_factory factory;
