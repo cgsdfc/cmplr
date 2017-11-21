@@ -41,6 +41,7 @@ UTILLIB_TEST_AUX(json_scanner_recognize, size_t const *kinds,
     }
     utillib_json_scanner_shiftaway(UT_FIXTURE);
   }
+  utillib_json_scanner_destroy(UT_FIXTURE);
 }
 
 UTILLIB_TEST(json_scanner_keywords) 

@@ -241,7 +241,7 @@ void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self) {
     case JSON_SYM_NULL:
       return &utillib_json_null;
     case JSON_SYM_STR:
-      str=strdup(utillib_string_c_str(&self->buffer));
+      str=utillib_string_c_str(&self->buffer);
       return utillib_json_string_create(&str);
     case JSON_SYM_LONG:
       str=utillib_string_c_str(&self->buffer);
