@@ -23,7 +23,7 @@
 
 #include <assert.h>
 #define json_value_check_kind(VAL, KIND) do {\
-  assert ((VAL)->kind == (KIND) && "JSON value should be of kind `" # KIND "'");\
+  assert ((VAL)->kind == (KIND)); \
 } while (0)
 
 

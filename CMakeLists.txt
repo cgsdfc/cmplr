@@ -24,6 +24,7 @@ file (STRINGS "VERSION" CMPLR_VERSION)
 include_directories(src)
 add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
 add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
+add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
 add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
 
 enable_testing()

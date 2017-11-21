@@ -162,14 +162,16 @@ static void parser_terminal_handler(struct pascal_parser *self,
                                     struct utillib_symbol const *terminal,
                                     void const *semantic) {
   struct utillib_vector *ast_nodes=&self->ast_nodes;
+  size_t uint;
   switch(terminal->value) {
     case SYM_IDEN:
       utillib_vector_push_back(ast_nodes,
           utillib_json_string_create(&semantic));
       return;
     case SYM_UINT:
+      uint=(size_t) semantic;
       utillib_vector_push_back(ast_nodes,
-          utillib_json_size_t_create(semantic));
+          utillib_json_size_t_create(&uint));
       return;
   }
   switch(terminal->value) {

@@ -146,21 +146,19 @@ UTILLIB_TEST_AUX(scanner_token_pretty_print) {
   printf("%15s: %lu: ", pascal_symbol_kind_tostring(code), code);
   switch (code) {
   case SYM_IDEN:
-    printf("%s\n", (char const *)value);
+    printf("`%s'\n", (char const *)value);
+    free((void *)value);
     break;
   case SYM_UINT:
-    printf("`%lu\n", *(size_t const *)value);
+    printf("`%lu'\n", (size_t)value);
     break;
   default:
     puts("null");
     break;
   }
-  free((void *)value);
 }
 
-UTILLIB_TEST_AUX(scanner_read_file, char const *filename) {
-  char const *full_path =
-      utillib_static_sprintf("%s/%s", PASCAL_TEST_DIR, filename);
+UTILLIB_TEST_AUX(scanner_read_file, char const *full_path) {
   FILE *file = fopen(full_path, "r");
   UTILLIB_TEST_ASSERT(file);
   pascal_scanner_init(UT_FIXTURE, file);
@@ -174,15 +172,15 @@ UTILLIB_TEST_AUX(scanner_read_file, char const *filename) {
 }
 
 UTILLIB_TEST(scanner_read_file_primes) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, "primes.pas");
+  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "primes.pas"));
 }
 
 UTILLIB_TEST(scanner_read_file_cock_rabbit) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, "cock_rabbit.pas");
+  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "cock_rabbit.pas"));
 }
 
 UTILLIB_TEST(scanner_read_file_gcd) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, "gcd.pas");
+  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "gcd.pas"));
 }
 
 UTILLIB_TEST_DEFINE(Pascal_Scanner) {

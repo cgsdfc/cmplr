@@ -105,6 +105,13 @@ UTILLIB_TEST(char_scanner) {
   remove(tmpfile);
 }
 
+UTILLIB_TEST(token_scanner)
+{
+
+
+
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Scanner) {
   UTILLIB_TEST_BEGIN(Utillib_Scanner)
   UTILLIB_TEST_RUN(symbol_scanner_lookahead)

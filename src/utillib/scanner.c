@@ -23,9 +23,6 @@
 #include <stdlib.h> // bsearch
 #include <string.h> // strcmp
 
-/* void *bsearch(const void *key, const void *base, */
-/*               size_t nmemb, size_t size, */
-/*               int (*compar)(const void *, const void *)); */
 static int keyword_pair_cmp(struct utillib_keyword_pair const *lhs,
                             struct utillib_keyword_pair const *rhs) {
   return strcmp(lhs->key, rhs->key);
@@ -43,6 +40,9 @@ size_t utillib_keyword_bsearch(char const *key,
   return pair->value;
 }
 
+/*
+ * utillib_symbol_scanner
+ */
 const struct utillib_scanner_op utillib_symbol_scanner_op = {
     .lookahead = (void *)utillib_symbol_scanner_lookahead,
     .shiftaway = (void *)utillib_symbol_scanner_shiftaway,
@@ -79,6 +79,9 @@ utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self) {
   return &self->table[symbol_scanner_deref(self)];
 }
 
+/*
+ * utillib_char_scanner
+ */
 void utillib_char_scanner_init(struct utillib_char_scanner *self, FILE *file) {
   self->file = file;
   self->col = 0;

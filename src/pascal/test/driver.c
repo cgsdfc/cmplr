@@ -26,5 +26,5 @@ UTILLIB_TEST_DECLARE(Pascal_Scanner);
 UTILLIB_TEST_DECLARE(Pascal_Parser);
 
 int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL(argc, argv, Pascal_Parser);
+  UTILLIB_TEST_RUN_ALL(argc, argv, Pascal_Scanner);
 }

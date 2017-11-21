@@ -258,6 +258,13 @@ typedef void *utillib_test_fixture_t;
 #define _UTILLIB_TEST_ENTRY_SELF _utillib_test_entry_self
 
 /**
+ * \macro UTILLIB_TEST_PATH_CAT
+ * Cats 2 path components as string literal to form a longer
+ * path.
+ */
+#define UTILLIB_TEST_PATH_CAT(PATH_1,PATH_2) PATH_1 "/" PATH_2
+
+/**
  * \macro UTILLIB_TEST
  * Defines a single test function with the fix signature.
  * \param NAME The name of the test function.

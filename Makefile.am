@@ -118,6 +118,8 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/driver.c 
 
 utillib_test_LDADD = libutillib.la
+utillib_test_CPPFLAGS = -DUTILLIB_TEST_DATA_DIR=\"$(abs_srcdir)/utillib/test/data/\"
+
 noinst_PROGRAMS += json_parser_table_gen
 json_parser_table_gen_SOURCES = src/utillib/json_parser_table_gen.c
 json_parser_table_gen_LDADD = libutillib.la
@@ -185,7 +187,7 @@ pascal_test_SOURCES = src/pascal/test/symbols.c \
 											src/pascal/test/parser.c \
 											src/pascal/test/driver.c
 pascal_test_LDADD = libutillib.la libpascal.la
-pascal_test_CPPFLAGS = $(PASCAL_TEST_DIR)
+pascal_test_CPPFLAGS = $(PASCAL_TEST_DIR) -DPASCAL_TEST_DATA_DIR=\"$(abs_srcdir)/src/pascal/test/data/\"
 
 ## Cling
 noinst_clingincludedir = $(includedir)/cling
