@@ -19,11 +19,10 @@
 
 */
 
-#include "symbol_rule.h"
 #include <utillib/scanner.h>
 #include <utillib/test.h>
+#include "ll1_sample_1.h"
 
-static struct utillib_symbol_scanner symbol_scanner;
 enum {
 
   SYM_KW_AUTO,
@@ -53,9 +52,10 @@ static const struct utillib_keyword_pair keywords[] = {
 static const size_t keywords_size = sizeof keywords / sizeof keywords[0];
 
 UTILLIB_TEST(symbol_scanner_lookahead) {
-  utillib_symbol_scanner_init(&symbol_scanner, test_symbols_input,
-                              test_symbols);
-  for (size_t const *psym = test_symbols_input; *psym != UT_SYM_NULL; ++psym) {
+  struct utillib_symbol_scanner symbol_scanner;
+  utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1,
+                            ll1_sample_1_symbols);
+  for (size_t const *psym = ll1_sample_1_input_1; *psym != UT_SYM_NULL; ++psym) {
     UTILLIB_TEST_EXPECT_EQ(*psym,
                            utillib_symbol_scanner_lookahead(&symbol_scanner));
     struct utillib_symbol const *symbol =
@@ -83,10 +83,26 @@ UTILLIB_TEST(keyword_bearch) {
   UTILLIB_TEST_ASSERT(code == UT_SYM_NULL);
 }
 
+UTILLIB_TEST(char_scanner) {
+  char const * chars="abcdefghijklmnopqrstuvwxyz";
+  struct utillib_char_scanner char_scanner;
+  /* Notes the fmemopen portability */
+  FILE * sfile=fmemopen(chars, sizeof chars, "r");
+  utillib_char_scanner_init(&char_scanner, sfile);
+  for (char const *s=chars; *s != '\0'; ++s) {
+    char actual=utillib_char_scanner_lookahead(&char_scanner);
+    char expected=*s;
+    UTILLIB_TEST_ASSERT_EQ(expected, actual);
+    utillib_char_scanner_shiftaway(&char_scanner);
+  }
+  UTILLIB_TEST_ASSERT(utillib_char_scanner_reacheof(&char_scanner));
+}
+
 UTILLIB_TEST_DEFINE(Utillib_Scanner) {
   UTILLIB_TEST_BEGIN(Utillib_Scanner)
   UTILLIB_TEST_RUN(symbol_scanner_lookahead)
   UTILLIB_TEST_RUN(keyword_bearch)
+  UTILLIB_TEST_RUN(char_scanner)
   UTILLIB_TEST_END(Utillib_Scanner)
   UTILLIB_TEST_RETURN(Utillib_Scanner)
 }

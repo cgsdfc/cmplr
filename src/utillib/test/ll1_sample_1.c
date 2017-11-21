@@ -65,3 +65,40 @@ const struct utillib_ll1_parser_op ll1_sample_1_parser_op = {
     .rule_handler = ll1_sample_1_rule_handler,
     .error_handler = ll1_sample_1_error_handler,
 };
+
+const size_t ll1_sample_1_first[][10] = {
+        [SYM_E] = {SYM_LP, SYM_I, UT_SYM_NULL},
+        [SYM_EP] = {SYM_PLUS, UT_SYM_EPS, UT_SYM_NULL},
+        [SYM_T] = {SYM_LP, SYM_I, UT_SYM_NULL},
+        [SYM_TP] = {SYM_MUL, UT_SYM_EPS, UT_SYM_NULL},
+        [SYM_F] = {SYM_LP, SYM_I, UT_SYM_NULL},
+};
+
+const size_t ll1_sample_1_follow[][10] = {
+        [SYM_E] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
+        [SYM_EP] = {SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
+        [SYM_T] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
+        [SYM_TP] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, UT_SYM_NULL},
+        [SYM_F] = {SYM_PLUS, SYM_RP, UT_SYM_EOF, SYM_MUL, UT_SYM_NULL},
+};
+const size_t ll1_sample_1_table[][20] = {
+
+        [SYM_E][SYM_I] = UTILLIB_TEST_ZERO_BASED(1),
+        [SYM_T][SYM_I] = UTILLIB_TEST_ZERO_BASED(4),
+        [SYM_F][SYM_I] = UTILLIB_TEST_ZERO_BASED(8),
+
+        [SYM_EP][SYM_PLUS] = UTILLIB_TEST_ZERO_BASED(2),
+        [SYM_TP][SYM_PLUS] = UTILLIB_TEST_ZERO_BASED(6),
+
+        [SYM_TP][SYM_MUL] = UTILLIB_TEST_ZERO_BASED(5),
+
+        [SYM_E][SYM_LP] = UTILLIB_TEST_ZERO_BASED(1),
+        [SYM_T][SYM_LP] = UTILLIB_TEST_ZERO_BASED(4),
+        [SYM_F][SYM_LP] = UTILLIB_TEST_ZERO_BASED(7),
+
+        [SYM_EP][SYM_RP] = UTILLIB_TEST_ZERO_BASED(3),
+        [SYM_TP][SYM_RP] = UTILLIB_TEST_ZERO_BASED(6),
+
+        [SYM_EP][UT_SYM_EOF] = UTILLIB_TEST_ZERO_BASED(3),
+        [SYM_TP][UT_SYM_EOF] = UTILLIB_TEST_ZERO_BASED(6),
+};

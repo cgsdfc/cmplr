@@ -137,7 +137,7 @@ struct utillib_token_scanner_callback {
     struct utillib_string *buffer);
   int (*error_handler)(
     struct utillib_char_scanner *chars,
-    struct utillib_token_scanner_error *error);
+    struct utillib_token_scanner_error const *error);
   void const * (*semantic_handler)(size_t value,
       char const * str);
 };

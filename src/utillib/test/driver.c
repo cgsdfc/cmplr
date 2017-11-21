@@ -53,9 +53,9 @@ int main(int argc, char **argv) {
       Utillib_Print,
       Utillib_LL1Parser,
       Utillib_LL1Builder,
-      Utillib_Scanner,
       Utillib_Vector2,
       Utillib_LL1Generator,
-      Utillib_JSON_Parser)
-  ;
+      Utillib_JSON_Parser,
+      Utillib_Scanner
+      );
 }

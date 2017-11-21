@@ -1,8 +1,30 @@
-#include "symbol_rule.h"
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
 #include <utillib/test.h>
+#include <utillib/rule.h>
+#include "ll1_sample_1.h"
+
 
 UTILLIB_TEST_SET_UP() {
-  utillib_rule_index_init(UT_FIXTURE, test_symbols, test_rules);
+  utillib_rule_index_init(UT_FIXTURE, ll1_sample_1_symbols, ll1_sample_1_rules);
 }
 
 UTILLIB_TEST_TEAR_DOWN() { utillib_rule_index_destroy(UT_FIXTURE); }
@@ -10,10 +32,10 @@ UTILLIB_TEST_TEAR_DOWN() { utillib_rule_index_destroy(UT_FIXTURE); }
 UTILLIB_TEST(rule_index_init) {
   struct utillib_rule_index *index = UT_FIXTURE;
   UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_terminals_size(index),
-                         test_terminals_size + 1 /* EOF */);
+                         LL1_SAMPLE_1_TER_SIZE);
   UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(index),
-                         test_non_terminals_size);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), test_rules_size);
+                         LL1_SAMPLE_1_NON_SIZE);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), LL1_SAMPLE_1_RULE_SIZE);
 }
 
 UTILLIB_TEST(rule_index_json) {
@@ -66,7 +88,7 @@ UTILLIB_TEST(rule_index_index_not_overflow) {
 UTILLIB_TEST(rule_index_rule_id) {
   struct utillib_rule_index const *self = UT_FIXTURE;
   struct utillib_vector const *RULES = utillib_rule_index_rules(self);
-  for (int i = 0; i < test_rules_size; ++i) {
+  for (int i = 0; i < LL1_SAMPLE_1_RULE_SIZE ; ++i) {
     struct utillib_rule const *rule = utillib_vector_at(RULES, i);
     UTILLIB_TEST_EXPECT_EQ(rule->id, i);
   }
@@ -80,7 +102,7 @@ UTILLIB_TEST_DEFINE(Utillib_Rule) {
   UTILLIB_TEST_RUN(rule_index_index_not_overflow)
   UTILLIB_TEST_RUN(rule_index_rule_id)
   /* Verbose output skipped */
-  UTILLIB_TEST_SKIP(rule_index_json)
+  UTILLIB_TEST_RUN(rule_index_json)
   UTILLIB_TEST_END(Utillib_Rule)
   UTILLIB_TEST_FIXTURE(struct utillib_rule_index)
   UTILLIB_TEST_RETURN(Utillib_Rule)

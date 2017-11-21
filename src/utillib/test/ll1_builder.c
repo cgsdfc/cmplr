@@ -18,7 +18,7 @@
    02110-1301 USA
 
 */
-#include "symbol_rule.h"
+#include "ll1_sample_1.h"
 #include <utillib/ll1_builder.h>
 #include <utillib/ll1_builder_impl.h>
 #include <utillib/test.h>
@@ -28,7 +28,7 @@ static struct utillib_rule_index rule_index;
 static struct utillib_vector2 ll1_table;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_rule_index_init(&rule_index, test_symbols, test_rules);
+  utillib_rule_index_init(&rule_index, ll1_sample_1_symbols, ll1_sample_1_rules);
   utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
   utillib_ll1_builder_build_table(UT_FIXTURE, &ll1_table);
 }
@@ -96,13 +96,13 @@ UTILLIB_TEST_AUX(ll1_builder_set_correct,
 UTILLIB_TEST(ll1_builder_FIRST_correct) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
   UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, self->FIRST,
-                          test_rules_FIRST);
+                          ll1_sample_1_first);
 }
 
 UTILLIB_TEST(ll1_builder_FOLLOW_correct) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
   UTILLIB_TEST_AUX_INVOKE(ll1_builder_set_correct, self->FOLLOW,
-                          test_rules_FOLLOW);
+                          ll1_sample_1_follow);
 }
 
 /**
@@ -122,7 +122,7 @@ UTILLIB_TEST_AUX(ll1_builder_locate_rule, size_t row, size_t col,
   /* `eof' tricky part */
   col += col ? rule_index.min_terminal - 1 : 0;
   row += rule_index.min_non_terminal;
-  *prule_id = test_rules_TABLE[row][col];
+  *prule_id = ll1_sample_1_table[row][col];
 }
 
 UTILLIB_TEST(ll1_builder_build_table_correct) {

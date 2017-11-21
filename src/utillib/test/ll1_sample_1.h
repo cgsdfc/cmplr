@@ -26,8 +26,7 @@
 #include <utillib/rule.h>
 #include <utillib/symbol.h>
 
-#define LL1_SAMPLE_1_EXTEND 20
-#define LL1_SAMPLE_1_TER_SIZE 5
+#define LL1_SAMPLE_1_TER_SIZE 6
 #define LL1_SAMPLE_1_NON_SIZE 5
 #define LL1_SAMPLE_1_RULE_SIZE 8
 
@@ -63,9 +62,9 @@ extern const struct utillib_symbol ll1_sample_1_symbols[];
 extern const struct utillib_rule_literal ll1_sample_1_rules[];
 extern const struct utillib_ll1_parser_op ll1_sample_1_parser_op;
 
-extern const size_t ll1_sample_1_first[][LL1_SAMPLE_1_EXTEND];
-extern const size_t ll1_sample_1_follow[][LL1_SAMPLE_1_EXTEND];
-extern const size_t ll1_sample_1_table[][LL1_SAMPLE_1_EXTEND];
+extern const size_t ll1_sample_1_first[][10];
+extern const size_t ll1_sample_1_follow[][10];
+extern const size_t ll1_sample_1_table[][20];
 
 extern const size_t ll1_sample_1_input_1[];
 extern const size_t ll1_sample_1_input_2[];

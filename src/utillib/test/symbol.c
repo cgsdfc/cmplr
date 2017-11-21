@@ -1,5 +1,5 @@
-#include "symbol_rule.h"
 #include <utillib/test.h>
+#include <utillib/symbol.h>
 
 /**
  * \test specaial_symbol
