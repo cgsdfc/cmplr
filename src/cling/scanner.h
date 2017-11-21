@@ -23,10 +23,20 @@
 #include <stdio.h> // FILE*
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
-#include <utillib/string.h>
-#include <utillib/vector.h>
 
-extern const struct utillib_keyword_pair cling_keywords[];
+UTILLIB_ENUM_BEGIN(cling_scanner_error_kind)
+  UTILLIB_ENUM_ELEM_INIT(CL_EBADNEQ, 1)
+  UTILLIB_ENUM_ELEM(CL_EUNTCHAR)
+  UTILLIB_ENUM_ELEM(CL_EUNTSTR)
+  UTILLIB_ENUM_ELEM(CL_ESTRCHAR)
+  UTILLIB_ENUM_ELEM(CL_ECHRCHAR)
+  UTILLIB_ENUM_ELEM(CL_EUNKNOWN)
+UTILLIB_ENUM_END(cling_scanner_error_kind)
+
+/* ＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝" */
+/* ＜无符号整数＞  ::= ＜非零数字＞｛＜数字＞｝ */
+/* ＜整数＞    ::= ［＋｜－］＜无符号整数＞｜０ */
+/* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
 void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
 int cling_scanner_read_handler(struct utillib_char_scanner *chars, 

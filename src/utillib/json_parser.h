@@ -46,6 +46,8 @@ void utillib_json_parser_destroy(struct utillib_json_parser *self);
 struct utillib_json_value *
 utillib_json_parser_parse(struct utillib_json_parser *self, char const *str);
 
+#ifndef NDEBUG
 bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
                                    size_t const *input);
+#endif 
 #endif /* UTILLIB_JSON_PARSER_H */

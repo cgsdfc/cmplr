@@ -228,6 +228,16 @@ void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self);
 bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self);
 
 /*
+ * Helpers of utillib_token_scanner
+ */
+void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars); 
+bool utillib_token_scanner_isidbegin(int ch);
+void utillib_token_scanner_collect_identifier(struct utillib_char_scanner *chars, 
+    struct utillib_string *buffer);
+void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars, 
+    struct utillib_string *buffer);
+
+/*
  * utillib_string_scanner
  */
 void utillib_string_scanner_init(struct utillib_string_scanner *self, char const *str);

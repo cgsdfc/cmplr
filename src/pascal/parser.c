@@ -217,7 +217,7 @@ static void parser_rule_handler(struct pascal_parser *self,
   utillib_vector_push_back(&self->ast_nodes, node);
 }
 
-static const struct utillib_ll1_parser_op pascal_parser_op = {
+static const struct utillib_ll1_parser_callback pascal_parser_callback = {
     .error_handler = parser_error_handler,
     .terminal_handler = parser_terminal_handler,
     .rule_handler = parser_rule_handler,
@@ -236,7 +236,7 @@ void pascal_parser_init(struct pascal_parser *self,
                         struct utillib_ll1_factory const *factory) {
   utillib_vector_init(&self->ast_nodes);
   utillib_ll1_factory_parser_init(factory, &self->parser, self,
-                                  &pascal_parser_op);
+                                  &pascal_parser_callback);
 }
 
 void pascal_parser_destroy(struct pascal_parser *self) {

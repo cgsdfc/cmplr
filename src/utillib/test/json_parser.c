@@ -143,6 +143,11 @@ UTILLIB_TEST(json_parser_deep_nested_array) {
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
+UTILLIB_TEST(json_parser_scanner) {
+
+
+}
+
 UTILLIB_TEST_DEFINE(Utillib_JSON_Parser) {
   UTILLIB_TEST_BEGIN(Utillib_JSON_Parser)
   UTILLIB_TEST_SKIP(json_parser_parse_str)

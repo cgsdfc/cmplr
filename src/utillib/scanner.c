@@ -222,4 +222,42 @@ bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self)
   return *self->str == '\0';
 }
 
+/*
+ * Helpers of utillib_token_scanner
+ */
+static void token_scanner_collect_char(struct utillib_string *buffer,
+                                 struct utillib_char_scanner *chars) {
+  char ch = utillib_char_scanner_lookahead(chars);
+  utillib_string_append_char(buffer, ch);
+  utillib_char_scanner_shiftaway(chars);
+}
+
+void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars)
+{
+  while (isspace(utillib_char_scanner_lookahead(chars))) {
+    utillib_char_scanner_shiftaway(chars);
+  }
+}
+
+static bool is_idmiddle(int ch) { return ch == '_' || isalnum(ch); }
+bool utillib_token_scanner_isidbegin(int ch) { return ch == '_' || isalpha(ch); }
+
+void utillib_token_scanner_collect_identifier(struct utillib_char_scanner *chars, 
+    struct utillib_string *buffer)
+{
+  token_scanner_collect_char(buffer, chars);
+  while (is_idmiddle(utillib_char_scanner_lookahead(chars))) {
+    token_scanner_collect_char(buffer, chars);
+  }
+}
+
+void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars, 
+    struct utillib_string *buffer)
+{
+  token_scanner_collect_char(buffer, chars);
+  while (isdigit(utillib_char_scanner_lookahead(chars))) {
+    token_scanner_collect_char(buffer, chars);
+  }
+}
+
 

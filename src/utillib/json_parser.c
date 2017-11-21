@@ -27,7 +27,9 @@
 #include "pair.h"
 #include <assert.h>
 #include <stdlib.h>
+#ifndef NODEBUG
 static const double _PI=3.1415926;
+#endif 
 
 /**
  * \function json_parser_values_pop_back
@@ -256,6 +258,7 @@ utillib_json_parser_parse(struct utillib_json_parser *self, char const *str) {
   return val;
 }
 
+#ifndef NDEBUG
 bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
                                    size_t const *symbols) {
   struct utillib_symbol_scanner scanner;
@@ -267,3 +270,4 @@ bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
   }
   return good;
 }
+#endif 
