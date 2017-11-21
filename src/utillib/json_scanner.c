@@ -24,13 +24,13 @@
 #include <string.h>
 
 const struct utillib_scanner_op utillib_json_scanner_op = {
-    .lookahead = utillib_json_scanner_lookahead,
-    .shiftaway = utillib_json_scanner_shiftaway,
-    .semantic = utillib_json_scanner_semantic,
+  .lookahead = utillib_json_scanner_lookahead,
+  .shiftaway = utillib_json_scanner_shiftaway,
+  .semantic = utillib_json_scanner_semantic,
 };
 
 static int json_scanner_read_str(struct utillib_string_scanner *scanner,
-                                 struct utillib_string *buffer) {
+    struct utillib_string *buffer) {
   char ch;
   for (ch=utillib_string_scanner_lookahead(scanner);
       ch != '\"'; utillib_string_scanner_shiftaway(scanner)) {
@@ -69,7 +69,7 @@ static int json_scanner_read_str(struct utillib_string_scanner *scanner,
         break;
       default:
         return -JSON_EESCAPE;
-      }
+    }
   }
   return JSON_SYM_STR;
 }
@@ -127,41 +127,29 @@ static int json_scanner_read_number(struct utillib_string_scanner *scanner,
   /* Handles the optional fraction or exponent */
   ch=utillib_string_scanner_lookahead(scanner);
   if (ch != '.' && ch != 'e' && ch != 'E')
-    return JSON_SYM_NUM;
-  bool seen_exp=false;
-  bool seen_frac=false;
-  while (true) {
-    if (seen_exp)
-      return JSON_SYM_NUM;
-    if (seen_frac)
-      return JSON_SYM_NUM;
-    if (ch == '.') {
-      json_scanner_collect_char(scanner, buffer);
-      ch=utillib_string_scanner_lookahead(scanner);
-      if (!isdigit(ch))
-        return -JSON_EFRACTION;
-      json_scanner_collect_digit(scanner, buffer);
-      seen_frac=true;
-    } else if (ch == 'e' || ch == 'E') {
-      json_scanner_collect_char(scanner, buffer);
-      ch=utillib_string_scanner_lookahead(scanner);
-      if (isdigit(ch)) {
-        json_scanner_collect_digit(scanner, buffer);
-        seen_exp=true;
-        continue;
-      }
-      /* Again, handle the optional sign */
-      if (ch == '-' || ch == '+') {
-        json_scanner_collect_char(scanner, buffer);
-        ch=utillib_string_scanner_lookahead(scanner);
-        if (!isdigit(ch)) 
-          return -JSON_ENODIGIT;
-        json_scanner_collect_digit(scanner, buffer);
-        seen_exp=true;
-      }
-      return -JSON_EEXPONENT;
-    }
+    return JSON_SYM_LONG;
+
+  if (ch == '.') {
+    json_scanner_collect_char(scanner, buffer);
+    ch=utillib_string_scanner_lookahead(scanner);
+    if (!isdigit(ch))
+      return -JSON_ENODIGIT;
+    json_scanner_collect_digit(scanner, buffer);
+  } 
+  if (ch != 'e' && ch != 'E')
+    return JSON_SYM_REAL;
+
+  json_scanner_collect_char(scanner, buffer);
+  ch=utillib_string_scanner_lookahead(scanner);
+  /* Again, handle the optional sign */
+  if (ch == '-' || ch == '+') {
+    json_scanner_collect_char(scanner, buffer);
+    ch=utillib_string_scanner_lookahead(scanner);
+    if (!isdigit(ch)) 
+      return -JSON_ENODIGIT;
   }
+  json_scanner_collect_digit(scanner, buffer);
+  return JSON_SYM_REAL;
 }
 
 static int 
@@ -236,6 +224,7 @@ void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self) {
 
 void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self) {
   double real;
+  long longv;
   char const *str;
   switch (self->code) {
     case UT_SYM_EOF:
@@ -250,7 +239,10 @@ void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self) {
     case JSON_SYM_STR:
       str=strdup(utillib_string_c_str(&self->buffer));
       return utillib_json_string_create(&str);
-    case JSON_SYM_NUM:
+    case JSON_SYM_LONG:
+      longv=strtol(utillib_string_c_str(&self->buffer), NULL);
+      return utillib_json_long_create(&longv);
+    case JSON_SYM_REAL:
       real=strtod(utillib_string_c_str(&self->buffer), NULL);
       return utillib_json_real_create(&real);
     default:

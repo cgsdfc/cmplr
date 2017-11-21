@@ -64,7 +64,7 @@ UTILLIB_TEST(json_scanner_number)
 {
   char const * integer=" 1234 ";
   size_t const expected[]={
-    JSON_SYM_NUM,
+    JSON_SYM_REAL,
     UT_SYM_EOF
   };
   UTILLIB_TEST_AUX_INVOKE(json_scanner_recognize, expected, integer);

@@ -55,7 +55,7 @@ UTILLIB_TEST(json_parser_parse_str) {
 }
 
 UTILLIB_TEST(json_parser_parse_number) {
-  size_t const input[] = {JSON_SYM_NUM, UT_SYM_EOF};
+  size_t const input[] = {JSON_SYM_REAL, UT_SYM_EOF};
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
@@ -84,7 +84,7 @@ UTILLIB_TEST(json_parser_empty_array) {
 UTILLIB_TEST(json_parser_parse_object) {
   size_t const input[] = {JSON_SYM_LB,    JSON_SYM_STR,   JSON_SYM_COLON,
                           JSON_SYM_NULL,  JSON_SYM_COMMA, JSON_SYM_STR,
-                          JSON_SYM_COLON, JSON_SYM_NUM,   JSON_SYM_COMMA,
+                          JSON_SYM_COLON, JSON_SYM_REAL,   JSON_SYM_COMMA,
                           JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_TRUE,
                           JSON_SYM_RB,    UT_SYM_EOF};
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));

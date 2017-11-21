@@ -163,7 +163,8 @@ static void json_parser_terminal_handler(
 #endif 
 
 #ifndef NODEBUG /* Debuging */
-  case JSON_SYM_NUM:
+  case JSON_SYM_LONG:
+  case JSON_SYM_REAL:
     utillib_vector_push_back(values,
         utillib_json_real_create(&_PI));
     return;
@@ -172,7 +173,8 @@ static void json_parser_terminal_handler(
         utillib_symbol_json_string_create(semantic));
     return;
 #else
-  case JSON_SYM_NUM:
+  case JSON_SYM_REAL:
+  case JSON_SYM_LONG:
   case JSON_SYM_STR:
     utillib_vector_push_back(values,semantic);
     return;
