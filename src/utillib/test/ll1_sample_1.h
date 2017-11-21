@@ -60,7 +60,7 @@ struct ll1_sample_1_semantic {
 
 extern const struct utillib_symbol ll1_sample_1_symbols[];
 extern const struct utillib_rule_literal ll1_sample_1_rules[];
-extern const struct utillib_ll1_parser_op ll1_sample_1_parser_op;
+extern const struct utillib_ll1_parser_callback ll1_sample_1_parser_callback;
 
 extern const size_t ll1_sample_1_first[][10];
 extern const size_t ll1_sample_1_follow[][10];

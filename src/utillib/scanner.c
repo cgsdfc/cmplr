@@ -195,3 +195,31 @@ bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self)
   return self->code == UT_SYM_EOF;
 }
 
+/*
+ * utillib_string_scanner
+ */
+void utillib_string_scanner_init(struct utillib_string_scanner *self, char const *str)
+{
+  self->str=str;
+  self->pos=0;
+}
+
+size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self)
+{
+  return *self->str;
+}
+
+void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self)
+{
+  if (*self->str == '\0')
+    return;
+  ++self->str;
+  ++self->pos;
+}
+
+bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self)
+{
+  return *self->str == '\0';
+}
+
+

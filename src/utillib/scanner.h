@@ -161,6 +161,16 @@ struct utillib_token_scanner {
 };
 
 /**
+ * \struct utillib_string_scanner
+ * Does scanning on a `char const*'.
+ */
+struct utillib_string_scanner {
+  char const * str;
+  char ch;
+  size_t pos;
+};
+
+/**
  * \function utillib_keyword_bsearch
  * Does binary search in the key-value table 
  * and returns the value if it was found, or else
@@ -217,5 +227,13 @@ void utillib_token_scanner_destroy(struct utillib_token_scanner *self);
 void const * utillib_token_scanner_semantic(struct utillib_token_scanner *self);
 void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self);
 bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self);
+
+/*
+ * utillib_string_scanner
+ */
+void utillib_string_scanner_init(struct utillib_string_scanner *self, char const *str);
+size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self);
+void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self);
+bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self);
 
 #endif /* UTILLIB_SCANNER_H */

@@ -18,8 +18,8 @@
    02110-1301 USA
 
 */
-#ifndef UTILLIB_JSON_IMPL_H
-#define UTILLIB_JSON_IMPL_H
+#ifndef UTILLIB_JSON_PARSER_IMPL_H
+#define UTILLIB_JSON_PARSER_IMPL_H
 
 #include "enum.h"
 #include "json_parser.h"
@@ -55,7 +55,7 @@ extern struct utillib_rule_literal const utillib_json_rules[];
 extern const struct utillib_scanner_op utillib_json_scanner_op;
 
 struct utillib_json_scanner {
-  char const *str;
+  struct utillib_string_scanner scanner;
   struct utillib_string buffer;
   size_t code;
 };
@@ -67,4 +67,4 @@ void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self);
 void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self);
 void utillib_json_scanner_destroy(struct utillib_json_scanner *self);
 
-#endif /* UTILLIB_JSON_IMPL_H */
+#endif /* UTILLIB_JSON_PARSER_IMPL_H */

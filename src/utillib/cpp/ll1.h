@@ -1,0 +1,54 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
+#ifndef UTILLIB_CPP_LL1_H
+#define UTILLIB_CPP_LL1_H
+
+extern "C" {
+#include <utillib/ll1_parser.h>
+#include <utillib/ll1_generator.h>
+
+}
+
+namespace utillib {
+namespace ll1 {
+  class Parser;
+  class Factory;
+  class Generator;
+  class Parser {
+    public:
+      bool Parse(
+    
+    private:
+      friend class Factory;
+      struct utillib_ll1_parser parser_;
+
+  };
+  class Factory {
+
+   private:
+     struct utillib_ll1_factory factory_;
+
+  };
+
+} // namespace ll1
+} // namespace utillib
+
+#endif // UTILLIB_CPP_LL1_H

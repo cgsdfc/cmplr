@@ -22,21 +22,11 @@
 #include "json_parser.h"
 #include "json_parser_impl.h"
 #include "json_parser_table.c" /* generated */
+#include "json_impl.h" /* json_value_check_kind */
 #include "pair.h"
 #include <assert.h>
 #include <stdlib.h>
-
-#define json_parser_check_object(val) do {\
-  assert ((val)->kind == UT_JSON_OBJECT && "Val should be a JSON object");\
-} while(0)
-
-#define json_parser_check_str(val) do {\
-  assert ((val)->kind == UT_JSON_STRING && "Val should be a JSON string");\
-} while(0)
-
-#define json_parser_check_nonempty(values) do {\
-  assert (utillib_vector_size((values)) && "Values should not be empty");\
-} while(0)
+static const double _PI=3.1415926;
 
 /**
  * \function json_parser_values_pop_back
@@ -46,7 +36,6 @@
 static struct utillib_json_value *
 json_parser_values_pop_back(struct utillib_vector *values)
 {
-  json_parser_check_nonempty(values);
   struct utillib_json_value *val=utillib_vector_back(values);
   utillib_vector_pop_back(values);
   return val;
@@ -74,7 +63,7 @@ static void json_parser_object_addval(struct utillib_vector *values)
 static void json_parser_object_addkey(struct utillib_vector *values)
 {
   struct utillib_json_value *keyval=json_parser_values_pop_back(values);
-  json_parser_check_str(keyval); /* It should be a json string */
+  json_value_check_kind(keyval, UT_JSON_STRING); /* It should be a json string */
   char const *key=keyval->as_ptr;
   free(keyval); /* It may be cached */
   struct utillib_json_value *object=utillib_vector_back(values);
@@ -131,46 +120,7 @@ static void json_parser_rule_handler(void *_self,
     utillib_vector_push_back(&self->values, val);
 }
 
-static const double _PI=3.1415926;
-
-static void json_parser_terminal_handler(void *_self, 
-    struct utillib_symbol const *symbol,
-    void const *semantic) {
-  struct utillib_json_parser *self=_self;
-  struct utillib_vector *values=&self->values;
-  struct utillib_json_value const*val=NULL;
-  switch (symbol->value) {
-  case JSON_SYM_TRUE:
-    val=&utillib_json_true;
-    break;
-  case JSON_SYM_FALSE:
-    val=&utillib_json_false;
-    break;
-  case JSON_SYM_NULL:
-    val=&utillib_json_null;
-    break;
-#ifdef NODEBUG
-  case JSON_SYM_NUM:
-    val=utillib_json_real_create(semantic, 0);
-    break;
-  case JSON_SYM_STR:
-    val=utillib_json_string_create(&semantic);
-    break;
-#else
-  case JSON_SYM_NUM:
-    val=utillib_json_real_create(&_PI);
-    break;
-  case JSON_SYM_STR:
-    val=utillib_json_string_create(&(((struct utillib_symbol const*)semantic)->name));
-    break;
-#endif
-  }
-  if (val) {
-    utillib_vector_push_back(values, val);
-    return;
-  }
-
-  /*
+/*
    * This switch is so complicated
    * because empty case should handle
    * correctly. The strategy is as follow:
@@ -186,7 +136,39 @@ static void json_parser_terminal_handler(void *_self,
    * on the top and we add it to the top-1 value
    * which should be an array or object.
    */
+static void json_parser_terminal_handler(
+    struct utillib_json_parser *self,
+    struct utillib_symbol const *symbol, void const *semantic) 
+{
+  struct utillib_vector *values=&self->values;
+ 
   switch (symbol->value) {
+  case JSON_SYM_TRUE:
+  case JSON_SYM_FALSE:
+  case JSON_SYM_NULL:
+    utillib_vector_push_back(values, semantic);
+    return;
+#ifdef NODEBUG
+  case JSON_SYM_NUM:
+    val=utillib_json_real_create(&_PI);
+    return;
+  case JSON_SYM_STR:
+    val=utillib_json_string_create(&(((struct utillib_symbol const*)semantic)->name));
+    return;
+#else
+  case JSON_SYM_NUM:
+    utillib_vector_push_back(values,  
+        utillib_json_real_create(semantic));
+    return;
+  case JSON_SYM_STR:
+    utillib_vector_push_back(values, 
+        utillib_json_string_create(&semantic));
+    return;
+#endif
+  default:
+    break;
+  }
+    switch (symbol->value) {
     case JSON_SYM_RB:
       utillib_vector_pop_back(values);
       if (utillib_vector_back(values)) {
@@ -221,7 +203,7 @@ json_parser_error_handler(void *_self, void *input,
   puts("ERROR");
 }
 
-static const struct utillib_ll1_parser_op json_parser_op = {
+static const struct utillib_ll1_parser_callback json_parser_callback = {
     .terminal_handler = json_parser_terminal_handler,
     .rule_handler = json_parser_rule_handler,
     .error_handler = json_parser_error_handler,
@@ -241,7 +223,7 @@ void utillib_json_parser_factory_destroy(
 void utillib_json_parser_init(struct utillib_json_parser *self,
                               struct utillib_json_parser_factory *factory) {
   utillib_ll1_factory_parser_init(&factory->factory, &self->parser, self,
-                                  &json_parser_op);
+                                  &json_parser_callback);
   utillib_vector_init(&self->values);
 }
 

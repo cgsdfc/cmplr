@@ -65,9 +65,9 @@ void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self) {
 void utillib_ll1_factory_parser_init(struct utillib_ll1_factory const *self,
                                      struct utillib_ll1_parser *parser,
                                      void *client_data,
-                                     struct utillib_ll1_parser_op const *op) {
+                                     struct utillib_ll1_parser_callback const *callback) {
   utillib_ll1_parser_init(parser, &self->rule_index, &self->table, client_data,
-                          op);
+                          callback);
 }
 
 /**
@@ -82,11 +82,11 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
                                    struct utillib_rule const *rule) {
   if (rule == UTILLIB_RULE_EPS) {
     struct utillib_symbol const *LHS = utillib_vector_back(&self->symbol_stack);
-    self->op->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS, LHS);
+    self->callback->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS, LHS);
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
-  self->op->rule_handler(self->client_data, rule);
+  self->callback->rule_handler(self->client_data, rule);
   utillib_vector_pop_back(&self->symbol_stack);
   struct utillib_vector const *RHS = &rule->RHS;
   size_t RHS_size = utillib_vector_size(RHS);
@@ -172,12 +172,12 @@ void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
                              struct utillib_vector2 const *table,
                              void *client_data,
-                             struct utillib_ll1_parser_op const *op) {
+                             struct utillib_ll1_parser_callback const *callback) {
   utillib_vector_init(&self->symbol_stack);
   self->rule_index = rule_index;
   self->table = table;
   self->client_data = client_data;
-  self->op = op;
+  self->callback = callback;
 }
 
 static void
@@ -227,19 +227,19 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     if (utillib_vector_empty(&self->symbol_stack)) {
       ll1_parser_error_init(&error, UT_LL1_EEMPTY, input_symbol,
                             UTILLIB_SYMBOL_ERR);
-      self->op->error_handler(self->client_data, input, &error);
+      self->callback->error_handler(self->client_data, input, &error);
       return result;
     }
     top_symbol = utillib_vector_back(&self->symbol_stack);
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
       if (top_symbol->value == input_symbol_value) {
         semantic = scanner->semantic(input);
-        self->op->terminal_handler(self->client_data, input_symbol, semantic);
+        self->callback->terminal_handler(self->client_data, input_symbol, semantic);
       } else {
         result = false;
         ll1_parser_error_init(&error, UT_LL1_EBADTOKEN, input_symbol,
                               top_symbol);
-        self->op->error_handler(self->client_data, input, &error);
+        self->callback->error_handler(self->client_data, input, &error);
       }
       utillib_vector_pop_back(&self->symbol_stack);
       scanner->shiftaway(input);
@@ -253,7 +253,7 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
       } else { /* rule == NULL */
         result = false;
         ll1_parser_error_init(&error, UT_LL1_ENORULE, input_symbol, top_symbol);
-        self->op->error_handler(self->client_data, input, &error);
+        self->callback->error_handler(self->client_data, input, &error);
         scanner->shiftaway(input);
         utillib_vector_pop_back(&self->symbol_stack);
       }

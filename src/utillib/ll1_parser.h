@@ -75,7 +75,7 @@ struct utillib_ll1_parser_error {
 };
 
 /**
- * \struct utillib_ll1_parser_op
+ * \struct utillib_ll1_parser_callback
  * Function table that defines the semantic behaviour
  * of the parser.
  * \field terminal_handler Called when an input token matches the token on top.
@@ -89,7 +89,7 @@ struct utillib_ll1_parser_error {
  * scanner which has more knowledge about the input and therefore called `input'
  * and the error.
  */
-struct utillib_ll1_parser_op {
+struct utillib_ll1_parser_callback {
   void (*terminal_handler)(void *client_data, struct utillib_symbol const *,
                            void const *semantic);
   void (*rule_handler)(void *client_data, struct utillib_rule const *);
@@ -116,7 +116,7 @@ struct utillib_ll1_parser {
   struct utillib_rule_index const *rule_index;
   struct utillib_vector2 const *table;
   void *client_data;
-  struct utillib_ll1_parser_op const *op;
+  struct utillib_ll1_parser_callback const *callback;
 };
 
 /**
@@ -146,19 +146,19 @@ void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self);
  * and the semantic actions from its client.
  * \param parser The parser to be initialized.
  * \param client_data The data of client that parser may access.
- * \param op The function table of the client that parser may call.
+ * \param callback The function table of the client that parser may call.
  */
 void utillib_ll1_factory_parser_init(struct utillib_ll1_factory const *self,
                                      struct utillib_ll1_parser *parser,
                                      void *client_data,
-                                     struct utillib_ll1_parser_op const *op);
+                                     struct utillib_ll1_parser_callback const *callback);
 
 /* Uses utillib_ll1_factory_parser_init instead */
 void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
                              struct utillib_rule_index const *rule_index,
                              struct utillib_vector2 const *table,
                              void *client_data,
-                             struct utillib_ll1_parser_op const *op);
+                             struct utillib_ll1_parser_callback const *callback);
 
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
 
