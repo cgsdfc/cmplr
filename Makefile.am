@@ -161,14 +161,14 @@ lib_LTLIBRARIES += libpascal.la
 noinst_pascalinclude_HEADERS =  src/pascal/symbols.h \
 																src/pascal/rules.h \
 																src/pascal/scanner.h \
-																src/pascal/ast.h \
+																src/pascal/json_ast.h \
 																src/pascal/parser.h
 
 libpascal_la_SOURCES = src/pascal/symbols.c \
-											 src/pascal/ast.c \
 											 src/pascal/rules.c \
 											 src/pascal/scanner.c \
 											 src/pascal/parser.c \
+											 src/pascal/json_ast.c \
 											 $(libpascal_la_headers)
 
 libpascal_la_LIBADD = libutillib.la
@@ -192,11 +192,19 @@ noinst_clingincludedir = $(includedir)/cling
 
 lib_LTLIBRARIES += libcling.la
 noinst_clinginclude_HEADERS = src/cling/symbols.h \
-															src/cling/rules.h
+															src/cling/rules.h \
+															src/cling/scanner.h
 
 libcling_la_SOURCES = src/cling/symbols.c \
 											src/cling/rules.c \
+											src/cling/scanner.c \
 											$(noinst_clinginclude_HEADERS)
+
+noinst_PROGRAMS += cling_test
+cling_test_SOURCES = src/cling/test/scanner.c \
+										 src/cling/test/driver.c
+
+cling_test_LDADD = libcling.la libutillib.la
 
 libcling_la_LIBADD = libutillib.la
 noinst_PROGRAMS += cling_ll1_table

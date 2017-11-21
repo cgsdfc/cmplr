@@ -22,8 +22,9 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file (STRINGS "VERSION" CMPLR_VERSION)
 include_directories(src)
-add_definitions(-DPASCAL_SOURCE_DIR=\"./src/pascal/\")
-add_definitions(-DPASCAL_TEST_DIR=\"./src/pascal/test/\")
+add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
+add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
+add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
 
 enable_testing()
 
@@ -107,8 +108,9 @@ add_library(pascal
   ./src/pascal/scanner.c
   ./src/pascal/symbols.c
   ./src/pascal/rules.c
-  ./src/pascal/ast.c
+  ./src/pascal/json_ast.c
 )
+target_link_libraries(pascal utillib)
 
 add_executable(pascal_test
   ./src/pascal/test/scanner.c
@@ -118,11 +120,21 @@ add_executable(pascal_test
   ./src/pascal/test/symbols.c
 )
 
-target_link_libraries(pascal_test
-  pascal
-  utillib
-)
+target_link_libraries(pascal_test pascal)
 add_test(Pascal_Test pascal_test)
 add_executable(pascal_ll1_table_gen ./src/pascal/ll1_table_gen.c)
-target_link_libraries(pascal_ll1_table_gen pascal utillib)
+target_link_libraries(pascal_ll1_table_gen pascal)
 
+## Cling
+add_library(cling
+  ./src/cling/symbols.c 
+  ./src/cling/rules.c 
+  ./src/cling/scanner.c
+  )	
+target_link_libraries(cling utillib)
+
+add_executable(cling_test
+  ./src/cling/test/scanner.c
+  ./src/cling/test/driver.c
+  )
+target_link_libraries(cling_test cling)

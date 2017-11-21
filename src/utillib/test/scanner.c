@@ -85,10 +85,15 @@ UTILLIB_TEST(keyword_bearch) {
 
 UTILLIB_TEST(char_scanner) {
   char const * chars="abcdefghijklmnopqrstuvwxyz";
+  char const * tmpfile=UTILLIB_TEST_DATA_DIR "char_scanner.txt";
   struct utillib_char_scanner char_scanner;
-  /* Notes the fmemopen portability */
-  FILE * sfile=fmemopen(chars, sizeof chars, "r");
-  utillib_char_scanner_init(&char_scanner, sfile);
+  FILE * tmp = fopen(tmpfile, "w");
+  UTILLIB_TEST_ASSERT(tmp);
+  fputs(chars, tmp);
+  fclose(tmp);
+  tmp=fopen(tmpfile, "r");
+  UTILLIB_TEST_ASSERT(tmp);
+  utillib_char_scanner_init(&char_scanner, tmp);
   for (char const *s=chars; *s != '\0'; ++s) {
     char actual=utillib_char_scanner_lookahead(&char_scanner);
     char expected=*s;
@@ -96,6 +101,8 @@ UTILLIB_TEST(char_scanner) {
     utillib_char_scanner_shiftaway(&char_scanner);
   }
   UTILLIB_TEST_ASSERT(utillib_char_scanner_reacheof(&char_scanner));
+  fclose(tmp);
+  remove(tmpfile);
 }
 
 UTILLIB_TEST_DEFINE(Utillib_Scanner) {

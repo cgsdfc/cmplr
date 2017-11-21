@@ -77,6 +77,15 @@ struct pascal_ast_const_decl {
 };
 
 /**
+ * \struct pascal_ast_procedure
+ * Procedure has a name a subprogram.
+ */
+struct pascal_ast_proc_decl {
+  char const *name;
+  void const *subprogram;
+};
+
+/**
  * \struct pascal_ast_var_decl
  * Each item in `items' is one string
  * that corresponds to an `iden'.
@@ -91,8 +100,8 @@ struct pascal_ast_var_decl {
  * an `expr'.
  */
 struct pascal_ast_assign_stmt {
-  char const *LHS;
-  void const *RHS;
+  void *LHS;
+  void *RHS;
 };
 
 /**
@@ -118,8 +127,8 @@ struct pascal_ast_write_stmt {
  */
 struct pascal_ast_term {
   int op;
-  void const *LHS;
-  void const *RHS;
+  void *LHS;
+  void *RHS;
 };
 
 /**
@@ -134,8 +143,8 @@ struct pascal_ast_term {
 struct pascal_ast_expr {
   int sign;
   int op;
-  void const *LHS;
-  void const *RHS;
+  void *LHS;
+  void *RHS;
 };
 
 /* FACTOR is stored directly in ast_node */
@@ -147,8 +156,8 @@ struct pascal_ast_expr {
  * `then' is any other statement.
  */
 struct pascal_ast_cond_stmt {
-  void const *cond;
-  void const *then;
+  void *cond;
+  void *then;
 };
 
 /**
@@ -168,12 +177,12 @@ struct pascal_ast_comp_stmt {
  * `do_' is the loop body.
  */
 struct pascal_ast_loop_stmt {
-  void const *cond;
-  void const *do_;
+  void *cond;
+  void *do_;
 };
 
 struct pascal_ast_call_stmt {
-  char const *proc_name;
+  void *proc_name;
 };
 
 /**
@@ -190,8 +199,8 @@ struct pascal_ast_call_stmt {
 struct pascal_ast_condition {
   bool odd;
   int op;
-  void const *LHS;
-  void const *RHS;
+  void *LHS;
+  void *RHS;
 };
 
 /**
@@ -204,19 +213,10 @@ struct pascal_ast_condition {
  * their should NULL.
  */
 struct pascal_ast_subprogram {
-  void const *const_decl;
-  void const *var_decl;
+  void *const_decl;
+  void *var_decl;
   struct utillib_vector proc_list;
-  struct pascal_ast_comp_stmt comp_stmt;
-};
-
-/**
- * \struct pascal_ast_procedure
- * Procedure has a name a subprogram.
- */
-struct pascal_ast_proc_decl {
-  char const *name;
-  void const *subprogram;
+  void * comp_stmt;
 };
 
 union pascal_ast_union {
@@ -238,8 +238,21 @@ union pascal_ast_union {
   struct pascal_ast_subprogram *subprogram;
 };
 
-struct pascal_ast_node *pascal_ast_node_create_empty(int kind);
-
+struct pascal_ast_node *pascal_ast_node_create(int kind);
+void pascal_ast_const_decl_init(struct pascal_ast_const_decl *self);
+void pascal_ast_var_decl_init(struct pascal_ast_var_decl *self);
+void pascal_ast_proc_decl_init(struct pascal_ast_proc_decl *self);
+void pascal_ast_assign_stmt_init(struct pascal_ast_assign_stmt *self);
+void pascal_ast_read_stmt_init(struct pascal_ast_read_stmt *self);
+void pascal_ast_write_stmt_init(struct pascal_ast_write_stmt *self);
+void pascal_ast_term_init(struct pascal_ast_term *self);
+void pascal_ast_expr_init(struct pascal_ast_expr *self);
+void pascal_ast_cond_stmt_init(struct pascal_ast_cond_stmt *self);
+void pascal_ast_comp_stmt_init(struct pascal_ast_comp_stmt *self);
+void pascal_ast_loop_stmt_init(struct pascal_ast_loop_stmt *self);
+void pascal_ast_call_stmt_init(struct pascal_ast_call_stmt *self);
+void pascal_ast_condition_init(struct pascal_ast_condition *self);
+void pascal_ast_subprogram_init(struct pascal_ast_subprogram *self);
 void pascal_ast_node_destroy(struct pascal_ast_node *self);
 
 #endif /* PASCAL_AST_H */

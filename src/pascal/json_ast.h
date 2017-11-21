@@ -19,28 +19,23 @@
 
 */
 
-#define _GNU_SOURCE
-#include <utillib/test.h>
+#ifndef PASCAL_JSON_AST_H
+#define PASCAL_JSON_AST_H
+#include <utillib/json.h>
+/**
+ * subprogram = {
+ *  "const_decl": [],
+ *  "var_decl": [],
+ *  "proc_list": [],
+ *  "comp_stmt": []
+ * }
+ *
+ * 
+ */
 
-UTILLIB_TEST_DECLARE(Utillib_Test);
-UTILLIB_TEST_DECLARE(Utillib_Vector);
-UTILLIB_TEST_DECLARE(Utillib_Slist);
-UTILLIB_TEST_DECLARE(Utillib_String);
-UTILLIB_TEST_DECLARE(Utillib_JSON);
-UTILLIB_TEST_DECLARE(Utillib_Hash);
-UTILLIB_TEST_DECLARE(Utillib_Rule);
-UTILLIB_TEST_DECLARE(Utillib_Symbol);
-UTILLIB_TEST_DECLARE(Utillib_Bitset);
-UTILLIB_TEST_DECLARE(Utillib_Print);
-UTILLIB_TEST_DECLARE(Utillib_LL1Parser);
-UTILLIB_TEST_DECLARE(Utillib_LL1Builder);
-UTILLIB_TEST_DECLARE(Utillib_Scanner);
-UTILLIB_TEST_DECLARE(Utillib_Vector2);
-UTILLIB_TEST_DECLARE(Utillib_LL1Generator);
-UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
+struct utillib_json_value * pascal_json_ast_create(int kind);
+int pascal_json_ast_kind(struct utillib_json_value const *self);
+void pascal_json_ast_add_item(struct utillib_json_value *self, struct utillib_json_value const *item);
 
-int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL(argc, argv, 
-      Utillib_Scanner
-      );
-}
+#endif /* PASCAL_JSON_AST_H */
+
