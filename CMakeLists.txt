@@ -17,7 +17,7 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 
 #  02110-1301 USA
 
-project(cmplr C)
+project(cmplr C CXX)
 cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file (STRINGS "VERSION" CMPLR_VERSION)
@@ -26,7 +26,7 @@ add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
 add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
 add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
 add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
-
+set(CMAKE_CXX_FLAGS "-std=c++11")
 enable_testing()
 
 if (MSVC OR WIN32)
@@ -44,6 +44,7 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 add_library(utillib
   ./src/utillib/test_impl.c
   ./src/utillib/json_parser.c
+  ./src/utillib/json_scanner.c
   ./src/utillib/json_parser_impl.c
   ./src/utillib/ll1_builder_impl.c
   ./src/utillib/ll1_generator.c
@@ -68,6 +69,7 @@ add_library(utillib
   ./src/utillib/string.c)
 
 add_executable(utillib_test 
+  ./src/utillib/test/json_scanner.c
   ./src/utillib/test/ll1_generator.c
   ./src/utillib/test/non_ll1_sample_1.c
   ./src/utillib/test/non_ll1_sample_2.c
@@ -94,6 +96,12 @@ add_executable(utillib_test
 
 target_link_libraries(utillib_test utillib)
 add_test(Utillib_Test utillib_test)
+
+add_library(utillibcpp
+  ./src/utillib/cpp/scanner.cpp
+  ./src/utillib/cpp/json.cpp
+)
+target_link_libraries(utillibcpp utillib)
 
 add_executable(example-json ./src/utillib/example/json.c)
 target_link_libraries(example-json utillib)

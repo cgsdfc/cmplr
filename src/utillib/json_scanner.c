@@ -31,9 +31,9 @@ const struct utillib_scanner_op utillib_json_scanner_op = {
 
 static int json_scanner_read_str(struct utillib_string_scanner *scanner,
     struct utillib_string *buffer) {
-  char ch;
-  for (ch=utillib_string_scanner_lookahead(scanner);
-      ch != '\"'; utillib_string_scanner_shiftaway(scanner)) {
+  char ch=utillib_string_scanner_lookahead(scanner);
+  for (; (ch=utillib_string_scanner_lookahead(scanner)) != '\"';
+      utillib_string_scanner_shiftaway(scanner)) {
     if (ch == '\n' || ch == '\r' || '\0')
       return -JSON_ESTRING;
     if (ch != '\\') {
@@ -71,6 +71,7 @@ static int json_scanner_read_str(struct utillib_string_scanner *scanner,
         return -JSON_EESCAPE;
     }
   }
+  utillib_string_scanner_shiftaway(scanner);
   return JSON_SYM_STR;
 }
 
@@ -136,6 +137,8 @@ static int json_scanner_read_number(struct utillib_string_scanner *scanner,
       return -JSON_ENODIGIT;
     json_scanner_collect_digit(scanner, buffer);
   } 
+
+  ch=utillib_string_scanner_lookahead(scanner);
   if (ch != 'e' && ch != 'E')
     return JSON_SYM_REAL;
 
@@ -195,6 +198,7 @@ json_scanner_read(struct utillib_string_scanner *scanner, struct utillib_string 
         return JSON_SYM_NULL;
       return -JSON_EUNKNOWN;
     case '\"':
+      utillib_string_scanner_shiftaway(scanner);
       return json_scanner_read_str(scanner, buffer);
     default:
       break;
@@ -240,10 +244,12 @@ void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self) {
       str=strdup(utillib_string_c_str(&self->buffer));
       return utillib_json_string_create(&str);
     case JSON_SYM_LONG:
-      longv=strtol(utillib_string_c_str(&self->buffer), NULL);
+      str=utillib_string_c_str(&self->buffer);
+      sscanf(str, "%ld", &longv);
       return utillib_json_long_create(&longv);
     case JSON_SYM_REAL:
-      real=strtod(utillib_string_c_str(&self->buffer), NULL);
+      str=utillib_string_c_str(&self->buffer);
+      sscanf(str, "%lf", &real);
       return utillib_json_real_create(&real);
     default:
       return NULL;
