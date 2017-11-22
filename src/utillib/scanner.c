@@ -168,6 +168,7 @@ void utillib_token_scanner_init(
 
 void utillib_token_scanner_destroy(struct utillib_token_scanner *self) {
   utillib_string_destroy(&self->buffer);
+  utillib_char_scanner_destroy(&self->chars);
 }
 
 size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
@@ -175,8 +176,6 @@ size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
 }
 
 void const *utillib_token_scanner_semantic(struct utillib_token_scanner *self) {
-  if (!utillib_string_size(&self->buffer))
-    return NULL;
   char const *str = utillib_string_c_str(&self->buffer);
   void const *semantic = self->callback->semantic_handler(self->code, str);
   return semantic;

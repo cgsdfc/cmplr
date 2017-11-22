@@ -156,6 +156,7 @@ struct utillib_token_scanner {
   size_t code;
 };
 
+
 /**
  * \struct utillib_string_scanner
  * Does scanning on a `char const*'.

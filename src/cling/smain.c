@@ -27,50 +27,67 @@
 
 int main(int argc, char *argv[])
 {
-  if (argc != 2) {
-    utillib_error_printf("ERROR: no input file\n");
-    utillib_error_printf("USAGE: cling_scanner input\n");
+  if (argc < 2) {
+    utillib_error_printf("ERROR: no input file\n"
+                         "USAGE: cling_scanner input [output]\n"
+                         "       Scans the `input' file and writes the tokens\n"
+                         "       to `output'. If no `output' file, writes to\n"
+                         "       stdout.\n");
     exit(1);
   }
+  FILE *output;
   FILE *file=fopen(argv[1], "r");
   if (!file) {
     utillib_error_printf("ERROR: %s: no such file or directory\n",
         argv[1]);
     exit(2);
   }
+  if (argc == 3) {
+    output=fopen(argv[2], "w");
+    if (!output) {
+      utillib_error_printf("ERROR: %s: cannot open for writing\n",
+          argv[3]);
+      exit(3);
+    }
+  } else {
+    output=stdout;
+  }
+
   struct utillib_token_scanner cling;
   size_t code;
+  bool success=true;
   cling_scanner_init(&cling, file);
   while ((code=utillib_token_scanner_lookahead(&cling))!=UT_SYM_EOF) {
     if (code == UT_SYM_ERR) {
-      exit(EXIT_FAILURE);
+      success=false;
+      break;
     }
     void const * semantic=utillib_token_scanner_semantic(&cling);
     char const * name=cling_symbols[code].name;
-    printf("code=%lu, name=%s, ", code, name);
+    fprintf(output, "%s\t", name);
     switch (code) {
       case SYM_UINT:
-        printf("value=%lu\n", (size_t) semantic);
+        fprintf(output, "%lu", (size_t) semantic);
         break;
       case SYM_IDEN:
-        printf("value=%s\n", (char const*) semantic);
+        fprintf(output, "%s", (char const*) semantic);
         free(semantic);
         break;
       case SYM_STRING:
-        printf("value=\"%s\"\n", (char const*) semantic);
+        fprintf(output, "\"%s\"", (char const*) semantic);
         free(semantic);
         break;
       case SYM_CHAR:
-        printf("value='%s'\n", (char) semantic);
+        fprintf(output, "'%c'", (char) semantic);
         break;
       default:
-        puts("null");
         break;
     }
+    fputs("\n", output);
     utillib_token_scanner_shiftaway(&cling);
   }
   utillib_token_scanner_destroy(&cling);
-  exit(EXIT_SUCCESS);
+  return !success;
 }
 
 

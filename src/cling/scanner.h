@@ -38,6 +38,12 @@ UTILLIB_ENUM_END(cling_scanner_error_kind)
 /* ＜整数＞    ::= ［＋｜－］＜无符号整数＞｜０ */
 /* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
+union cling_semantic {
+  char ch;
+  char const *string;
+  size_t uint;
+};
+
 void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
 int cling_scanner_read_handler(struct utillib_char_scanner *chars,
                                struct utillib_string *buffer);

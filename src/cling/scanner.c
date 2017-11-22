@@ -21,7 +21,7 @@
 #include "scanner.h"
 #include "symbols.h"
 #include <ctype.h>
-#include <utillib/print.h>
+#include <utillib/print.h> /* utillib_error_printf */
 #define CLING_KW_SIZE 14
 
 UTILLIB_ETAB_BEGIN(cling_scanner_error_kind)
@@ -79,6 +79,7 @@ int cling_scanner_read_string(struct utillib_char_scanner *chars,
       return -CL_EUNTSTR;
     if (ch == 32 || ch == 33 || 35 <= ch && ch <= 126) {
       utillib_string_append_char(buffer, ch);
+      continue;
     }
     return -CL_ESTRCHAR;
   }
@@ -188,6 +189,7 @@ int cling_scanner_read_handler(struct utillib_char_scanner *chars,
     utillib_char_scanner_shiftaway(chars);
     return cling_scanner_read_char(chars, buffer);
   }
+  /* Maybe number is over simplified */
   if (isdigit(ch)) {
     utillib_token_scanner_collect_digit(chars, buffer);
     return SYM_UINT;
@@ -223,7 +225,7 @@ void const *cling_scanner_semantic_handler(size_t value, char const *str) {
   char ch;
   switch (value) {
   case SYM_UINT:
-    scanf(str, "%lu", &uint);
+    sscanf(str, "%lu", &uint);
     return uint;
   case SYM_IDEN:
   case SYM_STRING:
