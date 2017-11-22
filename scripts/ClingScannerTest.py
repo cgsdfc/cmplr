@@ -71,7 +71,7 @@ except AssertionError:
     sys.exit(count)
 
 for testinput in badtest:
-    if not Test(testinput):
+    if not Test(testinput, expected=1):
         count += 1
 
 sys.exit(count)
