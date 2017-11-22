@@ -21,17 +21,14 @@
 #include "json_ast.h"
 #include <utillib/json.h>
 
-struct utillib_json_value *
-pascal_json_ast_create(int kind) {
-  struct utillib_json_value *ast=utillib_json_object_create_empty();
-  utillib_json_object_push_back(ast, "kind", 
-      utillib_json_int_create(&kind));
+struct utillib_json_value *pascal_json_ast_create(int kind) {
+  struct utillib_json_value *ast = utillib_json_object_create_empty();
+  utillib_json_object_push_back(ast, "kind", utillib_json_int_create(&kind));
   return ast;
 }
 
-int pascal_json_ast_kind(struct utillib_json_value const *self)
-{
-  struct utillib_json_value *kind=utillib_json_object_at(self, "kind");
+int pascal_json_ast_kind(struct utillib_json_value const *self) {
+  struct utillib_json_value *kind = utillib_json_object_at(self, "kind");
   return kind->as_int;
 }
 
@@ -42,9 +39,8 @@ int pascal_json_ast_kind(struct utillib_json_value const *self)
  * and add the item to the array.
  */
 void pascal_json_ast_add_item(struct utillib_json_value *self,
-    struct utillib_json_value const *item)
-{
+                              struct utillib_json_value const *item) {
   struct utillib_json_value *array;
-  array=utillib_json_object_at(self, "item");
+  array = utillib_json_object_at(self, "item");
   utillib_json_array_push_back(array, item);
 }

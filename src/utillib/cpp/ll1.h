@@ -22,31 +22,28 @@
 #define UTILLIB_CPP_LL1_H
 
 extern "C" {
-#include <utillib/ll1_parser.h>
 #include <utillib/ll1_generator.h>
-
+#include <utillib/ll1_parser.h>
 }
 
 namespace utillib {
 namespace ll1 {
-  class Parser;
-  class Factory;
-  class Generator;
-  class Parser {
-    public:
+class Parser;
+class Factory;
+class Generator;
+class Parser {
+public:
       bool Parse(
     
     private:
       friend class Factory;
       struct utillib_ll1_parser parser_;
+};
+class Factory {
 
-  };
-  class Factory {
-
-   private:
-     struct utillib_ll1_factory factory_;
-
-  };
+private:
+  struct utillib_ll1_factory factory_;
+};
 
 } // namespace ll1
 } // namespace utillib

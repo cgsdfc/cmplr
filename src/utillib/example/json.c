@@ -40,54 +40,47 @@ UTILLIB_JSON_OBJECT_FIELD_ELEM(struct compilatioin_entry, "file", filename,
                                utillib_json_string_create)
 UTILLIB_JSON_OBJECT_FIELD_END(CompilationEntry_Fields);
 
-void print_json_stdout(char const *msg, struct utillib_json_value const *val)
-{
+void print_json_stdout(char const *msg, struct utillib_json_value const *val) {
   puts(msg);
   utillib_json_pretty_print(val, stdout);
 }
 
-
-void use_primary_type(void) 
-{
+void use_primary_type(void) {
   puts("Use JSON with primary C types like int, double and bool");
-  int number=404;
-  struct utillib_json_value *val=utillib_json_int_create(&number);
+  int number = 404;
+  struct utillib_json_value *val = utillib_json_int_create(&number);
   print_json_stdout("int", val);
   utillib_json_value_destroy(val);
 
-  bool boolean=false;
-  val=utillib_json_bool_create(&boolean);
+  bool boolean = false;
+  val = utillib_json_bool_create(&boolean);
   print_json_stdout("bool", val);
   utillib_json_value_destroy(val);
 
-  char const * string="Hellow JSON";
-  val=utillib_json_bool_create(&boolean);
+  char const *string = "Hellow JSON";
+  val = utillib_json_bool_create(&boolean);
   print_json_stdout("string", val);
   utillib_json_value_destroy(val);
-
 }
 
-void use_pod_structure(void)
-{
+void use_pod_structure(void) {
   puts("Use JSON with POD structure");
   struct compilatioin_entry entry = {
-    .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"
-  };
+      .dir_name = "./", .cmd = "gcc -o a.out a.c", .filename = "a.c"};
 
   struct utillib_json_value *val =
-  utillib_json_object_create(&entry, CompilationEntry_Fields);
+      utillib_json_object_create(&entry, CompilationEntry_Fields);
   print_json_stdout("struct compilatioin_entry", val);
   utillib_json_value_destroy(val);
 }
 
-void use_builtin_array(void)
-{
-  char const * const strings[]={
-    "Use", "JSON", "in", "array","of", "strings"
-  };
+void use_builtin_array(void) {
+  char const *const strings[] = {"Use", "JSON", "in", "array", "of", "strings"};
   struct utillib_json_array_desc desc;
-  utillib_json_array_desc_init(&desc, sizeof (char const*), sizeof strings / sizeof strings[0], utillib_json_string_create);
-  struct utillib_json_value *val=utillib_json_array_create(strings, &desc);
+  utillib_json_array_desc_init(&desc, sizeof(char const *),
+                               sizeof strings / sizeof strings[0],
+                               utillib_json_string_create);
+  struct utillib_json_value *val = utillib_json_array_create(strings, &desc);
   print_json_stdout("char const * const[]", val);
   utillib_json_value_destroy(val);
 }

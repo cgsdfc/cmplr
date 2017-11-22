@@ -1,9 +1,9 @@
 #ifndef UTILLIB_TEST_IMPL_H
 #define UTILLIB_TEST_IMPL_H
 
-#include "json.h"
+#include "color.h"
 #include "enum.h"
-#include "color.h" 
+#include "json.h"
 #include "test.h"
 
 /**
@@ -24,9 +24,7 @@ static const char *GREEN_OK = COLOR_STRING_UNBOLD(GREEN, "[       OK ]");
 static const char *RED_BAD = COLOR_STRING_UNBOLD(RED, "[ BAD      ]");
 static const char *RED_FAILED = COLOR_STRING_UNBOLD(RED, "[  FAILED  ]");
 
-
 struct utillib_json_value const *
 utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self);
 
 #endif /* UTILLIB_TEST_IMPL_H */
-

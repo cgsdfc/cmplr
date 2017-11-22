@@ -22,16 +22,15 @@ UTILLIB_ETAB_END(utillib_test_status_kind)
  * Creates JSON value from `struct utillib_test_entry_t'.
  */
 static struct utillib_json_value *
-test_entry_json_object_create(struct utillib_test_entry_t const *self)
-{
-  char const * kind_str=utillib_test_status_kind_tostring(self->status);
-  struct utillib_json_value * object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "name", 
-      utillib_json_string_create(&self->func_name));
+test_entry_json_object_create(struct utillib_test_entry_t const *self) {
+  char const *kind_str = utillib_test_status_kind_tostring(self->status);
+  struct utillib_json_value *object = utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "name",
+                                utillib_json_string_create(&self->func_name));
   utillib_json_object_push_back(object, "status",
-      utillib_json_string_create(&kind_str));
+                                utillib_json_string_create(&kind_str));
   utillib_json_object_push_back(object, "result",
-      utillib_json_bool_create(&self->succeeded));
+                                utillib_json_bool_create(&self->succeeded));
   return object;
 }
 
@@ -41,13 +40,11 @@ test_entry_json_object_create(struct utillib_test_entry_t const *self)
  */
 
 static struct utillib_json_value *
-test_entry_json_array_create(struct utillib_test_env_t const *self)
-{
-  struct utillib_json_value *array=utillib_json_array_create_empty();
-  for (struct utillib_test_entry_t const * item=self->cases;
-      item->func!=NULL; ++item) {
-    utillib_json_array_push_back(array, 
-        test_entry_json_object_create(item));
+test_entry_json_array_create(struct utillib_test_env_t const *self) {
+  struct utillib_json_value *array = utillib_json_array_create_empty();
+  for (struct utillib_test_entry_t const *item = self->cases;
+       item->func != NULL; ++item) {
+    utillib_json_array_push_back(array, test_entry_json_object_create(item));
   }
   return array;
 }
@@ -57,35 +54,34 @@ test_entry_json_array_create(struct utillib_test_env_t const *self)
  * Wraps `TestEnv_Fields'.
  */
 static struct utillib_json_value *
-test_env_json_object_create(struct utillib_test_env_t const *self)
-{
-  struct utillib_json_value *object=utillib_json_object_create_empty();
+test_env_json_object_create(struct utillib_test_env_t const *self) {
+  struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
-      utillib_json_string_create(&self->filename));
+                                utillib_json_string_create(&self->filename));
   utillib_json_object_push_back(object, "name",
-      utillib_json_string_create(&self->case_name));
+                                utillib_json_string_create(&self->case_name));
   utillib_json_object_push_back(object, "ntests",
-      utillib_json_size_t_create(&self->ntests));
+                                utillib_json_size_t_create(&self->ntests));
   utillib_json_object_push_back(object, "nskipped",
-      utillib_json_size_t_create(&self->nskipped));
+                                utillib_json_size_t_create(&self->nskipped));
   utillib_json_object_push_back(object, "nrun",
-      utillib_json_size_t_create(&self->nrun));
+                                utillib_json_size_t_create(&self->nrun));
   utillib_json_object_push_back(object, "npassed",
-      utillib_json_size_t_create(&self->nsuccess));
+                                utillib_json_size_t_create(&self->nsuccess));
   utillib_json_object_push_back(object, "nfailed",
-      utillib_json_size_t_create(&self->nfailure));
+                                utillib_json_size_t_create(&self->nfailure));
   utillib_json_object_push_back(object, "details",
-      test_entry_json_array_create(self));
+                                test_entry_json_array_create(self));
   return object;
 }
 
 struct utillib_json_value const *
-utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self)
-{
-  struct utillib_json_value * object=utillib_json_object_create_empty();
+utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self) {
+  struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
-      utillib_json_string_create(&self->filename));
-  utillib_json_object_push_back(object, "tests",
-      utillib_vector_json_array_create(&self->tests, test_entry_json_object_create));
+                                utillib_json_string_create(&self->filename));
+  utillib_json_object_push_back(
+      object, "tests", utillib_vector_json_array_create(
+                           &self->tests, test_entry_json_object_create));
   return object;
 }

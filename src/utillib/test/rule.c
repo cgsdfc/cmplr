@@ -18,10 +18,9 @@
    02110-1301 USA
 
 */
-#include <utillib/test.h>
-#include <utillib/rule.h>
 #include "ll1_sample_1.h"
-
+#include <utillib/rule.h>
+#include <utillib/test.h>
 
 UTILLIB_TEST_SET_UP() {
   utillib_rule_index_init(UT_FIXTURE, ll1_sample_1_symbols, ll1_sample_1_rules);
@@ -35,7 +34,8 @@ UTILLIB_TEST(rule_index_init) {
                          LL1_SAMPLE_1_TER_SIZE);
   UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_non_terminals_size(index),
                          LL1_SAMPLE_1_NON_SIZE);
-  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index), LL1_SAMPLE_1_RULE_SIZE);
+  UTILLIB_TEST_ASSERT_EQ(utillib_rule_index_rules_size(index),
+                         LL1_SAMPLE_1_RULE_SIZE);
 }
 
 UTILLIB_TEST(rule_index_json) {
@@ -88,7 +88,7 @@ UTILLIB_TEST(rule_index_index_not_overflow) {
 UTILLIB_TEST(rule_index_rule_id) {
   struct utillib_rule_index const *self = UT_FIXTURE;
   struct utillib_vector const *RULES = utillib_rule_index_rules(self);
-  for (int i = 0; i < LL1_SAMPLE_1_RULE_SIZE ; ++i) {
+  for (int i = 0; i < LL1_SAMPLE_1_RULE_SIZE; ++i) {
     struct utillib_rule const *rule = utillib_vector_at(RULES, i);
     UTILLIB_TEST_EXPECT_EQ(rule->id, i);
   }

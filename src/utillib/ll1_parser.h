@@ -148,17 +148,16 @@ void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self);
  * \param client_data The data of client that parser may access.
  * \param callback The function table of the client that parser may call.
  */
-void utillib_ll1_factory_parser_init(struct utillib_ll1_factory const *self,
-                                     struct utillib_ll1_parser *parser,
-                                     void *client_data,
-                                     struct utillib_ll1_parser_callback const *callback);
+void utillib_ll1_factory_parser_init(
+    struct utillib_ll1_factory const *self, struct utillib_ll1_parser *parser,
+    void *client_data, struct utillib_ll1_parser_callback const *callback);
 
 /* Uses utillib_ll1_factory_parser_init instead */
-void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
-                             struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 const *table,
-                             void *client_data,
-                             struct utillib_ll1_parser_callback const *callback);
+void utillib_ll1_parser_init(
+    struct utillib_ll1_parser *self,
+    struct utillib_rule_index const *rule_index,
+    struct utillib_vector2 const *table, void *client_data,
+    struct utillib_ll1_parser_callback const *callback);
 
 void utillib_ll1_parser_destroy(struct utillib_ll1_parser *self);
 

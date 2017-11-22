@@ -22,8 +22,8 @@
 #define UTILLIB_JSON_PARSER_IMPL_H
 
 #include "enum.h"
-#include "symbol.h"
 #include "rule.h"
+#include "symbol.h"
 
 UTILLIB_ENUM_BEGIN(utillib_json_parser_error_kind)
 UTILLIB_ENUM_ELEM_INIT(JSON_ESTRING, 1)

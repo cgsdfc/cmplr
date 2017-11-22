@@ -21,9 +21,9 @@
 #ifndef UTILLIB_JSON_SCANNER_H
 #define UTILLIB_JSON_SCANNER_H
 
+#include "json_parser_impl.h"
 #include "scanner.h"
 #include "string.h"
-#include "json_parser_impl.h"
 
 struct utillib_json_scanner {
   struct utillib_string_scanner scanner;

@@ -28,7 +28,8 @@ static struct utillib_rule_index rule_index;
 static struct utillib_vector2 ll1_table;
 
 UTILLIB_TEST_SET_UP() {
-  utillib_rule_index_init(&rule_index, ll1_sample_1_symbols, ll1_sample_1_rules);
+  utillib_rule_index_init(&rule_index, ll1_sample_1_symbols,
+                          ll1_sample_1_rules);
   utillib_ll1_builder_init(UT_FIXTURE, &rule_index);
   utillib_ll1_builder_build_table(UT_FIXTURE, &ll1_table);
 }
@@ -80,7 +81,8 @@ UTILLIB_TEST_AUX(ll1_builder_set_correct,
                  size_t const expected_sets[][10]) {
   struct utillib_ll1_builder const *self = UT_FIXTURE;
   struct utillib_rule_index const *rule_index = self->rule_index;
-  size_t symbols_size = rule_index->symbols_size;;
+  size_t symbols_size = rule_index->symbols_size;
+  ;
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol,
                          &rule_index->non_terminals) {
     size_t index = utillib_rule_index_symbol_index(rule_index, symbol);

@@ -124,7 +124,8 @@ void utillib_rule_index_init(struct utillib_rule_index *self,
 
 void utillib_rule_index_destroy(struct utillib_rule_index *self);
 
-struct utillib_json_value *utillib_rule_json_object_create(struct utillib_rule const *self);
+struct utillib_json_value *
+utillib_rule_json_object_create(struct utillib_rule const *self);
 
 struct utillib_json_value *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self);

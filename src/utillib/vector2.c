@@ -101,7 +101,7 @@ struct utillib_json_value *utillib_vector2_json_array_create(
     struct utillib_json_value *row_array = utillib_json_array_create_empty();
     for (int j = 0; j < self->ncol; ++j) {
       void const *data = self->array[vector2_offset(self, i, j)];
-      struct utillib_json_value  const *json_data =
+      struct utillib_json_value const *json_data =
           (data && create_func) ? create_func(data) : &utillib_json_null;
       utillib_json_array_push_back(row_array, json_data);
     }

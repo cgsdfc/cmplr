@@ -19,9 +19,9 @@
 
 */
 
+#include "ll1_sample_1.h"
 #include <utillib/scanner.h>
 #include <utillib/test.h>
-#include "ll1_sample_1.h"
 
 enum {
 
@@ -54,8 +54,9 @@ static const size_t keywords_size = sizeof keywords / sizeof keywords[0];
 UTILLIB_TEST(symbol_scanner_lookahead) {
   struct utillib_symbol_scanner symbol_scanner;
   utillib_symbol_scanner_init(&symbol_scanner, ll1_sample_1_input_1,
-                            ll1_sample_1_symbols);
-  for (size_t const *psym = ll1_sample_1_input_1; *psym != UT_SYM_NULL; ++psym) {
+                              ll1_sample_1_symbols);
+  for (size_t const *psym = ll1_sample_1_input_1; *psym != UT_SYM_NULL;
+       ++psym) {
     UTILLIB_TEST_EXPECT_EQ(*psym,
                            utillib_symbol_scanner_lookahead(&symbol_scanner));
     struct utillib_symbol const *symbol =
@@ -84,19 +85,19 @@ UTILLIB_TEST(keyword_bearch) {
 }
 
 UTILLIB_TEST(char_scanner) {
-  char const * chars="abcdefghijklmnopqrstuvwxyz";
-  char const * tmpfile=UTILLIB_TEST_DATA_DIR "char_scanner.txt";
+  char const *chars = "abcdefghijklmnopqrstuvwxyz";
+  char const *tmpfile = UTILLIB_TEST_DATA_DIR "char_scanner.txt";
   struct utillib_char_scanner char_scanner;
-  FILE * tmp = fopen(tmpfile, "w");
+  FILE *tmp = fopen(tmpfile, "w");
   UTILLIB_TEST_ASSERT(tmp);
   fputs(chars, tmp);
   fclose(tmp);
-  tmp=fopen(tmpfile, "r");
+  tmp = fopen(tmpfile, "r");
   UTILLIB_TEST_ASSERT(tmp);
   utillib_char_scanner_init(&char_scanner, tmp);
-  for (char const *s=chars; *s != '\0'; ++s) {
-    char actual=utillib_char_scanner_lookahead(&char_scanner);
-    char expected=*s;
+  for (char const *s = chars; *s != '\0'; ++s) {
+    char actual = utillib_char_scanner_lookahead(&char_scanner);
+    char expected = *s;
     UTILLIB_TEST_ASSERT_EQ(expected, actual);
     utillib_char_scanner_shiftaway(&char_scanner);
   }
@@ -105,12 +106,7 @@ UTILLIB_TEST(char_scanner) {
   remove(tmpfile);
 }
 
-UTILLIB_TEST(token_scanner)
-{
-
-
-
-}
+UTILLIB_TEST(token_scanner) {}
 
 UTILLIB_TEST_DEFINE(Utillib_Scanner) {
   UTILLIB_TEST_BEGIN(Utillib_Scanner)

@@ -89,4 +89,3 @@ UTILLIB_ETAB_ELEM_INIT(JSON_EESCAPE, "unrecognized escaped sequence")
 UTILLIB_ETAB_ELEM_INIT(JSON_EUNKNOWN, "unrecognized character")
 UTILLIB_ETAB_ELEM_INIT(JSON_ENODIGIT, "no digits after sign")
 UTILLIB_ETAB_END(utillib_json_parser_error_kind);
-

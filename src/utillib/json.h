@@ -26,13 +26,13 @@
  * C and JSON format. Since this is almost about dealing
  * with safely converting C types to JSON types, the design
  * was written out here.
- * 
+ *
  * 1. Take care of yourselves because this design uses `void const*'
  * so it is essentially unsafe. However, it provides enum value that
  * has one-to-one mapping from C type to JSON type so once you pass
  * parameter of the correct type to those create_funcs, your data
  * will be well typed and safe.
- * 
+ *
  * 2. For POD types, use the directly creating way. For POD I means
  * Plain Old Data including primary type like bool, int, size_t, double, float
  * and char const* and built-in array that contains POD and struct that
@@ -41,12 +41,12 @@
  * POD struct or make a `utillib_json_array_desc' to descript your POD array
  * and then call `utillib_json_object_create' or `utillib_json_array_create'.
  * Thus, `struct utillib_vector' is not POD and so on.
- * 
+ *
  * 3. For non POD types, uses the create_empty and push_back way. In this way,
- * you write your only create function that is unnecessarily restricted by 
+ * you write your only create function that is unnecessarily restricted by
  * a certain signature and build up the JSON value using those `push_back' API.
  * You gain maximum flexibility in this way.
- * 
+ *
  */
 
 #include "enum.h"
@@ -55,7 +55,8 @@
 #include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
-typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void const *);
+typedef struct utillib_json_value *(*utillib_json_value_create_func_t)(
+    void const *);
 /**
  * \macro UTILLIB_JSON_OBJECT_FIELD_BEGIN
  * Begins to define an array of `struct utillib_json_object_field'.
@@ -79,9 +80,8 @@ typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void con
  * when passed in the base address and offset of this field.
  */
 #define UTILLIB_JSON_OBJECT_FIELD_ELEM(STRUCT, KEY, FIELD, FUNC)               \
-  {.create_func = (FUNC),                                                      \
-   .key = (KEY),                                                               \
-   .offset = offsetof(STRUCT, FIELD),                                          \
+  {                                                                            \
+      .create_func = (FUNC), .key = (KEY), .offset = offsetof(STRUCT, FIELD),  \
   },
 
 /**
@@ -91,7 +91,7 @@ typedef struct utillib_json_value * (*utillib_json_value_create_func_t)(void con
  * \value UT_JSON_REAL double
  * \value UT_JSON_OBJECT struct
  * \value UT_JSON_ARRAY struct or POD array
- * \value UT_JSON_BOOL bool 
+ * \value UT_JSON_BOOL bool
  * \value UT_JSON_NULL can be mapped to any thing
  * \value UT_JSON_LONG long
  * \value UT_JSON_SIZE_T size_t
@@ -180,7 +180,6 @@ extern const struct utillib_json_value utillib_json_true;
 extern const struct utillib_json_value utillib_json_false;
 extern const struct utillib_json_value utillib_json_null;
 
-
 /**
  * \function utillib_json_object_create
  * Creates a JOSN object from POD struct
@@ -188,8 +187,9 @@ extern const struct utillib_json_value utillib_json_null;
  * \param fields Pointer to field descripting array.
  * \return a json value.
  */
-struct utillib_json_value*
-utillib_json_object_create(void const *base, struct utillib_json_object_field const *fields);
+struct utillib_json_value *
+utillib_json_object_create(void const *base,
+                           struct utillib_json_object_field const *fields);
 /**
  * \function utillib_json_array_create
  * Creates a JOSN array from a POD array.
@@ -197,10 +197,12 @@ utillib_json_object_create(void const *base, struct utillib_json_object_field co
  * \param Sees above.
  * \return a json value.
  */
-struct utillib_json_value*
-utillib_json_array_create(void const *base, struct utillib_json_array_desc const *desc);
-void utillib_json_array_desc_init(struct utillib_json_array_desc *self, size_t elemsz,
-    size_t size, utillib_json_value_create_func_t create_func);
+struct utillib_json_value *
+utillib_json_array_create(void const *base,
+                          struct utillib_json_array_desc const *desc);
+void utillib_json_array_desc_init(struct utillib_json_array_desc *self,
+                                  size_t elemsz, size_t size,
+                                  utillib_json_value_create_func_t create_func);
 
 void utillib_json_value_destroy(struct utillib_json_value *self);
 
@@ -212,8 +214,7 @@ void utillib_json_array_push_back(struct utillib_json_value *self,
 void utillib_json_object_push_back(struct utillib_json_value *self,
                                    char const *key,
                                    struct utillib_json_value const *value);
-struct utillib_pair *
-utillib_json_object_back(struct utillib_json_value *self);
+struct utillib_pair *utillib_json_object_back(struct utillib_json_value *self);
 
 struct utillib_json_value *
 utillib_json_array_back(struct utillib_json_value *self);
@@ -224,18 +225,20 @@ utillib_json_object_at(struct utillib_json_value *self, char const *key);
 struct utillib_json_value *
 utillib_json_array_at(struct utillib_json_value *self, size_t index);
 
-void utillib_json_tostring(struct utillib_json_value const * self, struct utillib_string *str);
+void utillib_json_tostring(struct utillib_json_value const *self,
+                           struct utillib_string *str);
 
-void utillib_json_pretty_print(struct utillib_json_value const *self, FILE *file);
+void utillib_json_pretty_print(struct utillib_json_value const *self,
+                               FILE *file);
 
-struct utillib_json_value * utillib_json_string_create(char const *const *base);
+struct utillib_json_value *utillib_json_string_create(char const *const *base);
 struct utillib_json_value *utillib_json_real_create(double const *base);
-struct utillib_json_value * utillib_json_size_t_create(size_t const *base);
-struct utillib_json_value* utillib_json_int_create(int const *base);
-struct utillib_json_value * utillib_json_bool_create(bool const *base);
-struct utillib_json_value* utillib_json_long_create(long const *base);
-struct utillib_json_value* utillib_json_float_create(float const *base);
-struct utillib_json_value* utillib_json_null_create(void);
-struct utillib_json_value * utillib_json_null_array_create(size_t size);
+struct utillib_json_value *utillib_json_size_t_create(size_t const *base);
+struct utillib_json_value *utillib_json_int_create(int const *base);
+struct utillib_json_value *utillib_json_bool_create(bool const *base);
+struct utillib_json_value *utillib_json_long_create(long const *base);
+struct utillib_json_value *utillib_json_float_create(float const *base);
+struct utillib_json_value *utillib_json_null_create(void);
+struct utillib_json_value *utillib_json_null_array_create(size_t size);
 
 #endif /* UTILLIB_JSON_H */

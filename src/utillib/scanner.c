@@ -22,6 +22,7 @@
 #include "symbol.h"
 #include <stdlib.h> // bsearch
 #include <string.h> // strcmp
+#include <ctype.h>
 
 static int keyword_pair_cmp(struct utillib_keyword_pair const *lhs,
                             struct utillib_keyword_pair const *rhs) {
@@ -114,30 +115,29 @@ void utillib_char_scanner_destroy(struct utillib_char_scanner *self) {
 /*
  * utillib_token_scanner
  */
-const struct utillib_scanner_op utillib_token_scanner_op={
-  .lookahead=utillib_symbol_scanner_lookahead,
-  .shiftaway=utillib_symbol_scanner_shiftaway,
-  .semantic=utillib_symbol_scanner_semantic,
+const struct utillib_scanner_op utillib_token_scanner_op = {
+    .lookahead = utillib_symbol_scanner_lookahead,
+    .shiftaway = utillib_symbol_scanner_shiftaway,
+    .semantic = utillib_symbol_scanner_semantic,
 };
 
 static void token_scanner_error_init(struct utillib_token_scanner_error *self,
-    int kind, char victim, size_t row, size_t col)
-{
-  self->kind=kind;
-  self->victim=victim;
-  self->row=row;
-  self->col=col;
+                                     int kind, char victim, size_t row,
+                                     size_t col) {
+  self->kind = kind;
+  self->victim = victim;
+  self->row = row;
+  self->col = col;
 }
 
-static void token_scanner_read_input(struct utillib_token_scanner *self)
-{
+static void token_scanner_read_input(struct utillib_token_scanner *self) {
   struct utillib_string *buffer = &self->buffer;
   struct utillib_char_scanner *chars = &self->chars;
-  struct utillib_token_scanner_callback const *callback=self->callback;
+  struct utillib_token_scanner_callback const *callback = self->callback;
   struct utillib_token_scanner_error error;
 
   if (utillib_char_scanner_reacheof(chars)) {
-    self->code=UT_SYM_EOF;
+    self->code = UT_SYM_EOF;
     return;
   }
 
@@ -149,25 +149,24 @@ static void token_scanner_read_input(struct utillib_token_scanner *self)
     }
     char victim = utillib_char_scanner_lookahead(chars);
     token_scanner_error_init(&error, -code, victim, chars->row, chars->col);
-    int recovery=callback->error_handler(chars, &error);
+    int recovery = callback->error_handler(chars, &error);
     if (0 == recovery)
       continue;
-    self->code=UT_SYM_ERR;
+    self->code = UT_SYM_ERR;
     return;
   }
 }
 
-void utillib_token_scanner_init(struct utillib_token_scanner *self, FILE *file,
-    struct utillib_token_scanner_callback const *callback)
-{
+void utillib_token_scanner_init(
+    struct utillib_token_scanner *self, FILE *file,
+    struct utillib_token_scanner_callback const *callback) {
   utillib_char_scanner_init(&self->chars, file);
   utillib_string_init(&self->buffer);
-  self->callback=callback;
+  self->callback = callback;
   token_scanner_read_input(self);
 }
 
-void utillib_token_scanner_destroy(struct utillib_token_scanner *self)
-{
+void utillib_token_scanner_destroy(struct utillib_token_scanner *self) {
   utillib_string_destroy(&self->buffer);
 }
 
@@ -175,50 +174,44 @@ size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
   return self->code;
 }
 
-void const * utillib_token_scanner_semantic(struct utillib_token_scanner *self)
-{
+void const *utillib_token_scanner_semantic(struct utillib_token_scanner *self) {
   if (!utillib_string_size(&self->buffer))
     return NULL;
-  char const * str=utillib_string_c_str(&self->buffer);
-  void const * semantic=self->callback->semantic_handler(self->code, str);
+  char const *str = utillib_string_c_str(&self->buffer);
+  void const *semantic = self->callback->semantic_handler(self->code, str);
   return semantic;
 }
 
-void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self)
-{
+void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self) {
   utillib_string_clear(&self->buffer);
   token_scanner_read_input(self);
 }
 
-bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self)
-{
+bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self) {
   return self->code == UT_SYM_EOF;
 }
 
 /*
  * utillib_string_scanner
  */
-void utillib_string_scanner_init(struct utillib_string_scanner *self, char const *str)
-{
-  self->str=str;
-  self->pos=0;
+void utillib_string_scanner_init(struct utillib_string_scanner *self,
+                                 char const *str) {
+  self->str = str;
+  self->pos = 0;
 }
 
-size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self)
-{
+size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self) {
   return *self->str;
 }
 
-void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self)
-{
+void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self) {
   if (*self->str == '\0')
     return;
   ++self->str;
   ++self->pos;
 }
 
-bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self)
-{
+bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self) {
   return *self->str == '\0';
 }
 
@@ -226,38 +219,35 @@ bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self)
  * Helpers of utillib_token_scanner
  */
 static void token_scanner_collect_char(struct utillib_string *buffer,
-                                 struct utillib_char_scanner *chars) {
+                                       struct utillib_char_scanner *chars) {
   char ch = utillib_char_scanner_lookahead(chars);
   utillib_string_append_char(buffer, ch);
   utillib_char_scanner_shiftaway(chars);
 }
 
-void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars)
-{
+void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars) {
   while (isspace(utillib_char_scanner_lookahead(chars))) {
     utillib_char_scanner_shiftaway(chars);
   }
 }
 
 static bool is_idmiddle(int ch) { return ch == '_' || isalnum(ch); }
-bool utillib_token_scanner_isidbegin(int ch) { return ch == '_' || isalpha(ch); }
+bool utillib_token_scanner_isidbegin(int ch) {
+  return ch == '_' || isalpha(ch);
+}
 
-void utillib_token_scanner_collect_identifier(struct utillib_char_scanner *chars, 
-    struct utillib_string *buffer)
-{
+void utillib_token_scanner_collect_identifier(
+    struct utillib_char_scanner *chars, struct utillib_string *buffer) {
   token_scanner_collect_char(buffer, chars);
   while (is_idmiddle(utillib_char_scanner_lookahead(chars))) {
     token_scanner_collect_char(buffer, chars);
   }
 }
 
-void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars, 
-    struct utillib_string *buffer)
-{
+void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars,
+                                         struct utillib_string *buffer) {
   token_scanner_collect_char(buffer, chars);
   while (isdigit(utillib_char_scanner_lookahead(chars))) {
     token_scanner_collect_char(buffer, chars);
   }
 }
-
-

@@ -24,9 +24,9 @@
 extern "C" {
 #include <utillib/json.h>
 }
-#include <string>
 #include <cstddef>
 #include <cstdio>
+#include <string>
 
 namespace utillib {
 namespace json {
@@ -47,68 +47,68 @@ public:
   Value(Value &&other) noexcept;
   Value &operator=(Value &&other) noexcept;
   void swap(Value &other) noexcept;
-  std::string ToString() const ;
+  std::string ToString() const;
   void PrettyPrint(FILE *file) const noexcept;
 
-  bool operator== (Value const& other) = delete;
-  bool operator<= (Value const& other) = delete;
-  bool operator>= (Value const& other) = delete;
-  bool operator!= (Value const& other) = delete;
-  bool operator< (Value const& other) = delete;
-  bool operator> (Value const& other) = delete;
+  bool operator==(Value const &other) = delete;
+  bool operator<=(Value const &other) = delete;
+  bool operator>=(Value const &other) = delete;
+  bool operator!=(Value const &other) = delete;
+  bool operator<(Value const &other) = delete;
+  bool operator>(Value const &other) = delete;
 
 private:
   friend class Object;
   friend class Array;
   Value(struct utillib_json_value *val);
-  void  Reset() noexcept ;
+  void Reset() noexcept;
   struct utillib_json_value *val_;
 };
 
-template<class T>
-class ObjectFields {
-  public:
-    ObjectFields(struct utillib_json_object_field const *fields)noexcept:fields_(fields) {}
+template <class T> class ObjectFields {
+public:
+  ObjectFields(struct utillib_json_object_field const *fields) noexcept
+      : fields_(fields) {}
 
-  private:
-    friend class Object;
-    struct utillib_json_object_field const *fields_;
+private:
+  friend class Object;
+  struct utillib_json_object_field const *fields_;
 };
 
 class Object {
 public:
   Object(Object const &other) = delete;
   Object &operator=(Object const &other) = delete;
-  operator Value () noexcept;
-  template<class T>
-  Object(T const* base, ObjectFields<T> const& objectFeilds):
-    val_(utillib_json_object_create(base, objectFeilds.fields_)){}
+  operator Value() noexcept;
+  template <class T>
+  Object(T const *base, ObjectFields<T> const &objectFeilds)
+      : val_(utillib_json_object_create(base, objectFeilds.fields_)) {}
 
   Object();
   ~Object() noexcept;
   void AddMember(char const *key, Value &&value);
 
-  bool operator== (Object const& other) = delete;
-  bool operator<= (Object const& other) = delete;
-  bool operator>= (Object const& other) = delete;
-  bool operator!= (Object const& other) = delete;
-  bool operator< (Object const& other) = delete;
-  bool operator> (Object const& other) = delete;
+  bool operator==(Object const &other) = delete;
+  bool operator<=(Object const &other) = delete;
+  bool operator>=(Object const &other) = delete;
+  bool operator!=(Object const &other) = delete;
+  bool operator<(Object const &other) = delete;
+  bool operator>(Object const &other) = delete;
 
 private:
   struct utillib_json_value *val_;
 };
 
-template <class ElementT>
-class ArrayDescription {
-  public:
-      ArrayDescription(size_t size, utillib_json_value_create_func_t create_func) noexcept
-      {
-        utillib_json_array_desc_init(&desc_, sizeof (ElementT), size, create_func);
-      }
-  private:
-      friend class Array;
-      struct utillib_json_array_desc desc_;
+template <class ElementT> class ArrayDescription {
+public:
+  ArrayDescription(size_t size,
+                   utillib_json_value_create_func_t create_func) noexcept {
+    utillib_json_array_desc_init(&desc_, sizeof(ElementT), size, create_func);
+  }
+
+private:
+  friend class Array;
+  struct utillib_json_array_desc desc_;
 };
 
 class Array {
@@ -117,27 +117,30 @@ public:
   Array &operator=(Array const &other) = delete;
   operator Value() noexcept;
   Array();
-  template<class T>
-  Array(T const * base, ArrayDescription<T> const& arrayDesc): val_(utillib_json_array_create(base, &arrayDesc.desc_)) {}
+  template <class T>
+  Array(T const *base, ArrayDescription<T> const &arrayDesc)
+      : val_(utillib_json_array_create(base, &arrayDesc.desc_)) {}
   ~Array() noexcept;
   void AddElement(Value &&element);
 
-  bool operator== (Array const& other) = delete;
-  bool operator<= (Array const& other) = delete;
-  bool operator>= (Array const& other) = delete;
-  bool operator!= (Array const& other) = delete;
-  bool operator< (Array const& other) = delete;
-  bool operator> (Array const& other) = delete;
+  bool operator==(Array const &other) = delete;
+  bool operator<=(Array const &other) = delete;
+  bool operator>=(Array const &other) = delete;
+  bool operator!=(Array const &other) = delete;
+  bool operator<(Array const &other) = delete;
+  bool operator>(Array const &other) = delete;
 
 private:
   struct utillib_json_value *val_;
 };
 
-template<class T> Value MakeValue(T value) { return Value(value) ; }
-template<class T> Value MakeObject(T const *base, ObjectFields<T> const& fields) {
+template <class T> Value MakeValue(T value) { return Value(value); }
+template <class T>
+Value MakeObject(T const *base, ObjectFields<T> const &fields) {
   return Object(base, fields);
 }
-template<class T> Value MakeArray(T const *base, ArrayDescription<T> const &desc) {
+template <class T>
+Value MakeArray(T const *base, ArrayDescription<T> const &desc) {
   return Array(base, desc);
 }
 

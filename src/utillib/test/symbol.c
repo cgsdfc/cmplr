@@ -1,5 +1,5 @@
-#include <utillib/test.h>
 #include <utillib/symbol.h>
+#include <utillib/test.h>
 
 /**
  * \test specaial_symbol
@@ -15,8 +15,7 @@ UTILLIB_TEST(specaial_symbol_value) {
 UTILLIB_TEST(json_object_create) {
   struct utillib_symbol symbol = {
       .kind = UT_SYMBOL_TERMINAL, .value = 32, .name = "an-arbitrary-symbol"};
-  struct utillib_json_value *val =
-      utillib_symbol_json_object_create(&symbol);
+  struct utillib_json_value *val = utillib_symbol_json_object_create(&symbol);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }

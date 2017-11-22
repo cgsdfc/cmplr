@@ -28,22 +28,20 @@ UTILLIB_ETAB_ELEM_INIT(UT_SYMBOL_NON_TERMINAL, "non-terminal-symbol")
 UTILLIB_ETAB_END(utillib_symbol_kind);
 
 struct utillib_json_value *
-utillib_symbol_json_string_create(struct utillib_symbol const *self)
-{
+utillib_symbol_json_string_create(struct utillib_symbol const *self) {
   return utillib_json_string_create(&self->name);
 }
 
 struct utillib_json_value *
-utillib_symbol_json_object_create(struct utillib_symbol const *self)
-{
-  char const *kind_str=utillib_symbol_kind_tostring(self->kind);
-  struct utillib_json_value * object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "kind", 
-      utillib_json_string_create(&kind_str));
+utillib_symbol_json_object_create(struct utillib_symbol const *self) {
+  char const *kind_str = utillib_symbol_kind_tostring(self->kind);
+  struct utillib_json_value *object = utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "kind",
+                                utillib_json_string_create(&kind_str));
   utillib_json_object_push_back(object, "value",
-      utillib_json_int_create(&self->value));
+                                utillib_json_int_create(&self->value));
   utillib_json_object_push_back(object, "name",
-      utillib_json_string_create(&self->name));
+                                utillib_json_string_create(&self->name));
   return object;
 }
 
@@ -87,8 +85,7 @@ bool utillib_symbol_check(struct utillib_symbol const *symbols,
   if (actual_size != expected_size) {
     struct utillib_symbol const *prev = symbol - 1;
     printf("Empty Entry at `%d' detected\n", prev->value + 1);
-    struct utillib_json_value *val =
-        utillib_symbol_json_object_create(prev);
+    struct utillib_json_value *val = utillib_symbol_json_object_create(prev);
     puts("\tPrevious symbol is");
     utillib_json_pretty_print(val, stdout);
     utillib_json_value_destroy(val);

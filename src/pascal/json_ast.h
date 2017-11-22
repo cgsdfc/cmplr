@@ -30,12 +30,12 @@
  *  "comp_stmt": []
  * }
  *
- * 
+ *
  */
 
-struct utillib_json_value * pascal_json_ast_create(int kind);
+struct utillib_json_value *pascal_json_ast_create(int kind);
 int pascal_json_ast_kind(struct utillib_json_value const *self);
-void pascal_json_ast_add_item(struct utillib_json_value *self, struct utillib_json_value const *item);
+void pascal_json_ast_add_item(struct utillib_json_value *self,
+                              struct utillib_json_value const *item);
 
 #endif /* PASCAL_JSON_AST_H */
-

@@ -22,10 +22,9 @@
 #define UTILLIB_JSON_IMPL_H
 
 #include <assert.h>
-#define json_value_check_kind(VAL, KIND) do {\
-  assert ((VAL)->kind == (KIND)); \
-} while (0)
-
+#define json_value_check_kind(VAL, KIND)                                       \
+  do {                                                                         \
+    assert((VAL)->kind == (KIND));                                             \
+  } while (0)
 
 #endif /* UTILLIB_JSON_IMPL_H */
-

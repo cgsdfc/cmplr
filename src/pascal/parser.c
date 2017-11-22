@@ -19,9 +19,9 @@
 
 */
 #include "parser.h"
+#include "json_ast.h"
 #include "pascal_ll1_table.c"
 #include "rules.h"
-#include "json_ast.h"
 #include "scanner.h"
 #include "symbols.h"
 #include <assert.h>
@@ -65,143 +65,122 @@ static void parser_error_handler(void *self, void *input,
  * and puts the new top of the stack into `top'.
  * A common operation.
  */
-static void parser_peek_pop(struct utillib_vector *ast_nodes, 
-    struct utillib_json_value ** popped,
-    struct utillib_json_value ** top)
-{
-  *popped=utillib_vector_back(ast_nodes);
+static void parser_peek_pop(struct utillib_vector *ast_nodes,
+                            struct utillib_json_value **popped,
+                            struct utillib_json_value **top) {
+  *popped = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
-  *top=utillib_vector_back(ast_nodes);
+  *top = utillib_vector_back(ast_nodes);
 }
 
-static void parser_add_var(struct utillib_vector *ast_nodes)
-{
-  struct utillib_json_value * iden;
-  struct utillib_json_value * var_decl;
-  struct utillib_json_value * items;
+static void parser_add_var(struct utillib_vector *ast_nodes) {
+  struct utillib_json_value *iden;
+  struct utillib_json_value *var_decl;
+  struct utillib_json_value *items;
 
-  iden=utillib_vector_back(ast_nodes);
+  iden = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
-  var_decl=utillib_vector_back(ast_nodes);
+  var_decl = utillib_vector_back(ast_nodes);
   pascal_json_ast_add_item(var_decl, iden);
 }
 
-static void parser_add_const(struct utillib_vector *ast_nodes)
-{
-  struct utillib_json_value * iden;
-  struct utillib_json_value * uint;
-  struct utillib_json_value * pair;
-  struct utillib_json_value * const_decl;
+static void parser_add_const(struct utillib_vector *ast_nodes) {
+  struct utillib_json_value *iden;
+  struct utillib_json_value *uint;
+  struct utillib_json_value *pair;
+  struct utillib_json_value *const_decl;
 
-  uint=utillib_vector_back(ast_nodes);
+  uint = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
-  iden=utillib_vector_back(ast_nodes);
+  iden = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
-  pair=utillib_json_object_create_empty();
+  pair = utillib_json_object_create_empty();
   utillib_json_object_push_back(pair, "iden", iden);
   utillib_json_object_push_back(pair, "uint", uint);
-  const_decl=utillib_vector_back(ast_nodes);
+  const_decl = utillib_vector_back(ast_nodes);
   pascal_json_ast_add_item(const_decl, pair);
 }
 
 static void parser_comma_handler(struct utillib_vector *ast_nodes) {
-  struct utillib_json_value * val=utillib_vector_back(ast_nodes);
-  struct utillib_json_value * items;
+  struct utillib_json_value *val = utillib_vector_back(ast_nodes);
+  struct utillib_json_value *items;
   switch (val->kind) {
-    case UT_JSON_STRING:
-      parser_add_var(ast_nodes);
-      return;
-    case UT_JSON_SIZE_T:
-      parser_add_const(ast_nodes);
-      return;
-    default:
-      assert(false && "SYM_COMMA should follow uint or iden");
+  case UT_JSON_STRING:
+    parser_add_var(ast_nodes);
+    return;
+  case UT_JSON_SIZE_T:
+    parser_add_const(ast_nodes);
+    return;
+  default:
+    assert(false && "SYM_COMMA should follow uint or iden");
   }
 }
 
-static void parser_semi_handler(struct utillib_vector *ast_nodes)
-{
+static void parser_semi_handler(struct utillib_vector *ast_nodes) {
   struct utillib_json_value *val;
   struct utillib_json_value *handle;
 
-  val=utillib_vector_back(ast_nodes);
+  val = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
-  handle=utillib_vector_back(ast_nodes);
-  int kind=pascal_json_ast_kind(handle);
-  switch(kind) {
+  handle = utillib_vector_back(ast_nodes);
+  int kind = pascal_json_ast_kind(handle);
+  switch (kind) {
   case SYM_PROC_DECL:
     /* utillib_json_object_set(handle, "name", val); */
     return;
   }
-
-  
-
-
-
-
 }
 
-static void parser_rp_handler(struct utillib_vector * ast_nodes)
-{
-  struct utillib_json_value * val;
-  struct utillib_json_value * handle;
+static void parser_rp_handler(struct utillib_vector *ast_nodes) {
+  struct utillib_json_value *val;
+  struct utillib_json_value *handle;
   parser_peek_pop(ast_nodes, &val, &handle);
-  int kind=pascal_json_ast_kind(handle);
+  int kind = pascal_json_ast_kind(handle);
   switch (kind) {
-    case SYM_WRITE_STMT:
-      break;
+  case SYM_WRITE_STMT:
+    break;
   }
-
-
-
-
-
 }
 
 static void parser_terminal_handler(struct pascal_parser *self,
                                     struct utillib_symbol const *terminal,
                                     void const *semantic) {
-  struct utillib_vector *ast_nodes=&self->ast_nodes;
+  struct utillib_vector *ast_nodes = &self->ast_nodes;
   size_t uint;
-  switch(terminal->value) {
-    case SYM_IDEN:
-      utillib_vector_push_back(ast_nodes,
-          utillib_json_string_create(&semantic));
-      return;
-    case SYM_UINT:
-      uint=(size_t) semantic;
-      utillib_vector_push_back(ast_nodes,
-          utillib_json_size_t_create(&uint));
-      return;
+  switch (terminal->value) {
+  case SYM_IDEN:
+    utillib_vector_push_back(ast_nodes, utillib_json_string_create(&semantic));
+    return;
+  case SYM_UINT:
+    uint = (size_t)semantic;
+    utillib_vector_push_back(ast_nodes, utillib_json_size_t_create(&uint));
+    return;
   }
-  switch(terminal->value) {
-    case SYM_COMMA:
-      parser_comma_handler(ast_nodes);
-      return;
-    case SYM_SEMI:
-      parser_semi_handler(ast_nodes);
-      return;
-    case SYM_RP:
-      parser_rp_handler(ast_nodes);
-      return;
+  switch (terminal->value) {
+  case SYM_COMMA:
+    parser_comma_handler(ast_nodes);
+    return;
+  case SYM_SEMI:
+    parser_semi_handler(ast_nodes);
+    return;
+  case SYM_RP:
+    parser_rp_handler(ast_nodes);
+    return;
   }
-
-
-
 }
 
 static void parser_rule_handler(struct pascal_parser *self,
                                 struct utillib_rule const *rule) {
   struct utillib_symbol const *symbol = rule->LHS;
-  struct utillib_json_value * node=pascal_json_ast_create(symbol->value);
+  struct utillib_json_value *node = pascal_json_ast_create(symbol->value);
   switch (symbol->value) {
   case SYM_READ_STMT:
   case SYM_WRITE_STMT:
   case SYM_CONST_DECL:
   case SYM_COMP_STMT:
   case SYM_VAR_DECL:
-    utillib_json_object_push_back(node, "items", 
-        utillib_json_array_create_empty());
+    utillib_json_object_push_back(node, "items",
+                                  utillib_json_array_create_empty());
     break;
   case SYM_KW_PROC:
     break;
@@ -210,9 +189,6 @@ static void parser_rule_handler(struct pascal_parser *self,
   case SYM_LOOP_STMT:
   case SYM_COND_STMT:
     break;
-
-
-
   }
   utillib_vector_push_back(&self->ast_nodes, node);
 }

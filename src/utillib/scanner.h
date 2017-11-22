@@ -48,7 +48,7 @@ struct utillib_keyword_pair {
  * Function table that abstracts a scanner
  * for what a parser may concern about.
  * Any scanner that is meant to play with
- * the parser of utillib should fill in 
+ * the parser of utillib should fill in
  * the blank of this table.
  */
 struct utillib_scanner_op {
@@ -60,7 +60,7 @@ struct utillib_scanner_op {
 
 /**
  * \struct utillib_symbol_scanner
- * A scanner that scans upon a 
+ * A scanner that scans upon a
  * const size_t array that ends
  * with `UT_SYM_EOF'.
  * Its main purpose here is for
@@ -93,7 +93,7 @@ struct utillib_char_scanner {
 
 /**
  * \struct utillib_token_scanner_error
- * This is error that the client of 
+ * This is error that the client of
  * token_scanner will know when it hit.
  */
 struct utillib_token_scanner_error {
@@ -102,7 +102,6 @@ struct utillib_token_scanner_error {
   size_t row;
   size_t col;
 };
-
 
 /**
  * This callback should be implemented
@@ -116,7 +115,7 @@ struct utillib_token_scanner_error {
  * There is also a `utillib_token_scanner_collect'
  * provided to combine `append_char' and `shiftaway'
  * in one action, but please use it with care!
- * 
+ *
  */
 
 /**
@@ -132,14 +131,11 @@ struct utillib_token_scanner_error {
  */
 
 struct utillib_token_scanner_callback {
-  int (*read_handler) (
-    struct utillib_char_scanner *chars, 
-    struct utillib_string *buffer);
-  int (*error_handler)(
-    struct utillib_char_scanner *chars,
-    struct utillib_token_scanner_error const *error);
-  void const * (*semantic_handler)(size_t value,
-      char const * str);
+  int (*read_handler)(struct utillib_char_scanner *chars,
+                      struct utillib_string *buffer);
+  int (*error_handler)(struct utillib_char_scanner *chars,
+                       struct utillib_token_scanner_error const *error);
+  void const *(*semantic_handler)(size_t value, char const *str);
 };
 
 /**
@@ -165,13 +161,13 @@ struct utillib_token_scanner {
  * Does scanning on a `char const*'.
  */
 struct utillib_string_scanner {
-  char const * str;
+  char const *str;
   size_t pos;
 };
 
 /**
  * \function utillib_keyword_bsearch
- * Does binary search in the key-value table 
+ * Does binary search in the key-value table
  * and returns the value if it was found, or else
  * `UT_SYM_NULL' if not.
  * \param key Normally keywords are itself identifiers
@@ -214,33 +210,35 @@ void utillib_char_scanner_shiftaway(struct utillib_char_scanner *self);
 bool utillib_char_scanner_reacheof(struct utillib_char_scanner *self);
 void utillib_char_scanner_destroy(struct utillib_char_scanner *self);
 
-
 /*
  * utillib_token_scanner
  */
 extern const struct utillib_scanner_op utillib_token_scanner_op;
 
-void utillib_token_scanner_init(struct utillib_token_scanner *self, FILE *file,
+void utillib_token_scanner_init(
+    struct utillib_token_scanner *self, FILE *file,
     struct utillib_token_scanner_callback const *callback);
 void utillib_token_scanner_destroy(struct utillib_token_scanner *self);
-void const * utillib_token_scanner_semantic(struct utillib_token_scanner *self);
+size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self);
+void const *utillib_token_scanner_semantic(struct utillib_token_scanner *self);
 void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self);
 bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self);
 
 /*
  * Helpers of utillib_token_scanner
  */
-void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars); 
+void utillib_token_scanner_skipspace(struct utillib_char_scanner *chars);
 bool utillib_token_scanner_isidbegin(int ch);
-void utillib_token_scanner_collect_identifier(struct utillib_char_scanner *chars, 
-    struct utillib_string *buffer);
-void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars, 
-    struct utillib_string *buffer);
+void utillib_token_scanner_collect_identifier(
+    struct utillib_char_scanner *chars, struct utillib_string *buffer);
+void utillib_token_scanner_collect_digit(struct utillib_char_scanner *chars,
+                                         struct utillib_string *buffer);
 
 /*
  * utillib_string_scanner
  */
-void utillib_string_scanner_init(struct utillib_string_scanner *self, char const *str);
+void utillib_string_scanner_init(struct utillib_string_scanner *self,
+                                 char const *str);
 size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self);
 void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self);
 bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self);

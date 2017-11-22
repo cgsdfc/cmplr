@@ -41,7 +41,5 @@ UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
 UTILLIB_TEST_DECLARE(Utillib_JSON_Scanner);
 
 int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL(argc, argv, 
-      Utillib_JSON_Scanner
-      );
+  UTILLIB_TEST_RUN_ALL(argc, argv, Utillib_JSON_Scanner);
 }

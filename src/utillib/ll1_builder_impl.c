@@ -140,7 +140,8 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
   struct utillib_json_value *array = utillib_json_array_create_empty();
   UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, terminals) {
     if (utillib_ll1_set_contains(self, symbol->value)) {
-      utillib_json_array_push_back(array, utillib_symbol_json_string_create(symbol));
+      utillib_json_array_push_back(array,
+                                   utillib_symbol_json_string_create(symbol));
     }
   }
   if (self->flag) {
@@ -266,8 +267,7 @@ void utillib_ll1_builder_error_destroy(struct utillib_ll1_builder_error *self) {
  * The layout should be:
  * Rule A, FIRST A, Symbol B, FOLLOW B
  */
-static void
-ll1_builder_print_EFOLLOW(struct utillib_json_value * const * errs) {
+static void ll1_builder_print_EFOLLOW(struct utillib_json_value *const *errs) {
   struct utillib_string str;
   for (int i = 0; i < UT_LL1_ERR_VAL_MAX; ++i) {
     utillib_json_tostring(errs[i], &str);

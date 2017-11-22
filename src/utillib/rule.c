@@ -259,7 +259,7 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
 struct utillib_json_value *
 utillib_rule_json_object_create(struct utillib_rule const *self) {
   if (self == UTILLIB_RULE_EPS) {
-    static const char * null_str="A := epsilon";
+    static const char *null_str = "A := epsilon";
     return utillib_json_string_create(&null_str);
   }
   struct utillib_json_value *object = utillib_json_object_create_empty();
@@ -277,20 +277,24 @@ utillib_rule_json_object_create(struct utillib_rule const *self) {
 
 struct utillib_json_value *
 utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
-  struct utillib_json_value * object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "min-termianls-value",
+  struct utillib_json_value *object = utillib_json_object_create_empty();
+  utillib_json_object_push_back(
+      object, "min-termianls-value",
       utillib_json_size_t_create(&self->min_terminal));
-  utillib_json_object_push_back(object, "min-non-termianls-value",
+  utillib_json_object_push_back(
+      object, "min-non-termianls-value",
       utillib_json_size_t_create(&self->min_non_terminal));
-  utillib_json_object_push_back(object, "termianl-symbols",
+  utillib_json_object_push_back(
+      object, "termianl-symbols",
       utillib_vector_json_array_create(&self->terminals,
-        utillib_symbol_json_object_create));
-  utillib_json_object_push_back(object, "non-terminal-symbols",
+                                       utillib_symbol_json_object_create));
+  utillib_json_object_push_back(
+      object, "non-terminal-symbols",
       utillib_vector_json_array_create(&self->non_terminals,
-        utillib_symbol_json_object_create));
-  utillib_json_object_push_back(object, "rules",
-      utillib_vector_json_array_create(&self->rules,
-        utillib_rule_json_object_create));
+                                       utillib_symbol_json_object_create));
+  utillib_json_object_push_back(
+      object, "rules", utillib_vector_json_array_create(
+                           &self->rules, utillib_rule_json_object_create));
   return object;
 }
 
@@ -300,8 +304,7 @@ utillib_rule_index_json_object_create(struct utillib_rule_index const *self) {
  * Mainly for ease of debug.
  */
 void utillib_rule_json_pretty_print(struct utillib_rule const *self) {
-  struct utillib_json_value *val =
-      utillib_rule_json_object_create(self);
+  struct utillib_json_value *val = utillib_rule_json_object_create(self);
   utillib_json_pretty_print(val, stderr);
   utillib_json_value_destroy(val);
 }

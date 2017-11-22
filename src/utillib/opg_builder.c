@@ -21,14 +21,9 @@
 
 #include "opg_builder.h"
 
-void utillib_opg_builder_init(struct utillib_opg_builder *self, struct utillib_rule_index *rule_index)
-{
-  self->rule_index=rule_index;
+void utillib_opg_builder_init(struct utillib_opg_builder *self,
+                              struct utillib_rule_index *rule_index) {
+  self->rule_index = rule_index;
 }
 
-void utillib_opg_builder_destroy(struct utillib_opg_builder *self)
-{
-
-}
-
-
+void utillib_opg_builder_destroy(struct utillib_opg_builder *self) {}

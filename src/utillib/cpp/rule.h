@@ -23,13 +23,10 @@
 namespace utillib {
 class RuleIndex {
 
-
-  private:
-    struct 
+private:
+  struct
 };
-
 
 } // namespace utillib
 
 #endif // UTILLIB_CPP_RULE_H
-

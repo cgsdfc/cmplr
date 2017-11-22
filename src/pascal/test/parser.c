@@ -144,19 +144,26 @@ UTILLIB_TEST_AUX(parser_file_input, char const *abspath) {
 }
 
 UTILLIB_TEST(parser_cock_rabbit) {
-  UTILLIB_TEST_AUX_INVOKE(parser_file_input, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR,"cock_rabbit.pas"))
+  UTILLIB_TEST_AUX_INVOKE(
+      parser_file_input,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "cock_rabbit.pas"))
 }
 
 UTILLIB_TEST(parser_primes) {
-  UTILLIB_TEST_AUX_INVOKE(parser_file_input, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR,"primes.pas"))
+  UTILLIB_TEST_AUX_INVOKE(
+      parser_file_input,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "primes.pas"))
 }
 
 UTILLIB_TEST(parser_gcd) {
-  UTILLIB_TEST_AUX_INVOKE(parser_file_input, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR,"gcd.pas"))
+  UTILLIB_TEST_AUX_INVOKE(
+      parser_file_input, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "gcd.pas"))
 }
 
 UTILLIB_TEST(parser_nested_proc) {
-  UTILLIB_TEST_AUX_INVOKE(parser_file_input, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "nested_proc.pas"))
+  UTILLIB_TEST_AUX_INVOKE(
+      parser_file_input,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "nested_proc.pas"))
 }
 
 UTILLIB_TEST_DEFINE(Pascal_Parser) {

@@ -62,10 +62,9 @@ void utillib_ll1_factory_destroy(struct utillib_ll1_factory *self) {
   utillib_vector2_destroy(&self->table);
 }
 
-void utillib_ll1_factory_parser_init(struct utillib_ll1_factory const *self,
-                                     struct utillib_ll1_parser *parser,
-                                     void *client_data,
-                                     struct utillib_ll1_parser_callback const *callback) {
+void utillib_ll1_factory_parser_init(
+    struct utillib_ll1_factory const *self, struct utillib_ll1_parser *parser,
+    void *client_data, struct utillib_ll1_parser_callback const *callback) {
   utillib_ll1_parser_init(parser, &self->rule_index, &self->table, client_data,
                           callback);
 }
@@ -82,7 +81,8 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
                                    struct utillib_rule const *rule) {
   if (rule == UTILLIB_RULE_EPS) {
     struct utillib_symbol const *LHS = utillib_vector_back(&self->symbol_stack);
-    self->callback->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS, LHS);
+    self->callback->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS,
+                                     LHS);
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
@@ -168,11 +168,11 @@ ll1_parser_table_lookup(struct utillib_ll1_parser *self,
  * <\para>
  *
  */
-void utillib_ll1_parser_init(struct utillib_ll1_parser *self,
-                             struct utillib_rule_index const *rule_index,
-                             struct utillib_vector2 const *table,
-                             void *client_data,
-                             struct utillib_ll1_parser_callback const *callback) {
+void utillib_ll1_parser_init(
+    struct utillib_ll1_parser *self,
+    struct utillib_rule_index const *rule_index,
+    struct utillib_vector2 const *table, void *client_data,
+    struct utillib_ll1_parser_callback const *callback) {
   utillib_vector_init(&self->symbol_stack);
   self->rule_index = rule_index;
   self->table = table;
@@ -234,7 +234,8 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
       if (top_symbol->value == input_symbol_value) {
         semantic = scanner->semantic(input);
-        self->callback->terminal_handler(self->client_data, input_symbol, semantic);
+        self->callback->terminal_handler(self->client_data, input_symbol,
+                                         semantic);
       } else {
         result = false;
         ll1_parser_error_init(&error, UT_LL1_EBADTOKEN, input_symbol,

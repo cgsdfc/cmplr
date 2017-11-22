@@ -20,16 +20,16 @@
 */
 
 #include "json_parser.h"
+#include "json_impl.h" /* json_value_check_kind */
 #include "json_parser_impl.h"
 #include "json_parser_table.c" /* generated */
-#include "json_impl.h" /* json_value_check_kind */
 #include "json_scanner.h"
 #include "pair.h"
 #include <assert.h>
 #include <stdlib.h>
 #ifndef NODEBUG
-static const double _PI=3.1415926;
-#endif 
+static const double _PI = 3.1415926;
+#endif
 
 /**
  * \function json_parser_values_pop_back
@@ -37,25 +37,23 @@ static const double _PI=3.1415926;
  * Assuming `values' is no empty.
  */
 static struct utillib_json_value *
-json_parser_values_pop_back(struct utillib_vector *values)
-{
-  struct utillib_json_value *val=utillib_vector_back(values);
+json_parser_values_pop_back(struct utillib_vector *values) {
+  struct utillib_json_value *val = utillib_vector_back(values);
   utillib_vector_pop_back(values);
   return val;
 }
 
 /**
  * \function json_parser_object_addval
- * Pops off a value from `values' 
+ * Pops off a value from `values'
  * Called when `JSON_SYM_RB' was seen.
  */
-static void json_parser_object_addval(struct utillib_vector *values)
-{
-  struct utillib_json_value *val=json_parser_values_pop_back(values);
-  struct utillib_json_value *object=utillib_vector_back(values);
-  struct utillib_pair *pair=utillib_json_object_back(object);
+static void json_parser_object_addval(struct utillib_vector *values) {
+  struct utillib_json_value *val = json_parser_values_pop_back(values);
+  struct utillib_json_value *object = utillib_vector_back(values);
+  struct utillib_pair *pair = utillib_json_object_back(object);
   assert(pair->up_first && "The key of a strval should not be NULL");
-  pair->up_second=val;
+  pair->up_second = val;
 }
 
 /**
@@ -63,13 +61,13 @@ static void json_parser_object_addval(struct utillib_vector *values)
  * Adds the key as `char const*' to json object.
  * Called when `JSON_SYM_COLON' was seen.
  */
-static void json_parser_object_addkey(struct utillib_vector *values)
-{
-  struct utillib_json_value *keyval=json_parser_values_pop_back(values);
-  json_value_check_kind(keyval, UT_JSON_STRING); /* It should be a json string */
-  char const *key=keyval->as_ptr;
+static void json_parser_object_addkey(struct utillib_vector *values) {
+  struct utillib_json_value *keyval = json_parser_values_pop_back(values);
+  json_value_check_kind(keyval,
+                        UT_JSON_STRING); /* It should be a json string */
+  char const *key = keyval->as_ptr;
   free(keyval); /* It may be cached */
-  struct utillib_json_value *object=utillib_vector_back(values);
+  struct utillib_json_value *object = utillib_vector_back(values);
   utillib_json_object_push_back(object, key, NULL);
 }
 
@@ -77,10 +75,9 @@ static void json_parser_object_addkey(struct utillib_vector *values)
  * \function json_parser_array_addval
  * Called when `JSON_SYM_RK' was seen.
  */
-static void json_parser_array_addval(struct utillib_vector *values)
-{
-  struct utillib_json_value *val=json_parser_values_pop_back(values);
-  struct utillib_json_value *array=utillib_vector_back(values);
+static void json_parser_array_addval(struct utillib_vector *values) {
+  struct utillib_json_value *val = json_parser_values_pop_back(values);
+  struct utillib_json_value *array = utillib_vector_back(values);
   utillib_json_array_push_back(array, val);
 }
 
@@ -89,34 +86,33 @@ static void json_parser_array_addval(struct utillib_vector *values)
  * Adds value to array or object.
  * Called when `JSON_SYM_COMMA' was seen.
  */
-static void json_parser_addval(struct utillib_vector *values)
-{
-  size_t size=utillib_vector_size(values);
-  struct utillib_json_value *entity=utillib_vector_at(values, size-2);
-  switch(entity->kind) {
-    case UT_JSON_ARRAY:
-      json_parser_array_addval(values);
-      return;
-    case UT_JSON_OBJECT:
-      json_parser_object_addval(values);
-      return;
-    default:
-      assert(false && "The entity should be either JSON array or object");
+static void json_parser_addval(struct utillib_vector *values) {
+  size_t size = utillib_vector_size(values);
+  struct utillib_json_value *entity = utillib_vector_at(values, size - 2);
+  switch (entity->kind) {
+  case UT_JSON_ARRAY:
+    json_parser_array_addval(values);
+    return;
+  case UT_JSON_OBJECT:
+    json_parser_object_addval(values);
+    return;
+  default:
+    assert(false && "The entity should be either JSON array or object");
   }
 }
 
 static void json_parser_rule_handler(void *_self,
                                      struct utillib_rule const *rule) {
 
-  struct utillib_json_parser *self=_self;
-  struct utillib_symbol const * LHS=rule->LHS;
-  struct utillib_json_value const * val=NULL;
-  switch(LHS->value) {
+  struct utillib_json_parser *self = _self;
+  struct utillib_symbol const *LHS = rule->LHS;
+  struct utillib_json_value const *val = NULL;
+  switch (LHS->value) {
   case JSON_SYM_ARR:
-    val=utillib_json_array_create_empty();
+    val = utillib_json_array_create_empty();
     break;
   case JSON_SYM_OBJ:
-    val=utillib_json_object_create_empty();
+    val = utillib_json_object_create_empty();
     break;
   }
   if (val)
@@ -127,7 +123,7 @@ static void json_parser_rule_handler(void *_self,
    * This switch is so complicated
    * because empty case should handle
    * correctly. The strategy is as follow:
-   * 1. Handles the `UT_SYM_EPS' by pushing 
+   * 1. Handles the `UT_SYM_EPS' by pushing
    * `NULL' into `values'.
    * 2. It is known that `JSON_SYM_RB' or
    * `JSON_SYM_RK' must follow `UT_SYM_EPS'
@@ -139,77 +135,75 @@ static void json_parser_rule_handler(void *_self,
    * on the top and we add it to the top-1 value
    * which should be an array or object.
    */
-static void json_parser_terminal_handler(
-    struct utillib_json_parser *self,
-    struct utillib_symbol const *symbol, void const *semantic) 
-{
-  struct utillib_vector *values=&self->values;
- 
+static void json_parser_terminal_handler(struct utillib_json_parser *self,
+                                         struct utillib_symbol const *symbol,
+                                         void const *semantic) {
+  struct utillib_vector *values = &self->values;
+
   switch (symbol->value) {
 #ifndef NODEBUG
-    case JSON_SYM_FALSE:
-      utillib_vector_push_back(values,  &utillib_json_false);
-      return;
-    case JSON_SYM_TRUE:
-      utillib_vector_push_back(values,  &utillib_json_true);
-      return;
-    case JSON_SYM_NULL:
-      utillib_vector_push_back(values,  &utillib_json_null);
-      return;
+  case JSON_SYM_FALSE:
+    utillib_vector_push_back(values, &utillib_json_false);
+    return;
+  case JSON_SYM_TRUE:
+    utillib_vector_push_back(values, &utillib_json_true);
+    return;
+  case JSON_SYM_NULL:
+    utillib_vector_push_back(values, &utillib_json_null);
+    return;
 #else
   case JSON_SYM_TRUE:
   case JSON_SYM_FALSE:
   case JSON_SYM_NULL:
     utillib_vector_push_back(values, semantic);
     return;
-#endif 
+#endif
 
 #ifndef NODEBUG /* Debuging */
   case JSON_SYM_LONG:
   case JSON_SYM_REAL:
-    utillib_vector_push_back(values,
-        utillib_json_real_create(&_PI));
+    utillib_vector_push_back(values, utillib_json_real_create(&_PI));
     return;
   case JSON_SYM_STR:
     utillib_vector_push_back(values,
-        utillib_symbol_json_string_create(semantic));
+                             utillib_symbol_json_string_create(semantic));
     return;
 #else
   case JSON_SYM_REAL:
   case JSON_SYM_LONG:
   case JSON_SYM_STR:
-    utillib_vector_push_back(values,semantic);
+    utillib_vector_push_back(values, semantic);
     return;
 #endif
   default:
     break;
   }
-    switch (symbol->value) {
-    case JSON_SYM_RB:
-      utillib_vector_pop_back(values);
-      if (utillib_vector_back(values)) {
-        json_parser_object_addval(values);
-        return;
-      }
-      utillib_vector_pop_back(values);
+  switch (symbol->value) {
+  case JSON_SYM_RB:
+    utillib_vector_pop_back(values);
+    if (utillib_vector_back(values)) {
+      json_parser_object_addval(values);
       return;
-    case JSON_SYM_RK:
-      utillib_vector_pop_back(values);
-      if (utillib_vector_back(values)) {
-        json_parser_array_addval(values);
-        return;
-      }
-      utillib_vector_pop_back(values);
+    }
+    utillib_vector_pop_back(values);
+    return;
+  case JSON_SYM_RK:
+    utillib_vector_pop_back(values);
+    if (utillib_vector_back(values)) {
+      json_parser_array_addval(values);
       return;
-    case JSON_SYM_COMMA:
-      json_parser_addval(values);
-      return;
-    case JSON_SYM_COLON:
-      json_parser_object_addkey(values);
-      return;
-    case UT_SYM_EPS:
-      utillib_vector_push_back(values, NULL);
-      return;
+    }
+    utillib_vector_pop_back(values);
+    return;
+  case JSON_SYM_COMMA:
+    json_parser_addval(values);
+    return;
+  case JSON_SYM_COLON:
+    json_parser_object_addkey(values);
+    return;
+  case UT_SYM_EPS:
+    utillib_vector_push_back(values, NULL);
+    return;
   }
 }
 
@@ -252,9 +246,10 @@ struct utillib_json_value *
 utillib_json_parser_parse(struct utillib_json_parser *self, char const *str) {
   struct utillib_json_scanner scanner;
   utillib_json_scanner_init(&scanner, str);
-  if (!utillib_ll1_parser_parse(&self->parser, &scanner, &utillib_json_scanner_op))
+  if (!utillib_ll1_parser_parse(&self->parser, &scanner,
+                                &utillib_json_scanner_op))
     return NULL;
-  struct utillib_json_value * val=json_parser_values_pop_back(&self->values);
+  struct utillib_json_value *val = json_parser_values_pop_back(&self->values);
   return val;
 }
 
@@ -263,11 +258,12 @@ bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
                                    size_t const *symbols) {
   struct utillib_symbol_scanner scanner;
   utillib_symbol_scanner_init(&scanner, symbols, utillib_json_symbols);
-  bool good=utillib_ll1_parser_parse(&self->parser, &scanner,
-                                  &utillib_symbol_scanner_op);
-  UTILLIB_VECTOR_FOREACH(struct utillib_json_value const*, val, &self->values) {
+  bool good = utillib_ll1_parser_parse(&self->parser, &scanner,
+                                       &utillib_symbol_scanner_op);
+  UTILLIB_VECTOR_FOREACH(struct utillib_json_value const *, val,
+                         &self->values) {
     utillib_json_pretty_print(val, stderr);
   }
   return good;
 }
-#endif 
+#endif

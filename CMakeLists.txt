@@ -147,3 +147,7 @@ add_executable(cling_test
   ./src/cling/test/driver.c
   )
 target_link_libraries(cling_test cling)
+add_test(Cling_Test cling_test)
+add_executable(cling_scanner ./src/cling/smain.c)
+target_link_libraries(cling_scanner cling)
+

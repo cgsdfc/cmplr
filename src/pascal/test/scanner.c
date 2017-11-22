@@ -172,15 +172,21 @@ UTILLIB_TEST_AUX(scanner_read_file, char const *full_path) {
 }
 
 UTILLIB_TEST(scanner_read_file_primes) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "primes.pas"));
+  UTILLIB_TEST_AUX_INVOKE(
+      scanner_read_file,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "primes.pas"));
 }
 
 UTILLIB_TEST(scanner_read_file_cock_rabbit) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "cock_rabbit.pas"));
+  UTILLIB_TEST_AUX_INVOKE(
+      scanner_read_file,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "cock_rabbit.pas"));
 }
 
 UTILLIB_TEST(scanner_read_file_gcd) {
-  UTILLIB_TEST_AUX_INVOKE(scanner_read_file, UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "gcd.pas"));
+  UTILLIB_TEST_AUX_INVOKE(
+      scanner_read_file,
+      UTILLIB_TEST_PATH_CAT(PASCAL_TEST_DATA_DIR, "gcd.pas"));
 }
 
 UTILLIB_TEST_DEFINE(Pascal_Scanner) {

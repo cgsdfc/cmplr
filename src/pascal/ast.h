@@ -216,7 +216,7 @@ struct pascal_ast_subprogram {
   void *const_decl;
   void *var_decl;
   struct utillib_vector proc_list;
-  void * comp_stmt;
+  void *comp_stmt;
 };
 
 union pascal_ast_union {

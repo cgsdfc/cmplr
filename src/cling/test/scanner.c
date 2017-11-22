@@ -22,10 +22,9 @@
 
 UTILLIB_TEST(hello) {}
 
-UTILLIB_TEST_DEFINE(Cling_Scanner)
-{
+UTILLIB_TEST_DEFINE(Cling_Scanner) {
   UTILLIB_TEST_BEGIN(Cling_Scanner)
-    UTILLIB_TEST_RUN(hello)
+  UTILLIB_TEST_RUN(hello)
   UTILLIB_TEST_END(Cling_Scanner)
   UTILLIB_TEST_RETURN(Cling_Scanner)
 }

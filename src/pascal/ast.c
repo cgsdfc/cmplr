@@ -25,7 +25,7 @@
 #include <utillib/pair.h>
 
 void pascal_ast_const_decl_init(struct pascal_ast_const_decl *self) {
-    utillib_vector_init(&self->items);
+  utillib_vector_init(&self->items);
 }
 
 void pascal_ast_var_decl_init(struct pascal_ast_var_decl *self) {
@@ -33,13 +33,13 @@ void pascal_ast_var_decl_init(struct pascal_ast_var_decl *self) {
 }
 
 void pascal_ast_proc_decl_init(struct pascal_ast_proc_decl *self) {
-  self->name=NULL;
-  self->subprogram=NULL;
+  self->name = NULL;
+  self->subprogram = NULL;
 }
 
 void pascal_ast_assign_stmt_init(struct pascal_ast_assign_stmt *self) {
-  self->LHS=NULL;
-  self->RHS=NULL;
+  self->LHS = NULL;
+  self->RHS = NULL;
 }
 
 void pascal_ast_read_stmt_init(struct pascal_ast_read_stmt *self) {
@@ -51,21 +51,21 @@ void pascal_ast_write_stmt_init(struct pascal_ast_write_stmt *self) {
 }
 
 void pascal_ast_term_init(struct pascal_ast_term *self) {
-  self->op=0;
-  self->LHS=NULL;
-  self->RHS=NULL;
+  self->op = 0;
+  self->LHS = NULL;
+  self->RHS = NULL;
 }
 
 void pascal_ast_expr_init(struct pascal_ast_expr *self) {
-  self->sign=0;
-  self->op=0;
-  self->LHS=NULL;
-  self->RHS=NULL;
+  self->sign = 0;
+  self->op = 0;
+  self->LHS = NULL;
+  self->RHS = NULL;
 }
 
 void pascal_ast_cond_stmt_init(struct pascal_ast_cond_stmt *self) {
-  self->cond=NULL;
-  self->then=NULL;
+  self->cond = NULL;
+  self->then = NULL;
 }
 
 void pascal_ast_comp_stmt_init(struct pascal_ast_comp_stmt *self) {
@@ -73,28 +73,27 @@ void pascal_ast_comp_stmt_init(struct pascal_ast_comp_stmt *self) {
 }
 
 void pascal_ast_loop_stmt_init(struct pascal_ast_loop_stmt *self) {
-  self->cond=NULL;
-  self->do_=NULL;
+  self->cond = NULL;
+  self->do_ = NULL;
 }
 
 void pascal_ast_call_stmt_init(struct pascal_ast_call_stmt *self) {
-  self->proc_name=NULL;
+  self->proc_name = NULL;
 }
 
 void pascal_ast_condition_init(struct pascal_ast_condition *self) {
-  self->odd=false;
-  self->op=0;
-  self->LHS=NULL;
-  self->RHS=NULL;
+  self->odd = false;
+  self->op = 0;
+  self->LHS = NULL;
+  self->RHS = NULL;
 }
 
 void pascal_ast_subprogram_init(struct pascal_ast_subprogram *self) {
-  self->const_decl=NULL;
-  self->var_decl=NULL;
+  self->const_decl = NULL;
+  self->var_decl = NULL;
   utillib_vector_init(&self->proc_list);
-  self->comp_stmt=NULL;
+  self->comp_stmt = NULL;
 }
-
 
 struct pascal_ast_node *pascal_ast_node_create(int kind) {
   struct pascal_ast_node *self = malloc(sizeof *self);

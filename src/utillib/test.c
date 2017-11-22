@@ -20,9 +20,9 @@
 */
 
 #include "test.h"
-#include "test_impl.h"
 #include "flags.h"
 #include "print.h"
+#include "test_impl.h"
 #include <stdarg.h> // for va_list
 #include <string.h>
 #include <time.h> // for time
@@ -48,7 +48,6 @@ UTILLIB_ARGP_STATIC_PARSER(int key, char *text, utillib_argp_state *state) {
     return ARGP_ERR_UNKNOWN;
   }
 }
-
 
 /**
  * \function utillib_test_predicate_init
@@ -317,7 +316,6 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
   fputs(".\n", stderr);
   va_end(ap);
 }
-
 
 /**
  * \function test_suite_print_json

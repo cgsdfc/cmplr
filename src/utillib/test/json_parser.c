@@ -84,7 +84,7 @@ UTILLIB_TEST(json_parser_empty_array) {
 UTILLIB_TEST(json_parser_parse_object) {
   size_t const input[] = {JSON_SYM_LB,    JSON_SYM_STR,   JSON_SYM_COLON,
                           JSON_SYM_NULL,  JSON_SYM_COMMA, JSON_SYM_STR,
-                          JSON_SYM_COLON, JSON_SYM_REAL,   JSON_SYM_COMMA,
+                          JSON_SYM_COLON, JSON_SYM_REAL,  JSON_SYM_COMMA,
                           JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_TRUE,
                           JSON_SYM_RB,    UT_SYM_EOF};
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
@@ -115,38 +115,29 @@ UTILLIB_TEST(json_parser_nested_array) {
 UTILLIB_TEST(json_parser_nested_object) {
   /* { "string": { }, "string":{ "string":null,
    * "string": null }, "string": { "string":null,
-   * "string":null, "string":null } } 
+   * "string":null, "string":null } }
    * }
    */
-  size_t const input [] = {
-    JSON_SYM_LB, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_LB,
-    JSON_SYM_RB, JSON_SYM_COMMA, JSON_SYM_STR, JSON_SYM_COLON, 
-    JSON_SYM_LB, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_NULL,
-    JSON_SYM_COMMA, 
-    JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_NULL, JSON_SYM_RB,
-    JSON_SYM_COMMA, JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_LB,
-    JSON_SYM_STR, JSON_SYM_COLON, JSON_SYM_NULL, JSON_SYM_COMMA ,
-    JSON_SYM_STR,
-    JSON_SYM_COLON, JSON_SYM_NULL, JSON_SYM_COMMA, JSON_SYM_STR,
-    JSON_SYM_COLON, JSON_SYM_NULL, JSON_SYM_RB, JSON_SYM_RB,
-    UT_SYM_EOF
-  };
+  size_t const input[] = {
+      JSON_SYM_LB,    JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_LB,
+      JSON_SYM_RB,    JSON_SYM_COMMA, JSON_SYM_STR,   JSON_SYM_COLON,
+      JSON_SYM_LB,    JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_NULL,
+      JSON_SYM_COMMA, JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_NULL,
+      JSON_SYM_RB,    JSON_SYM_COMMA, JSON_SYM_STR,   JSON_SYM_COLON,
+      JSON_SYM_LB,    JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_NULL,
+      JSON_SYM_COMMA, JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_NULL,
+      JSON_SYM_COMMA, JSON_SYM_STR,   JSON_SYM_COLON, JSON_SYM_NULL,
+      JSON_SYM_RB,    JSON_SYM_RB,    UT_SYM_EOF};
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
 UTILLIB_TEST(json_parser_deep_nested_array) {
-  size_t const input[]={
-    JSON_SYM_LK, JSON_SYM_LK, JSON_SYM_LK,
-    JSON_SYM_RK, JSON_SYM_RK, JSON_SYM_RK,
-    UT_SYM_EOF
-  };
+  size_t const input[] = {JSON_SYM_LK, JSON_SYM_LK, JSON_SYM_LK, JSON_SYM_RK,
+                          JSON_SYM_RK, JSON_SYM_RK, UT_SYM_EOF};
   UTILLIB_TEST_ASSERT(utillib_json_parser_parse_dbg(UT_FIXTURE, input));
 }
 
-UTILLIB_TEST(json_parser_scanner) {
-
-
-}
+UTILLIB_TEST(json_parser_scanner) {}
 
 UTILLIB_TEST_DEFINE(Utillib_JSON_Parser) {
   UTILLIB_TEST_BEGIN(Utillib_JSON_Parser)
