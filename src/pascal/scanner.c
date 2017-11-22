@@ -18,7 +18,6 @@
    02110-1301 USA
 
 */
-#define _GNU_SOURCE
 #include "scanner.h"
 #include "symbols.h"
 #include <ctype.h>

@@ -1,28 +1,38 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
 #include "test_impl.h"
+#include "test.h"
+#include "enum.h"
+#include "json.h"
 
-/**
- * Strings associated with `utillib_test_severity_kind'.
- */
-UTILLIB_ETAB_BEGIN(utillib_test_severity_kind)
-UTILLIB_ETAB_ELEM_INIT(US_EXPECT, "Expected")
-UTILLIB_ETAB_ELEM_INIT(US_ASSERT, "Assertion Failed")
-UTILLIB_ETAB_ELEM_INIT(US_ABORT, "Abort")
-UTILLIB_ETAB_END(utillib_test_severity_kind)
-
-UTILLIB_ETAB_BEGIN(utillib_test_status_kind)
-UTILLIB_ETAB_ELEM_INIT(UT_STATUS_SKIP, "skipped")
-UTILLIB_ETAB_ELEM_INIT(UT_STATUS_RUN, "run")
-UTILLIB_ETAB_END(utillib_test_status_kind)
 /*
  * JSON interface
  */
 
 /**
  * \function json_test_entry_create
- * Creates JSON value from `struct utillib_test_entry_t'.
+ * Creates JSON value from `struct utillib_test_entry'.
  */
 static struct utillib_json_value *
-test_entry_json_object_create(struct utillib_test_entry_t const *self) {
+test_entry_json_object_create(struct utillib_test_entry const *self) {
   char const *kind_str = utillib_test_status_kind_tostring(self->status);
   struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "name",
@@ -36,13 +46,13 @@ test_entry_json_object_create(struct utillib_test_entry_t const *self) {
 
 /**
  * \function json_test_entry_array_pointer_create
- * Creates the JSON array of `struct utillib_test_entry_t'
+ * Creates the JSON array of `struct utillib_test_entry'
  */
 
 static struct utillib_json_value *
-test_entry_json_array_create(struct utillib_test_env_t const *self) {
+test_entry_json_array_create(struct utillib_test_env const *self) {
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  for (struct utillib_test_entry_t const *item = self->cases;
+  for (struct utillib_test_entry const *item = self->cases;
        item->func != NULL; ++item) {
     utillib_json_array_push_back(array, test_entry_json_object_create(item));
   }
@@ -54,7 +64,7 @@ test_entry_json_array_create(struct utillib_test_env_t const *self) {
  * Wraps `TestEnv_Fields'.
  */
 static struct utillib_json_value *
-test_env_json_object_create(struct utillib_test_env_t const *self) {
+test_env_json_object_create(struct utillib_test_env const *self) {
   struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
                                 utillib_json_string_create(&self->filename));
@@ -76,7 +86,7 @@ test_env_json_object_create(struct utillib_test_env_t const *self) {
 }
 
 struct utillib_json_value const *
-utillib_test_suite_json_object_create(struct utillib_test_suite_t const *self) {
+utillib_test_suite_json_object_create(struct utillib_test_suite const *self) {
   struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "filename",
                                 utillib_json_string_create(&self->filename));

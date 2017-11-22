@@ -148,6 +148,5 @@ add_executable(cling_test
   )
 target_link_libraries(cling_test cling)
 add_test(Cling_Test cling_test)
-add_executable(cling_scanner ./src/cling/smain.c)
-target_link_libraries(cling_scanner cling)
-
+add_executable(cling-scanner ./src/cling/smain.c)
+target_link_libraries(cling-scanner cling)

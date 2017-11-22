@@ -20,45 +20,36 @@
 */
 
 #include "test.h"
-#include "flags.h"
 #include "print.h"
-#include "test_impl.h"
+#include "test_impl.h" // colorful stuff and json
 #include <stdarg.h> // for va_list
 #include <string.h>
 #include <time.h> // for time
 
 /**
- * Argp options.
+ * Strings associated with `utillib_test_severity_kind'.
  */
-UTILLIB_ARGP_OPTION_BEGIN()
-UTILLIB_ARGP_OPTION_ELEM("json", 'j', "FILE",
-                         "Writes the test result to a JSON file.")
-UTILLIB_ARGP_OPTION_END()
+UTILLIB_ETAB_BEGIN(utillib_test_severity_kind)
+UTILLIB_ETAB_ELEM_INIT(US_EXPECT, "Expected")
+UTILLIB_ETAB_ELEM_INIT(US_ASSERT, "Assertion Failed")
+UTILLIB_ETAB_ELEM_INIT(US_ABORT, "Abort")
+UTILLIB_ETAB_END(utillib_test_severity_kind)
 
-UTILLIB_ARGP_OPTION_REGISTER(NULL, "Utillib.Test Runner")
-
-static utillib_argp_error_t
-UTILLIB_ARGP_STATIC_PARSER(int key, char *text, utillib_argp_state *state) {
-  struct utillib_test_suite_t *self = UTILLIB_ARGP_STATE_INPUT(state);
-  switch (key) {
-  case 'j':
-    self->json_output = text;
-    return 0;
-  default:
-    return ARGP_ERR_UNKNOWN;
-  }
-}
+UTILLIB_ETAB_BEGIN(utillib_test_status_kind)
+UTILLIB_ETAB_ELEM_INIT(UT_STATUS_SKIP, "skipped")
+UTILLIB_ETAB_ELEM_INIT(UT_STATUS_RUN, "run")
+UTILLIB_ETAB_END(utillib_test_status_kind)
 
 /**
  * \function utillib_test_predicate_init
- * Initializes a `struct utillib_test_predicate_t' for `UTILLIB_TEST_ASSERT'
+ * Initializes a `struct utillib_test_predicate' for `UTILLIB_TEST_ASSERT'
  * or such to use.
  * \param result The result of a boolean expression evaluated when passed in.
  * \param line The line where the predicate took place and self got initialized.
  * \param expr_str The stringized expression.
  * \param severity The severity of the failure.
  */
-void utillib_test_predicate_init(struct utillib_test_predicate_t *self,
+void utillib_test_predicate_init(struct utillib_test_predicate *self,
                                  bool result, size_t line, char const *expr_str,
                                  int severity) {
   self->result = result;
@@ -72,8 +63,8 @@ void utillib_test_predicate_init(struct utillib_test_predicate_t *self,
  * Prints a message about the failure of a predicate to stderr.
  */
 
-static void predicate_output(struct utillib_test_entry_t *self,
-                             struct utillib_test_predicate_t *predicate) {
+static void predicate_output(struct utillib_test_entry *self,
+                             struct utillib_test_predicate *predicate) {
   fprintf(stderr, "In `%s':%lu:\n", self->func_name, predicate->line);
   fprintf(stderr, "\t%s: `%s'.\n",
           utillib_test_severity_kind_tostring(predicate->severity),
@@ -89,8 +80,8 @@ static void predicate_output(struct utillib_test_entry_t *self,
  * \return predicate->result.
  */
 
-bool utillib_test_predicate(struct utillib_test_entry_t *self,
-                            struct utillib_test_predicate_t *predicate) {
+bool utillib_test_predicate(struct utillib_test_entry *self,
+                            struct utillib_test_predicate *predicate) {
   if (predicate->result) {
     return true;
   }
@@ -129,7 +120,7 @@ static void status_output(char const *status_str, char const *fmt, ...) {
  * Prints the name of the test with a status bar.
  */
 static void case_status_output(char const *status_str,
-                               struct utillib_test_entry_t *entry) {
+                               struct utillib_test_entry *entry) {
   status_output(status_str, "%s (%lds).", entry->func_name, entry->duration);
 }
 
@@ -146,8 +137,8 @@ static void filename_status_output(char const *filename) {
  * Invokes the function pointer in self, possibily after
  * calling its setup and does teardown after it.
  */
-static void utillib_test_case(struct utillib_test_entry_t *self,
-                              struct utillib_test_env_t *env) {
+static void utillib_test_case(struct utillib_test_entry *self,
+                              struct utillib_test_env *env) {
   time_t begin, end;
   if (env->setup_func) {
     env->setup_func(env->fixture);
@@ -171,8 +162,8 @@ static void utillib_test_case(struct utillib_test_entry_t *self,
  * `US_SUCCESS'; else returns the kind of severity of the failure of the test.
  */
 
-static int utillib_test_run_test(struct utillib_test_entry_t *self,
-                                 struct utillib_test_env_t *env) {
+static int utillib_test_run_test(struct utillib_test_entry *self,
+                                 struct utillib_test_env *env) {
   switch (self->status) {
   case UT_STATUS_RUN:
     /* displays a status bar */
@@ -210,13 +201,13 @@ static int utillib_test_run_test(struct utillib_test_entry_t *self,
  * Starts running a test suite by printing its name and
  * the file where it was defined.
  */
-static void utillib_test_setup(struct utillib_test_env_t *self) {
+static void utillib_test_setup(struct utillib_test_env *self) {
   filename_status_output(self->filename);
   status_output(GREEN_BANG, "Test suite `%s' sets up.", self->case_name);
 }
 
-static void utillib_test_report_failure(struct utillib_test_env_t *self) {
-  for (struct utillib_test_entry_t const *test = self->cases;
+static void utillib_test_report_failure(struct utillib_test_env *self) {
+  for (struct utillib_test_entry const *test = self->cases;
        test->func != NULL; ++test) {
     if (test->status != UT_STATUS_RUN)
       continue;
@@ -230,7 +221,7 @@ static void utillib_test_report_failure(struct utillib_test_env_t *self) {
  * \function utillib_test_summary
  * Displays statistics of a test suite after its execution reached end.
  */
-static void utillib_test_summary(struct utillib_test_env_t *self) {
+static void utillib_test_summary(struct utillib_test_env *self) {
   status_output(GREEN_BANG, "Test suite `%s' tears down.", self->case_name);
   utillib_test_report_failure(self);
   status_output(GREEN_DASH, "Summary: Total %lu tests, Run %lu, Skipped %lu.",
@@ -245,9 +236,9 @@ static void utillib_test_summary(struct utillib_test_env_t *self) {
  * runs all its tests and stops at the first abort.
  * Returns the number of failed tests.
  */
-int utillib_test_run_suite(struct utillib_test_env_t *self) {
+int utillib_test_run_suite(struct utillib_test_env *self) {
   utillib_test_setup(self);
-  for (struct utillib_test_entry_t *test = self->cases; test->func != NULL;
+  for (struct utillib_test_entry *test = self->cases; test->func != NULL;
        ++test) {
     if (US_ABORT == utillib_test_run_test(test, self)) {
       break;
@@ -259,9 +250,9 @@ int utillib_test_run_suite(struct utillib_test_env_t *self) {
 
 /**
  * \function utillib_test_suite_destroy
- * Destructor of `struct utillib_test_suite_t'.
+ * Destructor of `struct utillib_test_suite'.
  */
-void utillib_test_suite_destroy(struct utillib_test_suite_t *self) {
+void utillib_test_suite_destroy(struct utillib_test_suite *self) {
   utillib_vector_destroy(&self->tests);
 }
 
@@ -272,14 +263,14 @@ void utillib_test_suite_destroy(struct utillib_test_suite_t *self) {
  * \param ... Multiple `utillib_test_getenv_func_t' pointers.
  */
 
-void utillib_test_suite_init(struct utillib_test_suite_t *self, ...) {
+void utillib_test_suite_init(struct utillib_test_suite *self, ...) {
   static const size_t init_capacity = 8;
   utillib_vector_init(&self->tests);
   utillib_vector_reserve(&self->tests, init_capacity);
   va_list ap;
   va_start(ap, self);
   while (true) {
-    struct utillib_test_env_t *(*getenv_func)(void) = va_arg(ap, void *);
+    struct utillib_test_env *(*getenv_func)(void) = va_arg(ap, void *);
     if (!getenv_func) {
       break;
     }
@@ -293,7 +284,7 @@ void utillib_test_suite_init(struct utillib_test_suite_t *self, ...) {
  * Do not call it directly or more than once.
  * Call it via `UTILLIB_TEST_FIXTURE'.
  */
-void utillib_test_env_set_fixture(struct utillib_test_env_t *self,
+void utillib_test_env_set_fixture(struct utillib_test_env *self,
                                   utillib_test_fixture_t fixture,
                                   void (*setup)(void *),
                                   void (*teardown)(void *)) {
@@ -317,30 +308,9 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
   va_end(ap);
 }
 
-/**
- * \function test_suite_print_json
- * Implements output to JSON format.
- */
-static void test_suite_print_json(struct utillib_test_suite_t *self) {
-  if (!self->json_output) {
-    /* no output requirement */
-    return;
-  }
-  FILE *file = fopen(self->json_output, "w");
-  if (!file) {
-    status_output(RED_DASH, "warning: `%s': %s", strerror(errno),
-                  self->json_output);
-    return;
-  }
-  struct utillib_json_value *val = utillib_test_suite_json_object_create(self);
-  utillib_json_pretty_print(val, file);
-  utillib_json_value_destroy(val);
-  fclose(file);
-}
-
 static void
-utillib_test_suite_report_failure(struct utillib_test_suite_t *self) {
-  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
+utillib_test_suite_report_failure(struct utillib_test_suite *self) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_test_env *, env, &self->tests) {
     utillib_test_report_failure(env);
   }
 }
@@ -349,21 +319,19 @@ utillib_test_suite_report_failure(struct utillib_test_suite_t *self) {
  * \function utillib_test_suite_run_all
  * Runs all the tests and Returns the number of failed tests.
  */
-int utillib_test_suite_run_all(struct utillib_test_suite_t *self, int argc,
+int utillib_test_suite_run_all(struct utillib_test_suite *self, int argc,
                                char **argv) {
-  UTILLIB_ARGP_PARSE(argc, argv, self);
   size_t test_failure = 0;
   size_t test_suites = utillib_vector_size(&self->tests);
   filename_status_output(self->filename);
   status_output(GREEN_BANG, "%lu test suites found.", test_suites);
   status_output(GREEN_BANG, "Global testing environment sets up.");
   fputs("\n", stderr);
-  UTILLIB_VECTOR_FOREACH(struct utillib_test_env_t *, env, &self->tests) {
+  UTILLIB_VECTOR_FOREACH(struct utillib_test_env *, env, &self->tests) {
     test_failure += utillib_test_run_suite(env);
     fputs("\n", stderr);
   }
   status_output(GREEN_BANG, "Global testing environment tears down.");
   utillib_test_suite_report_failure(self);
-  test_suite_print_json(self);
   return test_failure;
 }

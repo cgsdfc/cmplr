@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include "logging.h"
 #include "print.h"  // for utillib_static_vsprintf
 #include <stdlib.h> // for abort

@@ -19,7 +19,6 @@
 
 */
 
-#define _GNU_SOURCE
 #include <utillib/test.h>
 
 UTILLIB_TEST_DECLARE(Utillib_Test);

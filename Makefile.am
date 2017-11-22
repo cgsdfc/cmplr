@@ -63,7 +63,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/unordered_map.h \
 													src/utillib/slist.h \
 													src/utillib/vector.h \
-													src/utillib/string.c
+													src/utillib/string.h
 
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
@@ -216,4 +216,8 @@ libcling_la_LIBADD = libutillib.la
 noinst_PROGRAMS += cling_ll1_table
 cling_ll1_table_SOURCES = src/cling/ll1_gen.c
 cling_ll1_table_LDADD = libcling.la libutillib.la
+
+bin_PROGRAMS += cling-scanner
+cling_scanner_SOURCES = src/cling/smain.c
+cling_scanner_LDADD = libcling.la
 

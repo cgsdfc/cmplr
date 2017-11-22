@@ -18,7 +18,6 @@
    02110-1301 USA
 
 */
-#define _GNU_SOURCE
 #include "string.h"
 #include <assert.h>
 #include <stdlib.h>
@@ -193,8 +192,10 @@ bool utillib_string_richcmp(struct utillib_string *self,
  * Opens in read mode to allow stream-like operation.
  * Client should close the returned pointer.
  */
-
+#ifndef WITH_WINDOWS
 FILE *utillib_string_fmemopen(struct utillib_string *self) {
   char const *buf = utillib_string_c_str(self);
   return fmemopen((void *)buf, self->size, "r");
 }
+#endif /* WITH_WINDOWS */
+

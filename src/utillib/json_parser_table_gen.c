@@ -21,7 +21,9 @@
 #include "json_parser_impl.h"
 #include "ll1_generator.h"
 
-int main(void) {
+static int porting_helper(void)
+{
+#ifndef WITH_WINDOWS
   struct utillib_ll1_generator gen;
   utillib_ll1_generator_init_from_code(&gen, utillib_json_symbols,
                                        utillib_json_rules);
@@ -29,4 +31,12 @@ int main(void) {
                                              "json_parser_table.c");
   utillib_ll1_generator_destroy(&gen);
   return !good;
+#else /* Due to UTILLIB_SOURCE_DIR, omitted on windows */
+  puts("This executable is not supported on this platform");
+  return 0;
+#endif /* WITH_WINDOWS */
+}
+
+int main(void) {
+  return porting_helper();
 }

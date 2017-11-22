@@ -63,5 +63,9 @@ void utillib_string_replace_last(struct utillib_string *, char);
 void utillib_string_reserve(struct utillib_string *, size_t);
 void utillib_string_append(struct utillib_string *, char const *);
 void utillib_string_append_char(struct utillib_string *, char);
+
+#ifndef WITH_WINDOWS
 FILE *utillib_string_fmemopen(struct utillib_string *);
+#endif /* WITH_WINDOWS */
+
 #endif /* UTILLIB_STRING_H */
