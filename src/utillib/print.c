@@ -19,7 +19,6 @@
 
 */
 #include "print.h"
-#include "error.h"
 #include <stdarg.h> // for va_list
 
 char const *utillib_LICENSE_str =

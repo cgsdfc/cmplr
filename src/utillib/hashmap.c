@@ -20,7 +20,6 @@
 */
 #include "unordered_map.h"
 #include "equal.h"
-#include "error.h"
 #include "hash.h"
 #include "slist.h"
 #include <assert.h>
