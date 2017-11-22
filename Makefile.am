@@ -40,7 +40,6 @@ lib_LTLIBRARIES = libutillib.la
 
 utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/json_impl.h \
-													src/utillib/flags.h \
 													src/utillib/opg_builder.h \
 													src/utillib/scanner.h \
 													src/utillib/ll1_parser.h \

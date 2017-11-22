@@ -89,7 +89,6 @@ add_executable(utillib_test
   ./src/utillib/test/string.c
   ./src/utillib/test/test.c
   ./src/utillib/test/slist.c
-  ./src/utillib/test/flags.c
   ./src/utillib/test/vector.c
   ./src/utillib/test/json_parser.c
   ./src/utillib/test/driver.c)
