@@ -65,5 +65,6 @@ void utillib_slist_push_front(struct utillib_slist *self, void const *value);
  */
 void * utillib_slist_erase(struct utillib_slist *self, size_t pos);
 void utillib_slist_pop_front(struct utillib_slist *self);
+void utillib_slist_clear(struct utillib_slist *self);
 
 #endif /* UTILLIB_SLIST_H */

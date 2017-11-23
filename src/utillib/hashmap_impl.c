@@ -25,13 +25,14 @@
 
 static void search_result_lookup(
     struct utillib_hashmap_search_result  *self,
-    void const *key, int (*compare_hander) (void const* lhs, void const *rhs))
+    void const *key, int (*compare_handler) (void const* lhs, void const *rhs))
 {
-  UTILLIB_SLIST_FOREACH(struct utillib_pair const *, pair, self->bucket)
-  ++self->itempos;
-  if (0 == compare_hander(pair->up_first, key)) {
-    self->pair=pair;
-    return ;
+  UTILLIB_SLIST_FOREACH(struct utillib_pair const *, pair, self->bucket) {
+    if (0 == compare_handler(pair->up_first, key)) {
+      self->pair=pair;
+      return ;
+    }
+    ++self->itempos;
   }
   self->pair=NULL;
 }

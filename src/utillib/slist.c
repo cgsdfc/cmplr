@@ -47,7 +47,7 @@ void utillib_slist_destroy_owning(struct utillib_slist *self,
   struct utillib_slist_node *node=self->head;
   while (node) {
     struct utillib_slist_node *next=node->next;
-    destroy(node);
+    destroy(node->value);
     free(node);
     node=next;
   }
@@ -104,7 +104,7 @@ void * utillib_slist_erase(struct utillib_slist *self, size_t pos)
   node=self->head;
   for (int i=0; i<pos-1; ++i) {
     node=node->next;
-    if (!node)
+    if (!node->next)
       return NULL;
   }
   old_node=node->next;
@@ -122,4 +122,9 @@ void utillib_slist_pop_front(struct utillib_slist *self)
   free(old_node);
 }
 
+void utillib_slist_clear(struct utillib_slist *self)
+{
+  utillib_slist_destroy(self);
+  self->head=NULL;
+}
 
