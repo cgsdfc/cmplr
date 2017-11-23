@@ -175,6 +175,33 @@ size_t utillib_hashmap_size(struct utillib_hashmap const *self);
 bool utillib_hashmap_empty(struct utillib_hashmap const *self);
 
 /**
+ * \function utillib_hashmap_buckets_size
+ * Provided for convenience.
+ */
+size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self);
+
+/**
+ * JSON interface
+ * One notice for primary type such as int or double:
+ * If you choose to store them directly into the pointer
+ * of the value, and you happen to covert the resulting
+ * hashmap to anything to do with JSON, you will be surprised
+ * by strange crashes.
+ * This is because **all** those JSON creating functions accept
+ * **pointer** to data but you store the data in that pointer,
+ * which of course points to error.
+ * To avoid that, either never attempt JSON you need to store
+ * primary in that way or wrap you primary in a struct with
+ * other related fields and store the pointer to struct instead.
+ * If you do not care about performance, use an adaptor function
+ * to covert value to address is also OK, but note that these adaptor
+ * waste your code.
+ * Last but not least, primary types unfortunately includes `char const*'
+ * so take care of yourselves and use `utillib_hashmap_json_object_create'
+ * 
+ */
+
+/**
  * \function utillib_hashmap_json_object_create
  * Assumes that the type of key is `char const*' and
  * returns a JSON object representation of self like
@@ -198,5 +225,16 @@ struct utillib_json_value *
 utillib_hashmap_json_array_create(struct utillib_hashmap *self,
     utillib_json_value_create_func_t key_create,
     utillib_json_value_create_func_t value_create);
+
+/**
+ * \function utillib_hashmap_print_buckets
+ * Displays details about all the buckets
+ * including their numbers, size and each key and value
+ * within each of them to stdout.
+ */
+
+#ifndef NDEBUG
+void utillib_hashmap_print_buckets(struct utillib_hashmap const *self);
+#endif
 
 #endif /* UTILLIB_HASHMAP_H */

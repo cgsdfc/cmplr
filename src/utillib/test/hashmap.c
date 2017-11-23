@@ -21,18 +21,13 @@
 
 #include <utillib/test.h>
 #include <utillib/hashmap.h>
+#include <utillib/strhash.h>
 #include <utillib/symbol.h>
 #include <utillib/json.h>
 
-static size_t simple_strhash(char const *str) {
-  size_t len=strlen(str);
-  size_t hash=str[0] + str[len-1] +(len << 4);
-  return hash;
-}
-
 static const struct utillib_hashmap_callback string_callback={
   .compare_handler=strcmp,
-  .hash_handler=simple_strhash,
+  .hash_handler=lh_strhash,
 };
 
 UTILLIB_TEST_SET_UP(){}
@@ -103,6 +98,7 @@ UTILLIB_TEST(hashmap_discard)
 
 UTILLIB_TEST(hashmap_json_object)
 {
+
   utillib_hashmap_init(UT_FIXTURE, &string_callback);
   utillib_hashmap_insert(UT_FIXTURE, "symbol1", UTILLIB_SYMBOL_EOF);
   utillib_hashmap_insert(UT_FIXTURE, "symbol2", UTILLIB_SYMBOL_EPS);
@@ -114,6 +110,39 @@ UTILLIB_TEST(hashmap_json_object)
   utillib_json_value_destroy(val);
 }
 
+  static struct utillib_json_value *
+json_string_create_adapted(char const *str)
+{
+  return utillib_json_string_create(&str);
+}
+
+UTILLIB_TEST(hashmap_json_array)
+{
+  utillib_hashmap_init(UT_FIXTURE, &string_callback);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol1", UTILLIB_SYMBOL_EOF);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol2", UTILLIB_SYMBOL_EPS);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol3", UTILLIB_SYMBOL_ERR);
+
+  struct utillib_json_value *val=utillib_hashmap_json_array_create(UT_FIXTURE,
+      json_string_create_adapted,
+      utillib_symbol_json_object_create);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+
+UTILLIB_TEST(hashmap_size)
+{
+  UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_size(UT_FIXTURE), 0);
+  char const * input[]={
+    "@1", "@2", "@3", "@4", NULL
+  };
+  for (char const **s=input; *s!=NULL; ++s) {
+    utillib_hashmap_insert(UT_FIXTURE, *s, *s);
+  }
+  UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_size(UT_FIXTURE), 4);
+}
+
+
 /*
  * We have to make sure after
  * rehash:
@@ -122,9 +151,30 @@ UTILLIB_TEST(hashmap_json_object)
  */ 
 UTILLIB_TEST(hashmap_rehash) 
 {
-
-
-
+  char const * input[]={
+    "@1", "@2", "@3", "@4",
+    "#1", "#2", "#3", "#4",
+    "$1", "$2", "$3", "$4",
+    "&1", "&2", "&3", "&4",
+    NULL
+  };
+  utillib_hashmap_init(UT_FIXTURE, &string_callback);
+  for (char const **s=input; *s!=NULL; ++s) {
+    utillib_hashmap_insert(UT_FIXTURE, *s, *s);
+  }
+  for (char const **s=input; *s!=NULL; ++s) {
+    char const * value=utillib_hashmap_at(UT_FIXTURE, *s);
+    UTILLIB_TEST_ASSERT_NE(NULL, value);
+    UTILLIB_TEST_ASSERT_EQ(value, *s);
+  }
+  utillib_hashmap_print_buckets(UT_FIXTURE);
+  utillib_hashmap_rehash(UT_FIXTURE);
+  utillib_hashmap_print_buckets(UT_FIXTURE);
+  for (char const **s=input; *s!=NULL; ++s) {
+    char const * value=utillib_hashmap_at(UT_FIXTURE, *s);
+    UTILLIB_TEST_ASSERT_NE(NULL, value);
+    UTILLIB_TEST_ASSERT_EQ(value, *s);
+  }
 
 
 }
@@ -135,6 +185,8 @@ UTILLIB_TEST_DEFINE(Utillib_HashMap) {
   UTILLIB_TEST_RUN(hashmap_update)
   UTILLIB_TEST_RUN(hashmap_discard)
   UTILLIB_TEST_RUN(hashmap_json_object)
+  UTILLIB_TEST_RUN(hashmap_json_array)
+  UTILLIB_TEST_RUN(hashmap_rehash)
   UTILLIB_TEST_END(Utillib_HashMap)
   UTILLIB_TEST_FIXTURE(struct utillib_hashmap)
   UTILLIB_TEST_RETURN(Utillib_HashMap)

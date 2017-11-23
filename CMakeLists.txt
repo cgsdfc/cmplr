@@ -43,6 +43,7 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
 add_library(utillib
   ./src/utillib/hashmap.c
+  ./src/utillib/strhash.c
   ./src/utillib/hashmap_impl.c
   ./src/utillib/test_impl.c
   ./src/utillib/json_parser.c

@@ -18,24 +18,19 @@
    02110-1301 USA
 
 */
-#ifndef UTILLIB_HASHMAP_IMPL_H
-#define UTILLIB_HASHMAP_IMPL_H
-#include "hashmap.h"
-#define hashmap_indexof(key, hash_handler, buckets_size) (hash_handler(key) & (buckets_size-1))
-#define hashmap_check_range(index, buckets_size) do {\
-  assert (( index ) < ( buckets_size ) && "Index out of range");\
-} while (0)
 
-struct utillib_hashmap_search_result {
-  size_t itempos;
-  struct utillib_slist  * bucket;
-  struct utillib_pair * pair;
-};
+#ifndef UTILLIB_STRHASH_H
+#define UTILLIB_STRHASH_H
+#include <stddef.h> /* for size_t */
 
-void utillib_hashmap_search_result_init(
-    struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap const *hashmap,
-    void const *key);
+/**
+ * Different string hashing function
+ * stealed from famous softwares.
+ */
 
-#endif /* UTILLIB_HASHMAP_IMPL_H */
+size_t simple_strhash(char const *str) ;
+size_t mysql_strhash(char const *key);
+unsigned long php_strhash(char const *arKey);
+unsigned long lh_strhash(char const *str);
 
+#endif /* UTILLIB_STRHASH_H */

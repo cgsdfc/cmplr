@@ -27,7 +27,7 @@ static void search_result_lookup(
     struct utillib_hashmap_search_result  *self,
     void const *key, int (*compare_handler) (void const* lhs, void const *rhs))
 {
-  UTILLIB_SLIST_FOREACH(struct utillib_pair const *, pair, self->bucket) {
+  UTILLIB_SLIST_FOREACH(struct utillib_pair*, pair, self->bucket) {
     if (0 == compare_handler(pair->up_first, key)) {
       self->pair=pair;
       return ;
@@ -39,10 +39,10 @@ static void search_result_lookup(
 
 void utillib_hashmap_search_result_init(
     struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap *hashmap,
+    struct utillib_hashmap const *hashmap,
     void const *key)
 {
-  struct utillib_hashmap_callback * callback=hashmap->callback;
+  struct utillib_hashmap_callback const * callback=hashmap->callback;
   assert (callback && "Callback should not be NULL");
   size_t index=hashmap_indexof(key, callback->hash_handler, hashmap->buckets_size);
   hashmap_check_range(index, hashmap->buckets_size);

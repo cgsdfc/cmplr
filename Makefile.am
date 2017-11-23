@@ -67,6 +67,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/hashmap.c \
 												 src/utillib/hashmap_impl.c \
+												 src/utillib/strhash.c \
 												 src/utillib/test_impl.c \
 												 src/utillib/ll1_builder_impl.c \
 												 src/utillib/json_parser.c \

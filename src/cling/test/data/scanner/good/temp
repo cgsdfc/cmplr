@@ -1,0 +1,98 @@
+SYM_KW_VOID	
+SYM_IDEN	void_function_noargs
+SYM_LP	
+SYM_RP	
+SYM_LB	
+SYM_KW_RETURN	
+SYM_SEMI	
+SYM_RB	
+SYM_KW_VOID	
+SYM_IDEN	void_function_noargs_2
+SYM_LP	
+SYM_RP	
+SYM_LB	
+SYM_KW_INT	
+SYM_IDEN	local_int_1
+SYM_SEMI	
+SYM_KW_SCANF	
+SYM_LP	
+SYM_IDEN	local_int_1
+SYM_RP	
+SYM_SEMI	
+SYM_KW_IF	
+SYM_LP	
+SYM_IDEN	local_int_1
+SYM_DEQ	
+SYM_UINT	1
+SYM_RP	
+SYM_LB	
+SYM_IDEN	void_function
+SYM_LP	
+SYM_CHAR	'a'
+SYM_COMMA	
+SYM_IDEN	local_int_1
+SYM_COMMA	
+SYM_CHAR	'b'
+SYM_RP	
+SYM_SEMI	
+SYM_RB	
+SYM_KW_ELSE	
+SYM_KW_IF	
+SYM_LP	
+SYM_IDEN	local_int_1
+SYM_DEQ	
+SYM_UINT	2
+SYM_RP	
+SYM_LB	
+SYM_KW_INT	
+SYM_IDEN	local_int_2
+SYM_EQ	
+SYM_IDEN	int_function_noargs
+SYM_LP	
+SYM_RP	
+SYM_SEMI	
+SYM_KW_PRINTF	
+SYM_LP	
+SYM_STRING	"Calls int_function_noargs returns "
+SYM_RP	
+SYM_SEMI	
+SYM_KW_PRINTF	
+SYM_LP	
+SYM_IDEN	local_int_2
+SYM_COMMA	
+SYM_STRING	""
+SYM_RP	
+SYM_SEMI	
+SYM_RB	
+SYM_KW_ELSE	
+SYM_LB	
+SYM_KW_INT	
+SYM_IDEN	local_int_2
+SYM_SEMI	
+SYM_KW_FOR	
+SYM_LP	
+SYM_IDEN	local_int_2
+SYM_EQ	
+SYM_UINT	2
+SYM_SEMI	
+SYM_IDEN	local_int_2
+SYM_LT	
+SYM_UINT	3
+SYM_SEMI	
+SYM_IDEN	local_int_2
+SYM_EQ	
+SYM_IDEN	local_int_2
+SYM_ADD	
+SYM_UINT	1
+SYM_RP	
+SYM_LB	
+SYM_KW_PRINTF	
+SYM_LP	
+SYM_STRING	"void_function_noargs_2 does loop "
+SYM_COMMA	
+SYM_IDEN	local_int_2
+SYM_RP	
+SYM_SEMI	
+SYM_RB	
+SYM_RB	
+SYM_RB	

@@ -114,7 +114,7 @@ void utillib_hashmap_rehash(struct utillib_hashmap *self)
 {
   struct utillib_slist * new_buckets;
   size_t new_buckets_size=self->buckets_size << 1;
-  struct utillib_hashmap_callback *callback=self->callback;
+  struct utillib_hashmap_callback const*callback=self->callback;
 
   new_buckets=calloc(sizeof new_buckets[0], new_buckets_size);
   for (int i=0; i<self->buckets_size; ++i) {
@@ -195,3 +195,28 @@ utillib_hashmap_json_array_create(struct utillib_hashmap *self,
   }
   return array;
 }
+
+size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self)
+{
+  return self->buckets_size;
+}
+
+#ifndef NDEBUG
+void utillib_hashmap_print_buckets(struct utillib_hashmap const *self)
+{
+  for (int i=0; i<self->buckets_size; ++i) {
+    printf("#%-4d ", i);
+    struct utillib_slist * bucket=&self->buckets[i];
+    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
+      fputs("# ", stdout);
+    }
+    puts("");
+  }
+  size_t size=utillib_hashmap_size(self);
+  printf("buckets_size is %lu\n", self->buckets_size);
+  printf("size is %lu\n", size);
+  printf("load factor is %f\n", (float)size / self->buckets_size);
+}
+
+#endif
+
