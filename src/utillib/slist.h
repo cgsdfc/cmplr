@@ -22,88 +22,48 @@
 #ifndef UTILLIB_SLIST_H
 #define UTILLIB_SLIST_H
 
-/**
- * \file utillib/slist.h
- * A single-linked forward list. Suitable for fast
- * insertion/remove at the front.
- */
 #include "config.h" /* for bool */
 #include <stddef.h> /* for size_t */
-#define UTILLIB_SLIST_HAS_NEXT(N) ((N) != NULL)
-#define UTILLIB_SLIST_NODE_DATA(N) ((N)->data)
-#define UTILLIB_SLIST_NODE_NEXT(N) ((N)->next)
-#define UTILLIB_SLIST_HEAD(L) ((L)->sl_tail)
-
-/**
- * \macro UTILLIB_SLIST_FOREACH
- * Inline triversal for slist.
- */
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
-  for (struct utillib_slist_node *_p = (L)->sl_tail;                           \
-       _p != NULL && (((X) = _p->data) || 1); _p = _p->next)
+  for (struct utillib_slist_node *_p = (L)->head;                           \
+       _p != NULL && (((X) = _p->value) || 1); _p = _p->next)
 
-/**
- * \struct utillib_slist_node
- * A node in the single list. Keeps the next node
- * pointer and `data' pointer.
- */
 
 struct utillib_slist_node {
   struct utillib_slist_node *next;
-  void const *data;
+  void *value;
 };
 
-/**
- * \struct utillib_slist
- * Keeps the pointer to the node at the front.
- * Also maintains a free list for caching those
- * nodes that were removed previously so that next
- * insertion can use these nodes first.
- */
 
 struct utillib_slist {
-  struct utillib_slist_node *sl_tail;
-  struct utillib_slist_node *sl_free;
+  struct utillib_slist_node *head;
 };
+
+void utillib_slist_init(struct utillib_slist *self);
+void utillib_slist_destroy(struct utillib_slist *self);
+void utillib_slist_destroy_owning(struct utillib_slist *self,
+                                  void (*destroy)(void *elem));
+
+bool utillib_slist_empty(struct utillib_slist const *self);
+/**
+ * \function utillib_slist_size
+ * Counts the elements linearly to size.
+ */
+size_t utillib_slist_size(struct utillib_slist const *self);
+void *utillib_slist_front(struct utillib_slist const *self);
+
+void utillib_slist_push_front(struct utillib_slist *self, void const *value);
 
 /**
- * \struct utillib_slist_iterator
- * Aquires the front pointer from an slist
- * and follows it down until it becomes NULL.
+ * \function utillib_slist_erase
+ * Removes the node in the `pos' of the list 
+ * and returns the value held by this node.
+ * If there is no `pos' in the list, `NULL'
+ * is returned.
  */
+void * utillib_slist_erase(struct utillib_slist *self, size_t pos);
+void utillib_slist_pop_front(struct utillib_slist *self);
 
-struct utillib_slist_iterator {
-  struct utillib_slist_node *iter_node;
-};
-
-/** \brief utillib_slist_iterator */
-void utillib_slist_iterator_init_null(struct utillib_slist_iterator *);
-void utillib_slist_iterator_init(struct utillib_slist_iterator *,
-                                 struct utillib_slist *);
-bool utillib_slist_iterator_has_next(struct utillib_slist_iterator *);
-void utillib_slist_iterator_next(struct utillib_slist_iterator *);
-void *utillib_slist_iterator_get(struct utillib_slist_iterator *);
-
-/** \brief constructor destructor */
-void utillib_slist_init(struct utillib_slist *);
-void utillib_slist_destroy(struct utillib_slist *);
-void utillib_slist_destroy_owning(struct utillib_slist *,
-                                  void (*destroy)(void *));
-
-/** \brief observer */
-bool utillib_slist_empty(struct utillib_slist *);
-size_t utillib_slist_size(struct utillib_slist *);
-void *utillib_slist_front(struct utillib_slist *);
-
-/** \brief modifier */
-void utillib_slist_push_front(struct utillib_slist *, void const *);
-void utillib_slist_push_front_node(struct utillib_slist *,
-                                   struct utillib_slist_node *);
-void utillib_slist_erase_node(struct utillib_slist *,
-                              struct utillib_slist_node *);
-void utillib_slist_erase(struct utillib_slist *,
-                         struct utillib_slist_iterator *);
-void utillib_slist_pop_front(struct utillib_slist *);
 #endif /* UTILLIB_SLIST_H */

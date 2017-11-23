@@ -253,59 +253,6 @@ void utillib_vector_reserve(struct utillib_vector *self, size_t new_cap) {
   }
 }
 
-/**
- * \function utillib_vector_iterator_init
- * Initializes self with the utillib_vector to traversal.
- * \param self.
- * \param cont the container. if it is empty, self does not
- * point to any data.
- * \return void.
- */
-
-void utillib_vector_iterator_init(struct utillib_vector_iterator *self,
-                                  struct utillib_vector *cont) {
-  self->iter_begin = cont->begin;
-  self->iter_end = cont->end;
-}
-
-/**
- * \function utillib_vector_iterator_has_next
- * Tells whether self points to a valid element
- * and has a valid successor. Note that the pass-the-end
- * iterator is a valid successor of any other valid iterator
- * that points to real data, but itself not points to valid
- * data and has no valid successor.
- * \para self.
- * \return whether self has a valid successor.
- */
-
-bool utillib_vector_iterator_has_next(struct utillib_vector_iterator *self) {
-  return self->iter_begin != self->iter_end;
-}
-
-/**
- * \function utillib_vector_iterator_get
- * Get the data pointed to by self.
- * \param self.
- * \return if self is not a valid iterator, it yeilds
- * undefined behaviour.
- */
-
-void *utillib_vector_iterator_get(struct utillib_vector_iterator *self) {
-  return (void *)*self->iter_begin;
-}
-
-/**
- * \function utillib_vector_iterator_next
- * Advances self to its successor. If self has
- * no valid successor, it yeilds undefined behaviour.
- * \param self.
- * \return void.
- */
-
-void utillib_vector_iterator_next(struct utillib_vector_iterator *self) {
-  ++self->iter_begin;
-}
 
 /**
  * JSON interfaces

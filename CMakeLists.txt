@@ -42,6 +42,7 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
+  ./src/utillib/hashmap.c
   ./src/utillib/test_impl.c
   ./src/utillib/json_parser.c
   ./src/utillib/json_scanner.c
@@ -53,7 +54,6 @@ add_library(utillib
   ./src/utillib/ll1_parser.c
   ./src/utillib/vector2.c
   ./src/utillib/bitset.c
-  ./src/utillib/unordered_op.c
   ./src/utillib/ll1_builder.c
   ./src/utillib/symbol.c
   ./src/utillib/rule.c
@@ -61,14 +61,12 @@ add_library(utillib
   ./src/utillib/json.c
   ./src/utillib/test.c
   ./src/utillib/print.c
-  ./src/utillib/equal.c
-  ./src/utillib/hash.c
-  ./src/utillib/unordered_map.c
   ./src/utillib/slist.c
   ./src/utillib/vector.c
   ./src/utillib/string.c)
 
 add_executable(utillib_test 
+  ./src/utillib/test/hashmap.c
   ./src/utillib/test/json_scanner.c
   ./src/utillib/test/ll1_generator.c
   ./src/utillib/test/non_ll1_sample_1.c
@@ -81,11 +79,9 @@ add_executable(utillib_test
   ./src/utillib/test/vector2.c
   ./src/utillib/test/bitset.c
   ./src/utillib/test/ll1_builder.c
-  ./src/utillib/test/hash.c
   ./src/utillib/test/symbol.c
   ./src/utillib/test/rule.c
   ./src/utillib/test/json.c
-  ./src/utillib/test/hash.c
   ./src/utillib/test/string.c
   ./src/utillib/test/test.c
   ./src/utillib/test/slist.c

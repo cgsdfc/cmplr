@@ -39,13 +39,14 @@ utillibincludedir = $(includedir)/utillib
 lib_LTLIBRARIES = libutillib.la
 
 utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
+													src/utillib/hashmap.h \
+													src/utillib/hashmap_impl.h \
 													src/utillib/json_impl.h \
 													src/utillib/opg_builder.h \
 													src/utillib/scanner.h \
 													src/utillib/ll1_parser.h \
 													src/utillib/vector2.h \
 													src/utillib/bitset.h \
-													src/utillib/unordered_op.h \
 													src/utillib/ll1_builder.h \
 													src/utillib/ll1_builder_impl.h \
 													src/utillib/json_parser_impl.h \
@@ -57,15 +58,15 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/json.h \
 													src/utillib/test.h \
 													src/utillib/print.h \
-													src/utillib/equal.h \
-													src/utillib/hash.h \
-													src/utillib/unordered_map.h \
+													src/utillib/hashmap.h \
 													src/utillib/slist.h \
 													src/utillib/vector.h \
 													src/utillib/string.h
 
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
+												 src/utillib/hashmap.c \
+												 src/utillib/hashmap_impl.c \
 												 src/utillib/test_impl.c \
 												 src/utillib/ll1_builder_impl.c \
 												 src/utillib/json_parser.c \
@@ -77,7 +78,6 @@ libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/ll1_parser.c \
 												 src/utillib/vector2.c \
 												 src/utillib/bitset.c \
-												 src/utillib/unordered_op.c \
 												 src/utillib/ll1_builder.c \
 												 src/utillib/symbol.c \
 												 src/utillib/rule.c \
@@ -85,9 +85,7 @@ libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 src/utillib/json.c \
 												 src/utillib/test.c \
 												 src/utillib/print.c \
-												 src/utillib/equal.c \
-												 src/utillib/hash.c \
-												 src/utillib/unordered_map.c \
+												 src/utillib/hashmap.c \
 												 src/utillib/slist.c \
 												 src/utillib/vector.c \
 												 src/utillib/string.c
@@ -112,11 +110,10 @@ utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/json_parser.c \
 											 src/utillib/test/test.c \
 											 src/utillib/test/print.c \
-											 src/utillib/test/unordered_map.c \
+											 src/utillib/test/hashmap.c \
 											 src/utillib/test/slist.c \
 											 src/utillib/test/vector.c \
 											 src/utillib/test/string.c \
-											 src/utillib/test/hash.c \
 											 src/utillib/test/driver.c 
 
 utillib_test_LDADD = libutillib.la

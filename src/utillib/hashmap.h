@@ -60,6 +60,22 @@
 #include "json.h"
 #include <stddef.h>
 
+/**
+ * \struct utillib_hashmap_callback
+ * Callbacks for utillib_hashmap.
+ * Exists for 2 purpses:
+ * 1. Keys of different types have different
+ * hasing and equaling logic which should be
+ * out of the concern of `utillib_hashmap'.
+ * 2. Even the same type can alway be compared
+ * using the same function, the
+ * hasing logic can still vary a lot due to
+ * the time-space trade-off.
+ * 
+ * Notices for the second reason the callback
+ * for the frequently used string is not provided
+ * in this module.
+ */
 struct utillib_hashmap_callback {
   size_t (*hash_handler )(void const *self);
   int (*compare_handler )(void const *lhs, void const *rhs);
@@ -77,18 +93,12 @@ struct utillib_hashmap {
  * buckets_size and a bucket array of that size.
  * The `callback' determines how the keys will be 
  * hashed and compared from then on.
+ * The default buckets_size is 16 and can be changed
+ * at compile-time by defining `UTILLIB_HASHMAP_DEFAULT_BUCKETS_SIZE'
+ * to a different value which should be the power of 2.
  */
 void utillib_hashmap_init(struct utillib_hashmap *self,
                                 struct utillib_hashmap_callback const *callback);
-/**
- * \function utillib_hashmap_init_string
- * Same as `utillib_hashmap_init' but binds the `callback'
- * to the suite of `const char*' which is frequently used.
- * If initialized in this way, the client can use 
- * `utillib_hashmap_json_object_create' to get a JSON view
- * resembling an object that has named fields.
- */
-void utillib_hashmap_init_string(struct utillib_hashmap *self);
 
 /**
  * \function utillib_hashmap_destroy
@@ -136,12 +146,13 @@ void * utillib_hashmap_update(struct utillib_hashmap *self, void const *key, voi
 void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key);
 
 /**
- * \function utillib_hashmap_clear
- * Discards all the keys and values.
- * Notices if `self' is owning these keys and values, memory
- * leak may happen because no clean up of them will be performed.
+ * \function utillib_hashmap_rehash
+ * Doubles the size of the bucket array and rearrage
+ * all the elements. This is an expensive operation
+ * so only call it when the map become crowed and
+ * never use it in a per-insert basic.
  */
-void utillib_hashmap_clear(struct utillib_hashmap *self);
+void utillib_hashmap_rehash(struct utillib_hashmap *self);
 
 /**
  * \function utillib_hashmap_at
@@ -170,9 +181,8 @@ bool utillib_hashmap_empty(struct utillib_hashmap const *self);
  * { "key": value }.
  * The value part is created using the `create_func'
  * argument.
- * if the type of key is not `char const*', that is,
- * self is not initialized by `utillib_hashmap_init_string'.
- * it returns `NULL' to indicate that error.
+ * Notices that if the type of key is not `char const*',
+ * disaster will happen so be clear.
  */
 struct utillib_json_value*
 utillib_hashmap_json_object_create(struct utillib_hashmap *self,

@@ -29,9 +29,9 @@
 #define UTILLIB_PAIR_SECOND(P) ((P)->up_second)
 
 struct utillib_pair {
-  void const *up_first;
-  void const *up_second;
+  void *up_first;
+  void *up_second;
 };
 
-struct utillib_pair *utillib_make_pair(void const *, void const *);
+struct utillib_pair *utillib_make_pair(void *first, void *second);
 #endif /* UTILLIB_PAIR_H */

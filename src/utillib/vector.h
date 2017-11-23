@@ -55,22 +55,6 @@ struct utillib_vector {
   void const **stor_end;
 };
 
-/**
- * \struct utillib_vector_iterator
- * Keeps `begin' and `end' pointers of
- * the vector to allow forward triversal.
- */
-struct utillib_vector_iterator {
-  void const **iter_begin, **iter_end;
-};
-
-/** \brief utillib_vector_iterator */
-void utillib_vector_iterator_init(struct utillib_vector_iterator *,
-                                  struct utillib_vector *);
-bool utillib_vector_iterator_has_next(struct utillib_vector_iterator *);
-void utillib_vector_iterator_next(struct utillib_vector_iterator *);
-void *utillib_vector_iterator_get(struct utillib_vector_iterator *);
-
 /** \brief constructor destructor */
 void utillib_vector_init(struct utillib_vector *self);
 void utillib_vector_init_fill(struct utillib_vector *self, size_t,

@@ -18,18 +18,24 @@
    02110-1301 USA
 
 */
-#include "hash.h"
-#include <string.h>
+#ifndef UTILLIB_HASHMAP_IMPL_H
+#define UTILLIB_HASHMAP_IMPL_H
+#include "hashmap.h"
+#define hashmap_indexof(key, hash_handler, buckets_size) (hash_handler(key) & (buckets_size-1))
+#define hashmap_check_range(index, buckets_size) do {\
+  assert (( index ) < ( buckets_size ) && "Index out of range");\
+} while (0)
 
-static size_t hash_c_str_len(char const *str) { return strlen(str); }
+struct utillib_hashmap_search_result {
+  size_t itempos;
+  struct utillib_slist  * bucket;
+  struct utillib_pair * pair;
+};
 
-static size_t hash_c_str_length(char const *str) {
-  size_t len = strlen(str);
-  size_t sum = str[0] + str[len - 1];
-  sum += len << 4;
-  return sum;
-}
+void utillib_hashmap_search_result_init(
+    struct utillib_hashmap_search_result *self,
+    struct utillib_hashmap *hashmap,
+    void const *key);
 
-size_t utillib_hash_c_str(char const *str) { return hash_c_str_length(str); }
+#endif /* UTILLIB_HASHMAP_IMPL_H */
 
-size_t utillib_hash_int(int const *i) { return *i; }

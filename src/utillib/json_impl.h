@@ -26,5 +26,9 @@
   do {                                                                         \
     assert((VAL)->kind == (KIND));                                             \
   } while (0)
+#define json_check_create_func(FUNC) \
+do { \
+  assert (FUNC && "create_func should not be NULL");\
+} while(0)
 
 #endif /* UTILLIB_JSON_IMPL_H */
