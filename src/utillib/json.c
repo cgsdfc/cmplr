@@ -256,9 +256,9 @@ static void json_object_tostring(struct utillib_json_object const *self,
   }
   UTILLIB_VECTOR_FOREACH(struct utillib_pair *, mem, &self->members) {
     utillib_string_append(string, "\"");
-    utillib_string_append(string, (char const *)UTILLIB_PAIR_FIRST(mem));
+    utillib_string_append(string, mem->up_first);
     utillib_string_append(string, "\":");
-    json_value_tostring(UTILLIB_PAIR_SECOND(mem), string);
+    json_value_tostring(mem->up_second, string);
     utillib_string_append(string, ",");
   }
   utillib_string_replace_last(string, '}');

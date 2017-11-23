@@ -28,7 +28,7 @@
 
 struct utillib_pair *utillib_make_pair(void *key, void *value) {
   struct utillib_pair *pair = malloc(sizeof *pair);
-  UTILLIB_PAIR_FIRST(pair) = key;
-  UTILLIB_PAIR_SECOND(pair) = value;
+  pair->up_first = key;
+  pair->up_second = value;
   return pair;
 }

@@ -131,10 +131,10 @@ UTILLIB_TEST(hashmap_rehash)
 
 UTILLIB_TEST_DEFINE(Utillib_HashMap) {
   UTILLIB_TEST_BEGIN(Utillib_HashMap)
-  /* UTILLIB_TEST_RUN(hashmap_insert) */
-  /* UTILLIB_TEST_RUN(hashmap_update) */
+  UTILLIB_TEST_RUN(hashmap_insert)
+  UTILLIB_TEST_RUN(hashmap_update)
   UTILLIB_TEST_RUN(hashmap_discard)
-  /* UTILLIB_TEST_RUN(hashmap_json_object) */
+  UTILLIB_TEST_RUN(hashmap_json_object)
   UTILLIB_TEST_END(Utillib_HashMap)
   UTILLIB_TEST_FIXTURE(struct utillib_hashmap)
   UTILLIB_TEST_RETURN(Utillib_HashMap)

@@ -25,9 +25,6 @@
  * \file utillib/pair.h
  */
 
-#define UTILLIB_PAIR_FIRST(P) ((P)->up_first)
-#define UTILLIB_PAIR_SECOND(P) ((P)->up_second)
-
 struct utillib_pair {
   void *up_first;
   void *up_second;
