@@ -18,82 +18,175 @@
    02110-1301 USA
 
 */
-#ifndef UTILLIB_UNORDERED_MAP_H
-#define UTILLIB_UNORDERED_MAP_H
+#ifndef UTILLIB_HASHMAP_H
+#define UTILLIB_HASHMAP_H
+
 /**
- * \file utillib/unordered_map.h
- * Linked hash map.
+ * \file utillib/hashmap.h
+ * Introduction
+ * HashMap can be used to implement important
+ * structures that based on fast lookup.
+ * It speeds up lookup by deriving index from
+ * the content of its elements and properly
+ * maintaining the elements with the same index.
+ * Practically usages can include:
+ * 1. Caches a subset of elements for frequent
+ * access.
+ * 2. Checks the existence of certain elements
+ * and ensures they are not discovered twice.
+ * Notices that HashMap serves as a aid of lookup
+ * rather than container of a large chunk of elements.
+ * The key can be part of a struct that serves as
+ * the value in a HashMap and a struct can use
+ * different fields as keys each of which comprises
+ * a HashMap.
+ * 
+ * Rehashing policy
+ * When the elements of a HashMap increase, most likely
+ * the speed of lookup will decrease. A HashMap is said
+ * to be auto-rehashing if it can detect the load factor
+ * itself and adjust the size of buckets accordingly.
+ * However, since this implementation aims at small
+ * size of struct and simple logic, it does not rehash
+ * automatically, but rather requires the client to 
+ * decide when should do the rehashing. This means the
+ * implementation does provide way to count elements
+ * and way to do rehashing. All the client needs to do
+ * is analyzing the statistic and rehash.
+ * 
  */
 
 #include "config.h"
-#include "enum.h"
-#include "pair.h"
-#include "slist.h"
-#include "unordered_op.h"
-#include "vector.h"
+#include "json.h"
 #include <stddef.h>
-#include <stdlib.h>
 
-UTILLIB_ENUM_BEGIN(utillib_unordered_map_retval_t)
-/* for mode find_only */
-UTILLIB_ENUM_ELEM(KEY_FOUND)
-UTILLIB_ENUM_ELEM(KEY_MISSING)
-/* for mode force_insert */
-UTILLIB_ENUM_ELEM(KEY_EXISTS)
-UTILLIB_ENUM_ELEM(KEY_INSERTED)
-UTILLIB_ENUM_END(utillib_unordered_map_retval_t)
-
-struct utillib_unordered_map {
-  struct utillib_unordered_op *un_op;
-  struct utillib_vector un_bucket;
-  double un_max_lf;
-  size_t un_nbucket;
-  size_t un_size;
-  /* manage memory of utillib_pair */
-  struct utillib_pair *un_free;
+struct utillib_hashmap_callback {
+  size_t (*hash_handler )(void const *self);
+  int (*compare_handler )(void const *lhs, void const *rhs);
 };
 
-struct utillib_unordered_map_iterator {
-  struct utillib_vector_iterator iter_slot;
-  struct utillib_slist_iterator iter_node;
+struct utillib_hashmap {
+  struct utillib_hashmap_callback const *callback;
+  struct utillib_slist * buckets;
+  size_t buckets_size;
 };
 
-/* utillib_unordered_map_iterator */
-void utillib_unordered_map_iterator_init(
-    struct utillib_unordered_map_iterator *, struct utillib_unordered_map *);
-bool utillib_unordered_map_iterator_has_next(
-    struct utillib_unordered_map_iterator *);
-void utillib_unordered_map_iterator_next(
-    struct utillib_unordered_map_iterator *);
-struct utillib_pair *
-utillib_unordered_map_iterator_get(struct utillib_unordered_map_iterator *);
+/**
+ * \function utillib_hashmap_init
+ * Initializes an empty hashmap with a default
+ * buckets_size and a bucket array of that size.
+ * The `callback' determines how the keys will be 
+ * hashed and compared from then on.
+ */
+void utillib_hashmap_init(struct utillib_hashmap *self,
+                                struct utillib_hashmap_callback const *callback);
+/**
+ * \function utillib_hashmap_init_string
+ * Same as `utillib_hashmap_init' but binds the `callback'
+ * to the suite of `const char*' which is frequently used.
+ * If initialized in this way, the client can use 
+ * `utillib_hashmap_json_object_create' to get a JSON view
+ * resembling an object that has named fields.
+ */
+void utillib_hashmap_init_string(struct utillib_hashmap *self);
 
-/* constructor destructor */
-void utillib_unordered_map_init_from_array(
-    struct utillib_unordered_map *, struct utillib_unordered_op *,
-    struct utillib_pair const *); /* NULL teminated */
-void utillib_unordered_map_init(struct utillib_unordered_map *,
-                                struct utillib_unordered_op *);
-void utillib_unordered_map_destroy(struct utillib_unordered_map *);
-void utillib_unordered_map_destroy_owning(struct utillib_unordered_map *,
-                                          void (*destroy)(void *));
+/**
+ * \function utillib_hashmap_destroy
+ * Destructs `self'.
+ */
+void utillib_hashmap_destroy(struct utillib_hashmap *self);
 
-/* modifier */
-int utillib_unordered_map_emplace(struct utillib_unordered_map *, void const *,
-                                  void const *);
-int utillib_unordered_map_insert(struct utillib_unordered_map *,
-                                 struct utillib_pair const *);
-int utillib_unordered_map_erase(struct utillib_unordered_map *, void const *);
-void utillib_unordered_map_set_max_load_factor(struct utillib_unordered_map *,
-                                               double);
-void utillib_unordered_map_rehash(struct utillib_unordered_map *, size_t);
-void utillib_unordered_map_clear(struct utillib_unordered_map *);
+/**
+ * \function utillib_hashmap_destroy_owning
+ * Destructs `self' and passes each key to 
+ * `key_destroy', each value to `value_destroy'.
+ * Notices that one of `key_destroy' and `value_destroy'
+ * can be `NULL', which will not be called. If both are
+ * `NULL', please use `utillib_hashmap_destroy' which is
+ * more efficient.
+ */
+void utillib_hashmap_destroy_owning(struct utillib_hashmap *self,
+                                          void (*key_destroy)(void *key),
+                                          void (*value_destroy)(void *value));
 
-/* observer */
-struct utillib_pair *utillib_unordered_map_find(struct utillib_unordered_map *,
-                                                void const *);
-size_t utillib_unordered_map_size(struct utillib_unordered_map *);
-size_t utillib_unordered_map_bucket_count(struct utillib_unordered_map *);
-bool utillib_unordered_map_empty(struct utillib_unordered_map *);
-double utillib_unordered_map_load_factor(struct utillib_unordered_map *);
-#endif /* UTILLIB_UNORDERED_MAP_H */
+/**
+ * \function utillib_hashmap_insert
+ * Inserts the key-value pair to self. If 
+ * the key already existed, the insertion failed.
+ * Returns zero if insertion success.
+ * Returns non-zero if insertion failed.
+ */
+int utillib_hashmap_insert(struct utillib_hashmap *self, void const *key, void const *value);
+
+/**
+ * \function utillib_hashmap_update
+ * Updates the value at `key'. If the key did not exist
+ * before, `value' is returned. Otherwise, the old value
+ * at `key' is returned.
+ * This function alway modifies `self'.
+ */
+void * utillib_hashmap_update(struct utillib_hashmap *self, void const *key, void const *value);
+
+/**
+ * \function utillib_hashmap_discard
+ * Discards the value at `key'. If no such value at `key',
+ * `NULL' is returned. Otherwise, the discarded value is 
+ * returned.
+ */
+void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key);
+
+/**
+ * \function utillib_hashmap_clear
+ * Discards all the keys and values.
+ * Notices if `self' is owning these keys and values, memory
+ * leak may happen because no clean up of them will be performed.
+ */
+void utillib_hashmap_clear(struct utillib_hashmap *self);
+
+/**
+ * \function utillib_hashmap_at
+ * Searches for value corresponding to this `key'
+ * and return the address of the value if it was found.
+ * Returns `NULL' if not.
+ */
+void * utillib_hashmap_at(struct utillib_hashmap const* self, void const *key);
+/**
+ * \function utillib_hashmap_size
+ * Counts the elements and return the number of them.
+ * Run linearly of the size of `self'.
+ */
+size_t utillib_hashmap_size(struct utillib_hashmap const *self);
+/**
+ * \function utillib_hashmap_empty
+ * Decides whether `self' is empty.
+ * Runs linearly of the size of the internal buckets.
+ */
+bool utillib_hashmap_empty(struct utillib_hashmap const *self);
+
+/**
+ * \function utillib_hashmap_json_object_create
+ * Assumes that the type of key is `char const*' and
+ * returns a JSON object representation of self like
+ * { "key": value }.
+ * The value part is created using the `create_func'
+ * argument.
+ * if the type of key is not `char const*', that is,
+ * self is not initialized by `utillib_hashmap_init_string'.
+ * it returns `NULL' to indicate that error.
+ */
+struct utillib_json_value*
+utillib_hashmap_json_object_create(struct utillib_hashmap *self,
+    utillib_json_value_create_func_t create_func);
+
+/**
+ * \function utillib_hashmap_json_array_create
+ * Does not assume anything about the key and value.
+ * Creates a JSON array of JSON objects each of which
+ * has the form { "key": key_value, "value": value_value }.
+ */
+struct utillib_json_value *
+utillib_hashmap_json_array_create(struct utillib_hashmap *self,
+    utillib_json_value_create_func_t key_create,
+    utillib_json_value_create_func_t value_create);
+
+#endif /* UTILLIB_HASHMAP_H */
