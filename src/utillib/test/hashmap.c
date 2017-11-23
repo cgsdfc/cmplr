@@ -21,6 +21,8 @@
 
 #include <utillib/test.h>
 #include <utillib/hashmap.h>
+#include <utillib/symbol.h>
+#include <utillib/json.h>
 
 static size_t simple_strhash(char const *str) {
   size_t len=strlen(str);
@@ -93,6 +95,35 @@ UTILLIB_TEST(hashmap_discard)
   UTILLIB_TEST_ASSERT_EQ(value, actual_value);
   UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_at(UT_FIXTURE, key), NULL);
 
+  /* Now discard a non-exist_key */
+  actual_value=utillib_hashmap_discard(UT_FIXTURE, "Not exist_key");
+  UTILLIB_TEST_ASSERT_EQ(NULL, actual_value);
+
+}
+
+UTILLIB_TEST(hashmap_json_object)
+{
+  utillib_hashmap_init(UT_FIXTURE, &string_callback);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol1", UTILLIB_SYMBOL_EOF);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol2", UTILLIB_SYMBOL_EPS);
+  utillib_hashmap_insert(UT_FIXTURE, "symbol3", UTILLIB_SYMBOL_ERR);
+
+  struct utillib_json_value *val=utillib_hashmap_json_object_create(UT_FIXTURE,
+      utillib_symbol_json_object_create);
+  utillib_json_pretty_print(val, stderr);
+  utillib_json_value_destroy(val);
+}
+
+/*
+ * We have to make sure after
+ * rehash:
+ * 1. The content is the same.
+ * 2. No memory leak.
+ */ 
+UTILLIB_TEST(hashmap_rehash) 
+{
+
+
 
 
 
@@ -100,9 +131,10 @@ UTILLIB_TEST(hashmap_discard)
 
 UTILLIB_TEST_DEFINE(Utillib_HashMap) {
   UTILLIB_TEST_BEGIN(Utillib_HashMap)
-  UTILLIB_TEST_RUN(hashmap_insert)
-  UTILLIB_TEST_RUN(hashmap_update)
+  /* UTILLIB_TEST_RUN(hashmap_insert) */
+  /* UTILLIB_TEST_RUN(hashmap_update) */
   UTILLIB_TEST_RUN(hashmap_discard)
+  /* UTILLIB_TEST_RUN(hashmap_json_object) */
   UTILLIB_TEST_END(Utillib_HashMap)
   UTILLIB_TEST_FIXTURE(struct utillib_hashmap)
   UTILLIB_TEST_RETURN(Utillib_HashMap)

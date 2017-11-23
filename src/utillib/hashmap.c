@@ -98,12 +98,16 @@ void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key)
 {
   struct utillib_hashmap_search_result result;
   struct utillib_pair *old_pair;
+  void * old_value;
+
   utillib_hashmap_search_result_init(&result, self, key);
   if (!result.pair)
     return NULL;
   old_pair=utillib_slist_erase(result.bucket, result.itempos);
   assert (old_pair == result.pair && "should remove the same pair");
-  return result.pair->up_second;
+  old_value=old_pair->up_second;
+  free(old_pair);
+  return old_value;
 }
 
 void utillib_hashmap_rehash(struct utillib_hashmap *self)
