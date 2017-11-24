@@ -34,6 +34,5 @@ Makefile
 *.log
 *.rst
 .dirstamp
-example-*
 *_test
 
