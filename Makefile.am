@@ -152,12 +152,6 @@ example_json_cpp_SOURCES = src/utillib/example-cpp/json.cpp
 example_json_cpp_LDADD = libutillibcpp.la
 
 ## Pascal
-noinst_PROGRAMS += pascal_ll1_table_gen
-pascal_ll1_table_gen_SOURCES = src/pascal/ll1_table_gen.c 
-pascal_ll1_table_gen_LDADD = libutillib.la libpascal.la
-pascal_ll1_table_gen_CPPFLAGS = $(PASCAL_SOURCE_DIR)
-
-noinst_pascalincludedir = $(includedir)/pascal
 
 lib_LTLIBRARIES += libpascal.la
 noinst_pascalinclude_HEADERS =  src/pascal/symbols.h \
@@ -179,6 +173,12 @@ bin_PROGRAMS = pascal
 pascal_SOURCES = src/pascal/main.c
 pascal_LDADD = libpascal.la
 
+noinst_PROGRAMS += pascal_ll1_table_gen
+pascal_ll1_table_gen_SOURCES = src/pascal/ll1_table_gen.c 
+pascal_ll1_table_gen_LDADD = libutillib.la libpascal.la
+pascal_ll1_table_gen_CPPFLAGS = $(PASCAL_SOURCE_DIR)
+
+noinst_pascalincludedir = $(includedir)/pascal
 noinst_PROGRAMS += pascal_test
 TESTS += pascal_test
 pascal_test_SOURCES = src/pascal/test/symbols.c \
@@ -201,6 +201,7 @@ libcling_la_SOURCES = src/cling/symbols.c \
 											src/cling/rules.c \
 											src/cling/scanner.c \
 											$(noinst_clinginclude_HEADERS)
+libcling_la_LIBADD = libutillib.la
 
 noinst_PROGRAMS += cling_test
 cling_test_SOURCES = src/cling/test/scanner.c \
@@ -208,12 +209,11 @@ cling_test_SOURCES = src/cling/test/scanner.c \
 
 cling_test_LDADD = libcling.la libutillib.la
 
-libcling_la_LIBADD = libutillib.la
 noinst_PROGRAMS += cling_ll1_table
 cling_ll1_table_SOURCES = src/cling/ll1_gen.c
 cling_ll1_table_LDADD = libcling.la libutillib.la
 
 bin_PROGRAMS += cling-scanner
 cling_scanner_SOURCES = src/cling/smain.c
-cling_scanner_LDADD = libcling.la
+cling_scanner_LDADD = libcling.la libutillib.la
 
