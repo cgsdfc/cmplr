@@ -18,28 +18,38 @@
    02110-1301 USA
 
 */
-#ifndef UTILLIB_HASHMAP_IMPL_H
-#define UTILLIB_HASHMAP_IMPL_H
-#include "hashmap.h"
-#define hashmap_indexof(key, hash_handler, buckets_size) (hash_handler(key) & (buckets_size-1))
-#define hashmap_check_range(index, buckets_size) do {\
-  assert (( index ) < ( buckets_size ) && "Index out of range");\
-} while (0)
+
+#ifndef UTILLIB_LR_BUILDER_IMPL_H
+#define UTILLIB_LR_BUILDER_IMPL_H
+#include "vector.h"
 
 /**
- * \struct utillib_hashmap_search_result
- * Helper to keep the result of one search
+ * \struct utillib_lr_item
+ * An item is a BNF rule decorated
+ * with a tiny dot to tell the parser's
+ * position after which the next symbol
+ * is expected.
+ * We use a straight forward way to represent
+ * it plus its ID since itemset may store IDs
+ * instead of pointers.
  */
-struct utillib_hashmap_search_result {
-  size_t itempos;
-  struct utillib_slist  * bucket;
-  struct utillib_pair * pair;
+struct utillib_lr_item {
+  size_t id;
+  size_t pos;
+  struct utillib_rule * rule;
 };
 
-void utillib_hashmap_search_result_init(
-    struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap const *hashmap,
-    void const *key);
+struct utillib_lr_item_factory {
+  struct utillib_bitset * 
 
-#endif /* UTILLIB_HASHMAP_IMPL_H */
+
+};
+
+/**
+ * \function utillib_lr_maximum_items
+ * Counts the maximum possible number of items
+ * so that itemset be made from a fixed-sized bitset.
+ */
+size_t utillib_lr_maximum_items(struct utillib_vector *rules);
+#endif /* UTILLIB_LR_BUILDER_IMPL_H */
 

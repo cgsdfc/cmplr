@@ -18,28 +18,22 @@
    02110-1301 USA
 
 */
-#ifndef UTILLIB_HASHMAP_IMPL_H
-#define UTILLIB_HASHMAP_IMPL_H
-#include "hashmap.h"
-#define hashmap_indexof(key, hash_handler, buckets_size) (hash_handler(key) & (buckets_size-1))
-#define hashmap_check_range(index, buckets_size) do {\
-  assert (( index ) < ( buckets_size ) && "Index out of range");\
-} while (0)
+#include "lr_builder_impl.h"
 
-/**
- * \struct utillib_hashmap_search_result
- * Helper to keep the result of one search
- */
-struct utillib_hashmap_search_result {
-  size_t itempos;
-  struct utillib_slist  * bucket;
-  struct utillib_pair * pair;
-};
+size_t utillib_lr_maximum_items(struct utillib_vector *rules)
+{
+  size_t size=0;
+  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules) {
+    if (utillib_rule_purely_epsilon(rule)) {
+      /* Form of A := eps takes only 1 item */
+      ++size;
+      continue;
+    }
+    /* Plus the past-the-rule item */
+    size += utillib_vector_size(&rule->RHS) + 1;
+  }
+  /* Plus the past-the-eof item */
+  return size + 1;
+}
 
-void utillib_hashmap_search_result_init(
-    struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap const *hashmap,
-    void const *key);
-
-#endif /* UTILLIB_HASHMAP_IMPL_H */
 

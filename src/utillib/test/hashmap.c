@@ -175,8 +175,6 @@ UTILLIB_TEST(hashmap_rehash)
     UTILLIB_TEST_ASSERT_NE(NULL, value);
     UTILLIB_TEST_ASSERT_EQ(value, *s);
   }
-
-
 }
 
 UTILLIB_TEST_DEFINE(Utillib_HashMap) {

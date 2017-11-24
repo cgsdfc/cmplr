@@ -85,7 +85,7 @@ void * utillib_hashmap_update(struct utillib_hashmap *self,
   struct utillib_hashmap_search_result result;
   utillib_hashmap_search_result_init(&result, self, key);
   if (result.pair) {
-    struct utillib_pair * old_value=result.pair->up_second;
+    void * old_value=result.pair->up_second;
     result.pair->up_second=value;
     return old_value;
   }

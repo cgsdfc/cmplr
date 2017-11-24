@@ -40,16 +40,12 @@ lib_LTLIBRARIES = libutillib.la
 
 utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/hashmap.h \
-													src/utillib/hashmap_impl.h \
-													src/utillib/json_impl.h \
 													src/utillib/opg_builder.h \
 													src/utillib/scanner.h \
 													src/utillib/ll1_parser.h \
 													src/utillib/vector2.h \
 													src/utillib/bitset.h \
 													src/utillib/ll1_builder.h \
-													src/utillib/ll1_builder_impl.h \
-													src/utillib/json_parser_impl.h \
 													src/utillib/json_scanner.h \
 													src/utillib/json_parser.h \
 													src/utillib/symbol.h \
@@ -58,14 +54,17 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/json.h \
 													src/utillib/test.h \
 													src/utillib/print.h \
-													src/utillib/hashmap.h \
 													src/utillib/slist.h \
 													src/utillib/vector.h \
 													src/utillib/string.h
 
+utillib_impl_headers = src/utillib/ll1_builder_impl.h \
+											 src/utillib/hashmap_impl.h \
+											 src/utillib/json_impl.h \
+											 src/utillib/json_parser_impl.h
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
-												 src/utillib/hashmap.c \
+												 $(utillib_impl_headers) \
 												 src/utillib/hashmap_impl.c \
 												 src/utillib/strhash.c \
 												 src/utillib/test_impl.c \
