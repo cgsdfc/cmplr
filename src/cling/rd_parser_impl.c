@@ -27,7 +27,7 @@
 #include <assert.h>
 #include <stdlib.h>
 struct cling_rd_parser_error *
-cling_rd_parser_error_create(int kind, struct utillib_token_scanner * input)
+cling_rd_parser_error(int kind, struct utillib_token_scanner * input)
 {
   struct cling_rd_parser_error * self=calloc(sizeof *self, 1);
   self->kind=kind;
@@ -66,16 +66,27 @@ bool cling_rd_parser_skipto(struct utillib_token_scanner *input,
 }
 
 struct cling_rd_parser_error *
-cling_rd_parser_expected_error_create(
+cling_rd_parser_expected_error(
     struct utillib_token_scanner *input,
     struct utillib_symbol const *expected,
     struct utillib_symbol const *actual,
     struct utillib_symbol const *context)
 {
-  struct cling_rd_parser_error *self=cling_rd_parser_error_create(CL_EEXPECT, input);
+  struct cling_rd_parser_error *self=cling_rd_parser_error(CL_EEXPECT, input);
   self->einfo[0]=expected->name;
   self->einfo[1]=actual->name;
   self->einfo[2]=context->name;
   return self;
 }
+
+struct cling_rd_parser_error *
+cling_rd_parser_noargs_error(
+    struct utillib_token_scanner *input,
+    char const * name)
+{
+  struct cling_rd_parser_error *self=cling_rd_parser_error(CL_ENOARGS, input);
+  self->einfo[0]=name;
+  return self;
+}
+
 

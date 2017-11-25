@@ -29,14 +29,20 @@
 #include <stdlib.h>
 #include <assert.h>
 
+static struct utillib_json_value *
+scanf_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
 /**
  * \function const_int_defs
  * Handles const integer definitions.
  * examples:
  * i=0
  * i=0, j=1, k=2
- * context:
- * SYM_CONST_DEF
+ * context: SYM_CONST_DEF
+ * skipto: SYM_SEMI
+ * return array of object{identifier:string, initilizer:size_t}
+ * lookahead: SYM_KW_CHAR | SYM_KW_INT
  */
 static struct utillib_json_value *
 const_defs(struct cling_rd_parser *self,
@@ -45,7 +51,6 @@ const_defs(struct cling_rd_parser *self,
 {
   char const *str;
   size_t expected;
-  size_t skipto;
   size_t initilizer;
   struct utillib_json_value * object;
   size_t code;
@@ -59,7 +64,6 @@ const_defs(struct cling_rd_parser *self,
     code=utillib_token_scanner_lookahead(input);
     if (code != SYM_IDEN) {
       expected=SYM_IDEN;
-      skipto=SYM_COMMA;
       goto error;
     }
     str=utillib_token_scanner_semantic(input);
@@ -70,15 +74,13 @@ const_defs(struct cling_rd_parser *self,
     code=utillib_token_scanner_lookahead(input);
     if (code != SYM_EQ) {
       expected=SYM_EQ;
-      skipto=SYM_COMMA;
       goto error;
     }
     utillib_token_scanner_shiftaway(input);
 
     code=utillib_token_scanner_lookahead(input);
     if (code != expected_initializer) {
-     expected=SYM_UINT;
-     skipto=SYM_SEMI;
+     expected=expected_initializer;
      goto error;
     }
     initilizer=utillib_token_scanner_semantic(input);
@@ -94,7 +96,7 @@ const_defs(struct cling_rd_parser *self,
   /* Error handling */
 error:
       utillib_vector_push_back(&self->elist, 
-          cling_rd_parser_expected_error_create(input,
+          cling_rd_parser_expected_error(input,
             &cling_symbols[expected],
             cling_symbol_cast(code),
             context));
@@ -124,6 +126,12 @@ error:
  * const int i=0;
  * const int i=0, j=1, k=2;
  * const char c='ch';
+ * lookahead: SYM_KW_CONST
+ * context: SYM_CONST_DECL
+ * skipto: SYM_SEMI
+ * return: object{type=size_t(SYM_KW_INT|SYM_KW_CHAR),
+ * const_decl=array}
+ * 
  */
 static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self,
@@ -146,7 +154,7 @@ single_const_decl(struct cling_rd_parser *self,
     utillib_token_scanner_shiftaway(input);
     expected_initializer=&cling_symbols[code];
     utillib_json_object_push_back(const_decl, "type", 
-        utillib_symbol_json_string_create(expected_initializer));
+        utillib_json_size_t_create(&code));
     utillib_json_object_push_back(const_decl, "const_defs",
         const_defs(self, input, code == SYM_KW_INT ? SYM_UINT : SYM_CHAR));
     code=utillib_token_scanner_lookahead(input);
@@ -162,7 +170,7 @@ single_const_decl(struct cling_rd_parser *self,
   }
 error:
     utillib_vector_push_back(&self->elist,
-        cling_rd_parser_expected_error_create(input,
+        cling_rd_parser_expected_error(input,
           &cling_symbols[expected],
           cling_symbol_cast(code),
           context));
@@ -173,6 +181,7 @@ error:
     /* Patches a little bit */
     switch (expected) {
     case SYM_TYPENAME:
+      /* Without typename what is left is null */
       utillib_json_value_destroy(const_decl);
       return utillib_json_null_create();
     case SYM_SEMI:
@@ -180,6 +189,13 @@ error:
     }
 }
 
+/**
+ * \function multiple_const_decl
+ * Recogizes multiple const_decls.
+ * lookahead: SYM_KW_CONST
+ * return: array of const_decl
+ * skipto: nothing
+ */
 static struct utillib_json_value *
 multiple_const_decl(struct cling_rd_parser *self,
     struct utillib_token_scanner * input)
@@ -224,7 +240,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   int code;
   switch (code=setjmp(self->fatal_saver)) {
   case 0:
-    return multiple_const_decl(self, input);
+    return scanf_stmt(self, input);
   default:
 #ifndef NDEBUG
     printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
@@ -243,11 +259,114 @@ void cling_rd_parser_error_print(
 
     switch (error->kind) {
       case CL_EEXPECT:
-        utillib_error_printf("During parsing `%s', expected `%s', got `%s'\n",
+        utillib_error_printf("During parsing `%s', expected `%s', got `%s'",
             error->einfo[2], error->einfo[0], error->einfo[1]);
-        return;
+        break;
+      case CL_ENOARGS:
+        utillib_error_printf(
+            "Function `%s' expects at least one argument, but none was given",
+            error->einfo[0]);
+        break;
       default:
         assert(false && "unimplemented");
     }
+    utillib_error_printf(".\n");
   }
+}
+
+/**
+ * \function scanf_stmt
+ * return: object{type:size_t=SYM_SCANF_STMT, 
+ * iden_list:nonempty array of identifier}
+ */
+
+static struct utillib_json_value *
+scanf_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  utillib_token_scanner_shiftaway(input);
+  assert (code == SYM_KW_SCANF);
+
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  struct utillib_symbol const * context=&cling_symbols[SYM_SCANF_STMT];
+  utillib_json_object_push_back(object, "type", 
+      utillib_json_size_t_create(&code));
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+  utillib_json_object_push_back(object, "iden_list", array);
+  size_t expected;
+  char const *str;
+  size_t skipto;
+
+  /* scanf( */
+  if (utillib_token_scanner_lookahead(input) != SYM_LP) {
+    expected=SYM_LP;
+    goto error;
+  }
+  utillib_token_scanner_shiftaway(input);
+
+  /* scanf(iden */
+  code=utillib_token_scanner_lookahead(input);
+  if (code == SYM_RP) {
+    /* Empty arglist case */
+    utillib_token_scanner_shiftaway(input);
+    utillib_json_value_destroy(object);
+    utillib_vector_push_back(&self->elist,
+        cling_rd_parser_noargs_error(input, "scanf"));
+    return utillib_json_null_create();
+  }
+
+  if (code != SYM_IDEN) {
+    expected=SYM_IDEN;
+    goto error;
+  }
+
+  while (true) {
+    str=utillib_token_scanner_semantic(input);
+    utillib_token_scanner_shiftaway(input);
+    utillib_json_array_push_back(array, 
+        utillib_json_string_create(&str));
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_COMMA)
+      break;
+    utillib_token_scanner_shiftaway(input);
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_IDEN) {
+      expected=SYM_IDEN;
+      goto error;
+    }
+  }
+  if (code != SYM_RP) {
+    expected=SYM_RP;
+    goto error;
+  }
+  utillib_token_scanner_shiftaway(input);
+  /* Success */
+  return object;
+
+error:
+  /* Expect error */
+  utillib_vector_push_back(&self->elist,
+      cling_rd_parser_expected_error(input,
+        &cling_symbols[expected],
+        cling_symbol_cast(code),
+        context));
+  switch (expected) {
+    case SYM_LP:
+      skipto=SYM_SEMI;
+      break;
+    case SYM_IDEN:
+      skipto=SYM_RP;
+      break;
+    case SYM_RP:
+      skipto=SYM_SEMI;
+      break;
+    default:
+      assert(false && "one expected was left out");
+  }
+  if (cling_rd_parser_skipto(input, skipto)) {
+    longjmp(self->fatal_saver, context->value);
+  }
+  return object;
+
 }
