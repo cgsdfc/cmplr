@@ -24,6 +24,7 @@
 
 #include <utillib/symbol.h>
 
+#include <assert.h>
 #include <stdlib.h>
 struct cling_rd_parser_error *
 cling_rd_parser_error_create(int kind, struct utillib_token_scanner * input)
@@ -77,5 +78,4 @@ cling_rd_parser_expected_error_create(
   self->einfo[2]=context->name;
   return self;
 }
-
 

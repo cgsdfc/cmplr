@@ -28,14 +28,20 @@ static struct utillib_json_value * json_ast;
 
 int main(int argc, char *argv[])
 {
+  if (argc != 2) {
+    abort();
+  }
   FILE *file=fopen(argv[1], "r");
   cling_scanner_init(&cling_scanner, file);
   cling_rd_parser_init(&cling_parser);
 
   json_ast=cling_rd_parser_parse(&cling_parser, &cling_scanner);
-  utillib_json_pretty_print(json_ast, stderr);
-  utillib_json_value_destroy(json_ast);
+  if (json_ast) {
+    utillib_json_pretty_print(json_ast, stderr);
+    utillib_json_value_destroy(json_ast);
+  }
 
+  cling_rd_parser_error_print(&cling_parser);
   cling_rd_parser_destroy(&cling_parser);
   cling_scanner_destroy(&cling_scanner);
 

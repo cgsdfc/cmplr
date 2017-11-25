@@ -24,7 +24,9 @@
 #include "symbols.h"
 #include <utillib/json.h>
 #include <utillib/scanner.h>
+#include <utillib/print.h>
 
+#include <stdlib.h>
 #include <assert.h>
 
 /**
@@ -33,6 +35,8 @@
  * examples:
  * i=0
  * i=0, j=1, k=2
+ * context:
+ * SYM_CONST_DEF
  */
 static struct utillib_json_value *
 const_defs(struct cling_rd_parser *self,
@@ -46,6 +50,7 @@ const_defs(struct cling_rd_parser *self,
   struct utillib_json_value * object;
   size_t code;
   struct utillib_json_value * array=utillib_json_array_create_empty();
+  struct utillib_symbol const *context=&cling_symbols[SYM_CONST_DEF];
 
   /* Main loop */
   while (true) {
@@ -92,7 +97,7 @@ error:
           cling_rd_parser_expected_error_create(input,
             &cling_symbols[expected],
             cling_symbol_cast(code),
-            &cling_symbols[SYM_CONST_DEF_INT]));
+            context));
       switch (expected) {
         /* Patches this failure a little bit */
         case SYM_IDEN:
@@ -107,7 +112,7 @@ error:
           break;
       }
       if (cling_rd_parser_skipto(input, SYM_SEMI)) {
-        longjmp(self->fatal_saver, SYM_CONST_DECL);
+        longjmp(self->fatal_saver, context->value);
       }
       return array;
 }
@@ -125,6 +130,7 @@ single_const_decl(struct cling_rd_parser *self,
     struct utillib_token_scanner * input)
 {
   size_t code=utillib_token_scanner_lookahead(input);
+  size_t expected;
   utillib_token_scanner_shiftaway(input);
   assert (code == SYM_KW_CONST);
 
@@ -145,21 +151,48 @@ single_const_decl(struct cling_rd_parser *self,
         const_defs(self, input, code == SYM_KW_INT ? SYM_UINT : SYM_CHAR));
     code=utillib_token_scanner_lookahead(input);
     if (code != SYM_SEMI) {
-      utillib_vector_push_back(&self->elist,
-          cling_rd_parser_expected_error_create(input,
-            &cling_symbols[SYM_SEMI],
-            cling_symbol_cast(code),
-            context));
+      expected=SYM_SEMI;
+      goto error;
     }
+    utillib_token_scanner_shiftaway(input);
     return const_decl;
   default:
+    expected=SYM_TYPENAME;
+    goto error;
+  }
+error:
     utillib_vector_push_back(&self->elist,
         cling_rd_parser_expected_error_create(input,
-          &cling_symbols[SYM_TYPENAME],
+          &cling_symbols[expected],
           cling_symbol_cast(code),
           context));
-    utillib_json_value_destroy(const_decl);
-    return utillib_json_null_create();
+    if (cling_rd_parser_skipto(input, SYM_SEMI)) {
+      longjmp(self->fatal_saver, context->value);
+    }
+    utillib_token_scanner_shiftaway(input); // SYM_SEMI
+    /* Patches a little bit */
+    switch (expected) {
+    case SYM_TYPENAME:
+      utillib_json_value_destroy(const_decl);
+      return utillib_json_null_create();
+    case SYM_SEMI:
+      return const_decl;
+    }
+}
+
+static struct utillib_json_value *
+multiple_const_decl(struct cling_rd_parser *self,
+    struct utillib_token_scanner * input)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_KW_CONST); 
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+  while (true) {
+    utillib_json_array_push_back(array,
+        single_const_decl(self, input));
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_KW_CONST) 
+      return array;
   }
 }
 
@@ -170,7 +203,7 @@ void cling_rd_parser_init(struct cling_rd_parser *self)
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self)
 {
-  utillib_vector_destroy(&self->elist);
+  utillib_vector_destroy_owning(&self->elist, free);
 }
 
 /**
@@ -188,11 +221,33 @@ struct utillib_json_value *
 cling_rd_parser_parse(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
-  switch (setjmp(self->fatal_saver)) {
+  int code;
+  switch (code=setjmp(self->fatal_saver)) {
   case 0:
-    return single_const_decl(self, input);
+    return multiple_const_decl(self, input);
   default:
+#ifndef NDEBUG
+    printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
+#endif
     return NULL;
   }
 }
 
+void cling_rd_parser_error_print(
+    struct cling_rd_parser const *self)
+{
+  UTILLIB_VECTOR_FOREACH(struct cling_rd_parser_error const *, error, &self->elist) 
+  {
+    utillib_error_printf("ERROR at line %lu, column %lu:\n",
+        error->row+1, error->col+1);
+
+    switch (error->kind) {
+      case CL_EEXPECT:
+        utillib_error_printf("During parsing `%s', expected `%s', got `%s'\n",
+            error->einfo[2], error->einfo[0], error->einfo[1]);
+        return;
+      default:
+        assert(false && "unimplemented");
+    }
+  }
+}
