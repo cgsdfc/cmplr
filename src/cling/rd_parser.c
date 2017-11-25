@@ -34,11 +34,11 @@
  */
 static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self,
-    struct utillib_scanner_op *scanner,
-    void * input)
+    struct utillib_token_scanner * input)
 {
 
 
+  return utillib_json_null_create();
 
 
 }
@@ -52,3 +52,11 @@ void cling_rd_parser_destroy(struct cling_rd_parser *self)
 {
   utillib_vector_destroy(&self->elist);
 }
+
+struct utillib_json_value *
+cling_rd_parser_parse(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  return single_const_decl(self, input);
+}
+

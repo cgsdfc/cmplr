@@ -398,7 +398,7 @@ void utillib_json_pretty_print(struct utillib_json_value const *self,
 }
 
 struct utillib_json_value *
-utillib_json_object_at(struct utillib_json_value *self, char const *key) {
+utillib_json_object_at(struct utillib_json_value const *self, char const *key) {
   json_value_check_kind(self, UT_JSON_OBJECT);
   struct utillib_json_object *object = self->as_ptr;
   UTILLIB_VECTOR_FOREACH(struct utillib_pair const *, pair, &object->members) {
@@ -410,7 +410,7 @@ utillib_json_object_at(struct utillib_json_value *self, char const *key) {
 }
 
 struct utillib_json_value *
-utillib_json_array_at(struct utillib_json_value *self, size_t index) {
+utillib_json_array_at(struct utillib_json_value const *self, size_t index) {
   json_value_check_kind(self, UT_JSON_ARRAY);
   struct utillib_json_array *array = self->as_ptr;
   return utillib_vector_at(&array->elements, index);

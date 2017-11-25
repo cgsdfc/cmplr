@@ -19,24 +19,15 @@
 
 */
 
-#include "rd_parser.h"
-#include "scanner.h"
+#ifndef UTILLIB_JSON_AST_H
+#define UTILLIB_JSON_AST_H
+#include "json.h"
+#include "symbol.h"
 
-static struct utillib_token_scanner cling_scanner;
-static struct cling_rd_parser cling_parser;
-static struct utillib_json_value * json_ast;
+struct utillib_json_value *utillib_json_ast_create(struct utillib_symbol const *symbol);
 
-int main(int argc, char *argv[])
-{
-  FILE *file=fopen(argv[1], "r");
-  cling_scanner_init(&cling_scanner, file);
-  cling_rd_parser_init(&cling_parser);
+int utillib_json_ast_getkind(struct utillib_json_value const *self);
 
-  json_ast=cling_rd_parser_parse(&cling_parser, &cling_scanner);
-  utillib_json_pretty_print(json_ast, stderr);
-  utillib_json_value_destroy(json_ast);
+char const * utillib_json_ast_getname(struct utillib_json_value const *self);
 
-  cling_rd_parser_destroy(&cling_parser);
-  cling_scanner_destroy(&cling_scanner);
-
-}
+#endif /* UTILLIB_JSON_AST_H */

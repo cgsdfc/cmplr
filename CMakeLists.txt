@@ -42,6 +42,7 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
+  ./src/utillib/json_ast.c
   ./src/utillib/lr_builder.c
   ./src/utillib/hashmap.c
   ./src/utillib/graph.c
@@ -117,7 +118,6 @@ add_library(pascal
   ./src/pascal/scanner.c
   ./src/pascal/symbols.c
   ./src/pascal/rules.c
-  ./src/pascal/json_ast.c
 )
 target_link_libraries(pascal utillib)
 
@@ -139,6 +139,7 @@ add_library(cling
   ./src/cling/symbols.c 
   ./src/cling/rules.c 
   ./src/cling/scanner.c
+  ./src/cling/rd_parser.c
   )	
 target_link_libraries(cling utillib)
 
@@ -150,3 +151,6 @@ target_link_libraries(cling_test cling)
 add_test(Cling_Test cling_test)
 add_executable(cling-scanner ./src/cling/smain.c)
 target_link_libraries(cling-scanner cling)
+add_executable(cling-parser ./src/cling/pmain.c)
+target_link_libraries(cling-parser cling)
+

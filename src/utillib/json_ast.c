@@ -18,25 +18,25 @@
    02110-1301 USA
 
 */
+#include "json_ast.h"
 
-#include "rd_parser.h"
-#include "scanner.h"
-
-static struct utillib_token_scanner cling_scanner;
-static struct cling_rd_parser cling_parser;
-static struct utillib_json_value * json_ast;
-
-int main(int argc, char *argv[])
+struct utillib_json_value *utillib_json_ast_create(struct utillib_symbol const *symbol)
 {
-  FILE *file=fopen(argv[1], "r");
-  cling_scanner_init(&cling_scanner, file);
-  cling_rd_parser_init(&cling_parser);
-
-  json_ast=cling_rd_parser_parse(&cling_parser, &cling_scanner);
-  utillib_json_pretty_print(json_ast, stderr);
-  utillib_json_value_destroy(json_ast);
-
-  cling_rd_parser_destroy(&cling_parser);
-  cling_scanner_destroy(&cling_scanner);
-
+  struct utillib_json_value *ast = utillib_json_object_create_empty();
+  utillib_json_object_push_back(ast, "__kind__", utillib_json_int_create(&symbol->value));
+  utillib_json_object_push_back(ast, "__name__", utillib_json_string_create(&symbol->name));
+  return ast;
 }
+
+int utillib_json_ast_getkind(struct utillib_json_value const *self) {
+  struct utillib_json_value *kind = utillib_json_object_at(self, "__kind__");
+  return kind->as_int;
+}
+
+char const * utillib_json_ast_getname(struct utillib_json_value const *self) {
+  struct utillib_json_value *name = utillib_json_object_at(self, "__name__");
+  return name->as_ptr;
+}
+
+
+

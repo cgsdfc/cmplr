@@ -66,6 +66,8 @@ utillib_impl_headers = src/utillib/ll1_builder_impl.h \
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 $(utillib_impl_headers) \
 												 src/utillib/hashmap_impl.c \
+												 src/utillib/graph.c \
+												 src/utillib/lr_builder.c \
 												 src/utillib/strhash.c \
 												 src/utillib/test_impl.c \
 												 src/utillib/ll1_builder_impl.c \
@@ -94,6 +96,7 @@ noinst_PROGRAMS = utillib_test
 TESTS = utillib_test
 utillib_test_SOURCES = src/utillib/test/ll1_generator.c \
 											 src/utillib/test/ll1_sample_1.c \
+											 src/utillib/test/graph.c \
 											 src/utillib/test/ll1_sample_2.c \
 											 src/utillib/test/ll1_sample_1.h \
 											 src/utillib/test/ll1_sample_2.h \

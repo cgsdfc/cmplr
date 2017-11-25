@@ -202,10 +202,10 @@ struct utillib_json_value *
 utillib_json_array_back(struct utillib_json_value *self);
 
 struct utillib_json_value *
-utillib_json_object_at(struct utillib_json_value *self, char const *key);
+utillib_json_object_at(struct utillib_json_value const *self, char const *key);
 
 struct utillib_json_value *
-utillib_json_array_at(struct utillib_json_value *self, size_t index);
+utillib_json_array_at(struct utillib_json_value const *self, size_t index);
 
 void utillib_json_tostring(struct utillib_json_value const *self,
                            struct utillib_string *str);
