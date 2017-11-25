@@ -237,3 +237,10 @@ void const *cling_scanner_semantic_handler(size_t value, char const *str) {
     return NULL;
   }
 }
+
+void cling_scanner_destroy(struct utillib_token_scanner *self)
+{
+  utillib_token_scanner_destroy(self);
+}
+
+

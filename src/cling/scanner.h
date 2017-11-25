@@ -45,6 +45,7 @@ union cling_semantic {
 };
 
 void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
+void cling_scanner_destroy(struct utillib_token_scanner *self);
 int cling_scanner_read_handler(struct utillib_char_scanner *chars,
                                struct utillib_string *buffer);
 int cling_scanner_error_handler(
