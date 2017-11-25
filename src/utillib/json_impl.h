@@ -22,6 +22,32 @@
 #define UTILLIB_JSON_IMPL_H
 
 #include <assert.h>
+#include "vector.h"
+
+/*
+ * Since client never see
+ * the json object and array
+ * struct but always see json
+ * value, they can be hidden.
+ */
+
+/**
+ * \struct utillib_json_object
+ * Represents a JSON object.
+ */
+
+struct utillib_json_object {
+  struct utillib_vector members;
+};
+
+/**
+ * \struct utillib_json_array
+ * Represents a JSON array.
+ */
+struct utillib_json_array {
+  struct utillib_vector elements;
+};
+
 #define json_value_check_kind(VAL, KIND)                                       \
   do {                                                                         \
     assert((VAL)->kind == (KIND));                                             \

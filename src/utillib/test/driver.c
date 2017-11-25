@@ -38,7 +38,8 @@ UTILLIB_TEST_DECLARE(Utillib_LL1Generator);
 UTILLIB_TEST_DECLARE(Utillib_JSON_Parser);
 UTILLIB_TEST_DECLARE(Utillib_JSON_Scanner);
 UTILLIB_TEST_DECLARE(Utillib_HashMap);
+UTILLIB_TEST_DECLARE(Utillib_Graph);
 
 int main(int argc, char **argv) {
-  UTILLIB_TEST_RUN_ALL(argc, argv, Utillib_HashMap);
+  UTILLIB_TEST_RUN_ALL(argc, argv, Utillib_Graph);
 }

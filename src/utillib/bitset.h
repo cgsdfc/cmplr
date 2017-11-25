@@ -63,6 +63,8 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
                                  struct utillib_bitset const *other);
 bool utillib_bitset_equal(struct utillib_bitset const *self,
                           struct utillib_bitset const *other);
+size_t utillib_bitset_hash(struct utillib_bitset const * self);
+
 struct utillib_json_value *utillib_bitset_json_array_create(void const *base,
                                                             size_t offset);
 #endif /* UTILLIB_BITSET_H */

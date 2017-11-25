@@ -22,34 +22,5 @@
 #ifndef UTILLIB_LR_BUILDER_IMPL_H
 #define UTILLIB_LR_BUILDER_IMPL_H
 #include "vector.h"
-
-/**
- * \struct utillib_lr_item
- * An item is a BNF rule decorated
- * with a tiny dot to tell the parser's
- * position after which the next symbol
- * is expected.
- * We use a straight forward way to represent
- * it plus its ID since itemset may store IDs
- * instead of pointers.
- */
-struct utillib_lr_item {
-  size_t id;
-  size_t pos;
-  struct utillib_rule * rule;
-};
-
-struct utillib_lr_item_factory {
-  struct utillib_bitset * 
-
-
-};
-
-/**
- * \function utillib_lr_maximum_items
- * Counts the maximum possible number of items
- * so that itemset be made from a fixed-sized bitset.
- */
-size_t utillib_lr_maximum_items(struct utillib_vector *rules);
 #endif /* UTILLIB_LR_BUILDER_IMPL_H */
 

@@ -51,8 +51,6 @@
 
 #include "enum.h"
 #include "string.h"
-#include "vector.h"
-#include <stdarg.h> /* for va_list */
 #include <stdio.h>
 
 typedef struct utillib_json_value *(*utillib_json_value_create_func_t)(
@@ -142,22 +140,6 @@ struct utillib_json_array_desc {
   size_t size;
 };
 
-/**
- * \struct utillib_json_object
- * Represents a JSON object.
- */
-
-struct utillib_json_object {
-  struct utillib_vector members;
-};
-
-/**
- * \struct utillib_json_array
- * Represents a JSON array.
- */
-struct utillib_json_array {
-  struct utillib_vector elements;
-};
 
 /**
  * \struct utillib_json_value
@@ -240,5 +222,6 @@ struct utillib_json_value *utillib_json_long_create(long const *base);
 struct utillib_json_value *utillib_json_float_create(float const *base);
 struct utillib_json_value *utillib_json_null_create(void);
 struct utillib_json_value *utillib_json_null_array_create(size_t size);
+struct utillib_json_value *utillib_json_string_create_adaptor(char const * str);
 
 #endif /* UTILLIB_JSON_H */

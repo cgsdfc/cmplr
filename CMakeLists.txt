@@ -42,7 +42,9 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
+  ./src/utillib/lr_builder.c
   ./src/utillib/hashmap.c
+  ./src/utillib/graph.c
   ./src/utillib/strhash.c
   ./src/utillib/hashmap_impl.c
   ./src/utillib/test_impl.c
@@ -68,6 +70,7 @@ add_library(utillib
   ./src/utillib/string.c)
 
 add_executable(utillib_test 
+  ./src/utillib/test/graph.c
   ./src/utillib/test/hashmap.c
   ./src/utillib/test/json_scanner.c
   ./src/utillib/test/ll1_generator.c

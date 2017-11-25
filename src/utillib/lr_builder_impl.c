@@ -20,20 +20,3 @@
 */
 #include "lr_builder_impl.h"
 
-size_t utillib_lr_maximum_items(struct utillib_vector *rules)
-{
-  size_t size=0;
-  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, rules) {
-    if (utillib_rule_purely_epsilon(rule)) {
-      /* Form of A := eps takes only 1 item */
-      ++size;
-      continue;
-    }
-    /* Plus the past-the-rule item */
-    size += utillib_vector_size(&rule->RHS) + 1;
-  }
-  /* Plus the past-the-eof item */
-  return size + 1;
-}
-
-

@@ -415,3 +415,9 @@ utillib_json_array_at(struct utillib_json_value *self, size_t index) {
   struct utillib_json_array *array = self->as_ptr;
   return utillib_vector_at(&array->elements, index);
 }
+
+struct utillib_json_value *utillib_json_string_create_adaptor(char const * str)
+{
+  return utillib_json_string_create(&str);
+}
+

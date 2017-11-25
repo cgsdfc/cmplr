@@ -21,8 +21,52 @@
 
 #ifndef UTILLIB_LR_BUILDER_H
 #define UTILLIB_LR_BUILDER_H
+#include "rule.h"
+#include "graph.h"
+#include "list.h"
+#include "hashmap.h"
+#include "bitset.h"
+
+/**
+ * \struct utillib_lr_item
+ * 
+ * 
+ */
+struct utillib_lr_item {
+  size_t pos;
+  size_t value;
+  struct utillib_rule const * rule;
+  struct utillib_symbol const *prefixed;
+};
+
+
+/**
+ * \struct utillib_lr_itemset
+ * A set of LR(0) items. Reprensented
+ * in tree structure and have a bitset
+ * as its hash value on the global itemset_index.
+ * The gotosets uses the `access' field
+ * as hash value.
+ */
+
+struct utillib_lr_itemset {
+  struct utillib_symbol const * access;
+  struct utillib_bitset bitset;
+  struct utillib_vector items;
+  size_t value;
+};
 
 struct utillib_lr_builder {
-
+  struct utillib_rule_index * rule_index;
+  struct utillib_hashmap itemset_index;
+  struct utillib_hashmap item_index;
+  struct utillib_vector gotosets;
+  size_t items_count;
+  struct utillib_list queue;
+  bool * closure_added;
+  size_t non_terminals_size;
+  size_t max_items;
 };
+
+
 #endif /* UTILLIB_LR_BUILDER_H */
