@@ -109,7 +109,8 @@ bool utillib_char_scanner_reacheof(struct utillib_char_scanner *self) {
 }
 
 void utillib_char_scanner_destroy(struct utillib_char_scanner *self) {
-  fclose(self->file);
+  if (self->file != stdin)
+    fclose(self->file);
 }
 
 /*

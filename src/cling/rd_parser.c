@@ -20,9 +20,97 @@
 */
 
 #include "rd_parser.h"
+#include "rd_parser_impl.h"
 #include "symbols.h"
 #include <utillib/json.h>
 #include <utillib/scanner.h>
+
+#include <assert.h>
+
+/**
+ * \function const_int_defs
+ * Handles const integer definitions.
+ * examples:
+ * i=0
+ * i=0, j=1, k=2
+ */
+static struct utillib_json_value *
+const_defs(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input,
+    size_t expected_initializer)
+{
+  char const *str;
+  size_t expected;
+  size_t skipto;
+  size_t initilizer;
+  struct utillib_json_value * object;
+  size_t code;
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+
+  /* Main loop */
+  while (true) {
+    object=utillib_json_object_create_empty();
+    utillib_json_array_push_back(array, object);
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_IDEN) {
+      expected=SYM_IDEN;
+      skipto=SYM_COMMA;
+      goto error;
+    }
+    str=utillib_token_scanner_semantic(input);
+    utillib_token_scanner_shiftaway(input);
+    utillib_json_object_push_back(object, "identifier", 
+        utillib_json_string_create(&str));
+
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_EQ) {
+      expected=SYM_EQ;
+      skipto=SYM_COMMA;
+      goto error;
+    }
+    utillib_token_scanner_shiftaway(input);
+
+    code=utillib_token_scanner_lookahead(input);
+    if (code != expected_initializer) {
+     expected=SYM_UINT;
+     skipto=SYM_SEMI;
+     goto error;
+    }
+    initilizer=utillib_token_scanner_semantic(input);
+    utillib_token_scanner_shiftaway(input);
+    utillib_json_object_push_back(object, "initilizer",
+        utillib_json_size_t_create(&initilizer));
+
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_COMMA) 
+      return array;
+    utillib_token_scanner_shiftaway(input);
+  } 
+  /* Error handling */
+error:
+      utillib_vector_push_back(&self->elist, 
+          cling_rd_parser_expected_error_create(input,
+            &cling_symbols[expected],
+            cling_symbol_cast(code),
+            &cling_symbols[SYM_CONST_DEF_INT]));
+      switch (expected) {
+        /* Patches this failure a little bit */
+        case SYM_IDEN:
+          utillib_json_object_push_back(object, "identifier",
+              utillib_json_null_create());
+          /* Falls through */
+        case SYM_UINT:
+        case SYM_CHAR:
+        case SYM_EQ:
+          utillib_json_object_push_back(object, "initilizer",
+              utillib_json_null_create());
+          break;
+      }
+      if (cling_rd_parser_skipto(input, SYM_SEMI)) {
+        longjmp(self->fatal_saver, SYM_CONST_DECL);
+      }
+      return array;
+}
 
 /**
  * \function single_const_decl
@@ -36,11 +124,43 @@ static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self,
     struct utillib_token_scanner * input)
 {
+  size_t code=utillib_token_scanner_lookahead(input);
+  utillib_token_scanner_shiftaway(input);
+  assert (code == SYM_KW_CONST);
 
+  struct utillib_json_value * const_decl=utillib_json_object_create_empty();
+  code=utillib_token_scanner_lookahead(input);
+  struct utillib_symbol const * context=&cling_symbols[SYM_CONST_DECL];
+  struct utillib_symbol const * expected_initializer;
 
-  return utillib_json_null_create();
-
-
+  switch (code) {
+    /* Similar handling */
+  case SYM_KW_CHAR:
+  case SYM_KW_INT:
+    utillib_token_scanner_shiftaway(input);
+    expected_initializer=&cling_symbols[code];
+    utillib_json_object_push_back(const_decl, "type", 
+        utillib_symbol_json_string_create(expected_initializer));
+    utillib_json_object_push_back(const_decl, "const_defs",
+        const_defs(self, input, code == SYM_KW_INT ? SYM_UINT : SYM_CHAR));
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_SEMI) {
+      utillib_vector_push_back(&self->elist,
+          cling_rd_parser_expected_error_create(input,
+            &cling_symbols[SYM_SEMI],
+            cling_symbol_cast(code),
+            context));
+    }
+    return const_decl;
+  default:
+    utillib_vector_push_back(&self->elist,
+        cling_rd_parser_expected_error_create(input,
+          &cling_symbols[SYM_TYPENAME],
+          cling_symbol_cast(code),
+          context));
+    utillib_json_value_destroy(const_decl);
+    return utillib_json_null_create();
+  }
 }
 
 void cling_rd_parser_init(struct cling_rd_parser *self)
@@ -53,10 +173,26 @@ void cling_rd_parser_destroy(struct cling_rd_parser *self)
   utillib_vector_destroy(&self->elist);
 }
 
+/**
+ * \function cling_rd_parser_parse
+ * Parses the `input' using recursive decent method.
+ * If the input somehow represents something recognizable
+ * returns a non-NULL value which can be further analyzed.
+ * However, if a fatal error is detected when the recursion
+ * if quite deep or there is no meaningful recovery, it returns
+ * NULL so the caller should wait for nothing but print errors
+ * and terminate the program.
+ * If NULL is returned, memory is probably leaked.
+ */
 struct utillib_json_value *
 cling_rd_parser_parse(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
-  return single_const_decl(self, input);
+  switch (setjmp(self->fatal_saver)) {
+  case 0:
+    return single_const_decl(self, input);
+  default:
+    return NULL;
+  }
 }
 

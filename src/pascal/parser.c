@@ -19,17 +19,17 @@
 
 */
 #include "parser.h"
-#include "json_ast.h"
 #include "pascal_ll1_table.c"
 #include "rules.h"
 #include "scanner.h"
 #include "symbols.h"
-#include <assert.h>
-#include <stdlib.h>
-#include <utillib/ll1_builder.h>
+
 #include <utillib/pair.h>
 #include <utillib/print.h>
+#include <utillib/json_ast.h>
 
+#include <assert.h>
+#include <stdlib.h>
 /*
  * handlers for rule, terminal and error
  */
@@ -81,7 +81,6 @@ static void parser_add_var(struct utillib_vector *ast_nodes) {
   iden = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
   var_decl = utillib_vector_back(ast_nodes);
-  pascal_json_ast_add_item(var_decl, iden);
 }
 
 static void parser_add_const(struct utillib_vector *ast_nodes) {
@@ -98,7 +97,6 @@ static void parser_add_const(struct utillib_vector *ast_nodes) {
   utillib_json_object_push_back(pair, "iden", iden);
   utillib_json_object_push_back(pair, "uint", uint);
   const_decl = utillib_vector_back(ast_nodes);
-  pascal_json_ast_add_item(const_decl, pair);
 }
 
 static void parser_comma_handler(struct utillib_vector *ast_nodes) {
@@ -123,7 +121,7 @@ static void parser_semi_handler(struct utillib_vector *ast_nodes) {
   val = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
   handle = utillib_vector_back(ast_nodes);
-  int kind = pascal_json_ast_kind(handle);
+  int kind = utillib_json_ast_getkind(handle);
   switch (kind) {
   case SYM_PROC_DECL:
     /* utillib_json_object_set(handle, "name", val); */
@@ -135,7 +133,7 @@ static void parser_rp_handler(struct utillib_vector *ast_nodes) {
   struct utillib_json_value *val;
   struct utillib_json_value *handle;
   parser_peek_pop(ast_nodes, &val, &handle);
-  int kind = pascal_json_ast_kind(handle);
+  int kind;
   switch (kind) {
   case SYM_WRITE_STMT:
     break;
@@ -172,7 +170,7 @@ static void parser_terminal_handler(struct pascal_parser *self,
 static void parser_rule_handler(struct pascal_parser *self,
                                 struct utillib_rule const *rule) {
   struct utillib_symbol const *symbol = rule->LHS;
-  struct utillib_json_value *node = pascal_json_ast_create(symbol->value);
+  struct utillib_json_value *node;
   switch (symbol->value) {
   case SYM_READ_STMT:
   case SYM_WRITE_STMT:
@@ -198,10 +196,6 @@ static const struct utillib_ll1_parser_callback pascal_parser_callback = {
     .terminal_handler = parser_terminal_handler,
     .rule_handler = parser_rule_handler,
 };
-
-/*
- * Public interface
- */
 
 void pascal_parser_factory_init(struct utillib_ll1_factory *self) {
   utillib_ll1_factory_gen_init(self, ll1_parser_table, pascal_symbols,

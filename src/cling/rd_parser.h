@@ -3,8 +3,10 @@
 #include <utillib/vector.h>
 #include <utillib/json.h>
 #include <utillib/scanner.h>
+#include <setjmp.h>
 
 struct cling_rd_parser {
+  jmp_buf fatal_saver;
   struct utillib_vector elist;
 };
 

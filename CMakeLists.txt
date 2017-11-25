@@ -140,6 +140,7 @@ add_library(cling
   ./src/cling/rules.c 
   ./src/cling/scanner.c
   ./src/cling/rd_parser.c
+  ./src/cling/rd_parser_impl.c
   )	
 target_link_libraries(cling utillib)
 

@@ -23,6 +23,9 @@
 
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
+#define CL_RD_PARSER_EMAX 4
+#define cling_symbol_cast(code) \
+((code) == UT_SYM_EOF ? UTILLIB_SYMBOL_EOF : &cling_symbols[(code)])
 
 /*
  * Error for RD parser defined here
@@ -35,19 +38,59 @@ UTILLIB_ENUM_END(cling_rd_parser_error_kind);
 
 struct cling_rd_parser_error {
   int kind;
-  union {
-    int expected;
-  };
+  size_t row;
+  size_t col;
+  void const * einfo[CL_RD_PARSER_EMAX];
 };
 
+/**
+ * \function cling_rd_parser_error_create
+ * Creates an error recording the kind of
+ * the error, the location in the source file.
+ * Notes that caller can store arbitary error info
+ * into it to a limit of `CL_RD_PARSER_EMAX'.
+ */
 struct cling_rd_parser_error *
-cling_rd_parser_error_create(int kind);
+cling_rd_parser_error_create(int kind, struct utillib_token_scanner * input);
 
+/**
+ * \function cling_rd_parser_expect
+ * Expects a token from the input and returns
+ * whether expectation failed.
+ * The caller should check like:
+ * `if (cling_rd_parser_expect(...)) {
+ *    // error...
+ * }'
+ */
+bool cling_rd_parser_expect(
+    struct utillib_token_scanner *input, 
+    size_t expected);
+
+/**
+ * \function cling_rd_parser_error_destroy
+ * Destroy this error.
+ */
 void cling_rd_parser_error_destroy(
     struct cling_rd_parser_error *self);
 
-void cling_rd_parser_shipto(void *input, struct utillib_scanner_op const *scanner,
+/**
+ * \function cling_rd_parser_skipto
+ * Reads and discards token from input until
+ * the lookahead token become `target'.
+ * Returns whether unfortunately before we can
+ * skip to `target', eof was reached.
+ * This indicates a fatal error and caller should
+ * signal it.
+ */
+bool cling_rd_parser_skipto(struct utillib_token_scanner *input, 
     size_t target);
+
+struct cling_rd_parser_error *
+cling_rd_parser_expected_error_create(
+    struct utillib_token_scanner *input,
+    struct utillib_symbol const *expected,
+    struct utillib_symbol const *actual,
+    struct utillib_symbol const *context);
 
 #endif /* CLING_RD_PARSER_IMPH_H */
 
