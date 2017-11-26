@@ -56,6 +56,7 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/print.h \
 													src/utillib/slist.h \
 													src/utillib/vector.h \
+												 src/utillib/json_ast.h \
 													src/utillib/string.h
 
 utillib_impl_headers = src/utillib/ll1_builder_impl.h \
@@ -65,6 +66,7 @@ utillib_impl_headers = src/utillib/ll1_builder_impl.h \
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 $(utillib_impl_headers) \
+												 src/utillib/json_ast.c \
 												 src/utillib/hashmap_impl.c \
 												 src/utillib/graph.c \
 												 src/utillib/lr_builder.c \
@@ -160,14 +162,12 @@ lib_LTLIBRARIES += libpascal.la
 noinst_pascalinclude_HEADERS =  src/pascal/symbols.h \
 																src/pascal/rules.h \
 																src/pascal/scanner.h \
-																src/pascal/json_ast.h \
 																src/pascal/parser.h
 
 libpascal_la_SOURCES = src/pascal/symbols.c \
 											 src/pascal/rules.c \
 											 src/pascal/scanner.c \
 											 src/pascal/parser.c \
-											 src/pascal/json_ast.c \
 											 $(libpascal_la_headers)
 
 libpascal_la_LIBADD = libutillib.la
@@ -198,10 +198,14 @@ noinst_clingincludedir = $(includedir)/cling
 lib_LTLIBRARIES += libcling.la
 noinst_clinginclude_HEADERS = src/cling/symbols.h \
 															src/cling/rules.h \
+															src/cling/rd_parser_impl.h \
+															src/cling/rd_parser.h \
 															src/cling/scanner.h
 
 libcling_la_SOURCES = src/cling/symbols.c \
 											src/cling/rules.c \
+											src/cling/rd_parser.c \
+											src/cling/rd_parser_impl.c \
 											src/cling/scanner.c \
 											$(noinst_clinginclude_HEADERS)
 libcling_la_LIBADD = libutillib.la
@@ -219,4 +223,8 @@ cling_ll1_table_LDADD = libcling.la libutillib.la
 bin_PROGRAMS += cling-scanner
 cling_scanner_SOURCES = src/cling/smain.c
 cling_scanner_LDADD = libcling.la libutillib.la
+
+bin_PROGRAMS += cling-parser
+cling_parser_SOURCES = src/cling/pmain.c
+cling_parser_LDADD = libcling.la libutillib.la
 
