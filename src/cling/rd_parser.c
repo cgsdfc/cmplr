@@ -29,9 +29,84 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/**
+ * File cling/rd_parser.c
+ * All the recursive decent subroutines 
+ * go here.
+ */
+
 static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input);
+
+/*
+ * init/destroy
+ */
+void cling_rd_parser_init(struct cling_rd_parser *self)
+{
+  utillib_vector_init(&self->elist);
+}
+
+void cling_rd_parser_destroy(struct cling_rd_parser *self)
+{
+  utillib_vector_destroy_owning(&self->elist, free);
+}
+
+/**
+ * \function cling_rd_parser_parse
+ * Parses the `input' using recursive decent method.
+ * If the input somehow represents something recognizable
+ * returns a non-NULL value which can be further analyzed.
+ * However, if a fatal error is detected when the recursion
+ * if quite deep or there is no meaningful recovery, it returns
+ * NULL so the caller should wait for nothing but print errors
+ * and terminate the program.
+ * If NULL is returned, memory is probably leaked.
+ */
+struct utillib_json_value *
+cling_rd_parser_parse(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  int code;
+  switch (code=setjmp(self->fatal_saver)) {
+  case 0:
+    return scanf_stmt(self, input);
+  default:
+#ifndef NDEBUG
+    printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
+#endif
+    return NULL;
+  }
+}
+
+void cling_rd_parser_error_print(
+    struct cling_rd_parser const *self)
+{
+  UTILLIB_VECTOR_FOREACH(struct cling_rd_parser_error const *, error, &self->elist) 
+  {
+    utillib_error_printf("ERROR at line %lu, column %lu:\n",
+        error->row+1, error->col+1);
+
+    switch (error->kind) {
+      case CL_EEXPECT:
+        utillib_error_printf("During parsing `%s', expected `%s', got `%s'",
+            error->einfo[2], error->einfo[0], error->einfo[1]);
+        break;
+      case CL_ENOARGS:
+        utillib_error_printf(
+            "Function `%s' expects at least one argument, but none was given",
+            error->einfo[0]);
+        break;
+      default:
+        assert(false && "unimplemented");
+    }
+    utillib_error_printf(".\n");
+  }
+}
+
+/*
+ * Recursive Decent Subroutines
+ */
 
 /**
  * \function const_int_defs
@@ -70,6 +145,7 @@ const_defs(struct cling_rd_parser *self,
     utillib_token_scanner_shiftaway(input);
     utillib_json_object_push_back(object, "identifier", 
         utillib_json_string_create(&str));
+    free(str);
 
     code=utillib_token_scanner_lookahead(input);
     if (code != SYM_EQ) {
@@ -211,69 +287,6 @@ multiple_const_decl(struct cling_rd_parser *self,
       return array;
   }
 }
-
-void cling_rd_parser_init(struct cling_rd_parser *self)
-{
-  utillib_vector_init(&self->elist);
-}
-
-void cling_rd_parser_destroy(struct cling_rd_parser *self)
-{
-  utillib_vector_destroy_owning(&self->elist, free);
-}
-
-/**
- * \function cling_rd_parser_parse
- * Parses the `input' using recursive decent method.
- * If the input somehow represents something recognizable
- * returns a non-NULL value which can be further analyzed.
- * However, if a fatal error is detected when the recursion
- * if quite deep or there is no meaningful recovery, it returns
- * NULL so the caller should wait for nothing but print errors
- * and terminate the program.
- * If NULL is returned, memory is probably leaked.
- */
-struct utillib_json_value *
-cling_rd_parser_parse(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input)
-{
-  int code;
-  switch (code=setjmp(self->fatal_saver)) {
-  case 0:
-    return scanf_stmt(self, input);
-  default:
-#ifndef NDEBUG
-    printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
-#endif
-    return NULL;
-  }
-}
-
-void cling_rd_parser_error_print(
-    struct cling_rd_parser const *self)
-{
-  UTILLIB_VECTOR_FOREACH(struct cling_rd_parser_error const *, error, &self->elist) 
-  {
-    utillib_error_printf("ERROR at line %lu, column %lu:\n",
-        error->row+1, error->col+1);
-
-    switch (error->kind) {
-      case CL_EEXPECT:
-        utillib_error_printf("During parsing `%s', expected `%s', got `%s'",
-            error->einfo[2], error->einfo[0], error->einfo[1]);
-        break;
-      case CL_ENOARGS:
-        utillib_error_printf(
-            "Function `%s' expects at least one argument, but none was given",
-            error->einfo[0]);
-        break;
-      default:
-        assert(false && "unimplemented");
-    }
-    utillib_error_printf(".\n");
-  }
-}
-
 /**
  * \function scanf_stmt
  * return: object{type:size_t=SYM_SCANF_STMT, 
@@ -326,6 +339,7 @@ scanf_stmt(struct cling_rd_parser *self,
     utillib_token_scanner_shiftaway(input);
     utillib_json_array_push_back(array, 
         utillib_json_string_create(&str));
+    free(str);
     code=utillib_token_scanner_lookahead(input);
     if (code != SYM_COMMA)
       break;
