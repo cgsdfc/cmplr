@@ -34,6 +34,21 @@ UTILLIB_ETAB_ELEM_INIT(CL_ECHRCHAR,
 UTILLIB_ETAB_ELEM_INIT(CL_EUNKNOWN, "unrecogized character")
 UTILLIB_ETAB_ELEM_INIT(CL_ELEADZERO, "leading zero in a number is not allowed")
 UTILLIB_ETAB_END(cling_scanner_error_kind)
+<<<<<<< HEAD
+=======
+#else
+UTILLIB_ETAB_BEGIN(cling_scanner_error_kind)
+UTILLIB_ETAB_ELEM_INIT(CL_EBADNEQ, "不完整的不等于运算符 `!='")
+UTILLIB_ETAB_ELEM_INIT(CL_EUNTCHAR, "字符常量缺少单引号")
+UTILLIB_ETAB_ELEM_INIT(CL_EUNTSTR, "字符串常量缺少双引号")
+UTILLIB_ETAB_ELEM_INIT(CL_ESTRCHAR, "字符串中出现了文法规定范围之外的字符")
+UTILLIB_ETAB_ELEM_INIT(CL_ECHRCHAR,
+                       "字符常量中出现了文法规定范围之外的字符")
+UTILLIB_ETAB_ELEM_INIT(CL_ELEADZERO,"非零数字不允许有前导零")
+UTILLIB_ETAB_ELEM_INIT(CL_EUNKNOWN, "字符不在文法规定范围内")
+UTILLIB_ETAB_END(cling_scanner_error_kind)
+#endif /* WITH_WINDOWS */
+>>>>>>> ad00313... Add leading zero error
 
 static const struct utillib_keyword_pair cling_keywords[] = {
     {"case", SYM_KW_CASE},     {"char", SYM_KW_CHAR},
