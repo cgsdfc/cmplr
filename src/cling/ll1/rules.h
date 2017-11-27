@@ -21,7 +21,7 @@
 #ifndef CLING_RULES_H
 #define CLING_RULES_H
 #include <utillib/rule.h>
-extern struct utillib_rule_literal const cling_rules[];
+extern struct utillib_rule_literal const cling_ll1_rules[];
 
 /*
  * Rules:

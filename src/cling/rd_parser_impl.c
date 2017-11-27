@@ -51,12 +51,12 @@ bool rd_parser_skipto(struct utillib_token_scanner *input,
 }
 
 struct rd_parser_error *rd_parser_expected_error(
-    struct utillib_token_scanner *input, struct utillib_symbol const *expected,
-    struct utillib_symbol const *actual, struct utillib_symbol const *context) {
+    struct utillib_token_scanner *input, char const *expected,
+    char const *actual, char const *context) {
   struct rd_parser_error *self = rd_parser_error(CL_EEXPECT, input);
-  self->einfo[0] = expected->name;
-  self->einfo[1] = actual->name;
-  self->einfo[2] = context->name;
+  self->einfo[0] = expected;
+  self->einfo[1] = actual;
+  self->einfo[2] = context;
   return self;
 }
 
@@ -70,12 +70,12 @@ rd_parser_noargs_error(struct utillib_token_scanner *input,
 
 struct rd_parser_error *
 rd_parser_unexpected_error(struct utillib_token_scanner *input,
-                                 struct utillib_symbol const *unexpected,
-                                 struct utillib_symbol const *context) {
+                                 char const *unexpected,
+                                 char const *context) {
   struct rd_parser_error *self =
       rd_parser_error(CL_EUNEXPECTED, input);
-  self->einfo[0] = unexpected->name;
-  self->einfo[1] = context->name;
+  self->einfo[0] = unexpected;
+  self->einfo[1] = context;
   return self;
 }
 

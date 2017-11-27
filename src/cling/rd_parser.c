@@ -75,7 +75,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
     return program(self, input);
   default:
 #ifndef NDEBUG
-    printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
+    printf("@@ longjmp from `%s' context @@\n",cling_symbol_kind_tostring(code));
 #endif
     return NULL;
   }
@@ -112,7 +112,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
   struct utillib_json_value *object;
   size_t code;
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  struct utillib_symbol const *context = &cling_symbols[SYM_CONST_DEF];
+  struct utillib_symbol const *context = cling_symbol_kind_tostring(SYM_CONST_DEF);
 
   /* Main loop */
   while (true) {
@@ -154,7 +154,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
 /* Error handling */
 error:
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                             input, &cling_symbols[expected],
+                                             input, cling_symbol_kind_tostring(expected),
                                              cling_symbol_cast(code), context));
   switch (expected) {
   /* Patches this failure a little bit */
@@ -199,7 +199,7 @@ single_const_decl(struct cling_rd_parser *self,
 
   struct utillib_json_value *const_decl = utillib_json_object_create_empty();
   code = utillib_token_scanner_lookahead(input);
-  struct utillib_symbol const *context = &cling_symbols[SYM_CONST_DECL];
+  struct utillib_symbol const *context = cling_symbol_kind_tostring(SYM_CONST_DECL);
   struct utillib_symbol const *expected_initializer;
 
   switch (code) {
@@ -207,7 +207,7 @@ single_const_decl(struct cling_rd_parser *self,
   case SYM_KW_CHAR:
   case SYM_KW_INT:
     utillib_token_scanner_shiftaway(input);
-    expected_initializer = &cling_symbols[code];
+    expected_initializer = cling_symbol_kind_tostring(code);
     utillib_json_object_push_back(const_decl, "type",
                                   utillib_json_size_t_create(&code));
     utillib_json_object_push_back(
@@ -226,7 +226,7 @@ single_const_decl(struct cling_rd_parser *self,
   }
 error:
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                             input, &cling_symbols[expected],
+                                             input, cling_symbol_kind_tostring(expected),
                                              cling_symbol_cast(code), context));
   if (rd_parser_skipto(input, SYM_SEMI)) {
     longjmp(self->fatal_saver, context->value);
@@ -276,7 +276,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   assert(code == SYM_KW_SCANF);
 
   struct utillib_json_value *object = utillib_json_object_create_empty();
-  struct utillib_symbol const *context = &cling_symbols[SYM_SCANF_STMT];
+  struct utillib_symbol const *context = cling_symbol_kind_tostring(SYM_SCANF_STMT);
   utillib_json_object_push_back(object, "type",
                                 utillib_json_size_t_create(&code));
   struct utillib_json_value *array = utillib_json_array_create_empty();
@@ -334,7 +334,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 error:
   /* Expect error */
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                             input, &cling_symbols[expected],
+                                             input, cling_symbol_kind_tostring(expected),
                                              cling_symbol_cast(code), context));
   switch (expected) {
   case SYM_LP:
@@ -423,9 +423,9 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
   }
 error:
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                             input, &cling_symbols[expected],
+                                             input, cling_symbol_kind_tostring(expected),
                                              cling_symbol_cast(code),
-                                             &cling_symbols[SYM_VAR_DEF]));
+                                             cling_symbol_kind_tostring(SYM_VAR_DEF)));
   if (rd_parser_skipto(input, SYM_SEMI))
     longjmp(self->fatal_saver, SYM_VAR_DEF);
   if (expected == SYM_UINT)
@@ -450,9 +450,9 @@ singel_var_decl(struct cling_rd_parser *self,
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_SEMI) {
     utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                               input, &cling_symbols[SYM_SEMI],
+                                               input, cling_symbol_kind_tostring(SYM_SEMI),
                                                cling_symbol_cast(code),
-                                               &cling_symbols[SYM_VAR_DECL]));
+                                               cling_symbol_kind_tostring(SYM_VAR_DECL)));
     return object;
   }
   utillib_token_scanner_shiftaway(input);
@@ -499,7 +499,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
     default:
       utillib_vector_push_back(&self->elist, rd_parser_unexpected_error(
                                                  input, cling_symbol_cast(code),
-                                                 &cling_symbols[SYM_VAR_DECL]));
+                                                 cling_symbol_kind_tostring(SYM_VAR_DECL)));
       goto skip;
     }
   }
@@ -510,9 +510,9 @@ maybe_return_array:
   return utillib_json_null_create();
 error:
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
-                                             input, &cling_symbols[expected],
+                                             input, cling_symbol_kind_tostring(expected),
                                              cling_symbol_cast(code),
-                                             &cling_symbols[SYM_VAR_DECL]));
+                                             cling_symbol_kind_tostring(SYM_VAR_DECL)));
 skip:
   if (rd_parser_skipto(input, SYM_SEMI))
     longjmp(self->fatal_saver, SYM_VAR_DECL);
@@ -526,7 +526,7 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
   struct utillib_json_value *val =
       maybe_multiple_var_decls(self, input, &type, &first_iden);
   if (val == &utillib_json_null) {
-    printf("first_iden %s, type %s\n", first_iden, cling_symbols[type].name);
+    printf("first_iden %s, type %s\n", first_iden,cling_symbol_kind_tostring(type));
   }
   return val;
 }

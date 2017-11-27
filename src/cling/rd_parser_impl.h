@@ -77,8 +77,8 @@ void rd_parser_error_destroy(struct rd_parser_error *self);
 bool rd_parser_skipto(struct utillib_token_scanner *input, size_t target);
 
 struct rd_parser_error *rd_parser_expected_error(
-    struct utillib_token_scanner *input, struct utillib_symbol const *expected,
-    struct utillib_symbol const *actual, struct utillib_symbol const *context);
+    struct utillib_token_scanner *input, char const *expected,
+    char const *actual, char const *context);
 
 struct rd_parser_error *
 rd_parser_noargs_error(struct utillib_token_scanner *input,
@@ -86,8 +86,8 @@ rd_parser_noargs_error(struct utillib_token_scanner *input,
 
 struct rd_parser_error *
 rd_parser_unexpected_error(struct utillib_token_scanner *input,
-                                 struct utillib_symbol const *unexpected,
-                                 struct utillib_symbol const *context);
+                                 char const *unexpected,
+                                 char const *context);
 
 void rd_parser_error_print(struct rd_parser_error *error);
 #endif /* CLING_RD_PARSER_IMPH_H */
