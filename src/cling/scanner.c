@@ -89,13 +89,12 @@ int cling_scanner_read_string(struct utillib_char_scanner *chars,
 }
 
 int cling_scanner_read_number(struct utillib_char_scanner *chars,
-                               struct utillib_string *buffer) {
+                              struct utillib_string *buffer) {
   utillib_token_scanner_collect_digit(chars, buffer);
-  char const * str=utillib_string_c_str(buffer);
+  char const *str = utillib_string_c_str(buffer);
   if (str[0] == '0' && utillib_string_size(buffer) > 1)
     return -CL_ELEADZERO;
   return SYM_UINT;
-
 }
 
 int cling_scanner_read_handler(struct utillib_char_scanner *chars,
@@ -248,9 +247,6 @@ void const *cling_scanner_semantic_handler(size_t value, char const *str) {
   }
 }
 
-void cling_scanner_destroy(struct utillib_token_scanner *self)
-{
+void cling_scanner_destroy(struct utillib_token_scanner *self) {
   utillib_token_scanner_destroy(self);
 }
-
-

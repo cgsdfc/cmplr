@@ -23,6 +23,8 @@
 #include <utillib/enum.h>
 #include <utillib/symbol.h>
 
+#define cling_symbol_cast(code)                                                \
+  ((code) == UT_SYM_EOF ? UTILLIB_SYMBOL_EOF : &cling_symbols[(code)])
 UTILLIB_ENUM_BEGIN(cling_symbol_kind)
 
 UTILLIB_ENUM_ELEM_INIT(SYM_PROGRAM, 1)

@@ -23,56 +23,47 @@
 
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
-#define CL_RD_PARSER_EMAX 4
-#define cling_symbol_cast(code) \
-((code) == UT_SYM_EOF ? UTILLIB_SYMBOL_EOF : &cling_symbols[(code)])
+#define RD_PARSER_EMAX 4
+#define RD_PARSER_SKIP_MAX 4
+
 
 /*
  * Error for RD parser defined here
  */
 
-UTILLIB_ENUM_BEGIN(cling_rd_parser_error_kind)
-  UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
-  UTILLIB_ENUM_ELEM(CL_EEXPECT)
-  UTILLIB_ENUM_ELEM(CL_ENOARGS)
-UTILLIB_ENUM_END(cling_rd_parser_error_kind);
+UTILLIB_ENUM_BEGIN(rd_parser_error_kind)
+UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
+UTILLIB_ENUM_ELEM(CL_EEXPECT)
+UTILLIB_ENUM_ELEM(CL_ENOARGS)
+UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
+UTILLIB_ENUM_END(rd_parser_error_kind);
 
-struct cling_rd_parser_error {
+struct rd_parser_error {
   int kind;
   size_t row;
   size_t col;
-  void const * einfo[CL_RD_PARSER_EMAX];
+  void const *einfo[RD_PARSER_EMAX];
+};
+
+struct rd_parser_skip_target {
+  size_t tars[RD_PARSER_SKIP_MAX];
 };
 
 /**
- * \function cling_rd_parser_error
+ * \function rd_parser_error
  * Creates an error recording the kind of
  * the error, the location in the source file.
  * Notes that caller can store arbitary error info
  * into it to a limit of `CL_RD_PARSER_EMAX'.
  */
-struct cling_rd_parser_error *
-cling_rd_parser_error(int kind, struct utillib_token_scanner * input);
+struct rd_parser_error *
+rd_parser_error(int kind, struct utillib_token_scanner *input);
 
 /**
- * \function cling_rd_parser_expect
- * Expects a token from the input and returns
- * whether expectation failed.
- * The caller should check like:
- * `if (cling_rd_parser_expect(...)) {
- *    // error...
- * }'
- */
-bool cling_rd_parser_expect(
-    struct utillib_token_scanner *input, 
-    size_t expected);
-
-/**
- * \function cling_rd_parser_error_destroy
+ * \function rd_parser_error_destroy
  * Destroy this error.
  */
-void cling_rd_parser_error_destroy(
-    struct cling_rd_parser_error *self);
+void rd_parser_error_destroy(struct rd_parser_error *self);
 
 /**
  * \function cling_rd_parser_skipto
@@ -83,20 +74,20 @@ void cling_rd_parser_error_destroy(
  * This indicates a fatal error and caller should
  * signal it.
  */
-bool cling_rd_parser_skipto(struct utillib_token_scanner *input, 
-    size_t target);
+bool rd_parser_skipto(struct utillib_token_scanner *input, size_t target);
 
-struct cling_rd_parser_error *
-cling_rd_parser_expected_error(
-    struct utillib_token_scanner *input,
-    struct utillib_symbol const *expected,
-    struct utillib_symbol const *actual,
-    struct utillib_symbol const *context);
+struct rd_parser_error *rd_parser_expected_error(
+    struct utillib_token_scanner *input, struct utillib_symbol const *expected,
+    struct utillib_symbol const *actual, struct utillib_symbol const *context);
 
-struct cling_rd_parser_error *
-cling_rd_parser_noargs_error(
-    struct utillib_token_scanner *input,
-    char const * name);
+struct rd_parser_error *
+rd_parser_noargs_error(struct utillib_token_scanner *input,
+                             char const *name);
 
+struct rd_parser_error *
+rd_parser_unexpected_error(struct utillib_token_scanner *input,
+                                 struct utillib_symbol const *unexpected,
+                                 struct utillib_symbol const *context);
+
+void rd_parser_error_print(struct rd_parser_error *error);
 #endif /* CLING_RD_PARSER_IMPH_H */
-
