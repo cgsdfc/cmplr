@@ -238,7 +238,7 @@ void const *cling_scanner_semantic_handler(size_t value, char const *str) {
     return uint;
   case SYM_IDEN:
   case SYM_STRING:
-    return strdup(str);
+    return str;
   case SYM_CHAR:
     ch = str[0];
     return ch;

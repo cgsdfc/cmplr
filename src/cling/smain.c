@@ -68,11 +68,9 @@ int main(int argc, char *argv[]) {
       break;
     case SYM_IDEN:
       fprintf(output, "%s", (char const *)semantic);
-      free(semantic);
       break;
     case SYM_STRING:
       fprintf(output, "\"%s\"", (char const *)semantic);
-      free(semantic);
       break;
     case SYM_CHAR:
       fprintf(output, "'%c'", (char)semantic);

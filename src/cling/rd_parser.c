@@ -86,6 +86,7 @@ void cling_rd_parser_report_errors(struct cling_rd_parser const *self) {
                          &self->elist) {
     rd_parser_error_print(error);
   }
+  fprintf(stderr,"%lu errors detected.\n", utillib_vector_size(&self->elist));
 }
 
 /*
@@ -127,7 +128,6 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
     utillib_token_scanner_shiftaway(input);
     utillib_json_object_push_back(object, "identifier",
                                   utillib_json_string_create(&str));
-    free(str);
 
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_EQ) {
@@ -312,7 +312,6 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     str = utillib_token_scanner_semantic(input);
     utillib_token_scanner_shiftaway(input);
     utillib_json_array_push_back(array, utillib_json_string_create(&str));
-    free(str);
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_COMMA)
       break;
@@ -373,7 +372,6 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
   utillib_json_object_push_back(object, "identifier",
                                 utillib_json_string_create(&first_iden));
   utillib_json_array_push_back(array, object);
-  free(first_iden);
 
   while (true) {
     bool is_array = false;
@@ -414,7 +412,6 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
       first_iden = utillib_token_scanner_semantic(input);
       utillib_json_object_push_back(object, "identifier",
                                     utillib_json_string_create(&first_iden));
-      free(first_iden);
       utillib_token_scanner_shiftaway(input);
       break;
     default:

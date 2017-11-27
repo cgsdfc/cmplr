@@ -24,7 +24,7 @@
 #include <utillib/symbol.h>
 
 #define cling_symbol_cast(code)                                                \
-  ((code) == UT_SYM_EOF ? UTILLIB_SYMBOL_EOF : cling_symbol_kind_tostring((code)))
+  ((code) == UT_SYM_EOF ? "EOF" : cling_symbol_kind_tostring((code)))
 
 UTILLIB_ENUM_BEGIN(cling_symbol_kind)
 
