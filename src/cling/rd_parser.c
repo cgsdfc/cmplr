@@ -39,6 +39,15 @@ static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input);
 
+static struct utillib_json_value *
+var_defs(struct cling_rd_parser * self,
+    struct utillib_token_scanner * input, 
+    char const * first_iden);
+
+static struct utillib_json_value *
+program(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
 /*
  * init/destroy
  */
@@ -70,7 +79,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   int code;
   switch (code=setjmp(self->fatal_saver)) {
   case 0:
-    return scanf_stmt(self, input);
+    return program(self, input);
   default:
 #ifndef NDEBUG
     printf("@@ longjmp from `%s' context @@\n", cling_symbols[code].name);
@@ -384,3 +393,189 @@ error:
   return object;
 
 }
+
+/**
+ * lookahead: [ , ;
+ * examples: 
+ * i,j,k
+ * i[10], i, k[10]
+ * return: array of object{type:(SYM_KW_INT|SYM_KW_CHAR),
+ * is_array:bool, extend:size_t}
+ */
+static struct utillib_json_value *
+var_defs(struct cling_rd_parser * self,
+    struct utillib_token_scanner * input, 
+    char const * first_iden)
+{
+  size_t code;
+  size_t expected;
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "identifier", 
+      utillib_json_string_create(&first_iden));
+  utillib_json_array_push_back(array, object);
+  free(first_iden);
+
+  while (true) {
+    bool is_array=false; 
+    size_t extend;
+    code=utillib_token_scanner_lookahead(input);
+    switch(code) {
+      /* Those that can follow iden are SYM_LK and SYM_COMMA*/ 
+    case SYM_LK:
+      is_array=true;
+      utillib_json_object_push_back(object, "is_array",
+          utillib_json_bool_create(&is_array));
+      utillib_token_scanner_shiftaway(input);
+      code=utillib_token_scanner_lookahead(input);
+      if (code != SYM_UINT) {
+        expected=SYM_UINT;
+        goto error;
+      }
+      extend=utillib_token_scanner_semantic(input);
+      utillib_json_object_push_back(object, "extend",
+          utillib_json_size_t_create(&extend));
+      utillib_token_scanner_shiftaway(input);
+      code=utillib_token_scanner_lookahead(input);
+      if (code != SYM_RK) {
+        expected=SYM_RK;
+        goto error;
+      }
+      utillib_token_scanner_shiftaway(input);
+      break;
+    case SYM_COMMA:
+      object=utillib_json_object_create_empty();
+      utillib_json_array_push_back(array, object);
+      utillib_token_scanner_shiftaway(input);
+      code=utillib_token_scanner_lookahead(input);
+      if (code != SYM_IDEN) {
+        expected=SYM_IDEN;
+        goto error;
+      }
+      first_iden=utillib_token_scanner_semantic(input);
+      utillib_json_object_push_back(object, "identifier",
+          utillib_json_string_create(&first_iden));
+      free(first_iden);
+      utillib_token_scanner_shiftaway(input);
+      break;
+    default:
+      return array;
+    }
+  }
+error:
+  utillib_vector_push_back(&self->elist,
+      cling_rd_parser_expected_error(input,
+        &cling_symbols[expected],
+        cling_symbol_cast(code),
+        &cling_symbols[SYM_VAR_DEF]));
+  if (cling_rd_parser_skipto(input, SYM_SEMI))
+    longjmp(self->fatal_saver, SYM_VAR_DEF);
+  if (expected == SYM_UINT)
+    utillib_json_object_push_back(object, "extend",
+        utillib_json_null_create());
+  if (expected == SYM_IDEN)
+    utillib_json_object_push_back(object, "identifier",
+        utillib_json_null_create());
+  return array;
+}
+
+static struct utillib_json_value *
+singel_var_decl(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, 
+    size_t type, char const * first_iden)
+{
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  size_t code;
+
+  utillib_json_object_push_back(object, "type",
+      utillib_json_size_t_create(&type));
+  utillib_json_object_push_back(object, "var_defs",
+      var_defs(self, input, first_iden));
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_SEMI) {
+    utillib_vector_push_back(&self->elist,
+        cling_rd_parser_expected_error(input,
+          &cling_symbols[SYM_SEMI],
+          cling_symbol_cast(code),
+          &cling_symbols[SYM_VAR_DECL]));
+    return object;
+  }
+  utillib_token_scanner_shiftaway(input);
+  return object;
+}
+
+static struct utillib_json_value *
+maybe_multiple_var_decls(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, 
+    size_t * type, char const  ** first_iden)
+{
+  size_t code;
+  size_t expected;
+  bool has_var_decl=false;
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+  code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_KW_INT || code == SYM_KW_CHAR);
+  *type = code;
+  utillib_token_scanner_shiftaway(input);
+
+  while(true) {
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_IDEN) {
+      expected=SYM_IDEN;
+      goto error;
+    }
+    *first_iden=utillib_token_scanner_semantic(input);
+    utillib_token_scanner_shiftaway(input);
+    code=utillib_token_scanner_lookahead(input);
+    switch (code) {
+      case SYM_LK:
+      case SYM_COMMA:
+      case SYM_SEMI:
+        has_var_decl=true;
+        utillib_json_array_push_back(array,
+            singel_var_decl(self, input, *type, *first_iden));
+        code=utillib_token_scanner_lookahead(input);
+        if (code != SYM_KW_INT && code != SYM_KW_CHAR)
+          return array;
+        * type=code;
+        utillib_token_scanner_shiftaway(input);
+        break;
+      default:
+        goto maybe_return_array;
+    }
+  }
+maybe_return_array:
+  if (has_var_decl) 
+    return array;
+  utillib_json_value_destroy(array);
+  return utillib_json_null_create();
+error:
+  utillib_vector_push_back(&self->elist,
+      cling_rd_parser_expected_error(input,
+        &cling_symbols[expected],
+        cling_symbol_cast(code),
+        &cling_symbols[SYM_VAR_DECL]));
+  if (cling_rd_parser_skipto(input, SYM_SEMI)) 
+    longjmp(self->fatal_saver, SYM_VAR_DECL);
+  goto maybe_return_array;
+}
+
+static struct utillib_json_value *
+program(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t type;
+  char const * first_iden;
+  struct utillib_json_value * val=maybe_multiple_var_decls(self, input, &type, &first_iden);
+  if (val == &utillib_json_null) {
+    printf("first_iden %s, type %s\n", first_iden, 
+        cling_symbols[type].name);
+  }
+  return val;
+}
+
+
+
+
+
+

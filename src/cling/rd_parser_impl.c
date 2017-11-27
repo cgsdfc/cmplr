@@ -58,7 +58,7 @@ bool cling_rd_parser_skipto(struct utillib_token_scanner *input,
 {
   size_t code;
   while ((code=utillib_token_scanner_lookahead(input)) != target) {
-    if (code == UT_SYM_EOF)
+    if (code == UT_SYM_EOF || code == UT_SYM_ERR)
       return true;
     utillib_token_scanner_shiftaway(input);
   }
@@ -88,5 +88,4 @@ cling_rd_parser_noargs_error(
   self->einfo[0]=name;
   return self;
 }
-
 
