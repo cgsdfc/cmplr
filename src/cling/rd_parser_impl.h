@@ -46,7 +46,8 @@ struct rd_parser_error {
 };
 
 struct rd_parser_skip_target {
-  size_t tars[RD_PARSER_SKIP_MAX];
+  size_t expected;
+  int tars[RD_PARSER_SKIP_MAX];
 };
 
 /**
@@ -65,20 +66,16 @@ rd_parser_error(int kind, struct utillib_token_scanner *input);
  */
 void rd_parser_error_destroy(struct rd_parser_error *self);
 
-/**
- * \function cling_rd_parser_skipto
- * Reads and discards token from input until
- * the lookahead token become `target'.
- * Returns whether unfortunately before we can
- * skip to `target', eof was reached.
- * This indicates a fatal error and caller should
- * signal it.
- */
-bool rd_parser_skipto(struct utillib_token_scanner *input, size_t target);
+void rd_parser_skip_target_init(struct rd_parser_skip_target * self,
+    size_t expected);
+
+size_t rd_parser_skipto(struct rd_parser_skip_target const *self,
+    struct utillib_token_scanner *input); 
 
 struct rd_parser_error *rd_parser_expected_error(
-    struct utillib_token_scanner *input, char const *expected,
-    char const *actual, char const *context);
+    struct utillib_token_scanner *input,
+    size_t expected,
+    size_t actual, size_t context);
 
 struct rd_parser_error *
 rd_parser_noargs_error(struct utillib_token_scanner *input,
@@ -86,8 +83,8 @@ rd_parser_noargs_error(struct utillib_token_scanner *input,
 
 struct rd_parser_error *
 rd_parser_unexpected_error(struct utillib_token_scanner *input,
-                                 char const *unexpected,
-                                 char const *context);
+                                 size_t unexpected,
+                                 size_t context);
 
-void rd_parser_error_print(struct rd_parser_error *error);
+void rd_parser_error_print(struct rd_parser_error const *error);
 #endif /* CLING_RD_PARSER_IMPH_H */

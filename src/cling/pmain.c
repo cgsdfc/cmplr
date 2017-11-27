@@ -22,6 +22,8 @@
 #include "rd_parser.h"
 #include "scanner.h"
 
+#include <stdlib.h>
+
 static struct utillib_token_scanner cling_scanner;
 static struct cling_rd_parser cling_parser;
 static struct utillib_json_value *json_ast;

@@ -27,6 +27,8 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
+
 struct rd_parser_error *
 rd_parser_error(int kind, struct utillib_token_scanner *input) {
   struct rd_parser_error *self = calloc(sizeof *self, 1);
@@ -39,24 +41,37 @@ void rd_parser_error_destroy(struct rd_parser_error *self) {
   free(self);
 }
 
-bool rd_parser_skipto(struct utillib_token_scanner *input,
-                            size_t target) {
+void rd_parser_skip_target_init(struct rd_parser_skip_target*self,
+    size_t expected)
+{
+  self->expected=expected;
+  memset(self->tars, -1, sizeof self->tars);
+}
+
+size_t rd_parser_skipto(struct rd_parser_skip_target const *self,
+    struct utillib_token_scanner *input) 
+{
   size_t code;
-  while ((code = utillib_token_scanner_lookahead(input)) != target) {
+  while (true) {
+    code=utillib_token_scanner_lookahead(input);
     if (code == UT_SYM_EOF || code == UT_SYM_ERR)
-      return true;
+      return UT_SYM_EOF;
+    for (int const * pi=self->tars; *pi!=-1; ++pi)
+      if (*pi == code) 
+        return code;
     utillib_token_scanner_shiftaway(input);
   }
-  return false;
 }
 
 struct rd_parser_error *rd_parser_expected_error(
-    struct utillib_token_scanner *input, char const *expected,
-    char const *actual, char const *context) {
+    struct utillib_token_scanner *input,
+    size_t expected,
+    size_t actual, size_t context)
+{
   struct rd_parser_error *self = rd_parser_error(CL_EEXPECT, input);
-  self->einfo[0] = expected;
-  self->einfo[1] = actual;
-  self->einfo[2] = context;
+  self->einfo[0] = cling_symbol_cast(expected);
+  self->einfo[1] = cling_symbol_cast(actual);
+  self->einfo[2] = cling_symbol_cast(context);
   return self;
 }
 
@@ -70,16 +85,16 @@ rd_parser_noargs_error(struct utillib_token_scanner *input,
 
 struct rd_parser_error *
 rd_parser_unexpected_error(struct utillib_token_scanner *input,
-                                 char const *unexpected,
-                                 char const *context) {
+                                 size_t unexpected,
+                                 size_t context) {
   struct rd_parser_error *self =
       rd_parser_error(CL_EUNEXPECTED, input);
-  self->einfo[0] = unexpected;
-  self->einfo[1] = context;
+  self->einfo[0] = cling_symbol_cast(unexpected);
+  self->einfo[1] = cling_symbol_cast(context);
   return self;
 }
 
-void rd_parser_error_print(struct rd_parser_error *error) {
+void rd_parser_error_print(struct rd_parser_error const *error) {
   utillib_error_printf("ERROR at line %lu, column %lu:\n", error->row + 1,
                        error->col + 1);
   switch (error->kind) {
