@@ -22,6 +22,8 @@
 #ifndef CLING_SYMBOL_TABLE_H
 #define CLING_SYMBOL_TABLE_H
 #include <utillib/hashmap.h>
+#include <utillib/slist.h>
+#include <utillib/enum.h>
 
 /**
  * \struct cling_symbol_table
@@ -45,14 +47,45 @@
  */
 
 struct cling_symbol_table {
-  struct utillib_hashmap const_table;
-  struct utillib_hashmap var_table;
-  struct utillib_hashmap func_table;
-  struct utillib_hashmap scope_table;
+  struct utillib_hashmap global_table;
+  struct utillib_slist scope_table;
+  size_t scope;
 };
 
+struct cling_symbol_entry {
+  int kind;
+  struct utillib_json_value * value;
+};
+
+/**
+ * \enum cling_symbol_entry_kind
+ * This enum descripts the properties of an entry
+ * in the symbol table. These fields can be OR together
+ * to express complex type from basic ones. For example,
+ * const int => CL_INT | CL_CONST
+ * int foo() => CL_INT | CL_FUNC
+ * int a[10] => CL_INT | CL_ARRAY
+ * However, some combinations are illegal.
+ */
+UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
+  UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
+  UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
+  UTILLIB_ENUM_ELEM_INIT(CL_CONST, 4)
+  UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 8)
+  UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 16)
+UTILLIB_ENUM_END(cling_symbol_entry_kind);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
 void cling_symbol_table_destroy(struct cling_symbol_table *self);
+
+void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
+void cling_symbol_table_exit_scope(struct cling_symbol_table *self);
+int cling_symbol_table_insert(struct cling_symbol_table *self, 
+    int kind, char const *name,
+    struct utillib_json_value * value);
+struct utillib_json_value *
+cling_symbol_table_at(struct cling_symbol_table *self, char const * name,
+    int * kind);
+
 #endif /* CLING_SYMBOL_TABLE_H */
 

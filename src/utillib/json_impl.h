@@ -30,6 +30,8 @@
  * struct but always see json
  * value, they can be hidden.
  */
+#define _JSON_ARRAY(VALUE) &(((struct utillib_json_array*) (VALUE)->as_ptr)->elements)
+#define _JSON_OBJECT(VALUE) &(((struct utillib_json_object*) (VALUE)->as_ptr)->members)
 
 /**
  * \struct utillib_json_object

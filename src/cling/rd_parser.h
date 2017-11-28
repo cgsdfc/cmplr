@@ -50,9 +50,13 @@
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
+  struct cling_symbol_table * symbols;
+  struct cling_entity_list * entities;
 };
 
-void cling_rd_parser_init(struct cling_rd_parser *self);
+void cling_rd_parser_init(struct cling_rd_parser *self, 
+    struct cling_symbol_table *symbols,
+    struct cling_entity_list *entities);
 void cling_rd_parser_destroy(struct cling_rd_parser *self);
 struct utillib_json_value *
 cling_rd_parser_parse(struct cling_rd_parser *self,
