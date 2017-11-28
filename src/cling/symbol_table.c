@@ -33,7 +33,7 @@ static const struct utillib_hashmap_callback symbol_hash_callback={
 
 static void symbol_table_scope_destroy(struct utillib_hashmap *self)
 {
-  utillib_hashmap_destroy_owning(self, NULL, free);
+  utillib_hashmap_destroy_owning(self, free, free);
   free(self);
 }
 
@@ -47,7 +47,7 @@ void cling_symbol_table_init(struct cling_symbol_table *self)
 
 void cling_symbol_table_destroy(struct cling_symbol_table *self)
 {
-  utillib_hashmap_destroy_owning(&self->global_table, NULL, free);
+  utillib_hashmap_destroy_owning(&self->global_table, free, free);
   utillib_slist_destroy_owning(&self->scope_table, symbol_table_scope_destroy);
 
 }
@@ -69,9 +69,17 @@ void cling_symbol_table_exit_scope(struct cling_symbol_table *self)
   free(old_scope);
   --self->scope;
 }
+static struct cling_symbol_entry *
+symbol_entry_create(int kind, struct utillib_json_value *value)
+{
+  struct cling_symbol_entry * new_entry=malloc(sizeof *new_entry);
+  new_entry->kind=kind;
+  new_entry->value=value;
+  return new_entry;
+}
 
 static struct utillib_hashmap *
-symbol_table_get_scope(struct cling_symbol_table *self)
+symbol_table_get_scope(struct cling_symbol_table const *self)
 {
   if (self->scope == 0)
     return &self->global_table;
@@ -85,11 +93,26 @@ int cling_symbol_table_insert(struct cling_symbol_table *self,
   struct utillib_hashmap * scope=symbol_table_get_scope(self);
   if (utillib_hashmap_at(scope, name))
     return 1;
-  struct cling_symbol_entry * new_entry=malloc(sizeof *new_entry);
-  new_entry->kind=kind;
-  new_entry->value=value;
-  utillib_hashmap_insert(scope, name, new_entry);
+  utillib_hashmap_insert(scope, strdup(name),
+      symbol_entry_create(kind, value));
   return 0;
+}
+
+void cling_symbol_table_reserve(struct cling_symbol_table *self, char const * name)
+{
+  struct utillib_hashmap * scope=symbol_table_get_scope(self);
+  size_t retv;
+  retv=utillib_hashmap_insert(scope, strdup(name), NULL);
+  assert(retv==0);
+}
+
+void cling_symbol_table_update(struct cling_symbol_table *self, 
+    int kind, char const *name,
+    struct utillib_json_value * value)
+{
+  struct utillib_hashmap * scope=symbol_table_get_scope(self);
+  void * old_value=utillib_hashmap_update(scope, name, symbol_entry_create(kind, value));
+  assert (old_value == NULL);
 }
 
 struct cling_symbol_entry *
@@ -98,10 +121,7 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const * name
 {
   struct utillib_hashmap * cur_scope = symbol_table_get_scope(self);
   struct cling_symbol_entry * entry=utillib_hashmap_at(cur_scope, name);
-  if (level == 0)
-    return entry;
-  if (self->scope == 0) {
-    assert (cur_scope == &self->global_table);
+  if (level == 0 || self->scope == 0) {
     return entry;
   }
   UTILLIB_SLIST_FOREACH(struct utillib_hashmap const*, scope, &self->scope_table) {
@@ -111,6 +131,20 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const * name
   }
   return utillib_hashmap_at(&self->global_table, name);
 }
+
+bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
+    char const *name, size_t level)
+{
+  struct utillib_hashmap *cur_scope=symbol_table_get_scope(self);
+  if (level == 0 || self->scope == 0) 
+    return utillib_hashmap_exist_key(cur_scope, name);
+  UTILLIB_SLIST_FOREACH(struct utillib_hashmap const*, scope, &self->scope_table) {
+    if (utillib_hashmap_exist_key(scope, name))
+      return true;
+  }
+  return utillib_hashmap_exist_key(&self->global_table, name);
+}
+
 
 /*
  * json
@@ -122,7 +156,7 @@ symbol_entry_json_create(struct cling_symbol_entry *self)
 }
 
 static struct utillib_json_value *
-symbol_table_scope_json_object_create(struct utillib_hashmap *self)
+symbol_table_scope_json_object_create(struct utillib_hashmap const *self)
 {
   return utillib_hashmap_json_object_create(self, 
       symbol_entry_json_create);
@@ -131,7 +165,7 @@ symbol_table_scope_json_object_create(struct utillib_hashmap *self)
 struct utillib_json_value *
 cling_symbol_table_json_object_create(struct cling_symbol_table *self)
 {
-  struct cling_symbol_table * object=utillib_json_object_create_empty();
+  struct utillib_json_value * object=utillib_json_object_create_empty();
   utillib_json_object_push_back(object, "global_table",
       symbol_table_scope_json_object_create(&self->global_table));
   struct utillib_json_value * array=utillib_slist_json_array_create(&self->scope_table,

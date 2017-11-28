@@ -34,7 +34,7 @@
  * A series of scopes linked in a list form the lexical scopes
  * for the language, which can be pushed as the parser enters
  * a new scope and popped as it exits a scope.
- * These hashmaps own the cling_symbol_entry.
+ * These hashmaps own the cling_symbol_entry and the name as key.
  */
 
 struct cling_symbol_table {
@@ -107,6 +107,42 @@ int cling_symbol_table_insert(struct cling_symbol_table *self,
 struct cling_symbol_entry *
 cling_symbol_table_find(struct cling_symbol_table const *self, char const * name,
     size_t level);
+
+/**
+ * \function cling_symbol_table_reserve
+ * Reserves an entry in the current scope
+ * with the `name' as key so that the following
+ * lookup shows thats `name' exists.
+ * Assumes `name' does not exist before.
+ * Notes the `name' will be strdup.
+ */
+void cling_symbol_table_reserve(struct cling_symbol_table *self, char const * name);
+
+/**
+ * \function cling_symbol_table_update
+ * Parallel with `utillib_hashmap_insert' but
+ * assumes the entry of `name' has been reserved with
+ * `cling_symbol_table_reserve' and fills in the `NULL'
+ * blank of it.
+ * Notes that the name will not be strdup.
+ */
+void cling_symbol_table_update(struct cling_symbol_table *self, 
+    int kind, char const *name,
+    struct utillib_json_value * value);
+
+/**
+ * \function cling_symbol_table_exist_name
+ * Parallel with `cling_symbol_table_find', but only answers
+ * whether the name exists regardless of its entry.
+ */
+bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
+    char const *name, size_t level);
+
+/*
+ * JSON
+ */
+struct utillib_json_value *
+cling_symbol_table_json_object_create(struct cling_symbol_table *self);
 
 #endif /* CLING_SYMBOL_TABLE_H */
 

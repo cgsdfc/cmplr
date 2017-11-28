@@ -155,6 +155,12 @@ void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key);
 void utillib_hashmap_rehash(struct utillib_hashmap *self);
 
 /**
+ * \function utillib_hashmap_exist_key
+ * Returns whether this `key' exists.
+ */
+bool utillib_hashmap_exist_key(struct utillib_hashmap const *self, void const *key);
+
+/**
  * \function utillib_hashmap_at
  * Searches for value corresponding to this `key'
  * and return the address of the value if it was found.
@@ -212,7 +218,7 @@ size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self);
  * disaster will happen so be clear.
  */
 struct utillib_json_value*
-utillib_hashmap_json_object_create(struct utillib_hashmap *self,
+utillib_hashmap_json_object_create(struct utillib_hashmap const *self,
     utillib_json_value_create_func_t create_func);
 
 /**
@@ -222,7 +228,7 @@ utillib_hashmap_json_object_create(struct utillib_hashmap *self,
  * has the form { "key": key_value, "value": value_value }.
  */
 struct utillib_json_value *
-utillib_hashmap_json_array_create(struct utillib_hashmap *self,
+utillib_hashmap_json_array_create(struct utillib_hashmap const *self,
     utillib_json_value_create_func_t key_create,
     utillib_json_value_create_func_t value_create);
 

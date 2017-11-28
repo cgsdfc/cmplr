@@ -132,9 +132,25 @@ void rd_parser_insert_const(struct cling_symbol_table *symbols,
   UTILLIB_JSON_ARRAY_FOREACH(obj, const_defs) {
     struct utillib_json_value * identifier=utillib_json_object_at(obj, "identifier");
     assert(identifier);
-    retv=cling_symbol_table_insert(symbols, kind, identifier->as_ptr, obj);
-    assert(retv==0);
+    cling_symbol_table_update(symbols, kind, identifier->as_ptr, obj);
    }
+}
+
+void rd_parser_insert_variable(struct cling_symbol_table *symbols,
+    struct utillib_json_value * object)
+{
+  struct utillib_json_value * type=utillib_json_object_at(object, "type");
+  struct utillib_json_value * var_defs=utillib_json_object_at(object, "var_defs");
+  int kind=type->as_size_t == SYM_KW_INT?CL_INT: CL_CHAR;
+  int retv;
+
+  UTILLIB_JSON_ARRAY_FOREACH(obj, var_defs) {
+    struct utillib_json_value * identifier=utillib_json_object_at(obj, "identifier");
+    assert(identifier);
+    cling_symbol_table_update(symbols, 
+        utillib_json_object_at(obj, "extend")?kind|CL_ARRAY : kind ,
+        identifier->as_ptr, obj);
+  }
 }
 
 void rd_parser_error_print(struct rd_parser_error const *error) {

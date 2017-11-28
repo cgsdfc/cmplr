@@ -91,10 +91,17 @@ struct rd_parser_error *
 rd_parser_unexpected_error(struct utillib_token_scanner *input,
                                  size_t unexpected,
                                  size_t context);
+struct rd_parser_error *
+rd_parser_redined_error(struct utillib_token_scanner *input,
+    char const * name,
+    size_t context);
 
 void rd_parser_error_print(struct rd_parser_error const *error);
 
 void rd_parser_insert_const(struct cling_symbol_table *symbols,
+    struct utillib_json_value * object);
+
+void rd_parser_insert_variable(struct cling_symbol_table *symbols,
     struct utillib_json_value * object);
 
 #endif /* CLING_RD_PARSER_IMPH_H */

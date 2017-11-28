@@ -140,6 +140,13 @@ void * utillib_hashmap_at(struct utillib_hashmap const* self, void const *key)
   return NULL;
 }
 
+bool utillib_hashmap_exist_key(struct utillib_hashmap const *self, void const *key)
+{
+  struct utillib_hashmap_search_result result;
+  utillib_hashmap_search_result_init(&result, self, key);
+  return result.pair != NULL;
+}
+
 size_t utillib_hashmap_size(struct utillib_hashmap const *self)
 {
   size_t size=0;
@@ -158,7 +165,7 @@ bool utillib_hashmap_empty(struct utillib_hashmap const *self)
 }
 
 struct utillib_json_value*
-utillib_hashmap_json_object_create(struct utillib_hashmap *self,
+utillib_hashmap_json_object_create(struct utillib_hashmap const *self,
     utillib_json_value_create_func_t create_func)
 {
   json_check_create_func(create_func);
@@ -166,7 +173,8 @@ utillib_hashmap_json_object_create(struct utillib_hashmap *self,
   for (int i=0; i<self->buckets_size; ++i) {
     struct utillib_slist * bucket=&self->buckets[i];
     UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
-      struct utillib_json_value *value=create_func(pair->up_second);
+      struct utillib_json_value *value=pair->up_second?
+      create_func(pair->up_second):utillib_json_null_create();
       utillib_json_object_push_back(object, pair->up_first, value);
     }
   }
@@ -174,7 +182,7 @@ utillib_hashmap_json_object_create(struct utillib_hashmap *self,
 }
 
 struct utillib_json_value *
-utillib_hashmap_json_array_create(struct utillib_hashmap *self,
+utillib_hashmap_json_array_create(struct utillib_hashmap const *self,
     utillib_json_value_create_func_t key_create,
     utillib_json_value_create_func_t value_create)
 {
@@ -187,9 +195,11 @@ utillib_hashmap_json_array_create(struct utillib_hashmap *self,
     UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
       struct utillib_json_value *object=utillib_json_object_create_empty();
       utillib_json_object_push_back(object, "key", 
-          key_create(pair->up_first));
+          pair->up_first?
+          key_create(pair->up_first):utillib_json_null_create());
       utillib_json_object_push_back(object, "value",
-          value_create(pair->up_second));
+          pair->up_second?
+          value_create(pair->up_second):utillib_json_null_create());
       utillib_json_array_push_back(array, object);
     }
   }
