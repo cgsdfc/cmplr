@@ -21,11 +21,13 @@
 
 #ifndef CLING_RD_PARSER_H
 #define CLING_RD_PARSER_H
-#include <setjmp.h>
+#include "opg_parser.h"
+
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 #include <utillib/vector.h>
 
+#include <setjmp.h>
 /**
  * \struct cling_rd_parser
  * A regular recursive-decent parser building
@@ -52,15 +54,19 @@ struct cling_rd_parser {
   struct utillib_vector elist;
   struct cling_symbol_table * symbols;
   struct cling_entity_list * entities;
+  struct cling_opg_parser opg_parser;
 };
 
 void cling_rd_parser_init(struct cling_rd_parser *self, 
     struct cling_symbol_table *symbols,
     struct cling_entity_list *entities);
+
 void cling_rd_parser_destroy(struct cling_rd_parser *self);
+
 struct utillib_json_value *
 cling_rd_parser_parse(struct cling_rd_parser *self,
                       struct utillib_token_scanner *input);
+
 void cling_rd_parser_report_errors(struct cling_rd_parser const *self);
 
 #endif /* CLING_RD_PARSER_H */

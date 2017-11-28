@@ -51,6 +51,12 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input,
                                            char const *first_iden);
 
+static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
+static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
 static struct utillib_json_value *program(struct cling_rd_parser *self,
                                           struct utillib_token_scanner *input);
 
@@ -63,10 +69,12 @@ void cling_rd_parser_init(struct cling_rd_parser *self,
   self->symbols=symbols;
   self->entities=entities;
   utillib_vector_init(&self->elist);
+  cling_opg_parser_init(&self->opg_parser, &self->elist);
 }
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self) {
   utillib_vector_destroy_owning(&self->elist, free);
+  cling_opg_parser_destroy(&self->opg_parser);
 }
 
 /**
@@ -86,7 +94,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   int code;
   switch (code = setjmp(self->fatal_saver)) {
   case 0:
-    return program(self, input);
+    return multiple_const_decl(self, input);
   default:
 #ifndef NDEBUG
     printf("@@ longjmp from `%s' context @@\n",cling_symbol_kind_tostring(code));
@@ -538,29 +546,6 @@ expected_maybe_lp:
   }
 }
 
-static struct utillib_json_value *program(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input) {
-  size_t type;
-  char const *first_iden;
-  struct utillib_json_value *val =
-  maybe_multiple_var_decls(self, input, &type, &first_iden);
-  return val;
-}
-
-static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input)
-{
-
-}
-
-static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input)
-{
-
-
-
-}
-
 static struct utillib_json_value * single_function_decl(struct cling_rd_parser *self,
     struct utillib_token_scanner *input, 
     size_t context,
@@ -720,3 +705,28 @@ fatal:
   longjmp(self->fatal_saver, context);
 
 }
+
+static struct utillib_json_value *program(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input) {
+  size_t type;
+  char const *first_iden;
+  struct utillib_json_value *val =
+  maybe_multiple_var_decls(self, input, &type, &first_iden);
+  return val;
+}
+
+static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
+}
+
+static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
+
+
+}
+
+
