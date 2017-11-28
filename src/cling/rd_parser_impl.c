@@ -99,8 +99,8 @@ void rd_parser_error_print(struct rd_parser_error const *error) {
                        error->col + 1);
   switch (error->kind) {
   case CL_EEXPECT:
-    utillib_error_printf("During parsing `%s', expected `%s', got `%s'",
-                         error->einfo[2], error->einfo[0], error->einfo[1]);
+    utillib_error_printf("expected `%s', got `%s' in `%s'",
+                         error->einfo[0], error->einfo[1], error->einfo[2]);
     break;
   case CL_ENOARGS:
     utillib_error_printf(
@@ -108,8 +108,8 @@ void rd_parser_error_print(struct rd_parser_error const *error) {
         error->einfo[0]);
     break;
   case CL_EUNEXPECTED:
-    utillib_error_printf("During parsing `%s', unexpected token `%s'",
-                         error->einfo[1], error->einfo[0]);
+    utillib_error_printf("unexpected token `%s' in `%s'",
+                         error->einfo[0], error->einfo[1]);
     break;
   default:
     assert(false && "unimplemented");
