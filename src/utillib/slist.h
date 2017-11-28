@@ -24,6 +24,7 @@
 
 #include "config.h" /* for bool */
 #include <stddef.h> /* for size_t */
+#include "json.h"
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
@@ -66,5 +67,9 @@ void utillib_slist_push_front(struct utillib_slist *self, void const *value);
 void * utillib_slist_erase(struct utillib_slist *self, size_t pos);
 void utillib_slist_pop_front(struct utillib_slist *self);
 void utillib_slist_clear(struct utillib_slist *self);
+
+struct utillib_json_value *
+utillib_slist_json_array_create(struct utillib_slist const *self,
+    utillib_json_value_create_func_t create_func);
 
 #endif /* UTILLIB_SLIST_H */

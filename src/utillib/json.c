@@ -279,6 +279,10 @@ static void json_value_tostring(struct utillib_json_value const *self,
     str = utillib_static_sprintf("%lu", self->as_size_t);
     utillib_string_append(string, str);
     return;
+  case UT_JSON_FLOAT:
+    str = utillib_static_sprintf("%f", self->as_double);
+    utillib_string_append(string, str);
+    return;
   case UT_JSON_REAL:
     str = utillib_static_sprintf("%lf", self->as_double);
     utillib_string_append(string, str);
@@ -419,5 +423,51 @@ utillib_json_array_at(struct utillib_json_value const *self, size_t index) {
 struct utillib_json_value *utillib_json_string_create_adaptor(char const * str)
 {
   return utillib_json_string_create(&str);
+}
+
+static struct utillib_json_value * 
+json_array_copy(struct utillib_json_array *self)
+{
+  struct utillib_json_value *array=utillib_json_array_create_empty();
+  UTILLIB_VECTOR_FOREACH(struct utillib_json_value const *, val, &self->elements) {
+    utillib_json_array_push_back(array, utillib_json_value_copy(val));
+  }
+  return array;
+}
+
+static struct utillib_json_value * 
+json_object_copy(struct utillib_json_object *self)
+{
+  struct utillib_json_value *object=utillib_json_object_create_empty();
+  UTILLIB_VECTOR_FOREACH(struct utillib_pair const *, pair, &self->members) {
+    utillib_json_object_push_back(object, pair->up_first,
+        utillib_json_value_copy(pair->up_second));
+  }
+  return object;
+}
+
+struct utillib_json_value *utillib_json_value_copy(struct utillib_json_value const *self)
+{
+  switch(self->kind) {
+  case UT_JSON_INT:
+    return utillib_json_int_create(&self->as_int);
+  case UT_JSON_SIZE_T:
+    return utillib_json_size_t_create(&self->as_size_t);
+  case UT_JSON_FLOAT:
+    return utillib_json_float_create(&self->as_double);
+  case UT_JSON_REAL:
+    return utillib_json_real_create(&self->as_double);
+  case UT_JSON_LONG:
+    return utillib_json_long_create(&self->as_long);
+  case UT_JSON_NULL:
+  case UT_JSON_BOOL:
+    return self;
+  case UT_JSON_STRING:
+    return utillib_json_string_create(&self->as_ptr);
+  case UT_JSON_ARRAY:
+    return json_array_copy(self->as_ptr);
+  case UT_JSON_OBJECT:
+    return json_object_copy(self->as_ptr);
+  }
 }
 

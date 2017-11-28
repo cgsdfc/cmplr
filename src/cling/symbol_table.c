@@ -104,5 +104,30 @@ cling_symbol_table_at(struct cling_symbol_table *self, char const * name,
   return entry->value;
 }
 
+/*
+ * json
+ */
+static struct utillib_json_value *
+symbol_entry_json_create(struct cling_symbol_entry *self)
+{
+  return utillib_json_value_copy(self->value);
+}
 
+static struct utillib_json_value *
+symbol_table_scope_json_object_create(struct utillib_hashmap *self)
+{
+  return utillib_hashmap_json_object_create(self, 
+      symbol_entry_json_create);
+}
 
+struct utillib_json_value *
+cling_symbol_table_json_object_create(struct cling_symbol_table *self)
+{
+  struct cling_symbol_table * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "global_table",
+      symbol_table_scope_json_object_create(&self->global_table));
+  struct utillib_json_value * array=utillib_slist_json_array_create(&self->scope_table,
+      symbol_table_scope_json_object_create);
+  utillib_json_object_push_back(object, "scope_table", array);
+  return object;
+}

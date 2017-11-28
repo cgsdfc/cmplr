@@ -19,11 +19,14 @@
 
 */
 #include "rd_parser_impl.h"
+#include "rd_parser.h"
 #include "config.h"
 #include "symbols.h"
+#include "symbol_table.h"
 
 #include <utillib/print.h>
 #include <utillib/symbol.h>
+#include <utillib/json_foreach.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -94,6 +97,16 @@ rd_parser_unexpected_error(struct utillib_token_scanner *input,
   return self;
 }
 
+struct rd_parser_error *
+rd_parser_redined_error(struct utillib_token_scanner *input,
+    char const * name,
+    size_t context) {
+  struct rd_parser_error * self=rd_parser_error(input, CL_EREDEFINED);
+  self->einfo[0]=name;
+  self->einfo[1]=cling_symbol_cast(context);
+  return self;
+}
+
 void rd_parser_error_print(struct rd_parser_error const *error) {
   utillib_error_printf("ERROR at line %lu, column %lu:\n", error->row + 1,
                        error->col + 1);
@@ -111,8 +124,37 @@ void rd_parser_error_print(struct rd_parser_error const *error) {
     utillib_error_printf("unexpected token `%s' in `%s'",
                          error->einfo[0], error->einfo[1]);
     break;
+  case CL_EREDEFINED:
+    utillib_error_printf("identifier `%s' was redefined in `%s'",
+        error->einfo[0], error->einfo[1]);
+    break;
   default:
     assert(false && "unimplemented");
   }
   utillib_error_printf(".\n");
+}
+
+/**
+ * \function rd_parser_insert_const
+ * Inserts a single_const_decl into the symbol_table.
+ * Assumes object is not null.
+ * Inserts into the current scope.
+ * Will push rd_parser_redined_error.
+ */
+
+void rd_parser_insert_const(struct cling_rd_parser *self,
+    struct utillib_token_scanner * input,
+    struct utillib_json_value * object)
+{
+  struct cling_symbol_table * symbols=self->symbols;
+  struct utillib_json_value *type=utillib_json_object_at(object, "type");
+  struct utillib_json_value *const_defs=utillib_json_object_at(object, "const_defs");
+  int kind=CL_CONST | (type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR);
+  UTILLIB_JSON_ARRAY_FOREACH(obj, const_defs) {
+    struct utillib_json_value * identifier=utillib_json_object_at(obj, "identifier");
+   if (cling_symbol_table_insert(symbols, kind, identifier->as_ptr, obj)) {
+     utillib_vector_push_back(&self->elist,
+         rd_parser_redined_error(input, identifier->as_ptr, SYM_CONST_DECL));
+   }
+  }
 }

@@ -86,6 +86,8 @@ int cling_symbol_table_insert(struct cling_symbol_table *self,
 struct utillib_json_value *
 cling_symbol_table_at(struct cling_symbol_table *self, char const * name,
     int * kind);
+struct utillib_json_value *
+cling_symbol_table_json_object_create(struct cling_symbol_table *self);
 
 #endif /* CLING_SYMBOL_TABLE_H */
 

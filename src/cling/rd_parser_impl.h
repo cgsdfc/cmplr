@@ -23,9 +23,12 @@
 
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
+#include <utillib/json.h>
+
 #define RD_PARSER_EMAX 4
 #define RD_PARSER_SKIP_MAX 4
 
+struct cling_rd_parser;
 
 /*
  * Error for RD parser defined here
@@ -36,6 +39,7 @@ UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
 UTILLIB_ENUM_ELEM(CL_EEXPECT)
 UTILLIB_ENUM_ELEM(CL_ENOARGS)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
+UTILLIB_ENUM_ELEM(CL_EREDEFINED)
 UTILLIB_ENUM_END(rd_parser_error_kind);
 
 struct rd_parser_error {
@@ -87,4 +91,9 @@ rd_parser_unexpected_error(struct utillib_token_scanner *input,
                                  size_t context);
 
 void rd_parser_error_print(struct rd_parser_error const *error);
+
+void rd_parser_insert_const(struct cling_rd_parser *self,
+    struct utillib_token_scanner * input,
+    struct utillib_json_value * object);
+
 #endif /* CLING_RD_PARSER_IMPH_H */

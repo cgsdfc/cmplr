@@ -22,7 +22,6 @@
 #include "rd_parser.h"
 #include "rd_parser_impl.h"
 #include "symbols.h"
-#include "symbol_table.h"
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 
@@ -299,8 +298,13 @@ multiple_const_decl(struct cling_rd_parser *self,
   size_t code = utillib_token_scanner_lookahead(input);
   assert(code == SYM_KW_CONST);
   struct utillib_json_value *array = utillib_json_array_create_empty();
+  struct utillib_json_value *object;
   while (true) {
-    utillib_json_array_push_back(array, single_const_decl(self, input));
+    object=single_const_decl(self, input);
+    if (object != &utillib_json_null) {
+      rd_parser_insert_const(self, input, object);
+      utillib_json_array_push_back(array, object);
+    }
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_KW_CONST)
       return array;

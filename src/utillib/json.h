@@ -223,5 +223,6 @@ struct utillib_json_value *utillib_json_float_create(float const *base);
 struct utillib_json_value *utillib_json_null_create(void);
 struct utillib_json_value *utillib_json_null_array_create(size_t size);
 struct utillib_json_value *utillib_json_string_create_adaptor(char const * str);
+struct utillib_json_value *utillib_json_value_copy(struct utillib_json_value const *self);
 
 #endif /* UTILLIB_JSON_H */
