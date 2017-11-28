@@ -59,11 +59,28 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
     return CL_OPG_LT;
   if (rhs == eof_symbol)
     return CL_OPG_GT;
-  if (lhs == SYM_ADD) {
-    if (rhs == SYM_ADD)
+  if (lhs == SYM_LP && rhs == SYM_RP)
+    return CL_OPG_EQ;
+  if (lhs == SYM_LP || rhs == SYM_LP)
+    return CL_OPG_LT;
+  if (lhs == SYM_RP || rhs == SYM_RP)
+    return CL_OPG_GT;
+  
+  if (lhs == SYM_ADD || lhs == SYM_MINUS) {
+    if (rhs == SYM_ADD || rhs == SYM_MINUS)
       return CL_OPG_GT;
     if (rhs == SYM_MUL || rhs == SYM_DIV)
       return CL_OPG_LT;
+    if (rhs == SYM_LP)
+      return CL_OPG_LT;
+    if (rhs == SYM_RP)
+      return CL_OPG_GT;
+  }
+  if (lhs == SYM_MUL || lhs == SYM_DIV) {
+    if (rhs == SYM_MUL || rhs == SYM_DIV)
+      return CL_OPG_GT;
+    if (rhs == SYM_ADD || rhs == SYM_MINUS)
+      return CL_OPG_GT;
   }
   return CL_OPG_ERR;
 
@@ -107,9 +124,9 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
     lhs=utillib_vector_back(stack);
     utillib_vector_pop_back(stack);
     object=utillib_json_object_create_empty();
+    utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&stacktop));
     utillib_json_object_push_back(object, "lhs", lhs);
     utillib_json_object_push_back(object, "rhs", rhs);
-    utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&stacktop));
     utillib_vector_push_back(stack, object);
     return 0;
   }
@@ -149,6 +166,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
     case CL_OPG_EQ:
       utillib_vector_pop_back(&self->opstack);
       utillib_token_scanner_shiftaway(input);
+      break;
     case CL_OPG_GT:
       if (0 != opg_parser_reduce(self, stacktop)) {
         goto error;

@@ -94,7 +94,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   int code;
   switch (code = setjmp(self->fatal_saver)) {
   case 0:
-    return multiple_const_decl(self, input);
+    return program(self, input);
   default:
 #ifndef NDEBUG
     printf("@@ longjmp from `%s' context @@\n",cling_symbol_kind_tostring(code));
@@ -710,8 +710,8 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
     struct utillib_token_scanner *input) {
   size_t type;
   char const *first_iden;
-  struct utillib_json_value *val =
-  maybe_multiple_var_decls(self, input, &type, &first_iden);
+  struct utillib_json_value *val = cling_opg_parser_parse(&self->opg_parser, 
+      UT_SYM_EOF, input);
   return val;
 }
 
