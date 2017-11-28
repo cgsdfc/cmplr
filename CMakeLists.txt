@@ -42,7 +42,6 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
-  ./src/utillib/json_ast.c
   ./src/utillib/lr_builder.c
   ./src/utillib/hashmap.c
   ./src/utillib/graph.c
@@ -147,6 +146,7 @@ target_link_libraries(cling utillib)
 
 add_executable(cling_test
   ./src/cling/test/scanner.c
+  ./src/cling/test/symbol_table.c
   ./src/cling/test/driver.c
   )
 target_link_libraries(cling_test cling)

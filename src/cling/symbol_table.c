@@ -47,7 +47,7 @@ void cling_symbol_table_init(struct cling_symbol_table *self)
 
 void cling_symbol_table_destroy(struct cling_symbol_table *self)
 {
-  utillib_hashmap_destroy(&self->global_table);
+  utillib_hashmap_destroy_owning(&self->global_table, NULL, free);
   utillib_slist_destroy_owning(&self->scope_table, symbol_table_scope_destroy);
 
 }

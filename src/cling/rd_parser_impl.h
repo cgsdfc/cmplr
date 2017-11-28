@@ -46,7 +46,7 @@ struct rd_parser_error {
   int kind;
   size_t row;
   size_t col;
-  void const *einfo[RD_PARSER_EMAX];
+  char const *einfo[RD_PARSER_EMAX];
 };
 
 struct rd_parser_skip_target {
