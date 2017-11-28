@@ -136,6 +136,8 @@ target_link_libraries(pascal_ll1_table_gen pascal)
 
 ## Cling
 add_library(cling
+  ./src/cling/entity.c
+  ./src/cling/symbol_table.c
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
   ./src/cling/rd_parser.c

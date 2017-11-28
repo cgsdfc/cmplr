@@ -197,28 +197,20 @@ noinst_clingincludedir = $(includedir)/cling
 
 lib_LTLIBRARIES += libcling.la
 noinst_clinginclude_HEADERS = src/cling/symbols.h \
-															src/cling/rules.h \
 															src/cling/rd_parser_impl.h \
 															src/cling/rd_parser.h \
+															src/cling/entity.h \
+															src/cling/symbol_table.h \
 															src/cling/scanner.h
 
 libcling_la_SOURCES = src/cling/symbols.c \
-											src/cling/rules.c \
 											src/cling/rd_parser.c \
 											src/cling/rd_parser_impl.c \
+											src/cling/entity.c \
+											src/cling/symbol_table.c \
 											src/cling/scanner.c \
 											$(noinst_clinginclude_HEADERS)
 libcling_la_LIBADD = libutillib.la
-
-noinst_PROGRAMS += cling_test
-cling_test_SOURCES = src/cling/test/scanner.c \
-										 src/cling/test/driver.c
-
-cling_test_LDADD = libcling.la libutillib.la
-
-noinst_PROGRAMS += cling_ll1_table
-cling_ll1_table_SOURCES = src/cling/ll1_gen.c
-cling_ll1_table_LDADD = libcling.la libutillib.la
 
 bin_PROGRAMS += cling-scanner
 cling_scanner_SOURCES = src/cling/smain.c
