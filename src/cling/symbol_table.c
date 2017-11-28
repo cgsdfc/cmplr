@@ -92,16 +92,24 @@ int cling_symbol_table_insert(struct cling_symbol_table *self,
   return 0;
 }
 
-struct utillib_json_value *
-cling_symbol_table_at(struct cling_symbol_table *self, char const * name,
-    int * kind)
+struct cling_symbol_entry *
+cling_symbol_table_find(struct cling_symbol_table const *self, char const * name,
+    size_t level)
 {
-  struct utillib_hashmap * scope = symbol_table_get_scope(self);
-  struct cling_symbol_entry * entry=utillib_hashmap_at(scope, name);
-  if (!entry)
-    return NULL;
-  * kind=entry->kind;
-  return entry->value;
+  struct utillib_hashmap * cur_scope = symbol_table_get_scope(self);
+  struct cling_symbol_entry * entry=utillib_hashmap_at(cur_scope, name);
+  if (level == 0)
+    return entry;
+  if (self->scope == 0) {
+    assert (cur_scope == &self->global_table);
+    return entry;
+  }
+  UTILLIB_SLIST_FOREACH(struct utillib_hashmap const*, scope, &self->scope_table) {
+    entry=utillib_hashmap_at(scope, name);
+    if (entry)
+      return entry;
+  }
+  return utillib_hashmap_at(&self->global_table, name);
 }
 
 /*

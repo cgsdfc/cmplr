@@ -21,6 +21,8 @@
 #ifndef CLING_RD_PARSER_IMPH_H
 #define CLING_RD_PARSER_IMPH_H
 
+#include "symbol_table.h"
+
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
 #include <utillib/json.h>
@@ -92,8 +94,7 @@ rd_parser_unexpected_error(struct utillib_token_scanner *input,
 
 void rd_parser_error_print(struct rd_parser_error const *error);
 
-void rd_parser_insert_const(struct cling_rd_parser *self,
-    struct utillib_token_scanner * input,
+void rd_parser_insert_const(struct cling_symbol_table *symbols,
     struct utillib_json_value * object);
 
 #endif /* CLING_RD_PARSER_IMPH_H */

@@ -22,6 +22,8 @@
 #include "rd_parser.h"
 #include "rd_parser_impl.h"
 #include "symbols.h"
+#include "symbol_table.h"
+
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 
@@ -115,6 +117,8 @@ void cling_rd_parser_report_errors(struct cling_rd_parser const *self) {
  * skipto: SYM_SEMI
  * return array of object{identifier:string, initilizer:size_t}
  * lookahead: SYM_KW_CHAR | SYM_KW_INT
+ * error: expected, unexpected, redefined
+ * all skip to SYM_COMMA, SYM_SEMI.
  */
 static struct utillib_json_value *
 const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
@@ -128,30 +132,33 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
   size_t code;
   size_t const context=SYM_CONST_DEF;
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  bool has_const_defs=false;
 
   while (true) {
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_IDEN) {
       rd_parser_skip_target_init(&target, SYM_IDEN); 
-      goto error;
+      goto expected;
     }
     str = utillib_token_scanner_semantic(input);
+    if (cling_symbol_table_find(self->symbols, str, 0)) {
+      rd_parser_skip_target_init(&target, SYM_IDEN);
+      goto redefined;
+    }
+
     name=utillib_json_string_create(&str);
-    has_const_defs=true;
     utillib_token_scanner_shiftaway(input);
 
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_EQ) {
       rd_parser_skip_target_init(&target, SYM_EQ);
-      goto error;
+      goto expected;
     }
     utillib_token_scanner_shiftaway(input);
 
     code=utillib_token_scanner_lookahead(input);
     if (code != expected_initializer) {
       rd_parser_skip_target_init(&target, expected_initializer);
-      goto error;
+      goto expected;
     }
 
     initilizer = utillib_token_scanner_semantic(input);
@@ -174,23 +181,28 @@ before_comma:
     default:
       /* unexpected */
       rd_parser_skip_target_init(&target, SYM_COMMA);
-      utillib_vector_push_back(&self->elist,
-          rd_parser_unexpected_error(input,
-            code, context));
       goto unexpected;
     }
   }
 return_array:
-  if (has_const_defs)
-    return array;
-  utillib_json_value_destroy(array);
-  return utillib_json_null_create();
+  return array;
 
-error:
+expected:
   utillib_vector_push_back(&self->elist, rd_parser_expected_error(
         input, target.expected,
         code,context));
+  goto skip;
+
+redefined:
+  utillib_vector_push_back(&self->elist, 
+      rd_parser_redined_error(input, str, context));
+  goto skip;
+
 unexpected:
+      utillib_vector_push_back(&self->elist,
+          rd_parser_unexpected_error(input,
+            code, context));
+skip:
   target.tars[0]=SYM_COMMA;
   target.tars[1]=SYM_SEMI;
   switch(rd_parser_skipto(&target,input)) {
@@ -302,7 +314,7 @@ multiple_const_decl(struct cling_rd_parser *self,
   while (true) {
     object=single_const_decl(self, input);
     if (object != &utillib_json_null) {
-      rd_parser_insert_const(self, input, object);
+      rd_parser_insert_const(self->symbols, object);
       utillib_json_array_push_back(array, object);
     }
     code = utillib_token_scanner_lookahead(input);

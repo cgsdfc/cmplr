@@ -41,6 +41,11 @@ rd_parser_error(int kind, struct utillib_token_scanner *input) {
 }
 
 void rd_parser_error_destroy(struct rd_parser_error *self) {
+  switch (self->kind) {
+  case CL_EREDEFINED:
+    free(self->einfo[0]);
+    break;
+  }
   free(self);
 }
 
@@ -102,7 +107,8 @@ rd_parser_redined_error(struct utillib_token_scanner *input,
     char const * name,
     size_t context) {
   struct rd_parser_error * self=rd_parser_error(CL_EREDEFINED,input );
-  self->einfo[0]=name;
+  /* Free needed */
+  self->einfo[0]=strdup(name);
   self->einfo[1]=cling_symbol_cast(context);
   return self;
 }
@@ -111,26 +117,24 @@ rd_parser_redined_error(struct utillib_token_scanner *input,
  * \function rd_parser_insert_const
  * Inserts a single_const_decl into the symbol_table.
  * Assumes object is not null.
+ * Assumes all the symbol in `object' are not redefined.
  * Inserts into the current scope.
- * Will push rd_parser_redined_error.
  */
 
-void rd_parser_insert_const(struct cling_rd_parser *self,
-    struct utillib_token_scanner * input,
+void rd_parser_insert_const(struct cling_symbol_table *symbols,
     struct utillib_json_value * object)
 {
-  struct cling_symbol_table * symbols=self->symbols;
   struct utillib_json_value *type=utillib_json_object_at(object, "type");
   struct utillib_json_value *const_defs=utillib_json_object_at(object, "const_defs");
   int kind=CL_CONST | (type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR);
+  int retv;
+
   UTILLIB_JSON_ARRAY_FOREACH(obj, const_defs) {
     struct utillib_json_value * identifier=utillib_json_object_at(obj, "identifier");
     assert(identifier);
-   if (cling_symbol_table_insert(symbols, kind, identifier->as_ptr, obj)) {
-     utillib_vector_push_back(&self->elist,
-         rd_parser_redined_error(input, identifier->as_ptr, SYM_CONST_DECL));
+    retv=cling_symbol_table_insert(symbols, kind, identifier->as_ptr, obj);
+    assert(retv==0);
    }
-  }
 }
 
 void rd_parser_error_print(struct rd_parser_error const *error) {

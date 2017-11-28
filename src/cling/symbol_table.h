@@ -27,23 +27,14 @@
 
 /**
  * \struct cling_symbol_table
- * This symbol table is intended to be 
- * light and share data with the AST.
- * Thus, it holds shared `utillib_json_value'.
- * Its purpose is assist the semantic checking
- * and codegen.
- * const_table holds the global constants (type and value).
- * var_table holds the global variables (type and value).
- * func_table holds functions (signature, return value and
- * normal arglist)
- * scope_table handles scopes formed by composite_stmt.
- * When a composite_stmt is seen, its local constants and
- * variables are first collected into the ast and then
- * entered the scope_table. When the scope leaves, these
- * entities are popped.
- * In case a name in the deeper scope shallows the outter
- * one, 
- * 
+ * This structure represents symbols in scopes.
+ * A scope is just a hashmap holding some entries of symbols.
+ * An entry of symbol is a name in the hashmap of the scope
+ * and its kind with its value.
+ * A series of scopes linked in a list form the lexical scopes
+ * for the language, which can be pushed as the parser enters
+ * a new scope and popped as it exits a scope.
+ * These hashmaps own the cling_symbol_entry.
  */
 
 struct cling_symbol_table {
@@ -65,7 +56,9 @@ struct cling_symbol_entry {
  * const int => CL_INT | CL_CONST
  * int foo() => CL_INT | CL_FUNC
  * int a[10] => CL_INT | CL_ARRAY
- * However, some combinations are illegal.
+ * However, some combinations are illegal. For example,
+ * CL_INT | CL_ARRAY | CL_FUNC
+ * 
  */
 UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
   UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
@@ -78,16 +71,42 @@ UTILLIB_ENUM_END(cling_symbol_entry_kind);
 void cling_symbol_table_init(struct cling_symbol_table *self);
 void cling_symbol_table_destroy(struct cling_symbol_table *self);
 
+/**
+ * \function cling_symbol_table_enter_scope
+ * Makes an new scope and increases the scope counter.
+ * This means the following insertions will be done in the new scope.
+ */
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
+
+/**
+ * \function cling_symbol_table_exit_scope
+ * Disposes the current scope if it is not the global scope.
+ * All the symbols of it are lost.
+ */
 void cling_symbol_table_exit_scope(struct cling_symbol_table *self);
+
+/**
+ * \function cling_symbol_table_insert
+ * Inserts a new entry (name, kind, value) into the current scope
+ * and fails if the entry already exists.
+ */
 int cling_symbol_table_insert(struct cling_symbol_table *self, 
     int kind, char const *name,
     struct utillib_json_value * value);
-struct utillib_json_value *
-cling_symbol_table_at(struct cling_symbol_table *self, char const * name,
-    int * kind);
-struct utillib_json_value *
-cling_symbol_table_json_object_create(struct cling_symbol_table *self);
+
+/**
+ * \function cling_symbol_table_find
+ * Finds the entry for symbol `name' either in the current scope
+ * or lexical scopes.
+ * \param level If it is 0, only searches the current scope.
+ * Otherwise(non-zero), searches from the current scope all the way to
+ * the global scope.
+ * \return If the symbol is not found, NULL, or else the entry
+ * of it.
+ */
+struct cling_symbol_entry *
+cling_symbol_table_find(struct cling_symbol_table const *self, char const * name,
+    size_t level);
 
 #endif /* CLING_SYMBOL_TABLE_H */
 
