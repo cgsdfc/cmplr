@@ -37,10 +37,9 @@
  * go here.
  */
 
-static void rd_parser_fatal(struct cling_rd_parser *self,
-    size_t context)
+static void rd_parser_fatal(struct cling_rd_parser *self)
 {
-  longjmp(self->fatal_saver, context);
+  longjmp(self->fatal_saver, self->context);
 }
 
 static struct utillib_json_value *
@@ -228,7 +227,7 @@ skip:
       goto fatal;
   }
 fatal:
-  rd_parser_fatal(self, self->context);
+  rd_parser_fatal(self);
 }
 
 /**
@@ -308,7 +307,7 @@ error:
   }
 
 fatal:
-  rd_parser_fatal(self, self->context);
+  rd_parser_fatal(self);
 }
 
 /**
@@ -456,7 +455,7 @@ skip:
       assert(false);
   }
 fatal:
-  rd_parser_fatal(self, SYM_VAR_DEF);
+  rd_parser_fatal(self);
 }
 
 /**
@@ -544,7 +543,7 @@ expected_maybe_lp:
   target.tars[0]=SYM_SEMI;
   switch(rd_parser_skipto(&target, input)) {
     case UT_SYM_EOF:
-      rd_parser_fatal(self, SYM_VAR_DECL);
+      rd_parser_fatal(self);
     case SYM_SEMI:
       utillib_token_scanner_shiftaway(input);
       goto return_array;
@@ -707,7 +706,7 @@ unexpected:
     goto fatal;
   }
 fatal:
-  rd_parser_fatal(self, self->context);
+  rd_parser_fatal(self);
 
 }
 
@@ -772,7 +771,7 @@ skip:
     case SYM_RP:
       goto return_array;
     case UT_SYM_EOF:
-      rd_parser_fatal(self, self->context);
+      rd_parser_fatal(self);
   }
 }
 
@@ -840,7 +839,7 @@ expected_rhs:
     goto return_object;
   }
 fatal:
-  rd_parser_fatal(self, self->context);
+  rd_parser_fatal(self);
 
 }
 
@@ -899,7 +898,7 @@ skip:
   case SYM_SEMI:
     return utillib_json_null_create();
   case UT_SYM_EOF:
-    rd_parser_fatal(self, self->context);
+    rd_parser_fatal(self);
   }
 }
 
