@@ -21,7 +21,6 @@
 
 #ifndef CLING_RD_PARSER_H
 #define CLING_RD_PARSER_H
-#include "opg_parser.h"
 
 #include <utillib/json.h>
 #include <utillib/scanner.h>
@@ -54,7 +53,6 @@ struct cling_rd_parser {
   struct utillib_vector elist;
   struct cling_symbol_table * symbols;
   struct cling_entity_list * entities;
-  struct cling_opg_parser opg_parser;
 };
 
 void cling_rd_parser_init(struct cling_rd_parser *self, 

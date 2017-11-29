@@ -42,12 +42,13 @@ struct cling_opg_parser {
 };
 
 void cling_opg_parser_init(struct cling_opg_parser *self,
+    size_t eof_symbol,
     struct utillib_vector *elist);
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self);
 
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
+cling_opg_parser_parse(struct cling_opg_parser *self, 
                        struct utillib_token_scanner *input);
 
 /* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜ */

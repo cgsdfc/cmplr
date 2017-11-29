@@ -69,12 +69,10 @@ void cling_rd_parser_init(struct cling_rd_parser *self,
   self->symbols=symbols;
   self->entities=entities;
   utillib_vector_init(&self->elist);
-  cling_opg_parser_init(&self->opg_parser, &self->elist);
 }
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self) {
   utillib_vector_destroy_owning(&self->elist, free);
-  cling_opg_parser_destroy(&self->opg_parser);
 }
 
 /**
@@ -708,11 +706,7 @@ fatal:
 
 static struct utillib_json_value *program(struct cling_rd_parser *self,
     struct utillib_token_scanner *input) {
-  size_t type;
-  char const *first_iden;
-  struct utillib_json_value *val = cling_opg_parser_parse(&self->opg_parser, 
-      UT_SYM_EOF, input);
-  return val;
+  return utillib_json_null_create();
 }
 
 static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,

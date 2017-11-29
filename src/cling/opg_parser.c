@@ -33,15 +33,17 @@ enum {
   CL_OPG_ERR
 };
 
-void cling_opg_parser_init(struct cling_opg_parser *self, struct utillib_vector *elist) {
+void cling_opg_parser_init(struct cling_opg_parser *self, 
+    size_t eof_symbol, struct utillib_vector *elist) {
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
-  self->eof_symbol=UT_SYM_EOF;
+  utillib_vector_push_back(&self->opstack, eof_symbol);
+  self->eof_symbol=eof_symbol;
   self->elist=elist;
 }
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self) {
-  utillib_vector_destroy(&self->stack);
+  utillib_vector_destroy_owning(&self->stack, utillib_json_value_destroy);
   utillib_vector_destroy(&self->opstack);
 }
 
@@ -192,16 +194,17 @@ make_binary:
 }
 
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
+cling_opg_parser_parse(struct cling_opg_parser *self, 
                        struct utillib_token_scanner *input) {
 
   size_t lookahead;
   size_t stacktop;
   size_t cmp;
-  self->eof_symbol=eof_symbol;
-  struct utillib_vector * stack=&self->stack;
   char const *errmsg;
-  utillib_vector_push_back(&self->opstack, eof_symbol);
+  struct utillib_json_value * val;
+  struct utillib_vector * stack=&self->stack;
+  struct utillib_vector * opstack=&self->opstack;
+  const size_t eof_symbol=self->eof_symbol;
 
   while (true) {
     lookahead=utillib_token_scanner_lookahead(input);
@@ -211,22 +214,22 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
          opg_parser_factor_create(lookahead, 
           utillib_token_scanner_semantic(input)));
      if (lookahead == SYM_IDEN)
-       utillib_vector_push_back(&self->opstack, lookahead);
+       utillib_vector_push_back(opstack, lookahead);
      utillib_token_scanner_shiftaway(input);
      continue;
     } 
-    stacktop=utillib_vector_back(&self->opstack);
+    stacktop=utillib_vector_back(opstack);
     if (stacktop == eof_symbol && lookahead == eof_symbol) {
       break;
     }
     cmp=opg_parser_compare(self, stacktop, lookahead);
     switch (cmp) {
     case CL_OPG_LT:
-      utillib_vector_push_back(&self->opstack, lookahead);
+      utillib_vector_push_back(opstack, lookahead);
       utillib_token_scanner_shiftaway(input);
       break;
     case CL_OPG_EQ:
-      utillib_vector_pop_back(&self->opstack);
+      utillib_vector_pop_back(opstack);
       utillib_token_scanner_shiftaway(input);
       break;
     case CL_OPG_GT:
@@ -240,14 +243,14 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
       goto vague_error;
     }
   }
-  if (utillib_vector_size(stack) == 1) {
-    struct utillib_json_value * val=utillib_vector_back(stack);
-    utillib_vector_pop_back(&self->stack);
-    return val;
+  if (utillib_vector_size(stack) != 1 || utillib_vector_size(opstack) != 1) {
+    errmsg="invalid expression";
+    goto vague_error;
   }
+  val=utillib_vector_back(stack);
+  utillib_vector_pop_back(stack);
+  return val;
 vague_error:
   utillib_vector_push_back(self->elist, rd_parser_vague_error(input, errmsg));
-  utillib_vector_destroy_owning(stack, utillib_json_value_destroy);
-  utillib_vector_init(stack);
   return utillib_json_null_create();
 }
