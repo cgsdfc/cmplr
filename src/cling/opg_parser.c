@@ -20,9 +20,8 @@
 */
 
 #include "opg_parser.h"
-#include "rd_parser_impl.h"
+#include "error.h"
 #include "ir.h"
-
 
 #include <assert.h>
 #include <stdlib.h>
@@ -251,6 +250,6 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   utillib_vector_pop_back(stack);
   return val;
 vague_error:
-  utillib_vector_push_back(self->elist, rd_parser_vague_error(input, errmsg));
+  utillib_vector_push_back(self->elist, cling_vague_error(input, errmsg));
   return utillib_json_null_create();
 }

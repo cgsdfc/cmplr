@@ -144,5 +144,11 @@ bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
 struct utillib_json_value *
 cling_symbol_table_json_object_create(struct cling_symbol_table *self);
 
+void cling_symbol_table_insert_const(struct cling_symbol_table *symbols,
+    struct utillib_json_value * object);
+
+void cling_symbol_table_insert_variable(struct cling_symbol_table *symbols,
+    struct utillib_json_value * object);
+
 #endif /* CLING_SYMBOL_TABLE_H */
 

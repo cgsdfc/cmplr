@@ -27,26 +27,10 @@
 #include <utillib/vector.h>
 
 #include <setjmp.h>
+
 /**
  * \struct cling_rd_parser
  * A regular recursive-decent parser building
- * json AST as the result of parsing.
- * It is believed that separating parsing
- * from semantic analysis will simplify both.
- * That is, in the first place the parser tries
- * its best to build the tree which may have
- * branches as `null' since some grammatical errors.
- * Then, the semantic analyzor run on the tree and
- * find more specific errors.
- * After these 2 passes, the survival source will be
- * valid.
- * If either of these passes fatally failed, the program
- * must clean up, print errors and exit gracefully.
- *
- * Notes the routines of parser will return `&utillib_json_false'
- * if a non-fatal grammatical error took place during parsing
- * and returns `&utillib_json_null' if the construct is optional'.
- *
  */
 struct cling_rd_parser {
   jmp_buf fatal_saver;

@@ -18,33 +18,22 @@
    02110-1301 USA
 
 */
-#include "rd_parser_impl.h"
+#ifndef CLING_AST_H
+#define CLING_AST_H
+#include <utillib/json.h>
+#include "symbol_table.h"
 
-/* UT_SYM_EOF */
-#include <utillib/symbol.h>
+/*
+ * Everything about traversal the ast
+ * is defined here.
+ * Although our ast is actually json tree,
+ * A lot can still be done on it.
+ */
+void cling_ast_insert_const(struct utillib_json_value * self,
+    struct cling_symbol_table *symbols);
 
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
+void cling_ast_insert_variable(struct utillib_json_value * self,
+    struct cling_symbol_table *symbols);
 
-void rd_parser_skip_target_init(struct rd_parser_skip_target*self,
-    size_t expected)
-{
-  self->expected=expected;
-  memset(self->tars, -1, sizeof self->tars);
-}
+#endif /* CLING_AST_H */
 
-size_t rd_parser_skipto(struct rd_parser_skip_target const *self,
-    struct utillib_token_scanner *input) 
-{
-  size_t code;
-  while (true) {
-    code=utillib_token_scanner_lookahead(input);
-    if (code == UT_SYM_EOF || code == UT_SYM_ERR)
-      return UT_SYM_EOF;
-    for (int const * pi=self->tars; *pi!=-1; ++pi)
-      if (*pi == code) 
-        return code;
-    utillib_token_scanner_shiftaway(input);
-  }
-}

@@ -147,7 +147,7 @@ bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
 
 
 /*
- * json
+ * JSON interface
  */
 static struct utillib_json_value *
 symbol_entry_json_create(struct cling_symbol_entry *self)

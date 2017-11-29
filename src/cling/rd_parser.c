@@ -22,10 +22,9 @@
 #include "rd_parser.h"
 #include "rd_parser_impl.h"
 #include "symbols.h"
+#include "error.h"
 #include "symbol_table.h"
-
-#include <utillib/json.h>
-#include <utillib/scanner.h>
+#include "ast.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -102,9 +101,9 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
 }
 
 void cling_rd_parser_report_errors(struct cling_rd_parser const *self) {
-  UTILLIB_VECTOR_FOREACH(struct rd_parser_error const *, error,
+  UTILLIB_VECTOR_FOREACH(struct cling_error const *, error,
                          &self->elist) {
-    rd_parser_error_print(error);
+    cling_error_print(error);
   }
   fprintf(stderr,"%lu errors detected.\n", utillib_vector_size(&self->elist));
 }
@@ -195,19 +194,19 @@ return_array:
   return array;
 
 expected:
-  utillib_vector_push_back(&self->elist, rd_parser_expected_error(
+  utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
         code,context));
   goto skip;
 
 redefined:
   utillib_vector_push_back(&self->elist, 
-      rd_parser_redined_error(input, str, context));
+      cling_redined_error(input, str, context));
   goto skip;
 
 unexpected:
       utillib_vector_push_back(&self->elist,
-          rd_parser_unexpected_error(input,
+          cling_unexpected_error(input,
             code, context));
 skip:
   target.tars[0]=SYM_COMMA;
@@ -271,7 +270,7 @@ single_const_decl(struct cling_rd_parser *self,
   return object;
 
 error:
-  utillib_vector_push_back(&self->elist, rd_parser_expected_error(
+  utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
         code, context));
   switch (target.expected) {
@@ -321,7 +320,7 @@ multiple_const_decl(struct cling_rd_parser *self,
   while (true) {
     object=single_const_decl(self, input);
     if (object != &utillib_json_null) {
-      rd_parser_insert_const(self->symbols, object);
+      cling_ast_insert_const(object,self->symbols);
       utillib_json_array_push_back(array, object);
     }
     code = utillib_token_scanner_lookahead(input);
@@ -408,12 +407,12 @@ return_array:
     }
   }
 expected:
-  utillib_vector_push_back(&self->elist, rd_parser_expected_error(
+  utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
         code, context));
   goto skip;
 redefined:
-  utillib_vector_push_back(&self->elist, rd_parser_redined_error(
+  utillib_vector_push_back(&self->elist, cling_redined_error(
         input, first_iden, context));
 
 skip:
@@ -469,7 +468,7 @@ singel_var_decl(struct cling_rd_parser *self,
       var_defs(self, input, first_iden));
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_SEMI) {
-    utillib_vector_push_back(&self->elist, rd_parser_expected_error(
+    utillib_vector_push_back(&self->elist, cling_expected_error(
           input, SYM_SEMI,
           code, SYM_VAR_DECL));
     return object;
@@ -509,7 +508,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
       case SYM_COMMA:
       case SYM_SEMI:
         object=singel_var_decl(self, input, *type, *first_iden);
-        rd_parser_insert_variable(self->symbols, object);
+        cling_ast_insert_variable(object,self->symbols);
         utillib_json_array_push_back(array, object);
         code = utillib_token_scanner_lookahead(input);
         if (code != SYM_KW_INT && code != SYM_KW_CHAR)
@@ -519,7 +518,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
         break;
       default:
         /* We are screw */
-        utillib_vector_push_back(&self->elist, rd_parser_unexpected_error(
+        utillib_vector_push_back(&self->elist, cling_unexpected_error(
               input, code, SYM_VAR_DECL));
         rd_parser_skip_target_init(&target, SYM_LP);
         goto expected_maybe_lp; 
@@ -529,7 +528,7 @@ return_array:
     return array;
 
 expected_iden:
-  utillib_vector_push_back(&self->elist, rd_parser_expected_error(
+  utillib_vector_push_back(&self->elist, cling_expected_error(
         input,target.expected,
         code, SYM_VAR_DECL));
   /* Fail through */
@@ -572,7 +571,7 @@ static struct utillib_json_value * single_function_decl(struct cling_rd_parser *
   return object;
 error:
   utillib_vector_push_back(&self->elist,
-      rd_parser_expected_error(input,
+      cling_expected_error(input,
         target.expected, code, context));
   switch (target.expected) {}
 
@@ -643,7 +642,7 @@ expected_lp:
      * to ';' directly and return null if succeed.
      */
   utillib_vector_push_back(&self->elist, 
-      rd_parser_expected_error(
+      cling_expected_error(
         input, target.expected,
         code, context));
   target.tars[0]=SYM_SEMI;
@@ -660,7 +659,7 @@ expected_iden:
    * try to skip to the next iden or ';'.
    */
   utillib_vector_push_back(&self->elist,
-      rd_parser_expected_error(input, target.expected,
+      cling_expected_error(input, target.expected,
         code, context));
   target.tars[0]=SYM_IDEN;
   target.tars[1]=SYM_SEMI;
@@ -681,7 +680,7 @@ expected_semi:
    * context to make a decision.
    */
   utillib_vector_push_back(&self->elist,
-      rd_parser_expected_error(input, SYM_SEMI,
+      cling_expected_error(input, SYM_SEMI,
         code, context));
   goto return_array;
 unexpected:
@@ -691,7 +690,7 @@ unexpected:
    * since the scanf_stmt is incomplete.
    */
   utillib_vector_push_back(&self->elist,
-      rd_parser_unexpected_error(input, code, context));
+      cling_unexpected_error(input, code, context));
   target.tars[0]=SYM_SEMI;
   switch (rd_parser_skipto(&target, input)) {
   case SYM_SEMI:
