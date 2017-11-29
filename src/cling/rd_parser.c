@@ -902,9 +902,80 @@ skip:
   }
 }
 
+/**
+ * Expression in ()
+ */
+static struct utillib_json_value * lp_expr_rp(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  struct cling_opg_parser opg_parser;
+  cling_opg_parser_init(&opg_parser, SYM_RP, &self->elist);
+  struct utillib_json_value * expr;
+  size_t code=utillib_token_scanner_lookahead(input);
+
+  if (code != SYM_LP) {
+    rd_parser_skip_target_init(self, SYM_LP);
+    goto expected_lp;
+  }
+  utillib_token_scanner_shiftaway(input);
+  expr=cling_opg_parser_parse(&opg_parser, input);
+  if (expr == &utillib_json_null) {
+    goto expected_expr;
+  }
+
+return_expr:
+  utillib_token_scanner_shiftaway(input);
+  cling_opg_parser_destroy(&opg_parser);
+  return expr;
+
+expected_lp:
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, self->expected, code, self->context));
+  expr=utillib_json_null_create();
+/* Fall through */
+expected_expr:
+  self->tars[0]=SYM_RP;
+  switch(rd_parser_skipto(self, input)) {
+  case SYM_RP:
+    goto return_expr;
+  }
+}
+
+
+/**
+ * If (expr) stmt [else stmt]
+ */
 static struct utillib_json_value * if_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+  size_t code;
+  self->context=SYM_IF_STMT;
+  struct utillib_json_value * expr, * object, * then_clause, * else_clause;
+  object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type", 
+      utillib_json_size_t_create(&self->context));
+
+  utillib_token_scanner_shiftaway(input);
+  expr=lp_expr_rp(self, input);
+  utillib_json_object_push_back(object, "expr", expr);
+  then_clause=statement(self, input);
+  utillib_json_object_push_back(object, "then", then_clause);
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_KW_ELSE) {
+    goto return_object;
+  }
+  utillib_token_scanner_shiftaway(input);
+  else_clause=statement(self, input);
+  utillib_json_object_push_back(object, "else", else_clause);
+
+return_object:
+  return object;
+}
+
+static struct utillib_json_value * switch_stmt_cases(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
 
 
 }
@@ -912,9 +983,50 @@ static struct utillib_json_value * if_stmt(struct cling_rd_parser *self,
 static struct utillib_json_value * switch_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+  size_t code;
+  self->context=SYM_SWITCH_STMT;
+  struct utillib_json_value * object, * expr;
+  utillib_token_scanner_shiftaway(input);
+  object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type", 
+      utillib_json_size_t_create(&self->context));
+  expr=lp_expr_rp(self, input);
+  utillib_json_array_push_back(object, "expr", expr);
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_LB) {
+    rd_parser_skip_target_init(self, SYM_LB);
+    goto expected_lb;
+  }
+  utillib_token_scanner_shiftaway(input);
+parse_cases:
+  cases=switch_stmt_cases(self, input);
+  utillib_json_object_push_back(object, "cases", cases);
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_RB) {
+    rd_parser_skip_target_init(self, SYM_RB);
+    goto expected_rb;
+  }
 
+return_object:
+  utillib_token_scanner_shiftaway(input);
+  return object;
 
-
+expected_lb:
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, self->expected, code, self->context));
+  self->tars[0]=SYM_KW_CASE;
+  self->tars[1]=SYM_RB;
+  switch (rd_parser_skipto(self, input)) {
+  case SYM_KW_CASE:
+    goto parse_cases;
+  case SYM_RB:
+    utillib_json_object_push_back(object, "cases", utillib_json_null_create());
+    goto return_object;
+  }
+expected_rb:
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, self->expected, code, self->context));
+  return object;
 }
 
 static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
