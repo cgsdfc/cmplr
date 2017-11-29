@@ -24,6 +24,8 @@
 #include <utillib/print.h> /* utillib_error_printf */
 #define CLING_KW_SIZE 14
 
+bool cling_scanner_signed_number;
+
 UTILLIB_ETAB_BEGIN(cling_scanner_error_kind)
 UTILLIB_ETAB_ELEM_INIT(CL_EBADNEQ, "expected `=' after `!' to form `!=' token")
 UTILLIB_ETAB_ELEM_INIT(CL_EUNTCHAR, "unterminated character constant")
@@ -90,6 +92,7 @@ int cling_scanner_read_string(struct utillib_char_scanner *chars,
 
 int cling_scanner_read_number(struct utillib_char_scanner *chars,
                               struct utillib_string *buffer) {
+  char ch=utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
   char const *str = utillib_string_c_str(buffer);
   if (str[0] == '0' && utillib_string_size(buffer) > 1)
@@ -200,7 +203,8 @@ int cling_scanner_read_handler(struct utillib_char_scanner *chars,
     return cling_scanner_read_char(chars, buffer);
   }
   /* Maybe number is over simplified */
-  if (isdigit(ch)) {
+  if (isdigit(ch) || 
+      cling_scanner_signed_number && (ch == '-'||ch=='+')) {
     return cling_scanner_read_number(chars, buffer);
   }
   return -CL_EUNKNOWN;

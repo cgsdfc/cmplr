@@ -44,5 +44,8 @@ void cling_ast_add_lhs(struct utillib_json_value * self,
 void cling_ast_add_rhs(struct utillib_json_value * self, 
     struct utillib_json_value * rhs);
 
+struct utillib_json_value *
+cling_ast_constant(size_t code, void const *semantic);
+
 #endif /* CLING_AST_H */
 

@@ -47,5 +47,6 @@ int cling_scanner_error_handler(
     struct utillib_char_scanner *chars,
     struct utillib_token_scanner_error const *error);
 void const *cling_scanner_semantic_handler(size_t value, char const *str);
+extern bool cling_scanner_signed_number;
 
 #endif /* CLING_SCANNER_H */

@@ -81,5 +81,17 @@ void cling_ast_add_rhs(struct utillib_json_value * self,
   utillib_json_object_push_back(self, "rhs", rhs);
 }
 
+struct utillib_json_value *
+cling_ast_constant(size_t code, void const *semantic)
+{
+  switch(code) {
+  case SYM_CHAR:
+  case SYM_UINT:
+    return utillib_json_size_t_create(&semantic);
+  default:
+    assert(false);
+  }
+}
+
 
 
