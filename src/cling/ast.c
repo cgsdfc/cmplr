@@ -62,3 +62,24 @@ void cling_ast_insert_variable(struct utillib_json_value * self,
   }
 }
 
+void cling_ast_add_op(struct utillib_json_value * self, 
+    size_t op)
+{
+  utillib_json_object_push_back(self, "op",
+      utillib_json_size_t_create(&op));
+}
+
+void cling_ast_add_lhs(struct utillib_json_value * self, 
+    struct utillib_json_value * lhs)
+{
+  utillib_json_object_push_back(self, "lhs", lhs);
+}
+
+void cling_ast_add_rhs(struct utillib_json_value * self, 
+    struct utillib_json_value * rhs)
+{
+  utillib_json_object_push_back(self, "rhs", rhs);
+}
+
+
+

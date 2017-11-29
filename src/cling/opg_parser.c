@@ -32,13 +32,18 @@ enum {
   CL_OPG_ERR
 };
 
-void cling_opg_parser_init(struct cling_opg_parser *self, 
-    size_t eof_symbol, struct utillib_vector *elist) {
+static opg_parser_init(struct cling_opg_parser *self)
+{
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
-  utillib_vector_push_back(&self->opstack, eof_symbol);
+  utillib_vector_push_back(&self->opstack, self->eof_symbol);
+}
+
+void cling_opg_parser_init(struct cling_opg_parser *self, 
+    size_t eof_symbol, struct utillib_vector *elist) {
   self->eof_symbol=eof_symbol;
   self->elist=elist;
+  opg_parser_init(self);
 }
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self) {
@@ -207,6 +212,10 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
 
   while (true) {
     lookahead=utillib_token_scanner_lookahead(input);
+    stacktop=utillib_vector_back(opstack);
+    if (stacktop == eof_symbol && lookahead == eof_symbol) {
+      break;
+    }
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT
         || lookahead == SYM_CHAR) {
      utillib_vector_push_back(stack, 
@@ -217,10 +226,6 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
      utillib_token_scanner_shiftaway(input);
      continue;
     } 
-    stacktop=utillib_vector_back(opstack);
-    if (stacktop == eof_symbol && lookahead == eof_symbol) {
-      break;
-    }
     cmp=opg_parser_compare(self, stacktop, lookahead);
     switch (cmp) {
     case CL_OPG_LT:
@@ -253,3 +258,13 @@ vague_error:
   utillib_vector_push_back(self->elist, cling_vague_error(input, errmsg));
   return utillib_json_null_create();
 }
+
+void cling_opg_parser_reinit(struct cling_opg_parser *self)
+{
+  /*
+   * Clean up and init == reinit
+   */
+  cling_opg_parser_destroy(self);
+  opg_parser_init(self);
+}
+

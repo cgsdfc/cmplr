@@ -24,6 +24,8 @@
 #include "symbols.h"
 #include "error.h"
 #include "symbol_table.h"
+#include "opg_parser.h"
+#include "ir.h"
 #include "ast.h"
 
 #include <assert.h>
@@ -34,6 +36,12 @@
  * All the recursive decent subroutines
  * go here.
  */
+
+static void rd_parser_fatal(struct cling_rd_parser *self,
+    size_t context)
+{
+  longjmp(self->fatal_saver, context);
+}
 
 static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self,
@@ -220,7 +228,7 @@ skip:
       goto fatal;
   }
 fatal:
-  longjmp(self->fatal_saver, context);
+  rd_parser_fatal(self, context);
 }
 
 /**
@@ -300,7 +308,7 @@ error:
   }
 
 fatal:
-  longjmp(self->fatal_saver, context);
+  rd_parser_fatal(self, context);
 }
 
 /**
@@ -448,7 +456,7 @@ skip:
       assert(false);
   }
 fatal:
-  longjmp(self->fatal_saver, SYM_VAR_DEF);
+  rd_parser_fatal(self, SYM_VAR_DEF);
 }
 
 /**
@@ -536,7 +544,7 @@ expected_maybe_lp:
   target.tars[0]=SYM_SEMI;
   switch(rd_parser_skipto(&target, input)) {
     case UT_SYM_EOF:
-      longjmp(self->fatal_saver, SYM_VAR_DECL);
+      rd_parser_fatal(self, SYM_VAR_DECL);
     case SYM_SEMI:
       utillib_token_scanner_shiftaway(input);
       goto return_array;
@@ -699,7 +707,7 @@ unexpected:
     goto fatal;
   }
 fatal:
-  longjmp(self->fatal_saver, context);
+  rd_parser_fatal(self, context);
 
 }
 
@@ -711,6 +719,82 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
 static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+
+}
+
+static struct utillib_json_value * assign_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_IDEN);
+  const size_t context=SYM_ASSIGN_STMT;
+  struct rd_parser_skip_target target;
+  struct utillib_json_value * lhs;
+  struct utillib_json_value * rhs;
+  struct utillib_json_value * object;
+
+  struct cling_opg_parser opg_parser;
+  cling_opg_parser_init(&opg_parser, SYM_SEMI, &self->elist);
+  lhs=cling_opg_parser_parse(&opg_parser, input);
+  if (lhs == &utillib_json_null) {
+    rd_parser_skip_target_init(&target, SYM_EXPR);
+    goto expected_lhs;
+  }
+
+  object=utillib_json_object_create_empty();
+  cling_ast_add_lhs(object, lhs);
+  cling_ast_add_op(object, OP_STORE);
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_EQ) {
+    goto expected_eq;
+  }
+before_rhs:
+  utillib_token_scanner_shiftaway(input);
+  rhs=cling_opg_parser_parse(&opg_parser, input);
+  if (rhs == &utillib_json_null) {
+    goto expected_rhs;
+  }
+  cling_ast_add_rhs(object, rhs);
+
+return_object:
+  cling_opg_parser_destroy(&opg_parser);
+  return object;
+
+expected_lhs:
+  target.tars[0]=SYM_EQ;
+  target.tars[1]=SYM_SEMI;
+  switch (rd_parser_skipto(&target, input)) {
+  case UT_SYM_EOF:
+    goto fatal;
+  case SYM_EQ:
+    goto before_rhs;
+  case SYM_SEMI:
+    cling_opg_parser_destroy(&opg_parser);
+    return utillib_json_null_create();
+  }
+expected_eq:
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, code, 
+        target.expected, context));
+expected_rhs:
+  target.tars[0]=SYM_SEMI;
+  switch(rd_parser_skipto(&target, input)) {
+  case UT_SYM_EOF:
+    goto fatal;
+  case SYM_SEMI:
+    cling_ast_add_rhs(object, utillib_json_null_create());
+    goto return_object;
+  }
+fatal:
+  rd_parser_fatal(self, context);
+
+}
+
+static struct utillib_json_value * for_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
+
 
 }
 

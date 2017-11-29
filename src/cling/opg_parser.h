@@ -51,6 +51,8 @@ struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self, 
                        struct utillib_token_scanner *input);
 
+void cling_opg_parser_reinit(struct cling_opg_parser *self);
+
 /* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜ */
 /* ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’ */
 #endif /* CLING_OPG_PARSER */
