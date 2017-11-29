@@ -20,6 +20,7 @@
 */
 
 #include "opg_parser.h"
+#include "ir.h"
 
 
 #include <assert.h>
@@ -57,13 +58,31 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
   const size_t eof_symbol=self->eof_symbol;
   if (lhs == eof_symbol)
     return CL_OPG_LT;
+
   if (rhs == eof_symbol)
     return CL_OPG_GT;
+
   if (lhs == SYM_LP && rhs == SYM_RP)
     return CL_OPG_EQ;
+
   if (lhs == SYM_LP || rhs == SYM_LP)
     return CL_OPG_LT;
+
   if (lhs == SYM_RP || rhs == SYM_RP)
+    return CL_OPG_GT;
+
+  if (lhs == SYM_IDEN) {
+    if (rhs == SYM_LP || rhs == SYM_LK)
+      return CL_OPG_LT;
+    if (rhs == SYM_RP || rhs == SYM_RK)
+      return CL_OPG_GT;
+    return CL_OPG_GT;
+  }
+
+  if (lhs == SYM_LK || rhs == SYM_LK)
+    return CL_OPG_LT;
+
+  if (lhs == SYM_RK || rhs == SYM_RK)
     return CL_OPG_GT;
   
   if (lhs == SYM_ADD || lhs == SYM_MINUS) {
@@ -103,20 +122,53 @@ opg_parser_factor_create(size_t code, void const * semantic)
   }
 }
 
+static void opg_parser_show_opstack(struct cling_opg_parser const *self)
+{
+  UTILLIB_VECTOR_FOREACH(size_t , op, &self->opstack) {
+    printf("%s, ", cling_symbol_kind_tostring(op));
+  }
+  puts("");
+}
+
 static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
 {
   assert (stacktop == (size_t) utillib_vector_back(&self->opstack));
   struct utillib_json_value * lhs;
   struct utillib_json_value * rhs;
   struct utillib_json_value * object;
+  size_t op;
   struct utillib_vector * stack=&self->stack;
-  utillib_vector_pop_back(&self->opstack);
+  struct utillib_vector * opstack=&self->opstack;
+  utillib_vector_pop_back(opstack);
 
   switch (stacktop) {
+  case SYM_RK:
+    if (utillib_vector_size(opstack) < 2)
+      return 1;
+    utillib_vector_pop_back(opstack);
+    utillib_vector_pop_back(opstack);
+    op=OP_IDX;
+    goto make_binary;
+  case SYM_IDEN:
+    return 0;
   case SYM_ADD:
+    op=OP_ADD;
+    goto make_binary;
   case SYM_MINUS:
+    op=OP_SUB;
+    goto make_binary;
   case SYM_DIV:
+    op=OP_DIV;
+    goto make_binary;
   case SYM_MUL:
+    op=OP_MUL;
+    goto make_binary;
+  default:
+    puts(cling_symbol_kind_tostring(stacktop));
+    opg_parser_show_opstack(self);
+    puts("Case not handled");
+  }
+make_binary:
     if (utillib_vector_size(stack) < 2)
       return 1;
     rhs=utillib_vector_back(stack);
@@ -124,12 +176,11 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
     lhs=utillib_vector_back(stack);
     utillib_vector_pop_back(stack);
     object=utillib_json_object_create_empty();
-    utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&stacktop));
+    utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&op));
     utillib_json_object_push_back(object, "lhs", lhs);
     utillib_json_object_push_back(object, "rhs", rhs);
     utillib_vector_push_back(stack, object);
     return 0;
-  }
 }
 
 struct utillib_json_value *
@@ -150,6 +201,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
      utillib_vector_push_back(stack, 
          opg_parser_factor_create(lookahead, 
           utillib_token_scanner_semantic(input)));
+     if (lookahead == SYM_IDEN)
+       utillib_vector_push_back(&self->opstack, lookahead);
      utillib_token_scanner_shiftaway(input);
      continue;
     } 
@@ -173,6 +226,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
       }
       break;
     case CL_OPG_ERR:
+      opg_parser_show_opstack(self);
       goto error;
     }
   }

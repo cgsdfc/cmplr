@@ -23,11 +23,6 @@
 #define CLING_ENTITY_H
 #include <utillib/vector.h>
 #include <utillib/json.h>
-#include <utillib/enum.h>
-
-UTILLIB_ENUM_BEGIN(cling_opcode_kind)
-UTILLIB_ENUM_ELEM(OP_ADD)
-UTILLIB_ENUM_END(cling_opcode_kind)
 
 struct cling_entity_list {
   struct utillib_vector func_list;
