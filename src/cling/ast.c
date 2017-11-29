@@ -18,7 +18,6 @@
    02110-1301 USA
 
 */
-
 #include "ast.h"
 #include "symbols.h"
 
