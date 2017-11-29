@@ -140,7 +140,9 @@ add_library(cling
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
   ./src/cling/rd_parser.c
+  ./src/cling/ast.c
   ./src/cling/rd_parser_impl.c
+  ./src/cling/error.c
   ./src/cling/opg_parser.c
   ./src/cling/ir.c
   )	
