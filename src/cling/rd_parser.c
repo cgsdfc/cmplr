@@ -204,18 +204,18 @@ return_array:
 expected:
   utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
-        code,context));
+        code,self->context));
   goto skip;
 
 redefined:
   utillib_vector_push_back(&self->elist, 
-      cling_redined_error(input, str, context));
+      cling_redined_error(input, str, self->context));
   goto skip;
 
 unexpected:
       utillib_vector_push_back(&self->elist,
           cling_unexpected_error(input,
-            code, context));
+            code, self->context));
 skip:
   target.tars[0]=SYM_COMMA;
   target.tars[1]=SYM_SEMI;
@@ -228,7 +228,7 @@ skip:
       goto fatal;
   }
 fatal:
-  rd_parser_fatal(self, context);
+  rd_parser_fatal(self, self->context);
 }
 
 /**
@@ -253,7 +253,7 @@ single_const_decl(struct cling_rd_parser *self,
   utillib_token_scanner_shiftaway(input);
 
   struct rd_parser_skip_target target;
-  const size_t context=SYM_CONST_DECL;
+  self->context=SYM_CONST_DECL;
   struct utillib_json_value *object;
   code = utillib_token_scanner_lookahead(input);
 
@@ -280,7 +280,7 @@ single_const_decl(struct cling_rd_parser *self,
 error:
   utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
-        code, context));
+        code, self->context));
   switch (target.expected) {
     case SYM_SEMI:
       return object;
@@ -308,7 +308,7 @@ error:
   }
 
 fatal:
-  rd_parser_fatal(self, context);
+  rd_parser_fatal(self, self->context);
 }
 
 /**
@@ -417,11 +417,11 @@ return_array:
 expected:
   utillib_vector_push_back(&self->elist, cling_expected_error(
         input, target.expected,
-        code, context));
+        code, self->context));
   goto skip;
 redefined:
   utillib_vector_push_back(&self->elist, cling_redined_error(
-        input, first_iden, context));
+        input, first_iden, self->context));
 
 skip:
   switch(target.expected) {
@@ -580,7 +580,7 @@ static struct utillib_json_value * single_function_decl(struct cling_rd_parser *
 error:
   utillib_vector_push_back(&self->elist,
       cling_expected_error(input,
-        target.expected, code, context));
+        target.expected, code, self->context));
   switch (target.expected) {}
 
 
@@ -599,7 +599,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 
   char const *str;
   struct rd_parser_skip_target target;
-  const size_t context=SYM_SCANF_STMT;
+  self->context=SYM_SCANF_STMT;
   struct utillib_json_value *array;
 
   code=utillib_token_scanner_lookahead(input);
@@ -652,7 +652,7 @@ expected_lp:
   utillib_vector_push_back(&self->elist, 
       cling_expected_error(
         input, target.expected,
-        code, context));
+        code, self->context));
   target.tars[0]=SYM_SEMI;
   switch (rd_parser_skipto(&target, input)) {
     case SYM_SEMI:
@@ -668,7 +668,7 @@ expected_iden:
    */
   utillib_vector_push_back(&self->elist,
       cling_expected_error(input, target.expected,
-        code, context));
+        code, self->context));
   target.tars[0]=SYM_IDEN;
   target.tars[1]=SYM_SEMI;
   switch(rd_parser_skipto(&target, input)) {
@@ -689,7 +689,7 @@ expected_semi:
    */
   utillib_vector_push_back(&self->elist,
       cling_expected_error(input, SYM_SEMI,
-        code, context));
+        code, self->context));
   goto return_array;
 unexpected:
   /*
@@ -698,7 +698,7 @@ unexpected:
    * since the scanf_stmt is incomplete.
    */
   utillib_vector_push_back(&self->elist,
-      cling_unexpected_error(input, code, context));
+      cling_unexpected_error(input, code, self->context));
   target.tars[0]=SYM_SEMI;
   switch (rd_parser_skipto(&target, input)) {
   case SYM_SEMI:
@@ -707,7 +707,7 @@ unexpected:
     goto fatal;
   }
 fatal:
-  rd_parser_fatal(self, context);
+  rd_parser_fatal(self, self->context);
 
 }
 
@@ -719,7 +719,61 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
 static struct utillib_json_value * normal_arglist(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_LP);
+  utillib_token_scanner_shiftaway(input);
+  struct rd_parser_skip_target target;
+  self->context=SYM_NARGS;
+  size_t type;
+  char const *name;
+  struct utillib_json_value * object;
+  struct utillib_json_value * array=utillib_json_array_create_empty();
 
+  while (true) {
+    code=utillib_token_scanner_lookahead(input);
+    switch (code) {
+    case SYM_KW_INT:
+    case SYM_KW_CHAR:
+      object=utillib_json_object_create_empty();
+      type=code==SYM_KW_INT?CL_INT:CL_CHAR;
+      utillib_json_object_push_back(object, "type", 
+          utillib_json_size_t_create(&type));
+      utillib_token_scanner_shiftaway(input);
+      code=utillib_token_scanner_lookahead(input);
+      if (code != SYM_IDEN) {
+        rd_parser_skip_target_init(&target, SYM_IDEN);
+        goto expected_iden;
+      }
+      name=utillib_token_scanner_lookahead(input);
+      utillib_json_object_push_back(object, "name",
+          utillib_json_string_create(&name));
+      utillib_token_scanner_shiftaway(input);
+      break;
+    case SYM_COMMA:
+      utillib_json_array_push_back(array, object);
+      break;
+return_array:
+    case SYM_RP:
+      return array;
+    default:
+      goto unexpected;
+    }
+  }
+unexpected:
+  utillib_vector_push_back(&self->elist,
+      cling_unexpected_error(input, code, self->context));
+  goto skip;
+
+expected_iden:
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, target.expected, code, self->context));
+skip:
+  switch (rd_parser_skipto(&target, input)) {
+    case SYM_RP:
+      goto return_array;
+    case UT_SYM_EOF:
+      rd_parser_fatal(self, self->context);
+  }
 }
 
 static struct utillib_json_value * assign_stmt(struct cling_rd_parser *self,
@@ -727,7 +781,7 @@ static struct utillib_json_value * assign_stmt(struct cling_rd_parser *self,
 {
   size_t code=utillib_token_scanner_lookahead(input);
   assert (code == SYM_IDEN);
-  const size_t context=SYM_ASSIGN_STMT;
+  self->context=SYM_ASSIGN_STMT;
   struct rd_parser_skip_target target;
   struct utillib_json_value * lhs;
   struct utillib_json_value * rhs;
@@ -775,7 +829,7 @@ expected_lhs:
 expected_eq:
   utillib_vector_push_back(&self->elist,
       cling_expected_error(input, code, 
-        target.expected, context));
+        target.expected, self->context));
 expected_rhs:
   target.tars[0]=SYM_SEMI;
   switch(rd_parser_skipto(&target, input)) {
@@ -786,7 +840,7 @@ expected_rhs:
     goto return_object;
   }
 fatal:
-  rd_parser_fatal(self, context);
+  rd_parser_fatal(self, self->context);
 
 }
 
@@ -797,7 +851,7 @@ static struct utillib_json_value * return_stmt(struct cling_rd_parser *self,
   assert (code == SYM_KW_RETURN);
   utillib_token_scanner_shiftaway(input);
   struct utillib_vector * elist=&self->elist;
-  const size_t context=SYM_RETURN_STMT;
+  self->context=SYM_RETURN_STMT;
   struct rd_parser_skip_target target;
   struct utillib_json_value * expr;
   struct cling_opg_parser opg_parser;
@@ -830,12 +884,12 @@ static struct utillib_json_value * return_stmt(struct cling_rd_parser *self,
 expected_rp:
   utillib_vector_push_back(elist,
       cling_expected_error(input,
-        target.expected, code, context));
+        target.expected, code, self->context));
   goto skip;
 
 unexpected:
   utillib_vector_push_back(elist,
-      cling_unexpected_error(input, code, context));
+      cling_unexpected_error(input, code, self->context));
   goto skip;
 
 expected_expr:
@@ -845,7 +899,7 @@ skip:
   case SYM_SEMI:
     return utillib_json_null_create();
   case UT_SYM_EOF:
-    rd_parser_fatal(self, context);
+    rd_parser_fatal(self, self->context);
   }
 }
 

@@ -35,6 +35,7 @@
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
+  size_t context;
   struct cling_symbol_table * symbols;
   struct cling_entity_list * entities;
 };
