@@ -32,7 +32,7 @@ enum {
   CL_OPG_ERR
 };
 
-static opg_parser_init(struct cling_opg_parser *self)
+static void opg_parser_init(struct cling_opg_parser *self)
 {
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);

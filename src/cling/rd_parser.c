@@ -790,6 +790,66 @@ fatal:
 
 }
 
+static struct utillib_json_value * return_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_KW_RETURN);
+  utillib_token_scanner_shiftaway(input);
+  struct utillib_vector * elist=&self->elist;
+  const size_t context=SYM_RETURN_STMT;
+  struct rd_parser_skip_target target;
+  struct utillib_json_value * expr;
+  struct cling_opg_parser opg_parser;
+
+  code=utillib_token_scanner_lookahead(input);
+  switch (code) {
+  case SYM_SEMI:
+    return utillib_json_null_create();
+  case SYM_LP:
+    utillib_token_scanner_shiftaway(input);
+    cling_opg_parser_init(&opg_parser, SYM_RP, elist);
+    expr=cling_opg_parser_parse(&opg_parser, input);
+    if (expr == &utillib_json_null) {
+      rd_parser_skip_target_init(&target, SYM_EXPR);
+      cling_opg_parser_destroy(&opg_parser);
+      goto expected_expr;
+    }
+    code=utillib_token_scanner_lookahead(input);
+    if (code != SYM_RP) {
+      rd_parser_skip_target_init(&target, SYM_EXPR);
+      goto expected_rp;
+    }
+    utillib_token_scanner_shiftaway(input);
+    cling_opg_parser_destroy(&opg_parser);
+    return expr;
+  default:
+    rd_parser_skip_target_init(&target, SYM_EXPR);
+    goto unexpected;
+  }
+expected_rp:
+  utillib_vector_push_back(elist,
+      cling_expected_error(input,
+        target.expected, code, context));
+  goto skip;
+
+unexpected:
+  utillib_vector_push_back(elist,
+      cling_unexpected_error(input, code, context));
+  goto skip;
+
+expected_expr:
+skip:
+  target.tars[0]=SYM_SEMI;
+  switch (rd_parser_skipto(&target, input)) {
+  case SYM_SEMI:
+    return utillib_json_null_create();
+  case UT_SYM_EOF:
+    rd_parser_fatal(self, context);
+  }
+}
+
+
 static struct utillib_json_value * for_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
