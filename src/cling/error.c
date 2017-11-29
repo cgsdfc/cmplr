@@ -87,29 +87,34 @@ cling_redined_error(struct utillib_token_scanner *input,
   return self;
 }
 
-void cling_error_print(struct cling_error const *error) {
-  utillib_error_printf("ERROR at line %lu, column %lu:\n", error->row + 1,
-                       error->col + 1);
-  switch (error->kind) {
+void cling_error_print(struct cling_error const *self) {
+  utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
+                       self->col + 1);
+  char const * const* einfo=self->einfo;
+  switch (self->kind) {
   case CL_EEXPECT:
     utillib_error_printf("expected `%s', got `%s' in `%s'",
-                         error->einfo[0], error->einfo[1], error->einfo[2]);
+                         einfo[0], einfo[1], einfo[2]);
     break;
   case CL_ENOARGS:
     utillib_error_printf(
         "Function `%s' expects at least one argument, but none was given",
-        error->einfo[0]);
+        einfo[0]);
     break;
   case CL_EUNEXPECTED:
     utillib_error_printf("unexpected token `%s' in `%s'",
-                         error->einfo[0], error->einfo[1]);
+                         einfo[0], einfo[1]);
     break;
   case CL_EREDEFINED:
     utillib_error_printf("identifier `%s' was redefined in `%s'",
-        error->einfo[0], error->einfo[1]);
+        einfo[0], einfo[1]);
     break;
   case CL_EVAGUE:
-    utillib_error_printf("%s", error->einfo[0]);
+    utillib_error_printf("%s", einfo[0]);
+    break;
+  case CL_EPREMATURE:
+    utillib_error_printf("fatal: premature end of input in `%s'",
+        einfo[0]);
     break;
   default:
     assert(false && "unimplemented");
@@ -126,5 +131,13 @@ cling_vague_error(struct utillib_token_scanner *input,
   return self;
 }
 
+struct cling_error *
+cling_premature_error(struct utillib_token_scanner *input,
+    size_t context)
+{
+  struct cling_error *self=cling_error_create(CL_EPREMATURE, input);
+  self->einfo[0]=cling_symbol_cast(context);
+  return self;
+}
 
 

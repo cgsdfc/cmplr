@@ -128,7 +128,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
     printf("@@ longjmp from `%s' context @@\n",cling_symbol_kind_tostring(code));
 #else
     utillib_vector_push_back(&self->elist,
-        cling_error_vague(input, "premature end of input"));
+        cling_premature_error(input, context));
 #endif
     return NULL;
   }

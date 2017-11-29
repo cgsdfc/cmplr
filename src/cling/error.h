@@ -31,6 +31,7 @@ UTILLIB_ENUM_ELEM(CL_ENOARGS)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
 UTILLIB_ENUM_ELEM(CL_EREDEFINED)
 UTILLIB_ENUM_ELEM(CL_EVAGUE)
+UTILLIB_ENUM_ELEM(CL_EPREMATURE)
 UTILLIB_ENUM_END(cling_error_kind);
 
 struct cling_error {
@@ -76,8 +77,11 @@ struct cling_error *
 cling_vague_error(struct utillib_token_scanner *input,
     char const * errmsg);
 
-void cling_error_print(struct cling_error const *error);
+void cling_error_print(struct cling_error const *self);
 
+struct cling_error *
+cling_premature_error(struct utillib_token_scanner *input,
+    size_t context);
 
 
 #endif /* CLING_ERROR_H */
