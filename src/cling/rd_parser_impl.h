@@ -24,17 +24,12 @@
 #include <utillib/scanner.h>
 
 #define RD_PARSER_SKIP_MAX 4
+struct cling_rd_parser;
 
-
-struct rd_parser_skip_target {
-  size_t expected;
-  int tars[RD_PARSER_SKIP_MAX];
-};
-
-void rd_parser_skip_target_init(struct rd_parser_skip_target * self,
+void rd_parser_skip_target_init(struct cling_rd_parser *self,
     size_t expected);
 
-size_t rd_parser_skipto(struct rd_parser_skip_target const *self,
+size_t rd_parser_skipto(struct cling_rd_parser const *self,
     struct utillib_token_scanner *input); 
 
 

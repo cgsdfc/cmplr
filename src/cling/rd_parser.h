@@ -28,6 +28,7 @@
 
 #include <setjmp.h>
 
+#define RD_PARSER_SKIP_MAX 4
 /**
  * \struct cling_rd_parser
  * A regular recursive-decent parser building
@@ -36,6 +37,8 @@ struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
   size_t context;
+  size_t expected;
+  int tars[RD_PARSER_SKIP_MAX];
   struct cling_symbol_table * symbols;
   struct cling_entity_list * entities;
 };

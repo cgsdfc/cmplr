@@ -19,6 +19,7 @@
 
 */
 #include "rd_parser_impl.h"
+#include "rd_parser.h"
 
 /* UT_SYM_EOF */
 #include <utillib/symbol.h>
@@ -27,14 +28,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-void rd_parser_skip_target_init(struct rd_parser_skip_target*self,
+void rd_parser_skip_target_init(struct cling_rd_parser *self,
     size_t expected)
 {
   self->expected=expected;
   memset(self->tars, -1, sizeof self->tars);
 }
 
-size_t rd_parser_skipto(struct rd_parser_skip_target const *self,
+size_t rd_parser_skipto(struct cling_rd_parser const *self,
     struct utillib_token_scanner *input) 
 {
   size_t code;
