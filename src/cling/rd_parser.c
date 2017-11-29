@@ -108,6 +108,12 @@ static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
 static struct utillib_json_value * statement(struct cling_rd_parser *self,
     struct utillib_token_scanner *input);
 
+static struct utillib_json_value * for_stmt_step(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
+static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
 static struct utillib_json_value *program(struct cling_rd_parser *self,
                                           struct utillib_token_scanner *input);
 
@@ -523,6 +529,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
     struct utillib_token_scanner *input, size_t *type,
     char const **first_iden) {
   size_t code = utillib_token_scanner_lookahead(input);
+  self->context=SYM_VAR_DECL;
   assert(code == SYM_KW_INT || code == SYM_KW_CHAR);
   utillib_token_scanner_shiftaway(input);
   *type = code;
@@ -558,9 +565,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
         break;
       default:
         /* We are screw */
-        utillib_vector_push_back(&self->elist, cling_unexpected_error(
-              input, code, SYM_VAR_DECL));
-        rd_parser_skip_target_init(self, SYM_LP);
+        rd_parser_unexpected_error(self, input, code);
         goto expected_maybe_lp; 
     }
   }
@@ -581,39 +586,6 @@ expected_maybe_lp:
   }
 }
 
-static struct utillib_json_value * single_function_decl(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input, 
-    size_t context,
-    char const * name) {
-  size_t code=utillib_token_scanner_lookahead(input);
-  assert (SYM_LP == code);
-  utillib_token_scanner_shiftaway(input);
-
-  struct utillib_json_value * object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "name",
-      utillib_json_string_create(&name));
-  utillib_json_object_push_back(object, "arglist",
-      formal_arglist(self, input));
-  code=utillib_token_scanner_lookahead(input);
-  if (code != SYM_LB) {
-    rd_parser_skip_target_init(self, SYM_LB);
-    goto error;
-  }
-  utillib_json_object_push_back(object, "composite_stmt",
-      composite_stmt(self, input));
-  if (code != SYM_RB) {
-    rd_parser_skip_target_init(self, SYM_LB);
-    goto error;
-  }
-  return object;
-error:
-  utillib_vector_push_back(&self->elist,
-      cling_expected_error(input,
-        self->expected, code, self->context));
-  switch (self->expected) {}
-
-
-}
 
 /**
  * \function scanf_stmt
@@ -731,14 +703,6 @@ unexpected:
 
 }
 
-static struct utillib_json_value *program(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input) {
-
-  self->root=utillib_json_object_create_empty();
-  utillib_json_object_push_back(self->root, "multiple_const_decl",
-      multiple_const_decl(self, input));
-  return self->root;
-}
 
 static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
@@ -1119,25 +1083,6 @@ expected_rb:
   return object;
 }
 
-static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input)
-{
-  size_t code=utillib_token_scanner_lookahead(input);
-  assert (code == SYM_KW_PRINTF);
-  utillib_token_scanner_shiftaway(input);
-
-
-
-
-}
-
-static struct utillib_json_value * for_stmt_step(struct cling_rd_parser *self,
-    struct utillib_token_scanner *input)
-{
-
-
-
-}
 
 static struct utillib_json_value * statement(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
@@ -1327,4 +1272,168 @@ static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
   return object;
 }
 
+static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_KW_PRINTF);
+  utillib_token_scanner_shiftaway(input);
+
+
+
+
+}
+
+static struct utillib_json_value * for_stmt_step(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
+
+
+}
+
+static struct utillib_json_value * single_function(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, 
+    char const * name) {
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (SYM_LP == code);
+  utillib_token_scanner_shiftaway(input);
+
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "name",
+      utillib_json_string_create(&name));
+  utillib_json_object_push_back(object, "arglist",
+      formal_arglist(self, input));
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_LB) {
+    rd_parser_skip_target_init(self, SYM_LB);
+    goto expected_lb;
+  }
+parse_composite:
+  utillib_json_object_push_back(object, "composite_stmt",
+      composite_stmt(self, input));
+  if (code != SYM_RB) {
+    rd_parser_skip_target_init(self, SYM_LB);
+    self->expected=SYM_RB;
+    cling_unexpected_error(self, input, code);
+  }
+  return object;
+expected_lb:
+  rd_parser_expected_error(self, input, code);
+  self->tars[0]=SYM_KW_CONST;
+  self->tars[1]=SYM_SEMI;
+  switch (rd_parser_skipto(self, input)) {
+  case SYM_KW_CONST:
+    goto parse_composite;
+  case SYM_SEMI:
+    utillib_token_scanner_shiftaway(input);
+    goto parse_composite;
+  }
+}
+
+static struct utillib_json_value * void_function(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, bool * is_main)
+{
+  size_t code;
+  utillib_token_scanner_shiftaway(input);
+  code=utillib_token_scanner_lookahead(input);
+  char const *name;
+
+  switch (code) {
+  case SYM_IDEN:
+    * is_main=false;
+    name=strdup(
+    break;
+  case SYM_KW_MAIN:
+    * is_main=true;
+    break;
+  default:
+    goto unexpected;
+  }
+
+
+
+
+}
+
+static struct utillib_json_value * ret_function(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+
+
+
+
+}
+
+static struct utillib_json_value * first_ret_function(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, size_t type, char const * name)
+{
+
+
+
+
+}
+
+static struct utillib_json_value * multiple_function(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input, size_t maybe_type, char const * maybe_name)
+{
+  size_t code=utillib_token_scanner_lookahead(input);
+  self->context=SYM_FUNC_DECL;
+  struct utillib_json_value * array=utillib_json_array_create_empty();
+  struct utillib_json_value * object;
+  size_t type;
+  char const * name;
+  bool is_main;
+
+  switch (code) {
+    case SYM_KW_VOID:
+      object=void_function(self, input);
+      utillib_json_array_push_back(array, object);
+      break;
+    case SYM_KW_INT:
+    case SYM_KW_CHAR:
+      object=first_ret_function(self, input, maybe_type, maybe_name);
+      utillib_json_array_push_back(array, object);
+    default:
+      assert(false);
+  }
+  while (true) {
+    code=utillib_token_scanner_lookahead(input);
+    switch(code) {
+      case SYM_KW_VOID:
+        object=void_function(self, input, &is_main);
+        utillib_json_array_push_back(array, object);
+        if (is_main)
+          return array;
+        break;
+      case SYM_KW_INT:
+      case SYM_KW_CHAR:
+        object=ret_function(self, input);
+        utillib_json_array_push_back(array, object);
+        break;
+      default:
+        goto unexpected;
+    }
+  }
+unexpected:
+  rd_parser_unexpected_error(self, input, code);
+  utillib_json_value_destroy(array);
+  rd_parser_fatal(self);
+}
+
+static struct utillib_json_value *program(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input) 
+{
+  size_t type;
+  char const * first_iden;
+
+  self->root=utillib_json_object_create_empty();
+  utillib_json_object_push_back(self->root, "const_decls",
+      multiple_const_decl(self, input));
+  utillib_json_object_push_back(self->root, "var_decls",
+      maybe_multiple_var_decls(selfm input, &type, &first_iden));
+  utillib_json_object_push_back(self->root, "funcs",
+      multiple_function(self, input, type, first_iden));
+  return self->root;
+}
 
