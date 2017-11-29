@@ -39,6 +39,7 @@ struct cling_rd_parser {
   size_t context;
   size_t expected;
   int tars[RD_PARSER_SKIP_MAX];
+  struct utillib_json_value *root;
   struct cling_symbol_table * symbols;
   struct cling_entity_list * entities;
 };
