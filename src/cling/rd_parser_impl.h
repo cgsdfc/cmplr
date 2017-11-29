@@ -42,6 +42,7 @@ UTILLIB_ENUM_ELEM(CL_EEXPECT)
 UTILLIB_ENUM_ELEM(CL_ENOARGS)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
 UTILLIB_ENUM_ELEM(CL_EREDEFINED)
+UTILLIB_ENUM_ELEM(CL_EVAGUE)
 UTILLIB_ENUM_END(rd_parser_error_kind);
 
 struct rd_parser_error {
@@ -95,6 +96,10 @@ struct rd_parser_error *
 rd_parser_redined_error(struct utillib_token_scanner *input,
     char const * name,
     size_t context);
+
+struct rd_parser_error *
+rd_parser_vague_error(struct utillib_token_scanner *input,
+    char const * errmsg);
 
 void rd_parser_error_print(struct rd_parser_error const *error);
 

@@ -20,6 +20,7 @@
 */
 
 #include "opg_parser.h"
+#include "rd_parser_impl.h"
 #include "ir.h"
 
 
@@ -102,10 +103,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
       return CL_OPG_GT;
   }
   return CL_OPG_ERR;
-
-
-
-
 }
 
 static struct utillib_json_value *
@@ -140,6 +137,9 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
   struct utillib_vector * stack=&self->stack;
   struct utillib_vector * opstack=&self->opstack;
   utillib_vector_pop_back(opstack);
+#ifndef NDEBUG
+  char const * opstr;
+#endif
 
   switch (stacktop) {
   case SYM_RK:
@@ -150,6 +150,9 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
     op=OP_IDX;
     goto make_binary;
   case SYM_IDEN:
+    /*
+     * This iden will be popped above
+     */
     return 0;
   case SYM_ADD:
     op=OP_ADD;
@@ -164,9 +167,7 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
     op=OP_MUL;
     goto make_binary;
   default:
-    puts(cling_symbol_kind_tostring(stacktop));
-    opg_parser_show_opstack(self);
-    puts("Case not handled");
+    return 1;
   }
 make_binary:
     if (utillib_vector_size(stack) < 2)
@@ -176,7 +177,14 @@ make_binary:
     lhs=utillib_vector_back(stack);
     utillib_vector_pop_back(stack);
     object=utillib_json_object_create_empty();
-    utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&op));
+#ifndef NDEBUG
+    opstr=cling_opcode_kind_tostring(op);
+    utillib_json_object_push_back(object, "op", 
+        utillib_json_string_create(&opstr));
+#else
+    utillib_json_object_push_back(object, "op",
+        utillib_json_size_t_create(&op));
+#endif
     utillib_json_object_push_back(object, "lhs", lhs);
     utillib_json_object_push_back(object, "rhs", rhs);
     utillib_vector_push_back(stack, object);
@@ -192,6 +200,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
   size_t cmp;
   self->eof_symbol=eof_symbol;
   struct utillib_vector * stack=&self->stack;
+  char const *errmsg;
   utillib_vector_push_back(&self->opstack, eof_symbol);
 
   while (true) {
@@ -222,12 +231,13 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
       break;
     case CL_OPG_GT:
       if (0 != opg_parser_reduce(self, stacktop)) {
-        goto error;
+        errmsg="imcomplete expression";
+        goto vague_error;
       }
       break;
     case CL_OPG_ERR:
-      opg_parser_show_opstack(self);
-      goto error;
+      errmsg="invalid expression";
+      goto vague_error;
     }
   }
   if (utillib_vector_size(stack) == 1) {
@@ -235,7 +245,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self, size_t eof_symbol,
     utillib_vector_pop_back(&self->stack);
     return val;
   }
-error:
+vague_error:
+  utillib_vector_push_back(self->elist, rd_parser_vague_error(input, errmsg));
   utillib_vector_destroy_owning(stack, utillib_json_value_destroy);
   utillib_vector_init(stack);
   return utillib_json_null_create();

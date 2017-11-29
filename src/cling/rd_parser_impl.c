@@ -174,9 +174,22 @@ void rd_parser_error_print(struct rd_parser_error const *error) {
     utillib_error_printf("identifier `%s' was redefined in `%s'",
         error->einfo[0], error->einfo[1]);
     break;
+  case CL_EVAGUE:
+    utillib_error_printf("%s", error->einfo[0]);
+    break;
   default:
     assert(false && "unimplemented");
   }
   utillib_error_printf(".\n");
 }
+
+struct rd_parser_error *
+rd_parser_vague_error(struct utillib_token_scanner *input,
+    char const * errmsg)
+{
+  struct rd_parser_error * self=rd_parser_error(CL_EVAGUE, input);
+  self->einfo[0]=errmsg;
+  return self;
+}
+
 
