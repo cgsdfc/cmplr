@@ -84,6 +84,9 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input,
                                            char const *first_iden);
 
+static struct utillib_json_value * for_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input);
+
 static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input);
 
@@ -917,6 +920,10 @@ static struct utillib_json_value * switch_stmt(struct cling_rd_parser *self,
 static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+  size_t code=utillib_token_scanner_lookahead(input);
+  assert (code == SYM_KW_PRINTF);
+  utillib_token_scanner_shiftaway(input);
+
 
 
 
@@ -933,9 +940,47 @@ static struct utillib_json_value * for_stmt_step(struct cling_rd_parser *self,
 static struct utillib_json_value * statement(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
+  size_t code=utillib_token_scanner_lookahead(input);
+  struct utillib_json_value * object;
 
+  switch (code) {
+  case SYM_KW_PRINTF:
+    object=printf_stmt(self, input);
+    goto parse_semi;
+  case SYM_KW_SCANF:
+    object=scanf_stmt(self, input);
+    goto parse_semi;
+  case SYM_KW_FOR:
+    object=for_stmt(self, input);
+    goto parse_semi;
+  case SYM_KW_IF:
+    object=if_stmt(self, input);
+    goto parse_semi;
+  case SYW_KW_SWITCH:
+    object=switch_stmt(self, input);
+    goto parse_semi;
+  case SYM_KW_RETURN:
+    object=return_stmt(self, input);
+    goto parse_semi;
+  case SYM_LB:
+    object=composite_stmt(self, input);
+    goto return_object;
+  case SYM_SEMI:
+    object=utillib_json_null_create();
+    goto parse_semi;
+  }
+return_object:
+  return object;
 
-
+parse_semi:
+  code=utillib_token_scanner_lookahead(input);
+  if (code == SYM_SEMI) {
+    utillib_token_scanner_shiftaway(input);
+    goto return_object;
+  }
+  utillib_vector_push_back(&self->elist,
+      cling_expected_error(input, SYM_SEMI, code, SYM_STMT));
+  goto return_object;
 }
 
 static struct utillib_json_value * for_stmt(struct cling_rd_parser *self,
@@ -960,6 +1005,8 @@ static struct utillib_json_value * for_stmt(struct cling_rd_parser *self,
 /* parse_init: */
   utillib_token_scanner_shiftaway(input); /* SYM_LP */
   object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type", 
+      utillib_json_size_t_create(&self->context));
   cling_opg_parser_init(&opg_parser, SYM_SEMI, &self->elist); 
   init=cling_opg_parser_parse(&opg_parser, input);
   if (init == &utillib_json_null) {
@@ -1033,12 +1080,30 @@ expected_rp:
   goto parse_stmt;
 }
 
-static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
+static struct utillib_json_value * multiple_statement(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
 
 
 
+
+}
+
+static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
+    struct utillib_token_scanner *input)
+{
+  size_t type;
+  char const * first_iden;
+
+  utillib_token_scanner_shiftaway(input); /* SYM_LB */
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "const_decls", 
+      multiple_const_decl(self, input));
+  utillib_json_object_push_back(object, "var_decls",
+      maybe_multiple_var_decls(self, input, &type, &first_iden));
+  utillib_json_object_push_back(object, "statements",
+      multiple_statement(self, input));
+  return object;
 }
 
 
