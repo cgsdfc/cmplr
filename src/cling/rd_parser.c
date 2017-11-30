@@ -682,7 +682,6 @@ static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
   size_t code;
-  size_t type;
   char const *name;
   struct utillib_json_value * object;
   struct utillib_json_value * array;
@@ -694,33 +693,40 @@ static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
   while (true) {
     code=utillib_token_scanner_lookahead(input);
     switch (code) {
-    case SYM_KW_INT:
-    case SYM_KW_CHAR:
-      object=utillib_json_object_create_empty();
-      type=code==SYM_KW_INT?CL_INT:CL_CHAR;
-      utillib_json_object_push_back(object, "type", 
-          utillib_json_size_t_create(&type));
-      utillib_token_scanner_shiftaway(input);
-      code=utillib_token_scanner_lookahead(input);
-      if (code != SYM_IDEN) {
-        rd_parser_skip_target_init(self, SYM_IDEN);
-        goto expected_iden;
-      }
-      name=utillib_token_scanner_semantic(input);
-      utillib_json_object_push_back(object, "name",
-          utillib_json_string_create(&name));
-      utillib_token_scanner_shiftaway(input);
+      case SYM_KW_INT:
+      case SYM_KW_CHAR:
+        object=utillib_json_object_create_empty();
+        cling_ast_set_type(object, code);
+        utillib_token_scanner_shiftaway(input);
+        code=utillib_token_scanner_lookahead(input);
+        if (code != SYM_IDEN) {
+          rd_parser_skip_target_init(self, SYM_IDEN);
+          goto expected_iden;
+        }
+        name=utillib_token_scanner_semantic(input);
+        cling_ast_set_name(object, name);
+        utillib_token_scanner_shiftaway(input);
+        utillib_json_array_push_back(array, object);
+        code=utillib_token_scanner_lookahead(input);
+        switch(code) {
+          case SYM_COMMA:
+            utillib_token_scanner_shiftaway(input);
+            break;
+          case SYM_RP:
+            goto return_array;
+          default:
+            goto unexpected;
+        }
       break;
-    case SYM_COMMA:
-      utillib_json_array_push_back(array, object);
-      break;
-return_array:
-    case SYM_RP:
-      return array;
     default:
       goto unexpected;
     }
   }
+
+return_array:
+  utillib_token_scanner_shiftaway(input);
+  return array;
+
 unexpected:
   utillib_vector_push_back(&self->elist,
       cling_unexpected_error(input, code, self->context));
@@ -730,6 +736,7 @@ expected_iden:
   utillib_vector_push_back(&self->elist,
       cling_expected_error(input, self->expected, code, self->context));
 skip:
+  self->tars[0]=SYM_RP;
   switch (rd_parser_skipto(self, input)) {
     case SYM_RP:
       goto return_array;
@@ -1653,7 +1660,7 @@ static struct utillib_json_value *
 mock(struct cling_rd_parser *self,
     struct utillib_token_scanner *input) 
 {
-  return return_stmt(self, input);
+  return formal_arglist(self, input);
 
 }
 

@@ -53,5 +53,8 @@ cling_ast_constant(size_t code, void const *semantic);
 struct utillib_json_value *
 cling_ast_statement(size_t type);
 
+void cling_ast_set_name(struct utillib_json_value *self, char const *name);
+void cling_ast_set_type(struct utillib_json_value *self, char const *type);
+
 #endif /* CLING_AST_H */
 

@@ -102,5 +102,14 @@ cling_ast_statement(size_t type)
   return object;
 }
 
+void cling_ast_set_name(struct utillib_json_value *self, char const *name)
+{
+  utillib_json_object_push_back(self, "name",
+      utillib_json_string_create(&name));
+}
 
-
+void cling_ast_set_type(struct utillib_json_value *self, char const *type)
+{
+  utillib_json_object_push_back(self, "type",
+      utillib_json_size_t_create(&type));
+}
