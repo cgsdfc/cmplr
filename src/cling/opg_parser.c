@@ -28,7 +28,8 @@
 
 enum { CL_OPG_GT, CL_OPG_LT, CL_OPG_EQ, CL_OPG_ERR };
 
-static void opg_parser_init(struct cling_opg_parser *self) {
+static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
+  self->eof_symbol=eof_symbol;
   self->last_error = UT_SYM_EOF;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
@@ -177,6 +178,7 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop) {
   case SYM_DIV:
   case SYM_MUL:
   case SYM_EQ:
+    /* Assignment Op */
     goto make_binary;
   default:
     return 1;
@@ -203,8 +205,7 @@ make_binary:
 }
 
 void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
-  self->eof_symbol = eof_symbol;
-  opg_parser_init(self);
+  opg_parser_init(self, eof_symbol);
 }
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self) {
@@ -256,7 +257,6 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       }
       break;
     case CL_OPG_ERR:
-      opg_parser_show_lookahead(lookahead, stacktop);
       goto error;
     }
   }
@@ -267,14 +267,15 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   utillib_vector_pop_back(stack);
   return val;
 error:
+  opg_parser_show_lookahead(lookahead, stacktop);
   self->last_error = lookahead;
   return utillib_json_null_create();
 }
 
-void cling_opg_parser_reinit(struct cling_opg_parser *self) {
+void cling_opg_parser_reinit(struct cling_opg_parser *self, size_t eof_symbol) {
   /*
    * Clean up and init == reinit
    */
   cling_opg_parser_destroy(self);
-  opg_parser_init(self);
+  opg_parser_init(self, eof_symbol);
 }

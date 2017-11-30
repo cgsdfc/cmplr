@@ -45,11 +45,22 @@ void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol);
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self);
 
+/**
+ * Parses the expression regarding `eof_symbol'.
+ * If failed, `&utillib_json_null' is returned
+ * and the last lookahead symbol is kept in 
+ * `last_error'.
+ * If succeeded, the tree is popped off the stack
+ * and both stacks will be empty.
+ */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
                        struct utillib_token_scanner *input);
 
-void cling_opg_parser_reinit(struct cling_opg_parser *self);
+/*
+ * Reinitialize.
+ */
+void cling_opg_parser_reinit(struct cling_opg_parser *self, size_t eof_symbol);
 
 /* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
  */

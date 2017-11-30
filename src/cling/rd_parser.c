@@ -1119,7 +1119,6 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     goto expected_lp;
   }
 
-  /* parse_init: */
   utillib_token_scanner_shiftaway(input); /* SYM_LP */
   init = cling_opg_parser_parse(&opg_parser, input);
   if (init == &utillib_json_null) {
@@ -1129,7 +1128,7 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 
 parse_cond:
   utillib_token_scanner_shiftaway(input);
-  cling_opg_parser_reinit(&opg_parser);
+  cling_opg_parser_reinit(&opg_parser, SYM_SEMI);
   cond = cling_opg_parser_parse(&opg_parser, input);
   if (cond == &utillib_json_null) {
     goto expected_cond;
@@ -1138,12 +1137,13 @@ parse_cond:
 
 parse_step:
   utillib_token_scanner_shiftaway(input);
-  cling_opg_parser_reinit(&opg_parser);
+  cling_opg_parser_reinit(&opg_parser, SYM_RP);
   step = cling_opg_parser_parse(&opg_parser, input);
   if (step == &utillib_json_null) {
     rd_parser_skip_target_init(self, SYM_FOR_STEP);
     goto expected_step;
   }
+  utillib_json_object_push_back(object, "step", step);
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_RP) {
     rd_parser_skip_target_init(self, SYM_RP);
@@ -1581,5 +1581,5 @@ unexpected:
 
 static struct utillib_json_value *mock(struct cling_rd_parser *self,
                                        struct utillib_token_scanner *input) {
-  return assign_stmt(self, input);
+  return for_stmt(self, input);
 }
