@@ -678,7 +678,8 @@ unexpected:
 /*
  * Lookahead SYM_LP
  */
-static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
+static struct utillib_json_value * 
+formal_arglist(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
   size_t code;
@@ -689,6 +690,10 @@ static struct utillib_json_value * formal_arglist(struct cling_rd_parser *self,
   utillib_token_scanner_shiftaway(input);
   self->context=SYM_NARGS;
   array=utillib_json_array_create_empty();
+  code=utillib_token_scanner_lookahead(input);
+  if (code == SYM_RP) {
+    goto return_array;
+  }
 
   while (true) {
     code=utillib_token_scanner_lookahead(input);
@@ -948,6 +953,9 @@ return_object:
   return object;
 }
 
+/*
+ * Lookahead SYM_KW_CASE
+ */
 static struct utillib_json_value * 
 switch_stmt_cases(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
@@ -969,17 +977,12 @@ parse_case:
       if (code != SYM_UINT && code != SYM_CHAR) {
         self->expected=SYM_CONSTANT;
         rd_parser_expected_error(self,input, code);
-        utillib_json_object_push_back(object, "const", utillib_json_null_create());
-        /*
-         * Left out constant in a case label is stupid
-         * but not impossible, so if is that case, we
-         * preserve the colon here.
-         */
+        utillib_json_object_push_back(object, "case", utillib_json_null_create());
         if (code != SYM_COLON)
           utillib_token_scanner_shiftaway(input);
         goto parse_colon;
       }
-      utillib_json_object_push_back(object, "const",
+      utillib_json_object_push_back(object, "case",
           cling_ast_constant(code, utillib_token_scanner_semantic(input)));
       utillib_token_scanner_shiftaway(input);
 parse_colon:
@@ -996,7 +999,7 @@ parse_default:
       code=utillib_token_scanner_lookahead(input);
       if (code != SYM_COLON)
         rd_parser_expected_error(self,input, code);
-      utillib_json_object_push_back(object, "const",
+      utillib_json_object_push_back(object, "default",
           &utillib_json_true);
       code=SYM_KW_DEFAULT;
       goto parse_stmt;
@@ -1660,7 +1663,7 @@ static struct utillib_json_value *
 mock(struct cling_rd_parser *self,
     struct utillib_token_scanner *input) 
 {
-  return formal_arglist(self, input);
+  return switch_stmt_cases(self, input);
 
 }
 

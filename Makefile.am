@@ -56,7 +56,6 @@ utillibinclude_HEADERS =  src/utillib/ll1_generator.h \
 													src/utillib/print.h \
 													src/utillib/slist.h \
 													src/utillib/vector.h \
-												 src/utillib/json_ast.h \
 													src/utillib/string.h
 
 utillib_impl_headers = src/utillib/ll1_builder_impl.h \
@@ -66,7 +65,6 @@ utillib_impl_headers = src/utillib/ll1_builder_impl.h \
 
 libutillib_la_SOURCES =  $(libutillib_la_headers) \
 												 $(utillib_impl_headers) \
-												 src/utillib/json_ast.c \
 												 src/utillib/hashmap_impl.c \
 												 src/utillib/graph.c \
 												 src/utillib/lr_builder.c \
@@ -197,18 +195,24 @@ noinst_clingincludedir = $(includedir)/cling
 
 lib_LTLIBRARIES += libcling.la
 noinst_clinginclude_HEADERS = src/cling/symbols.h \
-															src/cling/rd_parser_impl.h \
 															src/cling/rd_parser.h \
 															src/cling/entity.h \
 															src/cling/symbol_table.h \
+															src/cling/ast.h \
+															src/cling/ir.h \
+															src/cling/opg_parser.h \
+															src/cling/error.h \
 															src/cling/scanner.h
 
 libcling_la_SOURCES = src/cling/symbols.c \
 											src/cling/rd_parser.c \
-											src/cling/rd_parser_impl.c \
+											src/cling/ast.c \
+											src/cling/ir.c \
 											src/cling/entity.c \
 											src/cling/symbol_table.c \
 											src/cling/scanner.c \
+											src/cling/opg_parser.c \
+											src/cling/error.c \
 											$(noinst_clinginclude_HEADERS)
 libcling_la_LIBADD = libutillib.la
 
