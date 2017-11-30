@@ -47,5 +47,11 @@ void cling_ast_add_rhs(struct utillib_json_value * self,
 struct utillib_json_value *
 cling_ast_constant(size_t code, void const *semantic);
 
+/*
+ * Creates a template for a statement.
+ */
+struct utillib_json_value *
+cling_ast_statement(size_t type);
+
 #endif /* CLING_AST_H */
 

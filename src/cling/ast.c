@@ -93,5 +93,14 @@ cling_ast_constant(size_t code, void const *semantic)
   }
 }
 
+struct utillib_json_value *
+cling_ast_statement(size_t type) 
+{
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type",
+      utillib_json_size_t_create(&type));
+  return object;
+}
+
 
 
