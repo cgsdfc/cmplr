@@ -41,9 +41,9 @@ static void opg_parser_init(struct cling_opg_parser *self)
 }
 
 void cling_opg_parser_init(struct cling_opg_parser *self, 
-    size_t eof_symbol, struct utillib_vector *elist) {
+    size_t eof_symbol)
+{
   self->eof_symbol=eof_symbol;
-  self->elist=elist;
   opg_parser_init(self);
 }
 
@@ -238,21 +238,20 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       break;
     case CL_OPG_GT:
       if (0 != opg_parser_reduce(self, stacktop)) {
-        goto vague_error;
+        goto error;
       }
       break;
     case CL_OPG_ERR:
-      goto vague_error;
+      goto error;
     }
   }
   if (utillib_vector_size(stack) != 1 || utillib_vector_size(opstack) != 1) {
-    goto vague_error;
+    goto error;
   }
   val=utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   return val;
-vague_error:
-  utillib_vector_push_back(self->elist, cling_expr_error(input));
+error:
   return utillib_json_null_create();
 }
 

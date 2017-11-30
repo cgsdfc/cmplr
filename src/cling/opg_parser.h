@@ -37,13 +37,11 @@
 struct cling_opg_parser {
   struct utillib_vector stack;
   struct utillib_vector opstack;
-  struct utillib_vector * elist;
   size_t eof_symbol;
 };
 
 void cling_opg_parser_init(struct cling_opg_parser *self,
-    size_t eof_symbol,
-    struct utillib_vector *elist);
+    size_t eof_symbol);
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self);
 

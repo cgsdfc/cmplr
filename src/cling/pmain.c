@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
   cling_rd_parser_init(&cling_parser, &cling_symbol_table, &cling_entities);
-  cling_opg_parser_init(&opg_parser, UT_SYM_EOF, &cling_parser.elist);
+  cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
 
   /* json_ast = cling_opg_parser_parse(&opg_parser, &cling_scanner); */
   json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
