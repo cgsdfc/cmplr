@@ -21,9 +21,9 @@
 
 #ifndef CLING_SYMBOL_TABLE_H
 #define CLING_SYMBOL_TABLE_H
+#include <utillib/enum.h>
 #include <utillib/hashmap.h>
 #include <utillib/slist.h>
-#include <utillib/enum.h>
 
 /**
  * \struct cling_symbol_table
@@ -45,7 +45,7 @@ struct cling_symbol_table {
 
 struct cling_symbol_entry {
   int kind;
-  struct utillib_json_value * value;
+  struct utillib_json_value *value;
 };
 
 /**
@@ -58,14 +58,14 @@ struct cling_symbol_entry {
  * int a[10] => CL_INT | CL_ARRAY
  * However, some combinations are illegal. For example,
  * CL_INT | CL_ARRAY | CL_FUNC
- * 
+ *
  */
 UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
-  UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
-  UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
-  UTILLIB_ENUM_ELEM_INIT(CL_CONST, 4)
-  UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 8)
-  UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 16)
+UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
+UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
+UTILLIB_ENUM_ELEM_INIT(CL_CONST, 4)
+UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 8)
+UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 16)
 UTILLIB_ENUM_END(cling_symbol_entry_kind);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
@@ -90,9 +90,9 @@ void cling_symbol_table_exit_scope(struct cling_symbol_table *self);
  * Inserts a new entry (name, kind, value) into the current scope
  * and fails if the entry already exists.
  */
-int cling_symbol_table_insert(struct cling_symbol_table *self, 
-    int kind, char const *name,
-    struct utillib_json_value * value);
+int cling_symbol_table_insert(struct cling_symbol_table *self, int kind,
+                              char const *name,
+                              struct utillib_json_value *value);
 
 /**
  * \function cling_symbol_table_find
@@ -105,8 +105,8 @@ int cling_symbol_table_insert(struct cling_symbol_table *self,
  * of it.
  */
 struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self, char const * name,
-    size_t level);
+cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
+                        size_t level);
 
 /**
  * \function cling_symbol_table_reserve
@@ -116,7 +116,8 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const * name
  * Assumes `name' does not exist before.
  * Notes the `name' will be strdup.
  */
-void cling_symbol_table_reserve(struct cling_symbol_table *self, char const * name);
+void cling_symbol_table_reserve(struct cling_symbol_table *self,
+                                char const *name);
 
 /**
  * \function cling_symbol_table_update
@@ -126,9 +127,9 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self, char const * na
  * blank of it.
  * Notes that the name will not be strdup.
  */
-void cling_symbol_table_update(struct cling_symbol_table *self, 
-    int kind, char const *name,
-    struct utillib_json_value * value);
+void cling_symbol_table_update(struct cling_symbol_table *self, int kind,
+                               char const *name,
+                               struct utillib_json_value *value);
 
 /**
  * \function cling_symbol_table_exist_name
@@ -136,7 +137,7 @@ void cling_symbol_table_update(struct cling_symbol_table *self,
  * whether the name exists regardless of its entry.
  */
 bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
-    char const *name, size_t level);
+                                   char const *name, size_t level);
 
 /*
  * JSON
@@ -145,10 +146,9 @@ struct utillib_json_value *
 cling_symbol_table_json_object_create(struct cling_symbol_table *self);
 
 void cling_symbol_table_insert_const(struct cling_symbol_table *symbols,
-    struct utillib_json_value * object);
+                                     struct utillib_json_value *object);
 
 void cling_symbol_table_insert_variable(struct cling_symbol_table *symbols,
-    struct utillib_json_value * object);
+                                        struct utillib_json_value *object);
 
 #endif /* CLING_SYMBOL_TABLE_H */
-

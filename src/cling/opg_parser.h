@@ -22,9 +22,9 @@
 #define CLING_OPG_PARSER
 #include "symbols.h"
 
-#include <utillib/vector.h>
-#include <utillib/scanner.h>
 #include <utillib/json.h>
+#include <utillib/scanner.h>
+#include <utillib/vector.h>
 
 #include <stddef.h>
 
@@ -41,17 +41,17 @@ struct cling_opg_parser {
   size_t last_error;
 };
 
-void cling_opg_parser_init(struct cling_opg_parser *self,
-    size_t eof_symbol);
+void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol);
 
 void cling_opg_parser_destroy(struct cling_opg_parser *self);
 
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self, 
+cling_opg_parser_parse(struct cling_opg_parser *self,
                        struct utillib_token_scanner *input);
 
 void cling_opg_parser_reinit(struct cling_opg_parser *self);
 
-/* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜ */
+/* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
+ */
 /* ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’ */
 #endif /* CLING_OPG_PARSER */

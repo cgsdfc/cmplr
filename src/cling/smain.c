@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
       break;
     }
     void const *semantic = utillib_token_scanner_semantic(&cling);
-    char const *name =cling_symbol_kind_tostring(code);
+    char const *name = cling_symbol_kind_tostring(code);
     fprintf(output, "%s\t", name);
     switch (code) {
     case SYM_UINT:

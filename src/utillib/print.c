@@ -120,6 +120,12 @@ void utillib_printer_print_json(struct utillib_printer_t *self,
   FILE *file = self->file;
   for (; *str; ++str) {
     switch (*str) {
+    case '\"':
+      do {
+        fputc(*str++, file);
+      } while (*str != '\"');
+      fputc('\"', file);
+      break;
     case '{':
     case '[':
       fprintf(file, "%c\n", *str);

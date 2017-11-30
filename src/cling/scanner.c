@@ -92,7 +92,7 @@ int cling_scanner_read_string(struct utillib_char_scanner *chars,
 
 int cling_scanner_read_number(struct utillib_char_scanner *chars,
                               struct utillib_string *buffer) {
-  char ch=utillib_char_scanner_lookahead(chars);
+  char ch = utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
   char const *str = utillib_string_c_str(buffer);
   if (str[0] == '0' && utillib_string_size(buffer) > 1)
@@ -203,8 +203,7 @@ int cling_scanner_read_handler(struct utillib_char_scanner *chars,
     return cling_scanner_read_char(chars, buffer);
   }
   /* Maybe number is over simplified */
-  if (isdigit(ch) || 
-      cling_scanner_signed_number && (ch == '-'||ch=='+')) {
+  if (isdigit(ch) || cling_scanner_signed_number && (ch == '-' || ch == '+')) {
     return cling_scanner_read_number(chars, buffer);
   }
   return -CL_EUNKNOWN;

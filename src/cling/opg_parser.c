@@ -26,31 +26,18 @@
 #include <assert.h>
 #include <stdlib.h>
 
-enum {
-  CL_OPG_GT,
-  CL_OPG_LT,
-  CL_OPG_EQ,
-  CL_OPG_ERR
-};
+enum { CL_OPG_GT, CL_OPG_LT, CL_OPG_EQ, CL_OPG_ERR };
 
-static void opg_parser_init(struct cling_opg_parser *self)
-{
-  self->last_error=UT_SYM_EOF;
+static void opg_parser_init(struct cling_opg_parser *self) {
+  self->last_error = UT_SYM_EOF;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   utillib_vector_push_back(&self->opstack, self->eof_symbol);
 }
 
-void cling_opg_parser_init(struct cling_opg_parser *self, 
-    size_t eof_symbol)
-{
-  self->eof_symbol=eof_symbol;
-  opg_parser_init(self);
-}
-
-void cling_opg_parser_destroy(struct cling_opg_parser *self) {
-  utillib_vector_destroy_owning(&self->stack, utillib_json_value_destroy);
-  utillib_vector_destroy(&self->opstack);
+static bool opg_parser_is_relop(size_t op) {
+  return op == SYM_NE || op == SYM_DEQ || op == SYM_LT || op == SYM_LE ||
+         op == SYM_GT || op == SYM_GE;
 }
 
 /**
@@ -62,9 +49,9 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self) {
  * If it is `CL_OPG_EQ', we should pop the stack and shift off lookahead.
  * If it is `CL_OPG_EQ', we hit an error.
  */
-static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size_t rhs)
-{
-  const size_t eof_symbol=self->eof_symbol;
+static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
+                                 size_t rhs) {
+  const size_t eof_symbol = self->eof_symbol;
   if (lhs == eof_symbol)
     return CL_OPG_LT;
 
@@ -93,27 +80,34 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
 
   if (lhs == SYM_RK || rhs == SYM_RK)
     return CL_OPG_GT;
-  
+
   if (lhs == SYM_EQ) {
-    if (rhs == SYM_EQ) 
+    if (rhs == SYM_EQ)
       return CL_OPG_ERR;
-    if (rhs == SYM_ADD || rhs == SYM_MINUS ||
-        rhs == SYM_MUL || rhs == SYM_DIV)
+    if (rhs == SYM_ADD || rhs == SYM_MINUS || rhs == SYM_MUL ||
+        rhs == SYM_DIV || opg_parser_is_relop(rhs))
       return CL_OPG_LT;
   }
 
+  if (opg_parser_is_relop(lhs)) {
+    if (opg_parser_is_relop(rhs))
+      return CL_OPG_ERR;
+    if (rhs == SYM_ADD || rhs == SYM_MINUS || rhs == SYM_MUL || rhs == SYM_DIV)
+      return SYM_LT;
+  }
+
   if (lhs == SYM_ADD || lhs == SYM_MINUS) {
-    if (rhs == SYM_ADD || rhs == SYM_MINUS)
+    if (rhs == SYM_ADD || rhs == SYM_MINUS || rhs == SYM_EQ ||
+        opg_parser_is_relop(rhs))
       return CL_OPG_GT;
     if (rhs == SYM_MUL || rhs == SYM_DIV)
-      return CL_OPG_LT;
-    if (rhs == SYM_LP)
       return CL_OPG_LT;
   }
   if (lhs == SYM_MUL || lhs == SYM_DIV) {
     if (rhs == SYM_MUL || rhs == SYM_DIV)
       return CL_OPG_GT;
-    if (rhs == SYM_ADD || rhs == SYM_MINUS)
+    if (rhs == SYM_ADD || rhs == SYM_MINUS || rhs == SYM_EQ ||
+        opg_parser_is_relop(rhs))
       return CL_OPG_GT;
   }
 
@@ -121,8 +115,7 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
 }
 
 static struct utillib_json_value *
-opg_parser_factor_create(size_t code, void const * semantic)
-{
+opg_parser_factor_create(size_t code, void const *semantic) {
   switch (code) {
   case SYM_IDEN:
     return utillib_json_string_create(&semantic);
@@ -134,27 +127,38 @@ opg_parser_factor_create(size_t code, void const * semantic)
   }
 }
 
-static void opg_parser_show_opstack(struct cling_opg_parser const *self)
-{
-  UTILLIB_VECTOR_FOREACH(size_t , op, &self->opstack) {
+static void opg_parser_show_opstack(struct cling_opg_parser const *self) {
+  UTILLIB_VECTOR_FOREACH(size_t, op, &self->opstack) {
     printf("%s, ", cling_symbol_kind_tostring(op));
   }
   puts("");
 }
 
-static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
-{
-  assert (stacktop == (size_t) utillib_vector_back(&self->opstack));
-  struct utillib_json_value * lhs;
-  struct utillib_json_value * rhs;
-  struct utillib_json_value * object;
-  size_t op;
-  struct utillib_vector * stack=&self->stack;
-  struct utillib_vector * opstack=&self->opstack;
+static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {
+  printf("stacktop %s\n", cling_symbol_kind_tostring(stacktop));
+  printf("lookahead %s\n", cling_symbol_kind_tostring(lookahead));
+}
+
+/*
+ * The name of the operator is kept as
+ * that of the `SYM_XXX'.
+ * Specially, subscription is `SYM_RK'.
+ */
+static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop) {
+  assert(stacktop == (size_t)utillib_vector_back(&self->opstack));
+  struct utillib_json_value *lhs;
+  struct utillib_json_value *rhs;
+  struct utillib_json_value *object;
+  size_t op = stacktop;
+  struct utillib_vector *stack = &self->stack;
+  struct utillib_vector *opstack = &self->opstack;
   utillib_vector_pop_back(opstack);
 #ifndef NDEBUG
-  char const * opstr;
+  char const *opstr;
 #endif
+  if (opg_parser_is_relop(stacktop)) {
+    goto make_binary;
+  }
 
   switch (stacktop) {
   case SYM_RK:
@@ -162,7 +166,6 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
       return 1;
     utillib_vector_pop_back(opstack);
     utillib_vector_pop_back(opstack);
-    op=OP_IDX;
     goto make_binary;
   case SYM_IDEN:
     /*
@@ -170,74 +173,74 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
      */
     return 0;
   case SYM_ADD:
-    op=OP_ADD;
-    goto make_binary;
   case SYM_MINUS:
-    op=OP_SUB;
-    goto make_binary;
   case SYM_DIV:
-    op=OP_DIV;
-    goto make_binary;
   case SYM_MUL:
-    op=OP_MUL;
-    goto make_binary;
   case SYM_EQ:
-    op=OP_STORE;
     goto make_binary;
   default:
     return 1;
   }
 make_binary:
-    if (utillib_vector_size(stack) < 2)
-      return 1;
-    rhs=utillib_vector_back(stack);
-    utillib_vector_pop_back(stack);
-    lhs=utillib_vector_back(stack);
-    utillib_vector_pop_back(stack);
-    object=utillib_json_object_create_empty();
+  if (utillib_vector_size(stack) < 2)
+    return 1;
+  rhs = utillib_vector_back(stack);
+  utillib_vector_pop_back(stack);
+  lhs = utillib_vector_back(stack);
+  utillib_vector_pop_back(stack);
+  object = utillib_json_object_create_empty();
 #ifndef NDEBUG
-    opstr=cling_opcode_kind_tostring(op);
-    utillib_json_object_push_back(object, "op", 
-        utillib_json_string_create(&opstr));
+  opstr = cling_symbol_kind_tostring(op);
+  utillib_json_object_push_back(object, "op",
+                                utillib_json_string_create(&opstr));
 #else
-    utillib_json_object_push_back(object, "op",
-        utillib_json_size_t_create(&op));
+  utillib_json_object_push_back(object, "op", utillib_json_size_t_create(&op));
 #endif
-    utillib_json_object_push_back(object, "lhs", lhs);
-    utillib_json_object_push_back(object, "rhs", rhs);
-    utillib_vector_push_back(stack, object);
-    return 0;
+  utillib_json_object_push_back(object, "lhs", lhs);
+  utillib_json_object_push_back(object, "rhs", rhs);
+  utillib_vector_push_back(stack, object);
+  return 0;
+}
+
+void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
+  self->eof_symbol = eof_symbol;
+  opg_parser_init(self);
+}
+
+void cling_opg_parser_destroy(struct cling_opg_parser *self) {
+  utillib_vector_destroy_owning(&self->stack, utillib_json_value_destroy);
+  utillib_vector_destroy(&self->opstack);
 }
 
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self, 
+cling_opg_parser_parse(struct cling_opg_parser *self,
                        struct utillib_token_scanner *input) {
 
   size_t lookahead;
   size_t stacktop;
   size_t cmp;
-  struct utillib_json_value * val;
-  struct utillib_vector * stack=&self->stack;
-  struct utillib_vector * opstack=&self->opstack;
-  const size_t eof_symbol=self->eof_symbol;
+  struct utillib_json_value *val;
+  struct utillib_vector *stack = &self->stack;
+  struct utillib_vector *opstack = &self->opstack;
+  const size_t eof_symbol = self->eof_symbol;
 
   while (true) {
-    lookahead=utillib_token_scanner_lookahead(input);
-    stacktop=utillib_vector_back(opstack);
+    lookahead = utillib_token_scanner_lookahead(input);
+    stacktop = utillib_vector_back(opstack);
     if (stacktop == eof_symbol && lookahead == eof_symbol) {
       break;
     }
-    if (lookahead == SYM_IDEN || lookahead == SYM_UINT
-        || lookahead == SYM_CHAR) {
-     utillib_vector_push_back(stack, 
-         opg_parser_factor_create(lookahead, 
-          utillib_token_scanner_semantic(input)));
-     if (lookahead == SYM_IDEN)
-       utillib_vector_push_back(opstack, lookahead);
-     utillib_token_scanner_shiftaway(input);
-     continue;
-    } 
-    cmp=opg_parser_compare(self, stacktop, lookahead);
+    if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
+        lookahead == SYM_CHAR) {
+      utillib_vector_push_back(
+          stack, opg_parser_factor_create(
+                     lookahead, utillib_token_scanner_semantic(input)));
+      if (lookahead == SYM_IDEN)
+        utillib_vector_push_back(opstack, lookahead);
+      utillib_token_scanner_shiftaway(input);
+      continue;
+    }
+    cmp = opg_parser_compare(self, stacktop, lookahead);
     switch (cmp) {
     case CL_OPG_LT:
       utillib_vector_push_back(opstack, lookahead);
@@ -253,28 +256,25 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       }
       break;
     case CL_OPG_ERR:
-      printf("stacktop %s\n", cling_symbol_kind_tostring(stacktop));
-      printf("lookahead %s\n", cling_symbol_kind_tostring(lookahead));
+      opg_parser_show_lookahead(lookahead, stacktop);
       goto error;
     }
   }
   if (utillib_vector_size(stack) != 1 || utillib_vector_size(opstack) != 1) {
     goto error;
   }
-  val=utillib_vector_back(stack);
+  val = utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   return val;
 error:
-  self->last_error=lookahead;
+  self->last_error = lookahead;
   return utillib_json_null_create();
 }
 
-void cling_opg_parser_reinit(struct cling_opg_parser *self)
-{
+void cling_opg_parser_reinit(struct cling_opg_parser *self) {
   /*
    * Clean up and init == reinit
    */
   cling_opg_parser_destroy(self);
   opg_parser_init(self);
 }
-

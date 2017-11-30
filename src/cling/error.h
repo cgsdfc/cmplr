@@ -47,8 +47,8 @@ struct cling_error {
  * Creates an error recording the kind of
  * the error, the location in the source file.
  */
-struct cling_error *
-cling_error_create(int kind, struct utillib_token_scanner *input);
+struct cling_error *cling_error_create(int kind,
+                                       struct utillib_token_scanner *input);
 
 /**
  * \function cling_error_destroy
@@ -56,37 +56,26 @@ cling_error_create(int kind, struct utillib_token_scanner *input);
  */
 void cling_error_destroy(struct cling_error *self);
 
-struct cling_error *cling_expected_error(
-    struct utillib_token_scanner *input,
-    size_t expected,
-    size_t actual, size_t context);
+struct cling_error *cling_expected_error(struct utillib_token_scanner *input,
+                                         size_t expected, size_t actual,
+                                         size_t context);
 
-struct cling_error *
-cling_noargs_error(struct utillib_token_scanner *input,
-                             char const *name);
+struct cling_error *cling_noargs_error(struct utillib_token_scanner *input,
+                                       char const *name);
 
-struct cling_error *
-cling_unexpected_error(struct utillib_token_scanner *input,
-                                 size_t unexpected,
-                                 size_t context);
-struct cling_error *
-cling_redined_error(struct utillib_token_scanner *input,
-    char const * name,
-    size_t context);
+struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
+                                           size_t unexpected, size_t context);
+struct cling_error *cling_redined_error(struct utillib_token_scanner *input,
+                                        char const *name, size_t context);
 
-struct cling_error *
-cling_vague_error(struct utillib_token_scanner *input,
-    char const * errmsg);
+struct cling_error *cling_vague_error(struct utillib_token_scanner *input,
+                                      char const *errmsg);
 
 void cling_error_print(struct cling_error const *self);
 
-struct cling_error *
-cling_premature_error(struct utillib_token_scanner *input,
-    size_t context);
+struct cling_error *cling_premature_error(struct utillib_token_scanner *input,
+                                          size_t context);
 
-struct cling_error *
-cling_expr_error(struct utillib_token_scanner *input);
-
+struct cling_error *cling_expr_error(struct utillib_token_scanner *input);
 
 #endif /* CLING_ERROR_H */
-

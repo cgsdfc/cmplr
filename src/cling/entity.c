@@ -21,50 +21,39 @@
 #include "entity.h"
 #include <stdlib.h>
 
-static void function_destroy(struct cling_function *self)
-{
+static void function_destroy(struct cling_function *self) {
   utillib_vector_destroy_owning(&self->code, free);
   free(self);
 }
 
-
-void cling_entity_list_init(struct cling_entity_list *self)
-{
+void cling_entity_list_init(struct cling_entity_list *self) {
   utillib_vector_init(&self->func_list);
   utillib_vector_init(&self->var_list);
 }
 
-void cling_entity_list_destroy(struct cling_entity_list *self)
-{
+void cling_entity_list_destroy(struct cling_entity_list *self) {
   utillib_vector_destroy_owning(&self->func_list, function_destroy);
   utillib_vector_destroy_owning(&self->var_list, free);
 }
 
 struct cling_function *
- cling_function_create(struct utillib_json_value * signature)
-{
-  struct cling_function *self=malloc(sizeof *self);
-  self->signature=signature;
+cling_function_create(struct utillib_json_value *signature) {
+  struct cling_function *self = malloc(sizeof *self);
+  self->signature = signature;
   utillib_vector_init(&self->code);
   return self;
 }
 
-struct cling_variable *
-cling_variable_create( struct utillib_json_value *info,
-    size_t scope)
-{
-  struct cling_variable *self=malloc(sizeof *self);
-  self->info=info;
-  self->scope=scope;
+struct cling_variable *cling_variable_create(struct utillib_json_value *info,
+                                             size_t scope) {
+  struct cling_variable *self = malloc(sizeof *self);
+  self->info = info;
+  self->scope = scope;
   return self;
 }
 
-struct cling_ir *
-cling_ir_create(size_t opcode)
-{
-  struct cling_ir * self=malloc(sizeof *self);
-  self->opcode=opcode;
+struct cling_ir *cling_ir_create(size_t opcode) {
+  struct cling_ir *self = malloc(sizeof *self);
+  self->opcode = opcode;
   return self;
 }
-
-

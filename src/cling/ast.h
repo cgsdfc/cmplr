@@ -20,8 +20,8 @@
 */
 #ifndef CLING_AST_H
 #define CLING_AST_H
-#include <utillib/json.h>
 #include "symbol_table.h"
+#include <utillib/json.h>
 
 /*
  * Everything about traversal the ast
@@ -29,32 +29,29 @@
  * Although our ast is actually json tree,
  * A lot can still be done on it.
  */
-void cling_ast_insert_const(struct utillib_json_value * self,
-    struct cling_symbol_table *symbols);
+void cling_ast_insert_const(struct utillib_json_value *self,
+                            struct cling_symbol_table *symbols);
 
-void cling_ast_insert_variable(struct utillib_json_value * self,
-    struct cling_symbol_table *symbols);
+void cling_ast_insert_variable(struct utillib_json_value *self,
+                               struct cling_symbol_table *symbols);
 
-void cling_ast_add_op(struct utillib_json_value * self, 
-    size_t op);
+void cling_ast_add_op(struct utillib_json_value *self, size_t op);
 
-void cling_ast_add_lhs(struct utillib_json_value * self, 
-    struct utillib_json_value * lhs);
+void cling_ast_add_lhs(struct utillib_json_value *self,
+                       struct utillib_json_value *lhs);
 
-void cling_ast_add_rhs(struct utillib_json_value * self, 
-    struct utillib_json_value * rhs);
+void cling_ast_add_rhs(struct utillib_json_value *self,
+                       struct utillib_json_value *rhs);
 
-struct utillib_json_value *
-cling_ast_constant(size_t code, void const *semantic);
+struct utillib_json_value *cling_ast_constant(size_t code,
+                                              void const *semantic);
 
 /*
  * Creates a template for a statement.
  */
-struct utillib_json_value *
-cling_ast_statement(size_t type);
+struct utillib_json_value *cling_ast_statement(size_t type);
 
 void cling_ast_set_name(struct utillib_json_value *self, char const *name);
 void cling_ast_set_type(struct utillib_json_value *self, size_t type);
 
 #endif /* CLING_AST_H */
-

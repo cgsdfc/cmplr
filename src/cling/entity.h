@@ -21,8 +21,8 @@
 
 #ifndef CLING_ENTITY_H
 #define CLING_ENTITY_H
-#include <utillib/vector.h>
 #include <utillib/json.h>
+#include <utillib/vector.h>
 
 struct cling_entity_list {
   struct utillib_vector func_list;
@@ -30,12 +30,12 @@ struct cling_entity_list {
 };
 
 struct cling_function {
-  struct utillib_json_value * signature;
+  struct utillib_json_value *signature;
   struct utillib_vector code;
 };
 
 struct cling_variable {
-  struct utillib_json_value * info;
+  struct utillib_json_value *info;
   size_t scope;
 };
 
@@ -44,14 +44,16 @@ struct cling_ir {
   union {
     size_t uint;
     long integer;
-    struct cling_variable const * var;
+    struct cling_variable const *var;
   } operands[3];
 };
 
 void cling_entity_list_init(struct cling_entity_list *self);
 void cling_entity_list_destroy(struct cling_entity_list *self);
-struct cling_function * cling_function_create(struct utillib_json_value * signature);
-struct cling_variable * cling_variable_create( struct utillib_json_value *info, size_t scope);
-struct cling_ir * cling_ir_create(size_t opcode);
+struct cling_function *
+cling_function_create(struct utillib_json_value *signature);
+struct cling_variable *cling_variable_create(struct utillib_json_value *info,
+                                             size_t scope);
+struct cling_ir *cling_ir_create(size_t opcode);
 
 #endif /* CLING_ENTITY_H */
