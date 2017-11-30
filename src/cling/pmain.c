@@ -53,9 +53,9 @@ int main(int argc, char *argv[]) {
   utillib_json_pretty_print(json_ast, stdout);
   /* json_value=cling_symbol_table_json_object_create(&cling_symbol_table); */
   /* utillib_json_pretty_print(json_value, stdout); */
-  cling_rd_parser_report_errors(&cling_parser);
 
 cleanup:
+  cling_rd_parser_report_errors(&cling_parser);
   if (json_ast)
     utillib_json_value_destroy(json_ast);
   if (json_value)

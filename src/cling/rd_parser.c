@@ -167,7 +167,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   case 0:
     return mock(self, input);
   default:
-    utillib_json_value_destroy(self->root);
+    /* utillib_json_value_destroy(self->root); */
 #ifndef NDEBUG
     printf("@@ longjmp from `%s' context @@\n",cling_symbol_kind_tostring(code));
 #else
@@ -576,15 +576,22 @@ expected_maybe_lp:
 
 /**
  * Lookahead SYM_KW_SCANF
+ * Nonull
  */
 static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code ; 
   char const *str;
   struct utillib_json_value *array;
+  struct utillib_json_value *object;
 
   self->context=SYM_SCANF_STMT;
   utillib_token_scanner_shiftaway(input);
+  object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type",
+      utillib_json_size_t_create(&self->context));
+  array = utillib_json_array_create_empty();
+  utillib_json_object_push_back(object, "arglist", array);
   code=utillib_token_scanner_lookahead(input);
 
   if (code !=  SYM_LP) {
@@ -592,7 +599,6 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     goto expected_lp;
   }
   utillib_token_scanner_shiftaway(input);
-  array = utillib_json_array_create_empty();
 
   while (true) {
     code = utillib_token_scanner_lookahead(input);
@@ -611,20 +617,15 @@ before_iden:
       break;
     case SYM_RP:
       utillib_token_scanner_shiftaway(input);
-      code = utillib_token_scanner_lookahead(input);
-      if (code != SYM_SEMI) {
-        goto expected_semi;
-      }
-before_semi:
-      utillib_token_scanner_shiftaway(input);
-      goto return_array;
+      goto return_object;
     default:
       rd_parser_skip_target_init(self, SYM_RP);
       goto unexpected;
     }
   }
-return_array:
-    return array;
+return_object:
+    return object;
+
 expected_lp:
     /*
      * If we are missing '(' after `scanf', skip
@@ -654,20 +655,10 @@ expected_iden:
     case SYM_IDEN:
       goto before_iden;
     case SYM_SEMI:
-      goto before_semi;
+      goto return_object;
     default:
       assert(false);
   }
-expected_semi:
-  /*
-   * If we miss a semi, we just report that
-   * but not try to skip anything for too little
-   * context to make a decision.
-   */
-  utillib_vector_push_back(&self->elist,
-      cling_expected_error(input, SYM_SEMI,
-        code, self->context));
-  goto return_array;
 unexpected:
   /*
    * If we see an unexpected token after
@@ -679,7 +670,7 @@ unexpected:
   self->tars[0]=SYM_SEMI;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
-    goto before_semi;
+    goto return_object;
   }
 
 }
@@ -948,7 +939,6 @@ static struct utillib_json_value * switch_stmt_cases(struct cling_rd_parser *sel
   size_t code;
   struct utillib_json_value * array, * object, * stmt;
 
-  self->context=SYM_CASE_CLAUSE;
   array=utillib_json_array_create_empty();
 
   while (true) {
@@ -985,12 +975,11 @@ parse_colon:
       goto parse_stmt;
 parse_default:
     case SYM_KW_DEFAULT:
+      object=utillib_json_object_create_empty();
       utillib_token_scanner_shiftaway(input);
       code=utillib_token_scanner_lookahead(input);
       if (code != SYM_COLON)
         rd_parser_expected_error(self,input, code);
-      else 
-        utillib_token_scanner_shiftaway(input);
       utillib_json_object_push_back(object, "const",
           &utillib_json_true);
       code=SYM_KW_DEFAULT;
@@ -1014,6 +1003,7 @@ return_array:
   }
 
 unexpected:
+  self->context=SYM_CASE_CLAUSE;
   rd_parser_unexpected_error(self, input,code);
   rd_parser_skip_target_init(self, code);
   self->tars[0]=SYM_KW_CASE;
@@ -1032,7 +1022,8 @@ unexpected:
 /*
  * Lookahead SYM_KW_SWITCH
  */
-static struct utillib_json_value * switch_stmt(struct cling_rd_parser *self,
+static struct utillib_json_value * 
+switch_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
   size_t code;
@@ -1293,7 +1284,8 @@ static struct utillib_json_value * composite_stmt(struct cling_rd_parser *self,
 /*
  * Lookahead SYM_KW_PRINTF
  */
-static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
+static struct utillib_json_value * 
+printf_stmt(struct cling_rd_parser *self,
     struct utillib_token_scanner *input)
 {
   size_t code;
@@ -1305,6 +1297,12 @@ static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
 
   self->context=SYM_PRINTF_STMT;
   cling_opg_parser_init(&opg_parser, SYM_RP, &self->elist);
+  array=utillib_json_array_create_empty();
+  object=utillib_json_object_create_empty();
+  utillib_json_object_push_back(object, "type",
+      utillib_json_size_t_create(&self->context));
+  utillib_json_object_push_back(object, "arglist", array);
+
   utillib_token_scanner_shiftaway(input);
   code=utillib_token_scanner_lookahead(input);
 
@@ -1312,11 +1310,6 @@ static struct utillib_json_value * printf_stmt(struct cling_rd_parser *self,
     goto expected_lp;
   }
   utillib_token_scanner_shiftaway(input);
-  array=utillib_json_array_create_empty();
-  object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "type",
-      utillib_json_size_t_create(&self->context));
-  utillib_json_object_push_back(object, "arglist", array);
 
   code=utillib_token_scanner_lookahead(input);
   switch (code) {
@@ -1365,8 +1358,9 @@ return_object:
 
 expected_lp:
 expected_rp:
-expected_expr:
   rd_parser_expected_error(self, input, code);
+  goto skip;
+expected_expr:
   goto skip;
 unexpected:
   rd_parser_skip_target_init(self, code);
@@ -1633,8 +1627,7 @@ static struct utillib_json_value *
 mock(struct cling_rd_parser *self,
     struct utillib_token_scanner *input) 
 {
-
-
+  return switch_stmt_cases(self, input);
 
 }
 

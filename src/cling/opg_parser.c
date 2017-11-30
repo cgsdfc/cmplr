@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+
 enum {
   CL_OPG_GT,
   CL_OPG_LT,
@@ -204,7 +205,6 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   size_t lookahead;
   size_t stacktop;
   size_t cmp;
-  char const *errmsg;
   struct utillib_json_value * val;
   struct utillib_vector * stack=&self->stack;
   struct utillib_vector * opstack=&self->opstack;
@@ -238,24 +238,21 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       break;
     case CL_OPG_GT:
       if (0 != opg_parser_reduce(self, stacktop)) {
-        errmsg="imcomplete expression";
         goto vague_error;
       }
       break;
     case CL_OPG_ERR:
-      errmsg="invalid expression";
       goto vague_error;
     }
   }
   if (utillib_vector_size(stack) != 1 || utillib_vector_size(opstack) != 1) {
-    errmsg="invalid expression";
     goto vague_error;
   }
   val=utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   return val;
 vague_error:
-  utillib_vector_push_back(self->elist, cling_vague_error(input, errmsg));
+  utillib_vector_push_back(self->elist, cling_expr_error(input));
   return utillib_json_null_create();
 }
 

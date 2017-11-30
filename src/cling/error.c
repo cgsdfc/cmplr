@@ -116,6 +116,9 @@ void cling_error_print(struct cling_error const *self) {
     utillib_error_printf("fatal: premature end of input in `%s'",
         einfo[0]);
     break;
+  case CL_EEXPR:
+    utillib_error_printf("invalid expression");
+    break;
   default:
     assert(false && "unimplemented");
   }
@@ -140,4 +143,10 @@ cling_premature_error(struct utillib_token_scanner *input,
   return self;
 }
 
+struct cling_error *
+cling_expr_error(struct utillib_token_scanner *input)
+{
+  struct cling_error * self=cling_error_create(CL_EEXPR, input);
+  return self;
+}
 
