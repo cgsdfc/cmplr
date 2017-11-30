@@ -35,6 +35,7 @@ enum {
 
 static void opg_parser_init(struct cling_opg_parser *self)
 {
+  self->last_error=UT_SYM_EOF;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   utillib_vector_push_back(&self->opstack, self->eof_symbol);
@@ -93,6 +94,14 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
   if (lhs == SYM_RK || rhs == SYM_RK)
     return CL_OPG_GT;
   
+  if (lhs == SYM_EQ) {
+    if (rhs == SYM_EQ) 
+      return CL_OPG_ERR;
+    if (rhs == SYM_ADD || rhs == SYM_MINUS ||
+        rhs == SYM_MUL || rhs == SYM_DIV)
+      return CL_OPG_LT;
+  }
+
   if (lhs == SYM_ADD || lhs == SYM_MINUS) {
     if (rhs == SYM_ADD || rhs == SYM_MINUS)
       return CL_OPG_GT;
@@ -100,8 +109,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
       return CL_OPG_LT;
     if (rhs == SYM_LP)
       return CL_OPG_LT;
-    if (rhs == SYM_RP)
-      return CL_OPG_GT;
   }
   if (lhs == SYM_MUL || lhs == SYM_DIV) {
     if (rhs == SYM_MUL || rhs == SYM_DIV)
@@ -109,6 +116,7 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs, size
     if (rhs == SYM_ADD || rhs == SYM_MINUS)
       return CL_OPG_GT;
   }
+
   return CL_OPG_ERR;
 }
 
@@ -172,6 +180,9 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t stacktop)
     goto make_binary;
   case SYM_MUL:
     op=OP_MUL;
+    goto make_binary;
+  case SYM_EQ:
+    op=OP_STORE;
     goto make_binary;
   default:
     return 1;
@@ -242,6 +253,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       }
       break;
     case CL_OPG_ERR:
+      printf("stacktop %s\n", cling_symbol_kind_tostring(stacktop));
+      printf("lookahead %s\n", cling_symbol_kind_tostring(lookahead));
       goto error;
     }
   }
@@ -252,6 +265,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   utillib_vector_pop_back(stack);
   return val;
 error:
+  self->last_error=lookahead;
   return utillib_json_null_create();
 }
 
