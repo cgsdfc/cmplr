@@ -1109,8 +1109,6 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   self->context = SYM_FOR_STMT;
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
   object = cling_ast_statement(SYM_FOR_STMT);
-  self->tars[0] = SYM_SEMI;
-  self->tars[1] = SYM_RP;
 
   utillib_token_scanner_shiftaway(input);
   code = utillib_token_scanner_lookahead(input);
@@ -1119,9 +1117,10 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     goto expected_lp;
   }
 
-  utillib_token_scanner_shiftaway(input); /* SYM_LP */
+  utillib_token_scanner_shiftaway(input);
   init = cling_opg_parser_parse(&opg_parser, input);
   if (init == &utillib_json_null) {
+    rd_parser_skip_target_init(self, SYM_EXPR);
     goto expected_init;
   }
   utillib_json_object_push_back(object, "init", init);
@@ -1131,6 +1130,7 @@ parse_cond:
   cling_opg_parser_reinit(&opg_parser, SYM_SEMI);
   cond = cling_opg_parser_parse(&opg_parser, input);
   if (cond == &utillib_json_null) {
+    rd_parser_skip_target_init(self, SYM_EXPR);
     goto expected_cond;
   }
   utillib_json_object_push_back(object, "cond", cond);
@@ -1140,7 +1140,7 @@ parse_step:
   cling_opg_parser_reinit(&opg_parser, SYM_RP);
   step = cling_opg_parser_parse(&opg_parser, input);
   if (step == &utillib_json_null) {
-    rd_parser_skip_target_init(self, SYM_FOR_STEP);
+    rd_parser_skip_target_init(self, SYM_EXPR);
     goto expected_step;
   }
   utillib_json_object_push_back(object, "step", step);
@@ -1157,6 +1157,9 @@ parse_stmt:
   return object;
 
 expected_lp:
+  rd_parser_expected_error(self, input , code);
+  self->tars[0] = SYM_SEMI;
+  self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_cond;
@@ -1165,6 +1168,9 @@ expected_lp:
   }
 
 expected_init:
+  rd_parser_expected_error(self, input , opg_parser.last_error);
+  self->tars[0] = SYM_SEMI;
+  self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_cond;
@@ -1172,6 +1178,9 @@ expected_init:
     goto parse_stmt;
   }
 expected_cond:
+  rd_parser_expected_error(self, input , opg_parser.last_error);
+  self->tars[0] = SYM_SEMI;
+  self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_step;
@@ -1179,18 +1188,14 @@ expected_cond:
     goto parse_stmt;
   }
 expected_step:
-  utillib_vector_push_back(
-      &self->elist,
-      cling_expected_error(input, self->expected, code, self->context));
+  rd_parser_expected_error(self, input ,opg_parser.last_error);
   self->tars[0] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto parse_stmt;
   }
 expected_rp:
-  utillib_vector_push_back(
-      &self->elist,
-      cling_expected_error(input, self->expected, code, self->context));
+  rd_parser_expected_error(self, input ,code);
   goto parse_stmt;
 }
 
