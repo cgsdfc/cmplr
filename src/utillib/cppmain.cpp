@@ -5,9 +5,10 @@
 
 int main() 
 {
-  utillib::vector iv;
-  iv.push_back(new std::string("aaaaaaaaaaaaaaa"));
-  auto s=iv.at<std::string*> (0);
-  std::cout << *s  << '\n';
-  iv.destroy_owning(operator delete);
+  utillib::vector strvector;
+  strvector.push_back("BatMan");
+  strvector.push_back("SuperMan");
+  auto json=strvector.tojson(utillib_json_string_create_adaptor);
+  json.pretty_print();
+
 }

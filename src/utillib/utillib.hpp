@@ -1,24 +1,24 @@
 #ifndef UTILLIB_UTILLIB_HPP
 #define UTILLIB_UTILLIB_HPP
 extern "C" {
+#include <utillib/bitset.h>
+#include <utillib/enum.h>
 #include <utillib/hashmap.h>
 #include <utillib/json.h>
 #include <utillib/json_foreach.h>
+#include <utillib/json_parser.h>
 #include <utillib/slist.h>
 #include <utillib/string.h>
-#include <utillib/bitset.h>
-#include <utillib/enum.h>
-#include <utillib/json_parser.h>
-
 }
 
 namespace utillib {
 class string;
 
 class json_value {
+private:
+  struct utillib_json_value *self;
 
 public:
-  struct utillib_json_value *self;
   explicit json_value(struct utillib_json_value *val);
   json_value();
   ~json_value(){};
@@ -65,7 +65,7 @@ public:
   string();
   void destroy();
   explicit string(char const *str);
-  ~string(){}
+  ~string() {}
   char const *c_str();
   void append(char const *str);
   void append_char(char ch);
@@ -82,7 +82,7 @@ private:
 
 public:
   hashmap(struct utillib_hashmap_callback const &callback);
-  ~hashmap(){}
+  ~hashmap() {}
   void destroy();
   void destroy_owning(void (*key_destroy)(void *key),
                       void (*value_destroy)(void *value));
@@ -106,88 +106,84 @@ private:
 
 public:
   vector();
-  ~vector(){}
+  ~vector() {}
   void destroy();
   void destroy_owning(void (*destroy)(void *value));
   void push_back(void const *val);
   void pop_back();
   void *back();
   void *front();
-  template<class T> T at(size_t index)
-  {
-    return static_cast<T> (utillib_vector_at(&self, index));
-  }
+  void *at(size_t index);
   size_t size() const;
   size_t capacity() const;
-  json_value tojson(utillib_json_value_create_func_t value_create) const;
+  template <class ValueCreate>
+  json_value tojson(ValueCreate value_create) const {
+    return json_value(utillib_vector_json_array_create(
+        &self,
+        reinterpret_cast<utillib_json_value_create_func_t>(value_create)));
+  }
 };
 
 class slist {
-  private:
-    struct utillib_slist self;
-  public:
-    slist();
-    ~slist(){}
-    void destroy();
-    void destroy_owning(void (*destroy) (void *value));
-    void push_front(void const *value);
-    void * front();
-    void erase(size_t index);
-    bool empty() const;
-    size_t size() const;
-    json_value tojson(utillib_json_value_create_func_t value_create) const;
+private:
+  struct utillib_slist self;
+
+public:
+  slist();
+  ~slist() {}
+  void destroy();
+  void destroy_owning(void (*destroy)(void *value));
+  void push_front(void const *value);
+  void *front();
+  void erase(size_t index);
+  bool empty() const;
+  size_t size() const;
+  json_value tojson(utillib_json_value_create_func_t value_create) const;
 };
 
 class bitset {
-  private:
-    struct utillib_bitset self;
-  public:
-    bitset(size_t N);
-    ~bitset(){}
-    void destroy();
-    void insert(size_t pos);
-    void remove(size_t pos);
-    bool contains(size_t pos) const;
-    void merge(bitset const& rhs);
-    bool equal(bitset const& rhs) const;
-    bool is_intersect(bitset const& rhs) const;
+private:
+  struct utillib_bitset self;
 
-    bool insert_updated(size_t pos);
-    bool remove_updated(size_t pos);
-    bool merge_updated(bitset const& rhs);
-    json_value tojson() const;
+public:
+  bitset(size_t N);
+  ~bitset() {}
+  void destroy();
+  void insert(size_t pos);
+  void remove(size_t pos);
+  bool contains(size_t pos) const;
+  void merge(bitset const &rhs);
+  bool equal(bitset const &rhs) const;
+  bool is_intersect(bitset const &rhs) const;
+
+  bool insert_updated(size_t pos);
+  bool remove_updated(size_t pos);
+  bool merge_updated(bitset const &rhs);
+  json_value tojson() const;
 };
 
 class ll1_factory {
-  public:
-    struct utillib_ll1_factory self;
-    ll1_factory( 
-        int const *gentable,
-        struct utillib_symbol const *symbols,
-        struct utillib_rule_literal const *rules);
-    ~ll1_factory();
+public:
+  struct utillib_ll1_factory self;
+  ll1_factory(int const *gentable, struct utillib_symbol const *symbols,
+              struct utillib_rule_literal const *rules);
+  ~ll1_factory();
 };
 
 class json_parser {
-  private:
-    struct utillib_json_parser self;
-    struct factory {
-      struct utillib_ll1_factory self;
-      factory() {
-        utillib_json_parser_factory_init(&self);
-      }
-      ~factory() {
-        utillib_ll1_factory_destroy(&self);
-      }
-    };
-  public:
-    json_parser();
-    ~json_parser(){}
-    void destroy();
-    json_value parse(char const * str);
-    
+private:
+  struct utillib_json_parser self;
+  struct factory {
+    struct utillib_ll1_factory self;
+    factory() { utillib_json_parser_factory_init(&self); }
+    ~factory() { utillib_ll1_factory_destroy(&self); }
+  };
 
-
+public:
+  json_parser();
+  ~json_parser() {}
+  void destroy();
+  json_value parse(char const *str);
 };
 
 } // utillib
