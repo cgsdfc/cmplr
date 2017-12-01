@@ -21,7 +21,7 @@ public:
   struct utillib_json_value *self;
   explicit json_value(struct utillib_json_value *val);
   json_value();
-  ~json_value();
+  ~json_value(){};
   void destroy();
   void push_back(json_value element);
   void push_back(char const *key, json_value value);
@@ -65,7 +65,7 @@ public:
   string();
   void destroy();
   explicit string(char const *str);
-  ~string();
+  ~string(){}
   char const *c_str();
   void append(char const *str);
   void append_char(char ch);
@@ -82,7 +82,7 @@ private:
 
 public:
   hashmap(struct utillib_hashmap_callback const &callback);
-  ~hashmap();
+  ~hashmap(){}
   void destroy();
   void destroy_owning(void (*key_destroy)(void *key),
                       void (*value_destroy)(void *value));
@@ -91,7 +91,7 @@ public:
   void *update(void const *key, void const *value);
   void *discard(void const *key);
   bool exist_key(void const *key) const;
-  void *operator[](void const *key);
+  void *at(void const *key);
   size_t size() const;
   bool empty() const;
   size_t buckets_size() const;
@@ -106,13 +106,17 @@ private:
 
 public:
   vector();
-  ~vector();
+  ~vector(){}
   void destroy();
   void destroy_owning(void (*destroy)(void *value));
   void push_back(void const *val);
   void pop_back();
   void *back();
   void *front();
+  template<class T> T at(size_t index)
+  {
+    return static_cast<T> (utillib_vector_at(&self, index));
+  }
   size_t size() const;
   size_t capacity() const;
   json_value tojson(utillib_json_value_create_func_t value_create) const;
@@ -123,7 +127,7 @@ class slist {
     struct utillib_slist self;
   public:
     slist();
-    ~slist();
+    ~slist(){}
     void destroy();
     void destroy_owning(void (*destroy) (void *value));
     void push_front(void const *value);
@@ -139,7 +143,7 @@ class bitset {
     struct utillib_bitset self;
   public:
     bitset(size_t N);
-    ~bitset();
+    ~bitset(){}
     void destroy();
     void insert(size_t pos);
     void remove(size_t pos);

@@ -5,13 +5,17 @@ namespace utillib {
 // utillib.json_value
 //
 json_value::json_value(struct utillib_json_value *val) : self(val) {}
-json_value::~json_value() {}
+
 json_value::json_value() : self(utillib_json_null_create()) {}
+
 void json_value::destroy() { utillib_json_value_destroy(self); }
+
 bool json_value::is_null() const { return self == &utillib_json_null; }
+
 void json_value::push_back(json_value element) {
   utillib_json_array_push_back(self, element.self);
 }
+
 void json_value::push_back(char const *key, json_value value) {
   utillib_json_object_push_back(self, key, value.self);
 }
@@ -52,9 +56,9 @@ json_value json_array_create() {
 // utillib.string
 //
 string::string() { utillib_string_init(&self); }
+
 string::string(char const *str) { utillib_string_init_c_str(&self, str); }
 
-string::~string() { }
 void string::destroy() {
   utillib_string_destroy(&self); 
 }
@@ -64,6 +68,7 @@ char const *string::c_str() { return utillib_string_c_str(&self); }
 void string::append(char const *str) { utillib_string_append(&self, str); }
 
 void string::append_char(char ch) { utillib_string_append_char(&self, ch); }
+
 size_t string::size() const { return utillib_string_size(&self); }
 
 bool string::empty() const { return utillib_string_empty(&self); }
@@ -81,7 +86,6 @@ hashmap::hashmap(struct utillib_hashmap_callback const &callback) {
   utillib_hashmap_init(&self, &callback);
 }
 
-hashmap::~hashmap() {}
 
 void hashmap::destroy() { utillib_hashmap_destroy(&self); }
 
@@ -116,7 +120,7 @@ bool hashmap::exist_key(void const *key) const {
   return utillib_hashmap_exist_key(&self, key);
 }
 
-void *hashmap::operator[](void const *key) {
+void *hashmap::at(void const *key) {
   return utillib_hashmap_at(&self, key);
 }
 
@@ -134,7 +138,6 @@ hashmap::tojson(utillib_json_value_create_func_t key_create,
 
 vector::vector() { utillib_vector_init(&self); }
 
-vector::~vector() {}
 
 void vector::push_back(void const *value) {
   utillib_vector_push_back(&self, value);
@@ -158,13 +161,18 @@ size_t vector::capacity() const { return utillib_vector_capacity(&self); }
 // slit
 //
 slist::slist() { utillib_slist_init(&self); }
-slist::~slist() {}
+
+
 void slist::destroy()  { utillib_slist_destroy(&self); }
+
 void slist::destroy_owning(void (*destroy) (void *value)) {
   utillib_slist_destroy_owning(&self, destroy);
 }
+
 bool slist::empty() const { utillib_slist_empty(&self); }
+
 void *slist::front() { return utillib_slist_front(&self); }
+
 void slist::push_front(void const *value) {
   utillib_slist_push_front(&self, value);
 }
@@ -177,8 +185,6 @@ size_t slist::size() const{ return utillib_slist_size(&self); }
 bitset::bitset(size_t N) {
   utillib_bitset_init(&self, N);
 }
-
-bitset::~bitset()  {}
 
 void bitset::destroy() { utillib_bitset_destroy(&self); }
 
@@ -244,6 +250,7 @@ json_parser::json_parser() {
   static factory json_factory;
   utillib_json_parser_init(&self, &json_factory.self);
 }
+
 void json_parser::destroy() {
   utillib_json_parser_destroy(&self);
 }

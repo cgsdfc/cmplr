@@ -26,7 +26,7 @@ add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
 add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
 add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
 add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
-set(CMAKE_CXX_FLAGS "-std=c++11")
+set(CMAKE_CXX_FLAGS "-std=c++11 -g")
 enable_testing()
 
 if (MSVC OR WIN32)
@@ -97,12 +97,12 @@ add_executable(utillib_test
 target_link_libraries(utillib_test utillib)
 add_test(Utillib_Test utillib_test)
 
-add_library(utillibcpp
-  ./src/utillib/cpp/scanner.cpp
-  ./src/utillib/cpp/json.cpp
+add_library(utillib++
+  ./src/utillib/utillib.cpp
 )
-target_link_libraries(utillibcpp utillib)
-
+target_link_libraries(utillib++ utillib)
+add_executable(cppmain ./src/utillib/cppmain.cpp)
+target_link_libraries(cppmain utillib++)
 add_executable(example-json ./src/utillib/example/json.c)
 target_link_libraries(example-json utillib)
 add_executable(example-vector ./src/utillib/example/vector.c)

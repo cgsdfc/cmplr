@@ -1,12 +1,13 @@
 #include <utillib/utillib.hpp>
-using namespace utillib;
+#include <vector>
+#include <string>
+#include <iostream>
 
 int main() 
 {
-  json_parser parser;
-  auto json=parser.parse("[  \
-      null, null, true, false, 1.222 \
-  ]");
-  json.element(0).pretty_print();
-  json.pretty_print();
+  utillib::vector iv;
+  iv.push_back(new std::string("aaaaaaaaaaaaaaa"));
+  auto s=iv.at<std::string*> (0);
+  std::cout << *s  << '\n';
+  iv.destroy_owning(operator delete);
 }
