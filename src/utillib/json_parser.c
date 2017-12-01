@@ -141,40 +141,14 @@ static void json_parser_terminal_handler(struct utillib_json_parser *self,
   struct utillib_vector *values = &self->values;
 
   switch (symbol->value) {
-#ifndef NODEBUG
-  case JSON_SYM_FALSE:
-    utillib_vector_push_back(values, &utillib_json_false);
-    return;
-  case JSON_SYM_TRUE:
-    utillib_vector_push_back(values, &utillib_json_true);
-    return;
-  case JSON_SYM_NULL:
-    utillib_vector_push_back(values, &utillib_json_null);
-    return;
-#else
   case JSON_SYM_TRUE:
   case JSON_SYM_FALSE:
   case JSON_SYM_NULL:
-    utillib_vector_push_back(values, semantic);
-    return;
-#endif
-
-#ifndef NODEBUG /* Debuging */
-  case JSON_SYM_LONG:
-  case JSON_SYM_REAL:
-    utillib_vector_push_back(values, utillib_json_real_create(&_PI));
-    return;
-  case JSON_SYM_STR:
-    utillib_vector_push_back(values,
-                             utillib_symbol_json_string_create(semantic));
-    return;
-#else
   case JSON_SYM_REAL:
   case JSON_SYM_LONG:
   case JSON_SYM_STR:
     utillib_vector_push_back(values, semantic);
     return;
-#endif
   default:
     break;
   }
@@ -220,19 +194,13 @@ static const struct utillib_ll1_parser_callback json_parser_callback = {
 };
 
 void utillib_json_parser_factory_init(
-    struct utillib_json_parser_factory *self) {
-  utillib_ll1_factory_gen_init(&self->factory, ll1_parser_table,
-                               utillib_json_symbols, utillib_json_rules);
-}
-
-void utillib_json_parser_factory_destroy(
-    struct utillib_json_parser_factory *self) {
-  utillib_ll1_factory_destroy(&self->factory);
+    struct utillib_ll1_factory *self) {
+  utillib_ll1_factory_build_init(self, utillib_json_symbols, utillib_json_rules);
 }
 
 void utillib_json_parser_init(struct utillib_json_parser *self,
-                              struct utillib_json_parser_factory *factory) {
-  utillib_ll1_factory_parser_init(&factory->factory, &self->parser, self,
+                              struct utillib_ll1_factory *factory) {
+  utillib_ll1_factory_parser_init(factory, &self->parser, self,
                                   &json_parser_callback);
   utillib_vector_init(&self->values);
 }

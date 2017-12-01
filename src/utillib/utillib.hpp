@@ -6,23 +6,30 @@ extern "C" {
 #include <utillib/json_foreach.h>
 #include <utillib/slist.h>
 #include <utillib/string.h>
+#include <utillib/bitset.h>
+#include <utillib/enum.h>
+#include <utillib/json_parser.h>
+
 }
 
 namespace utillib {
+class string;
+
 class json_value {
-private:
-  struct utillib_json_value *self;
 
 public:
+  struct utillib_json_value *self;
   explicit json_value(struct utillib_json_value *val);
   json_value();
   ~json_value();
   void destroy();
-  void array_push_back(json_value element);
-  void object_push_back(char const *key, json_value value);
+  void push_back(json_value element);
+  void push_back(char const *key, json_value value);
   bool is_null() const;
-  json_value operator[](char const *key);
-  json_value operator[](size_t index);
+  json_value member(const char *key);
+  json_value element(size_t index);
+  void pretty_print() const;
+  string tostring() const;
 };
 template <class T> json_value json_value_create(T val);
 json_value json_array_create();
@@ -53,10 +60,8 @@ template <> inline json_value json_value_create<double>(double val) {
 }
 
 class string {
-private:
-  struct utillib_string self;
-
 public:
+  struct utillib_string self;
   string();
   void destroy();
   explicit string(char const *str);
@@ -109,7 +114,76 @@ public:
   void *back();
   void *front();
   size_t size() const;
+  size_t capacity() const;
   json_value tojson(utillib_json_value_create_func_t value_create) const;
+};
+
+class slist {
+  private:
+    struct utillib_slist self;
+  public:
+    slist();
+    ~slist();
+    void destroy();
+    void destroy_owning(void (*destroy) (void *value));
+    void push_front(void const *value);
+    void * front();
+    void erase(size_t index);
+    bool empty() const;
+    size_t size() const;
+    json_value tojson(utillib_json_value_create_func_t value_create) const;
+};
+
+class bitset {
+  private:
+    struct utillib_bitset self;
+  public:
+    bitset(size_t N);
+    ~bitset();
+    void destroy();
+    void insert(size_t pos);
+    void remove(size_t pos);
+    bool contains(size_t pos) const;
+    void merge(bitset const& rhs);
+    bool equal(bitset const& rhs) const;
+    bool is_intersect(bitset const& rhs) const;
+
+    bool insert_updated(size_t pos);
+    bool remove_updated(size_t pos);
+    bool merge_updated(bitset const& rhs);
+    json_value tojson() const;
+};
+
+class ll1_factory {
+  public:
+    struct utillib_ll1_factory self;
+    ll1_factory( 
+        int const *gentable,
+        struct utillib_symbol const *symbols,
+        struct utillib_rule_literal const *rules);
+    ~ll1_factory();
+};
+
+class json_parser {
+  private:
+    struct utillib_json_parser self;
+    struct factory {
+      struct utillib_ll1_factory self;
+      factory() {
+        utillib_json_parser_factory_init(&self);
+      }
+      ~factory() {
+        utillib_ll1_factory_destroy(&self);
+      }
+    };
+  public:
+    json_parser();
+    ~json_parser(){}
+    void destroy();
+    json_value parse(char const * str);
+    
+
+
 };
 
 } // utillib

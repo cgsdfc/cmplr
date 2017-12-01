@@ -245,6 +245,9 @@ void utillib_rule_index_load_table(struct utillib_rule_index const *self,
       } else if (rule_id == UT_RULE_EPS) {
         rule = UTILLIB_RULE_EPS;
       } else {
+        if (rule_id >= utillib_vector_size(&self->rules)) {
+          printf("%d\n", rule_id);
+        }
         rule = utillib_vector_at(&self->rules, rule_id);
       }
       utillib_vector2_set(table, i, j, rule);

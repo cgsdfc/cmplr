@@ -24,27 +24,23 @@
 #include "ll1_parser.h"
 #include "vector.h"
 
-struct utillib_json_parser_factory {
-  struct utillib_ll1_factory factory;
-};
-
 struct utillib_json_parser {
   struct utillib_ll1_parser parser;
   struct utillib_vector values;
 };
 
-void utillib_json_parser_factory_init(struct utillib_json_parser_factory *self);
+void utillib_json_parser_factory_init(struct utillib_ll1_factory *self);
 
 void utillib_json_parser_factory_destroy(
-    struct utillib_json_parser_factory *self);
+    struct utillib_ll1_factory *self);
 
 void utillib_json_parser_init(struct utillib_json_parser *self,
-                              struct utillib_json_parser_factory *factory);
-
-void utillib_json_parser_destroy(struct utillib_json_parser *self);
+                              struct utillib_ll1_factory *factory);
 
 struct utillib_json_value *
 utillib_json_parser_parse(struct utillib_json_parser *self, char const *str);
+
+void utillib_json_parser_destroy(struct utillib_json_parser *self);
 
 #ifndef NDEBUG
 bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
