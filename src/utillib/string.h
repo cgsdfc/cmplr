@@ -45,15 +45,15 @@ UTILLIB_ENUM_END(string_cmpop)
 
 /* constructor destructor */
 void utillib_string_init(struct utillib_string *);
-void utillib_string_init_c_str(struct utillib_string *, char const *);
-void utillib_string_destroy(struct utillib_string *);
+void utillib_string_init_c_str(struct utillib_string *self, char const *);
+void utillib_string_destroy(struct utillib_string *self);
 
 /* observer */
-size_t utillib_string_size(struct utillib_string *);
-size_t utillib_string_capacity(struct utillib_string *);
-bool utillib_string_empty(struct utillib_string *);
-char const *utillib_string_c_str(struct utillib_string *);
-bool utillib_string_richcmp(struct utillib_string *, struct utillib_string *,
+size_t utillib_string_size(struct utillib_string const *self);
+size_t utillib_string_capacity(struct utillib_string const *self);
+bool utillib_string_empty(struct utillib_string const *self);
+char const *utillib_string_c_str(struct utillib_string const *self);
+bool utillib_string_richcmp(struct utillib_string const *self, struct utillib_string const *other,
                             enum string_cmpop);
 
 /* modifier */

@@ -125,7 +125,7 @@ void utillib_string_append(struct utillib_string *self, char const *str) {
  * Returns a RO null-terminated C string of self.
  * If self is empty, the returned value equals to "".
  */
-char const *utillib_string_c_str(struct utillib_string *self) {
+char const *utillib_string_c_str(struct utillib_string const *self) {
   if (!self->c_str) {
     return "";
   }
@@ -137,14 +137,14 @@ char const *utillib_string_c_str(struct utillib_string *self) {
  * \function utillib_string_size
  * \return size.
  */
-size_t utillib_string_size(struct utillib_string *self) { return self->size; }
+size_t utillib_string_size(struct utillib_string const *self) { return self->size; }
 
 /**
  * \function utillib_string_capacity
  * \return capacity. Self can hold at most `capacity-1' chars.
  * If it returns zero, it means self is empty and can hold no char at all.
  */
-size_t utillib_string_capacity(struct utillib_string *self) {
+size_t utillib_string_capacity(struct utillib_string const *self) {
   return self->capacity;
 }
 
@@ -159,7 +159,7 @@ void utillib_string_destroy(struct utillib_string *self) {
 /**
  * \function utillib_string_empty
  */
-bool utillib_string_empty(struct utillib_string *self) {
+bool utillib_string_empty(struct utillib_string const *self) {
   return self->size == 0;
 }
 
@@ -167,8 +167,8 @@ bool utillib_string_empty(struct utillib_string *self) {
  * \function utillib_string_richcmp
  * Returns yes if `self' and `t' satisfy the relation `op'.
  */
-bool utillib_string_richcmp(struct utillib_string *self,
-                            struct utillib_string *t, enum string_cmpop op) {
+bool utillib_string_richcmp(struct utillib_string const *self,
+                            struct utillib_string const *t, enum string_cmpop op) {
 #define UTILLIB_STR_CMP(self, T, OP)                                           \
   (strcmp(UTILLIB_C_STR(self), UTILLIB_C_STR(T)) OP 0)
   switch (op) {
