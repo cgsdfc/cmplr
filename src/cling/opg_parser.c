@@ -47,7 +47,7 @@ static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
    * with any other one. Simply use negative
    * to distinguish both.
    */
-  self->eof_symbol = -eof_symbol;
+  self->eof_symbol = eof_symbol;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   utillib_vector_push_back(&self->opstack, self->eof_symbol);
@@ -322,9 +322,10 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   const size_t eof_symbol = self->eof_symbol;
 
   while (true) {
+    /* opg_parser_show_opstack(self); */
     lookahead = utillib_token_scanner_lookahead(input);
     stacktop = utillib_vector_back(opstack);
-    if (stacktop == eof_symbol && lookahead == -eof_symbol) {
+    if (stacktop == eof_symbol && lookahead == eof_symbol) {
       break;
     }
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||

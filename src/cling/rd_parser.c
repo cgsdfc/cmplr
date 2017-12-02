@@ -775,7 +775,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   const size_t context=SYM_RETURN_STMT;
 
   utillib_token_scanner_shiftaway(input);
-  cling_opg_parser_init(&opg_parser, SYM_RP);
+  cling_opg_parser_init(&opg_parser, SYM_SEMI);
   object = cling_ast_statement(SYM_RETURN_STMT);
   code = utillib_token_scanner_lookahead(input);
 
@@ -790,7 +790,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     /*
      * If the expr is null, it will be absent.
      */
-    expr=lp_expr_rp(self, input, context);
+    expr=cling_opg_parser_parse(&opg_parser, input);
     if (expr != &utillib_json_null) 
       utillib_json_object_push_back(object, "expr", expr);
     goto return_object;
@@ -1682,5 +1682,10 @@ unexpected:
 
 static struct utillib_json_value *mock(struct cling_rd_parser *self,
                                        struct utillib_token_scanner *input) {
+  struct cling_opg_parser opg_parser ;
+  cling_opg_parser_init(&opg_parser, SYM_SEMI);
+  bool is_main;
+  /* return cling_opg_parser_parse(&opg_parser, input); */
+  /* return function(self, input, &is_main); */
   return program(self, input);
 }
