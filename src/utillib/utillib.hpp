@@ -13,9 +13,11 @@ extern "C" {
 
 namespace utillib {
 class string;
+class json_array;
+class json_object;
 
 class json_value {
-private:
+public:
   struct utillib_json_value *self;
 
 public:
@@ -23,14 +25,32 @@ public:
   json_value();
   ~json_value(){};
   void destroy();
-  void push_back(json_value element);
-  void push_back(char const *key, json_value value);
   bool is_null() const;
-  json_value member(const char *key);
-  json_value element(size_t index);
+  bool is_object() const;
+  bool is_array() const;
   void pretty_print() const;
+  operator json_object() const;
+  operator json_array() const;
   string tostring() const;
+
 };
+
+class json_object : public json_value {
+  public:
+    json_object() = delete;
+    operator json_value() const;
+    void push_back(char const *key, json_value value);
+    json_value member(const char *key);
+};
+
+class json_array : public json_value {
+  public:
+    json_array() = delete;
+    operator json_value() const;
+    void push_back(json_value element);
+    json_value element(size_t index);
+};
+
 template <class T> json_value json_value_create(T val);
 json_value json_array_create();
 json_value json_object_create();

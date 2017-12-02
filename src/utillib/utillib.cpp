@@ -12,21 +12,34 @@ void json_value::destroy() { utillib_json_value_destroy(self); }
 
 bool json_value::is_null() const { return self == &utillib_json_null; }
 
-void json_value::push_back(json_value element) {
+bool json_value::is_array() const { return self->kind == UT_JSON_ARRAY; }
+bool json_value::is_object() const { return self->kind == UT_JSON_OBJECT; }
+
+//
+// json_array
+// 
+void json_array::push_back(json_value element) {
   utillib_json_array_push_back(self, element.self);
 }
 
-void json_value::push_back(char const *key, json_value value) {
-  utillib_json_object_push_back(self, key, value.self);
-}
-
-json_value json_value::member(char const *key) {
-  auto val = utillib_json_object_at(self, key);
+json_value json_array::element(size_t index) {
+  auto val = utillib_json_array_at(self, index);
   return val == NULL ? json_value() : json_value(val);
 }
 
-json_value json_value::element(size_t index) {
-  auto val = utillib_json_array_at(self, index);
+json_array::operator json_value() const {
+  return *this;
+}
+
+//
+// json_object
+//
+void json_object::push_back(char const *key, json_value value) {
+  utillib_json_object_push_back(self, key, value.self);
+}
+
+json_value json_object::member(char const *key) {
+  auto val = utillib_json_object_at(self, key);
   return val == NULL ? json_value() : json_value(val);
 }
 

@@ -78,6 +78,11 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
   if (lhs == SYM_RK || rhs == SYM_RK)
     return CL_OPG_GT;
 
+  if (lhs == SYM_COMMA) /* shift in as much SYM_COMMA as possible */
+    return CL_OPG_LT;
+  if (rhs == SYM_COMMA)
+    return CL_OPG_GT;
+
   if (rhs == SYM_EQ)
     return CL_OPG_GT;
   if (lhs == SYM_EQ)
@@ -152,12 +157,19 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
   }
 
   switch (stacktop) {
+  case SYM_COMMA:
+    goto make_arglist;
   case SYM_RP:
     if (utillib_vector_size(opstack) < 2)
       return 1;
     utillib_vector_pop_back(opstack);
     utillib_vector_pop_back(opstack);
-    return 0;
+    if (utillib_vector_size(opstack) < 1)
+      return 0;
+    stacktop=utillib_vector_back(opstack);
+    if (stacktop != SYM_IDEN)
+      return 0;
+    goto make_binary;
   case SYM_RK:
     if (utillib_vector_size(opstack) < 2)
       return 1;
@@ -175,13 +187,30 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
     goto make_binary;
   default:
     puts("opg_parser_reduce something");
-    return 1;
+    goto error;
   }
 
+make_arglist:
+  lhs=utillib_json_array_create_empty();
+  while (true) {
+    stacktop=utillib_vector_back(opstack);
+    if (stacktop != SYM_LP && stacktop != SYM_COMMA)
+      goto error;
+    if (utillib_vector_size(stack) < 1)
+      goto error;
+    rhs=utillib_vector_back(stack);
+    utillib_vector_pop_back(stack);
+    utillib_json_array_push_back(lhs, rhs);
+    if (stacktop == SYM_LP) {
+      utillib_vector_push_back(stack, lhs);
+      return 0;
+    }
+    utillib_vector_pop_back(opstack);
+  }
 make_binary:
   utillib_vector_pop_back(opstack);
   if (utillib_vector_size(stack) < 2)
-    return 1;
+  goto error;
   rhs = utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   lhs = utillib_vector_back(stack);
@@ -194,6 +223,8 @@ make_binary:
   utillib_json_object_push_back(object, "rhs", rhs);
   utillib_vector_push_back(stack, object);
   return 0;
+error:
+  return 1;
 }
 
 void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
@@ -249,6 +280,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
         goto error;
       }
       break;
+    default:
     case CL_OPG_ERR:
       goto error;
     }

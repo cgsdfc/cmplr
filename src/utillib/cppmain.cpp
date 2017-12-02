@@ -5,10 +5,9 @@
 
 int main() 
 {
-  utillib::vector strvector;
-  strvector.push_back("BatMan");
-  strvector.push_back("SuperMan");
-  auto json=strvector.tojson(utillib_json_string_create_adaptor);
-  json.pretty_print();
+  auto object=utillib::json_object_create();
+  object.pretty_print();
+  object.destroy();
+
 
 }
