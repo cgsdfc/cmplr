@@ -76,6 +76,9 @@ void cling_error_print(struct cling_error const *self);
 struct cling_error *cling_premature_error(struct utillib_token_scanner *input,
                                           size_t context);
 
+struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
+                                        char const *name, size_t context);
+
 struct cling_error *cling_expr_error(struct utillib_token_scanner *input);
 
 #endif /* CLING_ERROR_H */

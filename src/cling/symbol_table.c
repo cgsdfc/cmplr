@@ -53,7 +53,7 @@ void cling_symbol_table_enter_scope(struct cling_symbol_table *self) {
   ++self->scope;
 }
 
-void cling_symbol_table_exit_scope(struct cling_symbol_table *self) {
+void cling_symbol_table_leave_scope(struct cling_symbol_table *self) {
   assert(self->scope > 0);
   struct utillib_hashmap *old_scope = utillib_slist_front(&self->scope_table);
   utillib_slist_pop_front(&self->scope_table);

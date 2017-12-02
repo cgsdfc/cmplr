@@ -33,7 +33,7 @@
  * and its kind with its value.
  * A series of scopes linked in a list form the lexical scopes
  * for the language, which can be pushed as the parser enters
- * a new scope and popped as it exits a scope.
+ * a new scope and popped as it leaves a scope.
  * These hashmaps own the cling_symbol_entry and the name as key.
  */
 
@@ -61,6 +61,7 @@ struct cling_symbol_entry {
  *
  */
 UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
+UTILLIB_ENUM_ELEM_INIT(CL_UNDEF, 0)
 UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
 UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
 UTILLIB_ENUM_ELEM_INIT(CL_CONST, 4)
@@ -79,11 +80,11 @@ void cling_symbol_table_destroy(struct cling_symbol_table *self);
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_exit_scope
+ * \function cling_symbol_table_leave_scope
  * Disposes the current scope if it is not the global scope.
  * All the symbols of it are lost.
  */
-void cling_symbol_table_exit_scope(struct cling_symbol_table *self);
+void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
 
 /**
  * \function cling_symbol_table_insert

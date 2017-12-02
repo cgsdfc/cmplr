@@ -68,7 +68,7 @@ struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
   return self;
 }
 
-struct cling_error *cling_redined_error(struct utillib_token_scanner *input,
+struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
                                         char const *name, size_t context) {
   struct cling_error *self = cling_error_create(CL_EREDEFINED, input);
   /* Free needed */

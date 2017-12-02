@@ -100,7 +100,8 @@ static struct utillib_json_value *for_stmt(struct cling_rd_parser *self,
 
 static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
-               struct utillib_token_scanner *input);
+               struct utillib_token_scanner *input,
+               bool new_scope);
 
 static struct utillib_json_value *
 formal_arglist(struct cling_rd_parser *self,
@@ -131,9 +132,9 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
  * init/destroy
  */
 void cling_rd_parser_init(struct cling_rd_parser *self,
-                          struct cling_symbol_table *symbols,
+                          struct cling_symbol_table *symbol_table,
                           struct cling_entity_list *entities) {
-  self->symbols = symbols;
+  self->symbol_table = symbol_table;
   self->entities = entities;
   utillib_vector_init(&self->elist);
 }
@@ -181,8 +182,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
            size_t expected_initializer) {
 
   size_t code;
-  char const *str;
-  struct utillib_json_value *name;
+  char const * name;
   size_t initilizer;
   struct utillib_json_value *object, *array;
 
@@ -195,13 +195,15 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
       rd_parser_skip_target_init(self, SYM_IDEN);
       goto expected;
     }
-    str = utillib_token_scanner_semantic(input);
-    if (cling_symbol_table_exist_name(self->symbols, str, 0)) {
+    object = utillib_json_object_create_empty();
+    name = utillib_token_scanner_semantic(input);
+    if (cling_symbol_table_exist_name(self->symbol_table, name, 0)) {
       rd_parser_skip_target_init(self, SYM_IDEN);
       goto redefined;
     }
 
-    name = utillib_json_string_create(&str);
+    cling_symbol_table_reserve(self->symbol_table, name);
+    cling_ast_set_name(object, name);
     utillib_token_scanner_shiftaway(input);
 
     code = utillib_token_scanner_lookahead(input);
@@ -220,9 +222,6 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
     initilizer = utillib_token_scanner_semantic(input);
     utillib_token_scanner_shiftaway(input);
 
-    object = utillib_json_object_create_empty();
-    utillib_json_object_push_back(object, "identifier", name);
-    cling_symbol_table_reserve(self->symbols, name->as_ptr);
     utillib_json_object_push_back(object, "initilizer",
                                   utillib_json_size_t_create(&initilizer));
     utillib_json_array_push_back(array, object);
@@ -252,7 +251,7 @@ expected:
 
 redefined:
   utillib_vector_push_back(&self->elist,
-                           cling_redined_error(input, str, self->context));
+                           cling_redefined_error(input, name, self->context));
   goto skip;
 
 unexpected:
@@ -345,7 +344,7 @@ multiple_const_decl(struct cling_rd_parser *self,
   while (true) {
     object = single_const_decl(self, input);
     if (object != &utillib_json_null) {
-      cling_ast_insert_const(object, self->symbols);
+      cling_ast_insert_const(object, self->symbol_table);
       utillib_json_array_push_back(array, object);
     }
     code = utillib_token_scanner_lookahead(input);
@@ -364,13 +363,12 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
   size_t const context = SYM_VAR_DEF;
   struct utillib_json_value *array = utillib_json_array_create_empty();
   struct utillib_json_value *object = utillib_json_object_create_empty();
-  if (cling_symbol_table_exist_name(self->symbols, first_iden, 0)) {
+  if (cling_symbol_table_exist_name(self->symbol_table, first_iden, 0)) {
     rd_parser_skip_target_init(self, SYM_IDEN);
     goto redefined;
   }
-  utillib_json_object_push_back(object, "identifier",
-                                utillib_json_string_create(&first_iden));
-  cling_symbol_table_reserve(self->symbols, first_iden);
+  cling_ast_set_name(object, first_iden);
+  cling_symbol_table_reserve(self->symbol_table, first_iden);
   utillib_json_array_push_back(array, object);
 
   while (true) {
@@ -406,14 +404,13 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
         goto expected;
       }
       first_iden = utillib_token_scanner_semantic(input);
-      if (cling_symbol_table_exist_name(self->symbols, first_iden, 0)) {
+      if (cling_symbol_table_exist_name(self->symbol_table, first_iden, 0)) {
         rd_parser_skip_target_init(self, SYM_IDEN);
         goto redefined;
       }
       object = utillib_json_object_create_empty();
-      utillib_json_object_push_back(object, "identifier",
-                                    utillib_json_string_create(&first_iden));
-      cling_symbol_table_reserve(self->symbols, first_iden);
+      cling_ast_set_name(object, first_iden);
+      cling_symbol_table_reserve(self->symbol_table, first_iden);
       utillib_json_array_push_back(array, object);
       utillib_token_scanner_shiftaway(input);
       break;
@@ -429,7 +426,7 @@ expected:
   goto skip;
 redefined:
   utillib_vector_push_back(
-      &self->elist, cling_redined_error(input, first_iden, self->context));
+      &self->elist, cling_redefined_error(input, first_iden, self->context));
 
 skip:
   switch (self->expected) {
@@ -524,7 +521,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
     case SYM_SEMI:
       object = singel_var_decl(self, input, *type, *first_iden);
       free(*first_iden);
-      cling_ast_insert_variable(object, self->symbols);
+      cling_ast_insert_variable(object, self->symbol_table);
       utillib_json_array_push_back(array, object);
       code = utillib_token_scanner_lookahead(input);
       if (code != SYM_KW_INT && code != SYM_KW_CHAR)
@@ -687,6 +684,10 @@ formal_arglist(struct cling_rd_parser *self,
         goto expected_iden;
       }
       name = utillib_token_scanner_semantic(input);
+      if (cling_symbol_table_exist_name(self->symbol_table, name, 0)) {
+        goto redefined;
+      }
+      cling_symbol_table_reserve(self->symbol_table, name);
       cling_ast_set_name(object, name);
       utillib_token_scanner_shiftaway(input);
       utillib_json_array_push_back(array, object);
@@ -710,6 +711,11 @@ return_array:
   utillib_token_scanner_shiftaway(input);
   return array;
 
+redefined:
+  utillib_vector_push_back(&self->elist,
+      cling_redefined_error(input, name, SYM_NARGS));
+  goto skip;
+
 unexpected:
   utillib_vector_push_back(&self->elist,
                            cling_unexpected_error(input, code, self->context));
@@ -732,13 +738,13 @@ skip:
  * Nonull
  */
 static struct utillib_json_value *
-assign_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
+expr_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
   struct cling_opg_parser opg_parser;
   struct utillib_json_value *object, *expr;
 
-  object = cling_ast_statement(SYM_ASSIGN_STMT);
-  self->context = SYM_ASSIGN_STMT;
+  object = cling_ast_statement(SYM_EXPR_STMT);
+  self->context = SYM_EXPR_STMT;
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
 
   expr = cling_opg_parser_parse(&opg_parser, input);
@@ -1065,14 +1071,19 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     object = return_stmt(self, input);
     goto parse_semi;
   case SYM_LB:
-    object = composite_stmt(self, input);
+    /*
+     * Since we are entering a statement
+     * not a function,
+     * we need a new scope.
+     */
+    object = composite_stmt(self, input, true);
     goto return_object;
   case SYM_SEMI:
   return_null:
     utillib_token_scanner_shiftaway(input);
     return utillib_json_null_create();
   case SYM_IDEN:
-    object = assign_stmt(self, input);
+    object = expr_stmt(self, input);
     goto parse_semi;
   default:
     goto unexpected;
@@ -1231,7 +1242,8 @@ multiple_statement(struct cling_rd_parser *self,
  */
 static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
-               struct utillib_token_scanner *input) {
+               struct utillib_token_scanner *input,
+               bool new_scope) {
   size_t code;
   size_t type;
   char const *first_iden;
@@ -1239,8 +1251,10 @@ composite_stmt(struct cling_rd_parser *self,
 
   utillib_token_scanner_shiftaway(input);
   object = cling_ast_statement(SYM_COMP_STMT);
-
   code = utillib_token_scanner_lookahead(input);
+  if(new_scope)
+    cling_symbol_table_enter_scope(self->symbol_table);
+
   if (code == SYM_KW_CONST) {
     const_decls = multiple_const_decl(self, input);
     utillib_json_object_push_back(object, "const_decls", const_decls);
@@ -1261,6 +1275,8 @@ composite_stmt(struct cling_rd_parser *self,
   } else {
     utillib_token_scanner_shiftaway(input);
   }
+
+  cling_symbol_table_leave_scope(self->symbol_table);
   return object;
 }
 
@@ -1379,8 +1395,11 @@ function_args_body(struct cling_rd_parser *self,
     rd_parser_skip_target_init(self, SYM_LB);
     goto expected_lb;
   }
-  comp_stmt = composite_stmt(self, input);
+  cling_symbol_table_enter_scope(self->symbol_table);
+  cling_ast_insert_formal_arg(arglist, self->symbol_table);
+  comp_stmt = composite_stmt(self, input, false);
   utillib_json_object_push_back(object, "comp", comp_stmt);
+  cling_symbol_table_leave_scope(self->symbol_table);
 
 return_object:
   return object;
@@ -1450,7 +1469,12 @@ expected_lp:
   }
 parse_comp:
   utillib_token_scanner_shiftaway(input);
-  comp = composite_stmt(self, input);
+  /*
+   * Since the arglist is missing totally,
+   * we directly enter a new scope in composite_stmt
+   * so let it do it.
+   */
+  comp = composite_stmt(self, input, true);
   utillib_json_object_push_back(object, "comp", comp);
   return object;
 }

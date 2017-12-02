@@ -20,8 +20,11 @@
 */
 #include "ast.h"
 #include "symbols.h"
+#include "rd_parser.h"
+#include "symbol_table.h"
 
 #include <utillib/json_foreach.h>
+
 /**
  * \function cling_ast_insert_const
  * Inserts a single_const_decl into the symbol_table.
@@ -31,7 +34,7 @@
  */
 
 void cling_ast_insert_const(struct utillib_json_value *self,
-                            struct cling_symbol_table *symbols) {
+                            struct cling_symbol_table *symbol_table) {
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
   struct utillib_json_value *const_defs =
       utillib_json_object_at(self, "const_defs");
@@ -39,15 +42,15 @@ void cling_ast_insert_const(struct utillib_json_value *self,
   int retv;
 
   UTILLIB_JSON_ARRAY_FOREACH(obj, const_defs) {
-    struct utillib_json_value *identifier =
-        utillib_json_object_at(obj, "identifier");
-    assert(identifier);
-    cling_symbol_table_update(symbols, kind, identifier->as_ptr, obj);
+    struct utillib_json_value *name =
+        utillib_json_object_at(obj, "name");
+    assert(name);
+    cling_symbol_table_update(symbol_table, kind, name->as_ptr, obj);
   }
 }
 
 void cling_ast_insert_variable(struct utillib_json_value *self,
-                               struct cling_symbol_table *symbols) {
+                               struct cling_symbol_table *symbol_table) {
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
   struct utillib_json_value *var_defs =
       utillib_json_object_at(self, "var_defs");
@@ -55,25 +58,43 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
   int retv;
 
   UTILLIB_JSON_ARRAY_FOREACH(obj, var_defs) {
-    struct utillib_json_value *identifier =
-        utillib_json_object_at(obj, "identifier");
-    assert(identifier);
+    struct utillib_json_value *name =
+        utillib_json_object_at(obj, "name");
+    assert(name);
     cling_symbol_table_update(
-        symbols, utillib_json_object_at(obj, "extend") ? kind | CL_ARRAY : kind,
-        identifier->as_ptr, obj);
+        symbol_table, utillib_json_object_at(obj, "extend") ? kind | CL_ARRAY : kind,
+        name->as_ptr, obj);
   }
 }
 
-void cling_ast_add_op(struct utillib_json_value *self, size_t op) {
+/*
+ * Inserts arglist into the current scope of the function.
+ */
+void cling_ast_insert_formal_arg(struct utillib_json_value *self,
+    struct cling_symbol_table * symbol_table) {
+  UTILLIB_JSON_ARRAY_FOREACH(object, self) {
+    struct utillib_json_value * type=utillib_json_object_at(object, "type");
+    int kind=type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR;
+    struct utillib_json_value * name=utillib_json_object_at(object, "name");
+    cling_symbol_table_update(symbol_table, kind, name->as_ptr, object);
+  }
+}
+
+void cling_ast_set_op(struct utillib_json_value *self, size_t op) {
   utillib_json_object_push_back(self, "op", utillib_json_size_t_create(&op));
 }
 
-void cling_ast_add_lhs(struct utillib_json_value *self,
+void cling_ast_set_opstr(struct utillib_json_value *self, size_t op) {
+  char const * opstr=cling_symbol_kind_tostring(op);
+  utillib_json_object_push_back(self, "opstr", utillib_json_string_create(&opstr));
+}
+
+void cling_ast_set_lhs(struct utillib_json_value *self,
                        struct utillib_json_value *lhs) {
   utillib_json_object_push_back(self, "lhs", lhs);
 }
 
-void cling_ast_add_rhs(struct utillib_json_value *self,
+void cling_ast_set_rhs(struct utillib_json_value *self,
                        struct utillib_json_value *rhs) {
   utillib_json_object_push_back(self, "rhs", rhs);
 }
@@ -105,3 +126,4 @@ void cling_ast_set_type(struct utillib_json_value *self, size_t type) {
   utillib_json_object_push_back(self, "type",
                                 utillib_json_size_t_create(&type));
 }
+

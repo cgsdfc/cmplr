@@ -1,0 +1,88 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
+
+#include "rd_parser.h"
+#include "scanner.h"
+#include "symbol_table.h"
+#include <utillib/print.h>
+#include <stdlib.h>
+
+static struct utillib_token_scanner cling_scanner;
+static struct cling_rd_parser cling_parser;
+static struct cling_symbol_table cling_symbol_table;
+
+
+static void do_parse(FILE *file)
+{
+  cling_scanner_init(&cling_scanner, file);
+  cling_symbol_table_init(&cling_symbol_table);
+<<<<<<< HEAD
+  cling_rd_parser_init(&cling_parser, &cling_symbol_table, NULL);
+  cling_rd_parser_parse(&cling_parser, &cling_scanner);
+=======
+  cling_rd_parser_init(&cling_parser, &cling_symbol_table, &cling_entities);
+  cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
+
+  /* json_ast = cling_opg_parser_parse(&opg_parser, &cling_scanner); */
+  json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
+  if (!json_ast) {
+    goto cleanup;
+  }
+  utillib_json_pretty_print(json_ast, stdout);
+/* json_value=cling_symbol_table_json_object_create(&cling_symbol_table); */
+/* utillib_json_pretty_print(json_value, stdout); */
+
+cleanup:
+>>>>>>> newParser
+  cling_rd_parser_report_errors(&cling_parser);
+  cling_rd_parser_destroy(&cling_parser);
+  cling_symbol_table_destroy(&cling_symbol_table);
+  cling_scanner_destroy(&cling_scanner);
+}
+
+int main(int argc, char *argv[]) {
+
+  char * input_path;
+  char * output_path;
+
+  /*
+   * PREPARE INPUT OUTPUT FILES
+   */
+
+  puts("请输入源文件的绝对路径，回车结束：");
+  scanf("%ms", &input_path);
+  FILE *file=fopen(input_path, "r");
+
+  if (!file) {
+    utillib_error_printf("没有这个文件或目录：%s\n",input_path);
+    exit(2);
+  }
+  do_parse(file);
+
+  /*
+   * PRINT A BRIEF SUMMARY TO THE USER
+   */
+
+  puts("\n");
+  puts("输入文件是：");
+  puts(input_path);
+  return 0;
+}

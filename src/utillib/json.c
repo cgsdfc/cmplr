@@ -471,3 +471,9 @@ struct utillib_json_value *utillib_json_value_copy(struct utillib_json_value con
   }
 }
 
+size_t utillib_json_array_size(struct utillib_json_value const *self)
+{
+  json_value_check_kind(self, UT_JSON_ARRAY);
+  return utillib_vector_size(_JSON_ARRAY(self));
+}
+

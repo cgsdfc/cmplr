@@ -287,11 +287,9 @@ make_binary:
   lhs = utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   object = utillib_json_object_create_empty();
-  opstr = cling_symbol_kind_tostring(op);
-  utillib_json_object_push_back(object, "op",
-                                utillib_json_string_create(&opstr));
-  utillib_json_object_push_back(object, "lhs", lhs);
-  utillib_json_object_push_back(object, "rhs", rhs);
+  cling_ast_set_opstr(object, op);
+  cling_ast_set_lhs(object, lhs);
+  cling_ast_set_rhs(object, rhs);
   utillib_vector_push_back(stack, object);
   return 0;
 error:
