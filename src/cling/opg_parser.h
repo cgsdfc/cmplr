@@ -30,8 +30,16 @@
 
 /**
  * \struct cling_opg_parser
- * This parser will parse every
- * occurance of EXPRESSION.
+ * Ths language construct this parser can recognize is as follow:
+ * Chinese Version:
+ * ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
+ * ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’ 
+ *
+ * factor : iden | iden [ expr ] | integer | char | ( expr ) | call_expr
+ * call_expr : iden ( ) | iden (expr {, expr})
+ * expr : cond_expr = cond_expr 
+ * cond_expr : add_expr mulop add_expr
+ * add_expr : factor addop factor
  */
 
 struct cling_opg_parser {
@@ -47,8 +55,8 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self);
 
 /**
  * Parses the expression regarding `eof_symbol'.
- * If failed, `&utillib_json_null' is returned
- * and the last lookahead symbol is kept in 
+ * If failed, `null' is returned
+ * and the last lookahead symbol is kept in
  * `last_error'.
  * If succeeded, the tree is popped off the stack
  * and both stacks will be empty.
@@ -62,7 +70,4 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
  */
 void cling_opg_parser_reinit(struct cling_opg_parser *self, size_t eof_symbol);
 
-/* ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
- */
-/* ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’ */
 #endif /* CLING_OPG_PARSER */

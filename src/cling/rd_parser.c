@@ -1157,7 +1157,7 @@ parse_stmt:
   return object;
 
 expected_lp:
-  rd_parser_expected_error(self, input , code);
+  rd_parser_expected_error(self, input, code);
   self->tars[0] = SYM_SEMI;
   self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
@@ -1168,7 +1168,7 @@ expected_lp:
   }
 
 expected_init:
-  rd_parser_expected_error(self, input , opg_parser.last_error);
+  rd_parser_expected_error(self, input, opg_parser.last_error);
   self->tars[0] = SYM_SEMI;
   self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
@@ -1178,7 +1178,7 @@ expected_init:
     goto parse_stmt;
   }
 expected_cond:
-  rd_parser_expected_error(self, input , opg_parser.last_error);
+  rd_parser_expected_error(self, input, opg_parser.last_error);
   self->tars[0] = SYM_SEMI;
   self->tars[1] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
@@ -1188,14 +1188,14 @@ expected_cond:
     goto parse_stmt;
   }
 expected_step:
-  rd_parser_expected_error(self, input ,opg_parser.last_error);
+  rd_parser_expected_error(self, input, opg_parser.last_error);
   self->tars[0] = SYM_RP;
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto parse_stmt;
   }
 expected_rp:
-  rd_parser_expected_error(self, input ,code);
+  rd_parser_expected_error(self, input, code);
   goto parse_stmt;
 }
 
