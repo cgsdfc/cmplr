@@ -20,8 +20,7 @@
 */
 
 #include "opg_parser.h"
-#include "error.h"
-#include "ir.h"
+#include "ast.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -29,8 +28,12 @@
 enum { CL_OPG_GT, CL_OPG_LT, CL_OPG_EQ, CL_OPG_ERR };
 
 static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
-  self->eof_symbol=eof_symbol;
-  self->last_error = UT_SYM_EOF;
+  /*
+   * We do not want eof_symbol to conflict
+   * with any other one. Simply use negative
+   * to distinguish both.
+   */
+  self->eof_symbol=-eof_symbol;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   utillib_vector_push_back(&self->opstack, self->eof_symbol);
@@ -49,7 +52,7 @@ static bool opg_parser_is_relop(size_t op) {
  * \return If it is `CL_OPG_GT', we should reduce.
  * If it is `CL_OPG_LT', we should shift rhs into stack.
  * If it is `CL_OPG_EQ', we should pop the stack and shift off lookahead.
- * If it is `CL_OPG_EQ', we hit an error.
+ * If it is `CL_OPG_ERR', we hit an error.
  */
 static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
                                  size_t rhs) {
@@ -63,12 +66,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
   if (rhs == eof_symbol)
     return CL_OPG_GT;
 
-  if (lhs == SYM_IDEN && rhs == SYM_LP)
-    return CL_OPG_GT;
-
-  if (lhs == SYM_LP && rhs == SYM_RP)
-    return CL_OPG_EQ;
-
   if (lhs == SYM_LP || rhs == SYM_LP)
     return CL_OPG_LT;
 
@@ -79,11 +76,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
     return CL_OPG_LT;
 
   if (lhs == SYM_RK || rhs == SYM_RK)
-    return CL_OPG_GT;
-
-  if (lhs == SYM_COMMA)
-    return CL_OPG_LT;
-  if (rhs == SYM_COMMA)
     return CL_OPG_GT;
 
   if (rhs == SYM_EQ)
@@ -160,15 +152,18 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
   }
 
   switch (stacktop) {
+  case SYM_RP:
+    if (utillib_vector_size(opstack) < 2)
+      return 1;
+    utillib_vector_pop_back(opstack);
+    utillib_vector_pop_back(opstack);
+    return 0;
   case SYM_RK:
     if (utillib_vector_size(opstack) < 2)
       return 1;
     utillib_vector_pop_back(opstack);
     utillib_vector_pop_back(opstack);
     goto make_binary;
-  case SYM_COMMA:
-    /* Add arg to arglist */
-    goto make_arglist;
   case SYM_IDEN:
     utillib_vector_pop_back(opstack);
     return 0;
@@ -179,53 +174,9 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
   case SYM_EQ: /* Assignment Op */
     goto make_binary;
   default:
+    puts("opg_parser_reduce something");
     return 1;
   }
-make_arglist:
-  /*
-   * Tricky part : We collect the arguments
-   * by popping both stack with SYM_COMMA in
-   * the opstack as indicator.
-   * When we hit SYM_LP, we collect the **first**
-   * argument and stop.
-  lhs=utillib_json_array_create_empty();
-  while(true) {
-    stacktop=utillib_vector_back(opstack);
-    if (stacktop == SYM_LP) {
-      break;
-    }
-    if (stacktop != SYM_COMMA)
-      return 1;
-    if (utillib_vector_size(stack) < 2) 
-      return 1;
-    rhs=utillib_vector_back(stack);
-    utillib_vector_pop_back(stack);
-    utillib_json_array_push_back(lhs, rhs);
-    utillib_vector_pop_back(opstack);
-  }
-  /*
-   * Tricky part : if it is a function call,
-   * then we are sure the layout of the opstack
-   * should be `foo(', so we take the `foo' and
-   * reduce our node, but keep the `(' on the opstack
-   * so that the following `)' can be cancel this `('
-   * because their equality. The op is set to `SYM_RP'.
-   * Notes, the arguments are is reversed order.
-   */
-  assert(stacktop == SYM_LP);
-  utillib_vector_pop_back(opstack);
-  if (utillib_vector_size(opstack) < 1 ||
-      utillib_vector_size(stack) < 1)
-    return 1;
-  object=utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "op",
-      utillib_json_size_t_create(&stacktop));
-  rhs=lhs;
-  utillib_vector_pop_back(stack);
-  utillib_json_object_push_back(object, "lhs", lhs);
-  utillib_json_object_push_back(object, "rhs", rhs);
-  utillib_vector_push_back(stack, object);
-  return 0;
 
 make_binary:
   utillib_vector_pop_back(opstack);
