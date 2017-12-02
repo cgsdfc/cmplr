@@ -57,16 +57,13 @@ struct cling_error *cling_error_create(int kind,
 void cling_error_destroy(struct cling_error *self);
 
 struct cling_error *cling_expected_error(struct utillib_token_scanner *input,
-                                         size_t expected, size_t actual,
-                                         size_t context);
+                                         size_t expected, size_t context);
 
 struct cling_error *cling_noargs_error(struct utillib_token_scanner *input,
                                        char const *name);
 
 struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
-                                           size_t unexpected, size_t context);
-struct cling_error *cling_redined_error(struct utillib_token_scanner *input,
-                                        char const *name, size_t context);
+                                           size_t context);
 
 struct cling_error *cling_vague_error(struct utillib_token_scanner *input,
                                       char const *errmsg);

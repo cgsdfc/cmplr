@@ -44,26 +44,18 @@ void cling_error_destroy(struct cling_error *self) {
 }
 
 struct cling_error *cling_expected_error(struct utillib_token_scanner *input,
-                                         size_t expected, size_t actual,
-                                         size_t context) {
+                                         size_t expected, size_t context) {
   struct cling_error *self = cling_error_create(CL_EEXPECT, input);
   self->einfo[0] = cling_symbol_cast(expected);
-  self->einfo[1] = cling_symbol_cast(actual);
+  self->einfo[1] = cling_symbol_cast(utillib_token_scanner_lookahead(input));
   self->einfo[2] = cling_symbol_cast(context);
   return self;
 }
 
-struct cling_error *cling_noargs_error(struct utillib_token_scanner *input,
-                                       char const *name) {
-  struct cling_error *self = cling_error_create(CL_ENOARGS, input);
-  self->einfo[0] = name;
-  return self;
-}
-
 struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
-                                           size_t unexpected, size_t context) {
+                                            size_t context) {
   struct cling_error *self = cling_error_create(CL_EUNEXPECTED, input);
-  self->einfo[0] = cling_symbol_cast(unexpected);
+  self->einfo[0] = cling_symbol_cast(utillib_token_scanner_lookahead(input));
   self->einfo[1] = cling_symbol_cast(context);
   return self;
 }

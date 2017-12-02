@@ -105,6 +105,12 @@ void cling_ast_set_rhs(struct utillib_json_value *self,
   utillib_json_object_push_back(self, "rhs", rhs);
 }
 
+void cling_ast_set_extend(struct utillib_json_value *self,
+    size_t extend) {
+  utillib_json_object_push_back(self, "extend", utillib_json_size_t_create(&extend));
+}
+
+
 struct utillib_json_value *cling_ast_constant(size_t code,
                                               void const *semantic) {
   switch (code) {
