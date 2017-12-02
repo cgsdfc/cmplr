@@ -324,7 +324,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   while (true) {
     lookahead = utillib_token_scanner_lookahead(input);
     stacktop = utillib_vector_back(opstack);
-    if (stacktop == eof_symbol && lookahead == eof_symbol) {
+    if (stacktop == eof_symbol && lookahead == -eof_symbol) {
       break;
     }
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
