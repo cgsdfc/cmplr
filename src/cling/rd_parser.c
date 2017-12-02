@@ -287,9 +287,8 @@ single_const_decl(struct cling_rd_parser *self,
     goto error;
   }
   object = utillib_json_object_create_empty();
+  cling_ast_set_type(object, code);
   utillib_token_scanner_shiftaway(input);
-  utillib_json_object_push_back(object, "type",
-                                utillib_json_size_t_create(&code));
   utillib_json_object_push_back(
       object, "const_defs", /* expected_initializer */
       const_defs(self, input, code == SYM_KW_INT ? SYM_UINT : SYM_CHAR));
@@ -471,8 +470,7 @@ singel_var_decl(struct cling_rd_parser *self,
   size_t code;
   struct utillib_json_value *object = utillib_json_object_create_empty();
 
-  utillib_json_object_push_back(object, "type",
-                                utillib_json_size_t_create(&type));
+  cling_ast_set_type(object, type);
   utillib_json_object_push_back(object, "var_defs",
                                 var_defs(self, input, first_iden));
   code = utillib_token_scanner_lookahead(input);
@@ -566,8 +564,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   self->context = SYM_SCANF_STMT;
   utillib_token_scanner_shiftaway(input);
   object = utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "type",
-                                utillib_json_size_t_create(&self->context));
+  cling_ast_set_type(object, SYM_SCANF_STMT);
   array = utillib_json_array_create_empty();
   utillib_json_object_push_back(object, "arglist", array);
   code = utillib_token_scanner_lookahead(input);
@@ -1297,8 +1294,7 @@ printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   cling_opg_parser_init(&opg_parser, SYM_RP);
   array = utillib_json_array_create_empty();
   object = utillib_json_object_create_empty();
-  utillib_json_object_push_back(object, "type",
-                                utillib_json_size_t_create(&self->context));
+  cling_ast_set_type(object, SYM_PRINTF_STMT);
   utillib_json_object_push_back(object, "arglist", array);
 
   utillib_token_scanner_shiftaway(input);

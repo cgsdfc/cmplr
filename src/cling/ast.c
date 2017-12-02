@@ -80,6 +80,12 @@ void cling_ast_insert_formal_arg(struct utillib_json_value *self,
   }
 }
 
+void cling_ast_insert_function(struct utillib_json_value *self,
+    struct cling_symbol_table * symbol_table) {
+
+
+}
+
 void cling_ast_set_op(struct utillib_json_value *self, size_t op) {
   utillib_json_object_push_back(self, "op", utillib_json_size_t_create(&op));
 }
