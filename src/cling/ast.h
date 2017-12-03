@@ -30,10 +30,12 @@
  * A lot can still be done on it.
  */
 void cling_ast_insert_const(struct utillib_json_value *self,
-                            struct cling_symbol_table *symbols);
+                            struct cling_symbol_table *symbols,
+                            int scope_kind);
 
 void cling_ast_insert_variable(struct utillib_json_value *self,
-                               struct cling_symbol_table *symbols);
+                               struct cling_symbol_table *symbols,
+                               int scope_kind);
 
 void cling_ast_insert_arglist(struct utillib_json_value *self,
                                struct cling_symbol_table *symbols);

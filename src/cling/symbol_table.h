@@ -103,12 +103,12 @@ void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
 void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_insert
- * Inserts an entry (name, kind, value) into the scope
+ * \function cling_symbol_table_update
+ * updates an entry (name, kind, value) into the scope
  * \param scope_kind should be either CL_GLOBAL or CL_LOCAL.
- * Notes It inserts the entry anyway.
+ * Notes It updates the entry anyway.
  */
-void cling_symbol_table_insert(struct cling_symbol_table *self, 
+void cling_symbol_table_update(struct cling_symbol_table *self, 
                               char const *name,
                               int kind,
                               struct utillib_json_value *value,

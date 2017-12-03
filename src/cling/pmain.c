@@ -31,9 +31,6 @@ static struct utillib_token_scanner cling_scanner;
 static struct cling_rd_parser cling_parser;
 static struct cling_symbol_table cling_symbol_table;
 static struct utillib_json_value *json_ast;
-static struct cling_entity_list cling_entities;
-static struct cling_opg_parser opg_parser;
-static struct utillib_json_value *json_value;
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -42,26 +39,19 @@ int main(int argc, char *argv[]) {
   FILE *file = fopen(argv[1], "r");
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
-  cling_rd_parser_init(&cling_parser, &cling_symbol_table, &cling_entities);
-  cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
+  cling_rd_parser_init(&cling_parser, &cling_symbol_table, NULL);
 
-  /* json_ast = cling_opg_parser_parse(&opg_parser, &cling_scanner); */
   json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
   if (!json_ast) {
     goto cleanup;
   }
   utillib_json_pretty_print(json_ast, stdout);
-/* json_value=cling_symbol_table_json_object_create(&cling_symbol_table); */
-/* utillib_json_pretty_print(json_value, stdout); */
 
 cleanup:
   cling_rd_parser_report_errors(&cling_parser);
   if (json_ast)
     utillib_json_value_destroy(json_ast);
-  if (json_value)
-    utillib_json_value_destroy(json_value);
 
-  cling_opg_parser_destroy(&opg_parser);
   cling_rd_parser_destroy(&cling_parser);
   cling_symbol_table_destroy(&cling_symbol_table);
   cling_scanner_destroy(&cling_scanner);

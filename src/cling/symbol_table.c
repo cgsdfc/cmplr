@@ -26,12 +26,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct cling_symbol_entry *
+symbol_entry_create(int kind, struct utillib_json_value *value) {
+  struct cling_symbol_entry *new_entry = malloc(sizeof *new_entry);
+  new_entry->kind = kind;
+  new_entry->value = value;
+  return new_entry;
+}
+
+static void symbol_entry_destroy(struct cling_symbol_entry *self) {
+  utillib_json_value_destroy(self->value);
+  free(self);
+}
+
 static const struct utillib_hashmap_callback symbol_hash_callback = {
     .hash_handler = mysql_strhash, .compare_handler = strcmp,
 };
 
+static struct utillib_hashmap * symbol_table_scope_create(void) {
+  struct utillib_hashmap *new_scope = malloc(sizeof *new_scope);
+  utillib_hashmap_init(new_scope, &symbol_hash_callback);
+  return new_scope;
+}
+
 static void symbol_table_scope_destroy(struct utillib_hashmap *self) {
-  utillib_hashmap_destroy_owning(self, free, free);
+  utillib_hashmap_destroy_owning(self, free, symbol_entry_destroy);
   free(self);
 }
 
@@ -42,13 +61,12 @@ void cling_symbol_table_init(struct cling_symbol_table *self) {
 }
 
 void cling_symbol_table_destroy(struct cling_symbol_table *self) {
-  utillib_hashmap_destroy_owning(&self->global_table, free, free);
+  utillib_hashmap_destroy_owning(&self->global_table, free, symbol_entry_destroy);
   utillib_slist_destroy_owning(&self->scope_table, symbol_table_scope_destroy);
 }
 
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self) {
-  struct utillib_hashmap *new_scope = malloc(sizeof *new_scope);
-  utillib_hashmap_init(new_scope, &symbol_hash_callback);
+  struct utillib_hashmap *new_scope=symbol_table_scope_create();
   utillib_slist_push_front(&self->scope_table, new_scope);
   ++self->scope;
 }
@@ -57,17 +75,8 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self) {
   assert(self->scope > 0);
   struct utillib_hashmap *old_scope = utillib_slist_front(&self->scope_table);
   utillib_slist_pop_front(&self->scope_table);
-  utillib_hashmap_destroy(old_scope);
-  free(old_scope);
+  symbol_table_scope_destroy(old_scope);
   --self->scope;
-}
-
-static struct cling_symbol_entry *
-symbol_entry_create(int kind, struct utillib_json_value *value) {
-  struct cling_symbol_entry *new_entry = malloc(sizeof *new_entry);
-  new_entry->kind = kind;
-  new_entry->value = value;
-  return new_entry;
 }
 
 static struct cling_symbol_entry *
@@ -92,7 +101,7 @@ static bool symbol_table_lexical_exist_name(struct cling_symbol_table const *sel
   return utillib_hashmap_exist_key(&self->global_table, name);
 }
 
-void cling_symbol_table_insert(struct cling_symbol_table *self, 
+void cling_symbol_table_update(struct cling_symbol_table *self, 
                               char const *name,int kind,
                               struct utillib_json_value *value,
                               int scope_kind) {
@@ -110,7 +119,7 @@ void cling_symbol_table_insert(struct cling_symbol_table *self,
     assert(false);
   }
   should_be_NULL=utillib_hashmap_update(scope,
-      strdup(name), symbol_entry_create(kind, value));
+      name, symbol_entry_create(kind, value));
   assert (should_be_NULL == NULL);
 }
 

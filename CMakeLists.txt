@@ -148,19 +148,19 @@ add_library(cling
   )	
 target_link_libraries(cling utillib)
 
-add_executable(cling_test
-  ./src/cling/test/scanner.c
-  ./src/cling/test/symbol_table.c
-  ./src/cling/test/driver.c
-  )
-target_link_libraries(cling_test cling)
-add_test(Cling_Test cling_test)
-add_executable(cling-scanner ./src/cling/smain.c)
-target_link_libraries(cling-scanner cling)
+# add_executable(cling_test
+#   ./src/cling/test/scanner.c
+#   ./src/cling/test/symbol_table.c
+#   ./src/cling/test/driver.c
+#   )
+# target_link_libraries(cling_test cling)
+# add_test(Cling_Test cling_test)
+# add_executable(cling-scanner ./src/cling/smain.c)
+# target_link_libraries(cling-scanner cling)
 add_executable(cling-parser ./src/cling/pmain.c)
 target_link_libraries(cling-parser cling)
-add_library(cling++ ./src/cling/cling.cpp)
-target_link_libraries(cling++ cling utillib++)
-add_executable(clingcppmain ./src/cling/cppmain.cpp)
-target_link_libraries(clingcppmain cling++)
+# add_library(cling++ ./src/cling/cling.cpp)
+# target_link_libraries(cling++ cling utillib++)
+# add_executable(clingcppmain ./src/cling/cppmain.cpp)
+# target_link_libraries(clingcppmain cling++)
 
