@@ -398,7 +398,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     }
   }
 error:
-  return utillib_json_null_create();
+  return NULL;
 }
 
 /*

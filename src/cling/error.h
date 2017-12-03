@@ -27,12 +27,14 @@
 UTILLIB_ENUM_BEGIN(cling_error_kind)
 UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
 UTILLIB_ENUM_ELEM(CL_EEXPECT)
-UTILLIB_ENUM_ELEM(CL_ENOARGS)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
 UTILLIB_ENUM_ELEM(CL_EREDEFINED)
 UTILLIB_ENUM_ELEM(CL_EVAGUE)
 UTILLIB_ENUM_ELEM(CL_EEXPR)
 UTILLIB_ENUM_ELEM(CL_EPREMATURE)
+
+UTILLIB_ENUM_ELEM(CL_EUNDEFINED)
+UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
 UTILLIB_ENUM_END(cling_error_kind);
 
 struct cling_error {
@@ -41,14 +43,6 @@ struct cling_error {
   size_t col;
   char const *einfo[CLING_ERROR_EMAX];
 };
-
-/**
- * \function cling_error
- * Creates an error recording the kind of
- * the error, the location in the source file.
- */
-struct cling_error *cling_error_create(int kind,
-                                       struct utillib_token_scanner *input);
 
 /**
  * \function cling_error_destroy
@@ -77,5 +71,11 @@ struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
                                         char const *name, size_t context);
 
 struct cling_error *cling_expr_error(struct utillib_token_scanner *input);
+
+struct cling_error *cling_undefined_name_error(struct utillib_token_scanner *input,
+    char const *name, size_t context);
+
+struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
+    char const *name, size_t context);
 
 #endif /* CLING_ERROR_H */

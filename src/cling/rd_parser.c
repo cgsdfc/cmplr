@@ -256,6 +256,7 @@ skip:
 
 /**
  * Lookahead: SYM_KW_CONST
+ * Maybenull
  */
 static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self,
@@ -297,13 +298,13 @@ skip:
   switch (rd_parser_skipto(self, input)) {
     case SYM_SEMI:
       utillib_token_scanner_shiftaway(input);
-      return utillib_json_null_create();
+      return NULL;
     case SYM_KW_CONST:
       /*
        * This const is deliberately left for
        * `multiple_const_decl' to parse.
        */
-      return utillib_json_null_create();
+      return NULL;
   }
 }
 
@@ -320,7 +321,7 @@ multiple_const_decl(struct cling_rd_parser *self,
   struct utillib_json_value *object;
   while (true) {
     object = single_const_decl(self, input, scope_kind);
-    if (object != &utillib_json_null) {
+    if (object != NULL) {
       cling_ast_insert_const(object, self->symbol_table, scope_kind);
       utillib_json_array_push_back(array, object);
     }
@@ -436,8 +437,8 @@ expected:
 
 /**
  * Lookahead SYM_KW_INT | SYM_KW_CHAR SYM_IDEN
+ * Nonull
  */
-
 static struct utillib_json_value *
 singel_var_decl(struct cling_rd_parser *self,
                 struct utillib_token_scanner *input, size_t type,
@@ -506,7 +507,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
        * This object has as least one first_iden
        * so it should not be null.
        */
-      assert (object != &utillib_json_null);
+      assert (object != NULL);
       free(*first_iden);
       /*
        * These names were checked in var_defs.
@@ -541,7 +542,7 @@ skip:
 
 /**
  * Lookahead SYM_KW_SCANF
- * Nonull
+ * Maybenull if **any** error happened.
  */
 static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
@@ -549,7 +550,13 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   char const *name;
   struct utillib_json_value *array;
   struct utillib_json_value *object;
-  struct cling_error * error;
+  /*
+   * This error is also used to indicate whether
+   * an error ever happened. After all, what is
+   * the need for an errored branch to be left
+   * in the ast?
+   */
+  struct cling_error * error=NULL;
 
   const size_t context = SYM_SCANF_STMT;
   utillib_token_scanner_shiftaway(input);
@@ -561,7 +568,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 
   if (code != SYM_LP) {
     error=cling_expected_error(input, SYM_LP, context);
-    goto expected_lp;
+    goto skip;
   }
   utillib_token_scanner_shiftaway(input);
 
@@ -569,14 +576,27 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     code = utillib_token_scanner_lookahead(input);
     if (code != SYM_IDEN) {
      error= cling_expected_error(input, SYM_IDEN, context);
-      goto expected_iden;
+      goto skip;
     }
   before_iden:
     name = utillib_token_scanner_semantic(input);
-    utillib_json_array_push_back(array, utillib_json_string_create(&name));
+    switch(cling_ast_check_assignable(name, self->symbol_table)) {
+    case CL_EUNDEFINED:
+      rd_parser_error_push_back(self,
+          error=cling_undefined_name_error(input, name, context));
+      break;
+    case CL_ENOTLVALUE:
+      rd_parser_error_push_back(self,
+          error=cling_not_lvalue_error(input, name, context));
+      break;
+    case 0:
+      utillib_json_array_push_back(array, utillib_json_string_create(&name));
+      break;
+    } 
     utillib_token_scanner_shiftaway(input);
     code = utillib_token_scanner_lookahead(input);
     switch (code) {
+before_comma:
     case SYM_COMMA:
       utillib_token_scanner_shiftaway(input);
       break;
@@ -585,50 +605,26 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
       goto return_object;
     default:
       error=cling_unexpected_error(input, context);
-      goto unexpected;
+      goto skip;
     }
   }
 return_object:
-  return object;
+  if (!error)
+    return object;
+  utillib_json_value_destroy(object);
+  return NULL;
 
-expected_lp:
-  /*
-   * If we are missing '(' after `scanf', skip
-   * to ';' directly and return null if succeed.
-   */
-  rd_parser_error_push_back(self, error);
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
-  switch (rd_parser_skipto(self, input)) {
-  case SYM_SEMI:
-    utillib_token_scanner_shiftaway(input);
-    return utillib_json_null_create();
-  }
-expected_iden:
-  /*
-   * If we are missing iden after '(' or ',',
-   * try to skip to the next iden or ';'.
-   */
+skip:
   rd_parser_error_push_back(self, error);
   rd_parser_skip_target_init(self);
   self->tars[0] = SYM_IDEN;
   self->tars[1] = SYM_SEMI;
+  self->tars[2]=SYM_COMMA;
   switch (rd_parser_skipto(self, input)) {
+  case SYM_COMMA:
+    goto before_comma;
   case SYM_IDEN:
     goto before_iden;
-  case SYM_SEMI:
-    goto return_object;
-  }
-unexpected:
-  /*
-   * If we see an unexpected token after
-   * iden, we handle it by skipping to a semi,
-   * since the scanf_stmt is incomplete.
-   */
-  rd_parser_skip_target_init(self);
-  rd_parser_error_push_back(self, error);
-  self->tars[0] = SYM_SEMI;
-  switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto return_object;
   }
@@ -737,7 +733,7 @@ expr_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
 
   expr = cling_opg_parser_parse(&opg_parser, input);
-  if (expr == &utillib_json_null) {
+  if (expr == NULL) {
     goto expected_expr;
   }
   utillib_json_object_push_back(object, "expr", expr);
@@ -792,7 +788,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
      * If the expr is null, it will be absent.
      */
     expr=cling_opg_parser_parse(&opg_parser, input);
-    if (expr != &utillib_json_null) 
+    if (expr != NULL) 
       utillib_json_object_push_back(object, "expr", expr);
     goto return_object;
   default:
@@ -847,7 +843,7 @@ lp_expr_rp(struct cling_rd_parser *self,
     utillib_token_scanner_shiftaway(input);
   }
   expr = cling_opg_parser_parse(&opg_parser, input);
-  if (expr == &utillib_json_null) {
+  if (expr == NULL) {
     rd_parser_error_push_back(self,
         cling_expected_error(input, SYM_EXPR, context));
     goto skip;
@@ -1005,7 +1001,7 @@ switch_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   utillib_token_scanner_shiftaway(input);
   object = cling_ast_statement(SYM_SWITCH_STMT);
   expr = lp_expr_rp(self, input, context);
-  if (&utillib_json_null != expr) {
+  if (NULL != expr) {
     utillib_json_object_push_back(object, "expr", expr);
   }
 
@@ -1095,7 +1091,7 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   case SYM_SEMI:
   return_null:
     utillib_token_scanner_shiftaway(input);
-    return utillib_json_null_create();
+    return NULL;
   default:
     rd_parser_error_push_back(self, 
         cling_unexpected_error(input, context));
@@ -1147,7 +1143,7 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 
   utillib_token_scanner_shiftaway(input);
   init = cling_opg_parser_parse(&opg_parser, input);
-  if (init == &utillib_json_null) {
+  if (init == NULL) {
     rd_parser_error_push_back(self,
         cling_expected_error(input, SYM_EXPR, context));
     goto expected_init;
@@ -1158,7 +1154,7 @@ parse_cond:
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_reinit(&opg_parser, SYM_SEMI);
   cond = cling_opg_parser_parse(&opg_parser, input);
-  if (cond == &utillib_json_null) {
+  if (cond == NULL) {
     rd_parser_error_push_back(self,
         cling_expected_error(input, SYM_EXPR, context));
     goto expected_cond;
@@ -1169,7 +1165,7 @@ parse_step:
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_reinit(&opg_parser, SYM_RP);
   step = cling_opg_parser_parse(&opg_parser, input);
-  if (step == &utillib_json_null) {
+  if (step == NULL) {
     rd_parser_error_push_back(self,
         cling_expected_error(input, SYM_EXPR, context));
     goto expected_step;
@@ -1185,7 +1181,7 @@ parse_step:
 parse_stmt:
   utillib_token_scanner_shiftaway(input);
   stmt = statement(self, input);
-  if (stmt != &utillib_json_null)
+  if (stmt != NULL)
     utillib_json_object_push_back(object, "stmt", stmt);
   return object;
 
@@ -1253,7 +1249,7 @@ multiple_statement(struct cling_rd_parser *self,
     if (!rd_parser_is_stmt_lookahead(code))
       return array;
     object = statement(self, input);
-    if (object != &utillib_json_null) 
+    if (object != NULL) 
       utillib_json_array_push_back(array, object);
   }
 }
@@ -1429,7 +1425,7 @@ printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   case SYM_CHAR:
   parse_expr:
     expr = cling_opg_parser_parse(&opg_parser, input);
-    if (&utillib_json_null == expr) {
+    if (NULL == expr) {
       rd_parser_error_push_back(self,
           cling_expected_error(input, SYM_EXPR, context));
       goto skip;

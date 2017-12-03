@@ -24,11 +24,18 @@
 #include <utillib/json.h>
 
 /*
- * Everything about traversal the ast
- * is defined here.
- * Although our ast is actually json tree,
- * A lot can still be done on it.
+ * Every operation backed up by 
+ * AST is held here including
+ * some symbol_table lookup and
+ * insertion. The reason is that
+ * I want to keep the symbol_table
+ * language-neutual.
  */
+
+/*
+ * Table insertion.
+ */
+
 void cling_ast_insert_const(struct utillib_json_value *self,
                             struct cling_symbol_table *symbols,
                             int scope_kind);
@@ -42,6 +49,10 @@ void cling_ast_insert_arglist(struct utillib_json_value *self,
 
 void cling_ast_insert_function(struct utillib_json_value *self,
     struct cling_symbol_table * symbol_table);
+
+/*
+ * AST construction helpers.
+ */
 
 void cling_ast_set_op(struct utillib_json_value *self, size_t op);
 
@@ -59,12 +70,15 @@ void cling_ast_set_rhs(struct utillib_json_value *self,
 struct utillib_json_value *cling_ast_constant(size_t code,
                                               void const *semantic);
 
-/*
- * Creates a template for a statement.
- */
 struct utillib_json_value *cling_ast_statement(size_t type);
 
 void cling_ast_set_name(struct utillib_json_value *self, char const *name);
 void cling_ast_set_type(struct utillib_json_value *self, size_t type);
 
+/*
+ * AST Semantic Checks
+ */
+
+int cling_ast_check_assignable(char const *name, 
+    struct cling_symbol_table const *symbol_table);
 #endif /* CLING_AST_H */

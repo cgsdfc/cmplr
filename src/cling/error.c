@@ -26,21 +26,34 @@
 #include <assert.h>
 #include <stdlib.h>
 
-struct cling_error *cling_error_create(int kind,
-                                       struct utillib_token_scanner *input) {
-  struct cling_error *self = calloc(sizeof *self, 1);
+static struct cling_error *
+cling_error_create(int kind, struct utillib_token_scanner *input) {
+  struct cling_error *self = malloc(sizeof *self);
   self->kind = kind;
   self->row = input->chars.row;
   self->col = input->chars.col;
+  return self;
 }
 
 void cling_error_destroy(struct cling_error *self) {
   switch (self->kind) {
   case CL_EREDEFINED:
+  case CL_EUNDEFINED:
+  case CL_ENOTLVALUE:
     free(self->einfo[0]);
     break;
   }
   free(self);
+}
+
+static struct cling_error *
+name_context_error(int kind, struct utillib_token_scanner *input,
+    char const *name, size_t context) {
+  struct cling_error *self = cling_error_create(kind, input);
+  /* Free needed */
+  self->einfo[0] = strdup(name);
+  self->einfo[1] = cling_symbol_cast(context);
+  return self;
 }
 
 struct cling_error *cling_expected_error(struct utillib_token_scanner *input,
@@ -62,47 +75,18 @@ struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
 
 struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
                                         char const *name, size_t context) {
-  struct cling_error *self = cling_error_create(CL_EREDEFINED, input);
-  /* Free needed */
-  self->einfo[0] = strdup(name);
-  self->einfo[1] = cling_symbol_cast(context);
-  return self;
+  return name_context_error(CL_EREDEFINED, input,name, context);
 }
 
-void cling_error_print(struct cling_error const *self) {
-  utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
-                       self->col + 1);
-  char const *const *einfo = self->einfo;
-  switch (self->kind) {
-  case CL_EEXPECT:
-    utillib_error_printf("expected `%s', got `%s' in `%s'", einfo[0], einfo[1],
-                         einfo[2]);
-    break;
-  case CL_ENOARGS:
-    utillib_error_printf(
-        "Function `%s' expects at least one argument, but none was given",
-        einfo[0]);
-    break;
-  case CL_EUNEXPECTED:
-    utillib_error_printf("unexpected token `%s' in `%s'", einfo[0], einfo[1]);
-    break;
-  case CL_EREDEFINED:
-    utillib_error_printf("identifier `%s' was redefined in `%s'", einfo[0],
-                         einfo[1]);
-    break;
-  case CL_EVAGUE:
-    utillib_error_printf("%s", einfo[0]);
-    break;
-  case CL_EPREMATURE:
-    utillib_error_printf("fatal: premature end of input in `%s'", einfo[0]);
-    break;
-  case CL_EEXPR:
-    utillib_error_printf("invalid expression");
-    break;
-  default:
-    assert(false && "unimplemented");
-  }
-  utillib_error_printf(".\n");
+struct cling_error *cling_undefined_name_error(struct utillib_token_scanner *input,
+    char const *name, size_t context) {
+  return name_context_error(CL_EUNDEFINED,input, name, context);
+}
+
+struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
+    char const *name, size_t context)
+{
+  return name_context_error(CL_ENOTLVALUE,input, name, context);
 }
 
 struct cling_error *cling_vague_error(struct utillib_token_scanner *input,
@@ -123,3 +107,40 @@ struct cling_error *cling_expr_error(struct utillib_token_scanner *input) {
   struct cling_error *self = cling_error_create(CL_EEXPR, input);
   return self;
 }
+
+void cling_error_print(struct cling_error const *self) {
+  utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
+                       self->col + 1);
+  char const *const *einfo = self->einfo;
+  switch (self->kind) {
+  case CL_EEXPECT:
+    utillib_error_printf("expected `%s', got `%s' in `%s'", einfo[0], einfo[1],
+                         einfo[2]);
+    break;
+  case CL_EUNEXPECTED:
+    utillib_error_printf("unexpected token `%s' in `%s'", einfo[0], einfo[1]);
+    break;
+  case CL_EREDEFINED:
+    utillib_error_printf("identifier `%s' was redefined in `%s'", einfo[0],
+                         einfo[1]);
+    break;
+  case CL_EVAGUE:
+    utillib_error_printf("%s", einfo[0]);
+    break;
+  case CL_EPREMATURE:
+    utillib_error_printf("fatal: premature end of input in `%s'", einfo[0]);
+    break;
+  case CL_EEXPR:
+    utillib_error_printf("invalid expression");
+    break;
+  case CL_EUNDEFINED:
+    utillib_error_printf("undefined reference to `%s' in `%s'", einfo[0], einfo[1]);
+    break;
+  case CL_ENOTLVALUE:
+    utillib_error_printf("in `%s', operand `%s' is not left value", einfo[1], einfo[0]);
+  default:
+    assert(false && "unimplemented");
+  }
+  utillib_error_printf(".\n");
+}
+
