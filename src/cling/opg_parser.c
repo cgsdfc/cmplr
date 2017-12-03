@@ -76,16 +76,25 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
   const bool lhs_is_relop = opg_parser_is_relop(lhs);
   const bool rhs_is_relop = opg_parser_is_relop(rhs);
 
-  if (lhs == eof_symbol)
+  if (lhs == eof_symbol && utillib_vector_size(&self->opstack)==1)
+    /*
+     * Make sure it is a true eof_symbol on the stacktop.
+     */
     return CL_OPG_LT;
 
-  if (rhs == eof_symbol)
-    return CL_OPG_GT;
-
   if (lhs == SYM_LP || rhs == SYM_LP)
+    /*
+     * Give expression more chances than eof_symbol.
+     */
     return CL_OPG_LT;
 
   if (lhs == SYM_RP || rhs == SYM_RP)
+    return CL_OPG_GT;
+
+  if (rhs == eof_symbol)
+    /*
+     * But if it is a true eof_symbol...
+     */
     return CL_OPG_GT;
 
   if (lhs == SYM_LK || rhs == SYM_LK)
@@ -125,6 +134,7 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
     return CL_OPG_GT;
   if (rhs == SYM_IDEN)
     return CL_OPG_LT;
+
 
   return CL_OPG_ERR;
 }
@@ -321,13 +331,31 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   struct utillib_vector *opstack = &self->opstack;
   const size_t eof_symbol = self->eof_symbol;
 
-  while (true) {
+  while (!utillib_vector_empty(opstack)) {
     /* opg_parser_show_opstack(self); */
     lookahead = utillib_token_scanner_lookahead(input);
-    stacktop = utillib_vector_back(opstack);
-    if (stacktop == eof_symbol && lookahead == eof_symbol) {
-      break;
+    if (utillib_vector_size(opstack)==1 && lookahead == eof_symbol) {
+      /*
+       * We will catch any success before the precedence is computed
+       * since the success condition is correct and thus have higher
+       * priority.
+       * I don't know what will happen if 2 SYM_RP mix together in
+       * opg_parser_compare.
+       */
+      if (utillib_vector_size(stack) != 1)
+        goto error;
+      /*
+       * And we must pop this successful result
+       * since opg_parser no longer owns it but
+       * in case of failure, all the partial nodes
+       * will be destroyed using utillib_vector_destroy_owning.
+       */
+      val=utillib_vector_back(stack);
+      utillib_vector_pop_back(stack);
+      return val;
     }
+
+    stacktop = utillib_vector_back(opstack);
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
         lookahead == SYM_CHAR) {
       utillib_vector_push_back(
@@ -369,19 +397,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       goto error;
     }
   }
-  if (utillib_vector_size(stack) != 1
-      || utillib_vector_size(opstack) != 1) {
-    /*
-     * Our final judgement of success:
-     * Both stack contain only one element.
-     */
-    goto error;
-  }
-  val = utillib_vector_back(stack);
-  utillib_vector_pop_back(stack);
-  return val;
 error:
-  self->last_error = lookahead;
   return utillib_json_null_create();
 }
 

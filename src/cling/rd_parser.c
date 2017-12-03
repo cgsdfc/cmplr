@@ -1683,7 +1683,7 @@ unexpected:
 static struct utillib_json_value *mock(struct cling_rd_parser *self,
                                        struct utillib_token_scanner *input) {
   struct cling_opg_parser opg_parser ;
-  cling_opg_parser_init(&opg_parser, SYM_SEMI);
+  cling_opg_parser_init(&opg_parser, SYM_RP);
   bool is_main;
   /* return cling_opg_parser_parse(&opg_parser, input); */
   /* return function(self, input, &is_main); */
