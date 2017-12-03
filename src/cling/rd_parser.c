@@ -89,6 +89,11 @@ static struct utillib_json_value *for_stmt(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input);
 
 static struct utillib_json_value *
+composite_stmt_nolookahead(struct cling_rd_parser *self,
+               struct utillib_token_scanner *input,
+               bool new_scope);
+
+static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
                struct utillib_token_scanner *input,
                bool new_scope);
@@ -150,14 +155,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   case 0:
     return mock(self, input);
   default:
-/* utillib_json_value_destroy(self->root); */
-#ifndef NDEBUG
-    printf("@@ longjmp from `%s' context @@\n",
-           cling_symbol_kind_tostring(code));
-#else
-    utillib_vector_push_back(&self->elist,
-                             cling_premature_error(input, context));
-#endif
+    /* utillib_json_value_destroy(self->root); */
     return NULL;
   }
 }
@@ -197,12 +195,12 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
     }
     object = utillib_json_object_create_empty();
     name = utillib_token_scanner_semantic(input);
-    if (cling_symbol_table_exist_name(self->symbol_table, name, 0)) {
+    if (cling_symbol_table_exist_name(self->symbol_table, name, CL_LOCAL)) {
       error=cling_redefined_error(input, name, context);
       goto skip;
     }
 
-    cling_symbol_table_reserve(self->symbol_table, name);
+    cling_symbol_table_reserve(self->symbol_table, name, CL_LOCAL);
     cling_ast_set_name(object, name);
     utillib_token_scanner_shiftaway(input);
 
@@ -346,12 +344,12 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
   struct utillib_json_value *object = utillib_json_object_create_empty();
   struct cling_error *error;
 
-  if (cling_symbol_table_exist_name(self->symbol_table, first_iden, 0)) {
+  if (cling_symbol_table_exist_name(self->symbol_table, first_iden, CL_LOCAL)) {
     rd_parser_skip_target_init(self);
     goto redefined;
   }
   cling_ast_set_name(object, first_iden);
-  cling_symbol_table_reserve(self->symbol_table, first_iden);
+  cling_symbol_table_reserve(self->symbol_table, first_iden, CL_LOCAL);
   utillib_json_array_push_back(array, object);
 
   while (true) {
@@ -386,12 +384,12 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
         goto expected;
       }
       first_iden = utillib_token_scanner_semantic(input);
-      if (cling_symbol_table_exist_name(self->symbol_table, first_iden, 0)) {
+      if (cling_symbol_table_exist_name(self->symbol_table, first_iden, CL_LOCAL)) {
         goto redefined;
       }
       object = utillib_json_object_create_empty();
       cling_ast_set_name(object, first_iden);
-      cling_symbol_table_reserve(self->symbol_table, first_iden);
+      cling_symbol_table_reserve(self->symbol_table, first_iden, CL_LOCAL);
       utillib_json_array_push_back(array, object);
       utillib_token_scanner_shiftaway(input);
       break;
@@ -668,12 +666,12 @@ formal_arglist(struct cling_rd_parser *self,
         goto skip;
       }
       name = utillib_token_scanner_semantic(input);
-      if (cling_symbol_table_exist_name(self->symbol_table, name, 0)) {
+      if (cling_symbol_table_exist_name(self->symbol_table, name, CL_LOCAL)) {
         rd_parser_error_push_back(self,
             cling_redefined_error(input, name, context));
         goto skip;
       }
-      cling_symbol_table_reserve(self->symbol_table, name);
+      cling_symbol_table_reserve(self->symbol_table, name, CL_LOCAL);
       cling_ast_set_name(object, name);
       utillib_token_scanner_shiftaway(input);
       utillib_json_array_push_back(array, object);
@@ -1086,10 +1084,10 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   case SYM_LB:
     /*
      * Since we are entering a statement
-     * not a function,
-     * we need a new scope.
+     * not a function, we need a new scope.
+     *
      */
-    object = composite_stmt(self, input, true);
+    object = composite_stmt_nolookahead(self, input, true);
     goto return_object;
   case SYM_SEMI:
   return_null:
@@ -1258,7 +1256,61 @@ multiple_statement(struct cling_rd_parser *self,
 }
 
 /*
- * Lookahead SYM_LB
+ * Since function, function_args_body 
+ * both call composite_stmt, and both
+ * need to handle the situation when
+ * a SYM_LB is missing, the missing-handling
+ * code is extracted into composite_stmt_nolookahead.
+ * which ensures a lookahead of `SYM_LB' and then call
+ * composite_stmt.
+ * Normally all the functions require their caller to
+ * ensure lookahead token for them, which makes this
+ * parser predictive, but in case of composite_stmt,
+ * those lookahead-ensuring code is put into **this**
+ * function, which should always be used.
+ */
+static struct utillib_json_value *
+composite_stmt_nolookahead(struct cling_rd_parser *self,
+               struct utillib_token_scanner *input,
+               bool new_scope) {
+
+  size_t code;
+  const size_t context=SYM_COMP_STMT;
+  
+  code=utillib_token_scanner_lookahead(input);
+  if (code != SYM_LB) {
+    goto expected_lb;
+  }
+  utillib_token_scanner_shiftaway(input);
+
+parse_comp:
+  return composite_stmt(self, input ,new_scope);
+
+expected_lb:
+  /*
+   * Missing a SYM_LB is very typical.
+   * In that we just do some favour for composite_stmt
+   * by skipping to its Lookaheads.
+   */
+  rd_parser_error_push_back(self, 
+      cling_expected_error(input, SYM_LB, context));
+  rd_parser_skip_target_init(self);
+  self->tars[0] = SYM_KW_CONST;
+  self->tars[1]=SYM_KW_INT;
+  self->tars[2]=SYM_KW_CHAR;
+  switch (rd_parser_skipto(self, input)) {
+  case SYM_KW_CONST:
+  case SYM_KW_INT:
+  case SYM_KW_CHAR:
+    goto parse_comp;
+  }
+
+
+}
+
+/*
+ * Lookahead SYM_KW_CONST | SYM_KW_INT | SYM_CHAR | 
+ * all those for statement.
  */
 static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
@@ -1269,7 +1321,6 @@ composite_stmt(struct cling_rd_parser *self,
   char const *first_iden;
   struct utillib_json_value *object, *const_decls, *var_decls, *stmts;
 
-  utillib_token_scanner_shiftaway(input);
   object = cling_ast_statement(SYM_COMP_STMT);
   code = utillib_token_scanner_lookahead(input);
   if(new_scope)
@@ -1308,6 +1359,7 @@ composite_stmt(struct cling_rd_parser *self,
   if (new_scope)
     cling_symbol_table_leave_scope(self->symbol_table);
   return object;
+
 }
 
 /*
@@ -1425,43 +1477,19 @@ function_args_body(struct cling_rd_parser *self,
   struct utillib_json_value *comp_stmt, *arglist;
 
   cling_symbol_table_enter_scope(self->symbol_table);
-  /*
-   * The arguments will entered into the new scope.
-   */
   arglist = formal_arglist(self, input);
-  /*
-   * After they are reserved, now insert them.
-   */
-  cling_ast_insert_formal_arg(arglist, self->symbol_table);
+  cling_ast_insert_arglist(arglist, self->symbol_table);
   utillib_json_object_push_back(object, "arglist", arglist);
-  code = utillib_token_scanner_lookahead(input);
-  if (code != SYM_LB) {
-    rd_parser_error_push_back(self, 
-        cling_expected_error(input, SYM_LB, SYM_COMP_STMT));
-    goto expected_lb;
-  }
-parse_comp:
-  comp_stmt = composite_stmt(self, input, false);
+  cling_ast_insert_function(object, self->symbol_table);
+
+  /*
+   * Handle maybe-missing SYM_LB
+   */
+  comp_stmt = composite_stmt_nolookahead(self, input, false);
   utillib_json_object_push_back(object, "comp", comp_stmt);
   cling_symbol_table_leave_scope(self->symbol_table);
   return object;
 
-expected_lb:
-  /*
-   * Missing a SYM_LB is very typical.
-   * In that we just do some favour for composite_stmt
-   * by skipping to its Lookaheads.
-   */
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_KW_CONST;
-  self->tars[1]=SYM_KW_INT;
-  self->tars[2]=SYM_KW_CHAR;
-  switch (rd_parser_skipto(self, input)) {
-  case SYM_KW_CONST:
-  case SYM_KW_INT:
-  case SYM_KW_CHAR:
-    goto parse_comp;
-  }
 }
 
 /*
@@ -1483,6 +1511,10 @@ static struct utillib_json_value *function(struct cling_rd_parser *self,
 
   code = utillib_token_scanner_lookahead(input);
   switch (code) {
+    /*
+     * First of all, we try to recognize
+     * its name -- whether it is main.
+     */
   case SYM_IDEN:
     *is_main = false;
     name = utillib_token_scanner_semantic(input);
@@ -1494,17 +1526,17 @@ static struct utillib_json_value *function(struct cling_rd_parser *self,
   default:
     goto unexpected;
   }
-  if (cling_symbol_table_exist_name(self->symbol_table, name, 0)) {
+  if (cling_symbol_table_exist_name(self->symbol_table, name, CL_GLOBAL)) {
     goto redefined;
   }
-  cling_symbol_table_reserve(self->symbol_table, name);
+  cling_symbol_table_reserve(self->symbol_table, name, CL_GLOBAL);
   cling_ast_set_name(object, name);
 
 parse_args_body:
+  /* SYM_IDEN */
   utillib_token_scanner_shiftaway(input);
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_LP) {
-    rd_parser_skip_target_init(self);
     goto expected_lp;
   }
   return function_args_body(self, input, object);
@@ -1514,36 +1546,49 @@ redefined:
    * to look into its arglist and composite_stmt
    * to pick up more possible errors.
    */
-  utillib_vector_push_back(&self->elist,
-      cling_redefined_error(input, name, SYM_FUNC_DECL));
+  rd_parser_error_push_back(self,
+      cling_redefined_error(input, name, context));
   goto parse_args_body;
 
 unexpected:
+  /*
+   * We lost the name of the function.
+   */
   rd_parser_error_push_back(self,
-      cling_unexpected_error(input, SYM_FUNC_DECL));
-  rd_parser_fatal(self);
+      cling_unexpected_error(input, context));
+  rd_parser_skip_target_init(self);
+  self->tars[0]=SYM_LP;
+  self->tars[1]=SYM_RP;
+  self->tars[2]=SYM_LB;
+  switch (rd_parser_skipto(self, input)) {
+    case SYM_LP:
+      goto parse_args_body;
+    case SYM_RP:
+      utillib_token_scanner_shiftaway(input);
+      goto parse_comp;
+    case SYM_LB:
+      goto parse_comp;
+  }
 expected_lp:
+  rd_parser_skip_target_init(self);
   rd_parser_error_push_back(self,
-      cling_expected_error(input, SYM_LP, SYM_FUNC_DECL));
+      cling_expected_error(input, SYM_LP, context));
   self->tars[0] = SYM_RP;
   self->tars[1] = SYM_LB;
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
-    code = utillib_token_scanner_lookahead(input);
-    if (code == SYM_LB)
-      goto parse_comp;
-    rd_parser_fatal(self);
+    utillib_token_scanner_shiftaway(input);
+    goto parse_comp;
   case SYM_LB:
     goto parse_comp;
   }
 parse_comp:
-  utillib_token_scanner_shiftaway(input);
   /*
    * Since the arglist is missing totally,
-   * we directly enter a new scope in composite_stmt
-   * so let it do it.
+   * we directly enter a new scope in 
+   * composite_stmt_nolookahead.
    */
-  comp = composite_stmt(self, input, true);
+  comp = composite_stmt_nolookahead(self, input, true);
   utillib_json_object_push_back(object, "comp", comp);
   return object;
 }
@@ -1686,6 +1731,6 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   cling_opg_parser_init(&opg_parser, SYM_RP);
   bool is_main;
   /* return cling_opg_parser_parse(&opg_parser, input); */
-  /* return function(self, input, &is_main); */
-  return program(self, input);
+  return function(self, input, &is_main);
+  /* return program(self, input); */
 }

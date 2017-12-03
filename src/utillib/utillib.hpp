@@ -37,18 +37,19 @@ public:
 
 class json_object : public json_value {
   public:
-    json_object() = delete;
     operator json_value() const;
+    explicit json_object(json_value val);
     void push_back(char const *key, json_value value);
     json_value at(const char *key);
 };
 
 class json_array : public json_value {
   public:
-    json_array() = delete;
     operator json_value() const;
+    explicit json_array(json_value val);
     void push_back(json_value element);
     json_value at(size_t index);
+    size_t size() const;
 };
 
 template <class T> json_value json_value_create(T val);

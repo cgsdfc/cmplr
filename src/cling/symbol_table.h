@@ -49,6 +49,21 @@ struct cling_symbol_entry {
 };
 
 /**
+ * \enum cling_symbol_table_scope_kind
+ * Determine the scope in which searches
+ * or insertions are done.
+ * Object like function should be inserted into global scope.
+ * When searching for names, we use lexical scope.
+ * When checking declaring a name, we declare it in the current scope.
+ */
+
+UTILLIB_ENUM_BEGIN(cling_symbol_table_scope_kind)
+  UTILLIB_ENUM_ELEM(CL_GLOBAL)
+  UTILLIB_ENUM_ELEM(CL_LOCAL)
+  UTILLIB_ENUM_ELEM(CL_LEXICAL)
+UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
+
+/**
  * \enum cling_symbol_entry_kind
  * This enum descripts the properties of an entry
  * in the symbol table. These fields can be OR together
@@ -64,9 +79,10 @@ UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
 UTILLIB_ENUM_ELEM_INIT(CL_UNDEF, 0)
 UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
 UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
-UTILLIB_ENUM_ELEM_INIT(CL_CONST, 4)
-UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 8)
-UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 16)
+UTILLIB_ENUM_ELEM_INIT(CL_VOID, 4)
+UTILLIB_ENUM_ELEM_INIT(CL_CONST, 8)
+UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 16)
+UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 32)
 UTILLIB_ENUM_END(cling_symbol_entry_kind);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
@@ -88,51 +104,39 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
 
 /**
  * \function cling_symbol_table_insert
- * Inserts a new entry (name, kind, value) into the current scope
- * and fails if the entry already exists.
+ * Inserts an entry (name, kind, value) into the scope
+ * \param scope_kind should be either CL_GLOBAL or CL_LOCAL.
+ * Notes It inserts the entry anyway.
  */
-int cling_symbol_table_insert(struct cling_symbol_table *self, 
+void cling_symbol_table_insert(struct cling_symbol_table *self, 
                               char const *name,
                               int kind,
-                              struct utillib_json_value *value);
+                              struct utillib_json_value *value,
+                              int scope_kind);
 
 /**
  * \function cling_symbol_table_find
- * Finds the entry for symbol `name' either in the current scope
- * or lexical scopes.
- * \param level If it is 0, only searches the current scope.
- * Otherwise(non-zero), searches from the current scope all the way to
- * the global scope.
+ * Finds the entry for symbol `name' in the scope
+ * specified by `scope_kind'.
  * \return If the symbol is not found, NULL, or else the entry
  * of it.
  */
 struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
-                        size_t level);
+cling_symbol_table_find(struct cling_symbol_table const *self, 
+    char const *name,
+    int scope_kind);
 
 /**
  * \function cling_symbol_table_reserve
- * Reserves an entry in the current scope
+ * Reserves an entry in scope specified by `scope_kind'
  * with the `name' as key so that the following
  * lookup shows thats `name' exists.
  * Assumes `name' does not exist before.
  * Notes the `name' will be strdup.
+ * Notes `scope_kind' cannot be CL_LEXICAL.
  */
 void cling_symbol_table_reserve(struct cling_symbol_table *self,
-                                char const *name);
-
-/**
- * \function cling_symbol_table_update
- * Parallel with `utillib_hashmap_insert' but
- * assumes the entry of `name' has been reserved with
- * `cling_symbol_table_reserve' and fills in the `NULL'
- * blank of it.
- * Notes that the name will not be strdup.
- */
-void cling_symbol_table_update(struct cling_symbol_table *self,
-                               char const *name,
-                               int kind,
-                               struct utillib_json_value *value);
+                                char const *name, int scope_kind);
 
 /**
  * \function cling_symbol_table_exist_name
@@ -140,7 +144,8 @@ void cling_symbol_table_update(struct cling_symbol_table *self,
  * whether the name exists regardless of its entry.
  */
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
-                                   char const *name, size_t level);
+                                   char const *name, 
+                                   int scope_kind);
 
 /*
  * JSON

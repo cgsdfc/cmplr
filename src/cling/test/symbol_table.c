@@ -30,7 +30,7 @@ UTILLIB_TEST_TEAR_DOWN() {
 
 UTILLIB_TEST(symbol_table_insert) {
   cling_symbol_table_insert(UT_FIXTURE, "x",
-      CL_INT|CL_CONST,utillib_json_null_create());
+      CL_INT|CL_CONST,utillib_json_null_create(), CL_LOCAL);
   struct utillib_json_value *val=cling_symbol_table_json_object_create(UT_FIXTURE);
   utillib_json_pretty_print(val, stderr);
   

@@ -22,12 +22,12 @@ void json_value::pretty_print() const {
 
 json_value::operator json_object() const {
   assert (self->kind == UT_JSON_OBJECT);
-  return *this;
+  return json_object(*this);
 }
 
 json_value::operator json_array() const {
   assert (self->kind == UT_JSON_ARRAY);
-  return *this;
+  return json_array(*this);
 }
 
 string json_value::tostring() const {
@@ -52,6 +52,12 @@ json_array::operator json_value() const {
   return *this;
 }
 
+json_array::json_array(json_value val) :json_value(val) {}
+
+size_t json_array::size() const {
+  return utillib_json_array_size(self);
+}
+
 //
 // json_object
 //
@@ -64,6 +70,7 @@ json_value json_object::at(char const *key) {
   return val == NULL ? json_value() : json_value(val);
 }
 
+json_object::json_object(json_value val):json_value(val) {}
 
 json_value json_object_create() {
   auto val = utillib_json_object_create_empty();

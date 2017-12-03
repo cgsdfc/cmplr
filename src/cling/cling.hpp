@@ -11,6 +11,8 @@ extern "C" {
 //
 #include <utillib/utillib.hpp>
 
+#include <utility>
+
 namespace cling {
   using utillib::json_array;
   using utillib::json_value;
@@ -38,8 +40,11 @@ namespace cling {
   class symbol_entry {
     public:
       struct cling_symbol_entry self;
-      symbol_entry(int kind, json_value value);
+    public:
+      symbol_entry();
       ~symbol_entry() {}
+      symbol_entry(struct cling_symbol_entry const* entry);
+      symbol_entry(int kind, json_value value);
       int kind() const ;
       json_value value() const;
   };
@@ -53,11 +58,10 @@ namespace cling {
       ~symbol_table();
       void enter_scope();
       void leave_scope();
-      int insert(char const *name, symbol_entry const& entry);
-      void update(char const *name, symbol_entry const& entry);
-      symbol_entry find(char const* name, size_t level) const;
-      void reserve(char const *name);
-      bool exist_name(char const *name, size_t level) const;
+      void insert(char const *name, symbol_entry const& entry, int scope_kind);
+      void reserve(char const *name, int scope_kind);
+      std::pair<bool, symbol_entry> find(char const* name, int scope_kind) const;
+      bool exist_name(char const *name, int scope_kind) const;
       json_value tojson() const;
   };
 
@@ -102,6 +106,46 @@ namespace cling {
     public:
       json_value type();
       json_array var_defs();
+  };
+
+  class arglist : public json_array {
+    public:
+      arglist(json_array array);
+      size_t argc() const;
+      json_array argv();
+  };
+
+  class function : private ast_node {
+    public:
+      function(json_value val);
+      json_value name();
+      json_array arglist();
+      json_object composite_stmt();
+  };
+
+  class scanf_stmt: private ast_node {
+    public:
+      json_array args();
+      json_value type();
+  };
+
+  class printf_stmt : private ast_node {
+    public:
+      json_array args();
+      json_value type();
+  };
+      
+  class expression : private ast_node {
+    public:
+      json_value op();
+      json_value lhs();
+      json_value rhs();
+  };
+
+  class call_expr : private expression {
+    public:
+      json_value callee() ;
+      json_array args();
   };
 
 } // cling

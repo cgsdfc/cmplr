@@ -25,6 +25,24 @@
 
 #include <utillib/json_foreach.h>
 
+static size_t ast_gettype(struct utillib_json_value *self) {
+  switch(self->as_size_t) {
+  case SYM_KW_INT:
+    return CL_INT;
+  case SYM_KW_CHAR:
+    return CL_CHAR;
+  case SYM_KW_VOID:
+    return CL_VOID;
+  default:
+    assert(false);
+  }
+}
+
+static char const* ast_getname(struct utillib_json_value *self) {
+  assert (self->kind == UT_JSON_STRING);
+  return self->as_ptr;
+}
+
 /**
  * \function cling_ast_insert_const
  * Inserts a single_const_decl into the symbol_table.
@@ -38,14 +56,12 @@ void cling_ast_insert_const(struct utillib_json_value *self,
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
   struct utillib_json_value *const_defs =
       utillib_json_object_at(self, "const_defs");
-  int kind = CL_CONST | (type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR);
-  int retv;
+  int kind = CL_CONST | ast_gettype(type);
 
-  UTILLIB_JSON_ARRAY_FOREACH(obj, const_defs) {
+  UTILLIB_JSON_ARRAY_FOREACH(object, const_defs) {
     struct utillib_json_value *name =
-        utillib_json_object_at(obj, "name");
-    assert(name);
-    cling_symbol_table_update(symbol_table, name->as_ptr,kind,  obj);
+        utillib_json_object_at(object, "name");
+    cling_symbol_table_insert(symbol_table, ast_getname(name), kind, object, CL_LOCAL);
   }
 }
 
@@ -54,36 +70,39 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
   struct utillib_json_value *var_defs =
       utillib_json_object_at(self, "var_defs");
-  int kind = type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR;
-  int retv;
+  const int base_kind = ast_gettype(type);
 
-  UTILLIB_JSON_ARRAY_FOREACH(obj, var_defs) {
-    struct utillib_json_value *name =
-        utillib_json_object_at(obj, "name");
-    assert(name);
-    cling_symbol_table_update(
-        symbol_table, name->as_ptr,
-        utillib_json_object_at(obj, "extend") ? kind | CL_ARRAY : kind,obj);
+  UTILLIB_JSON_ARRAY_FOREACH(object, var_defs) {
+    int kind=base_kind;
+    struct utillib_json_value *name = utillib_json_object_at(object, "name");
+    if (utillib_json_object_at(object, "extend")) {
+      kind  |= CL_ARRAY;
+    }
+    cling_symbol_table_insert(symbol_table, ast_getname(name), kind, object, CL_LOCAL);
   }
 }
 
 /*
  * Inserts arglist into the current scope of the function.
  */
-void cling_ast_insert_formal_arg(struct utillib_json_value *self,
+void cling_ast_insert_arglist(struct utillib_json_value *self,
     struct cling_symbol_table * symbol_table) {
   UTILLIB_JSON_ARRAY_FOREACH(object, self) {
     struct utillib_json_value * type=utillib_json_object_at(object, "type");
-    int kind=type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR;
+    int kind=ast_gettype(type);
     struct utillib_json_value * name=utillib_json_object_at(object, "name");
-    cling_symbol_table_update(symbol_table, name->as_ptr, kind, object);
+    cling_symbol_table_insert(symbol_table, ast_getname(name), kind, object, CL_LOCAL);
   }
 }
 
 void cling_ast_insert_function(struct utillib_json_value *self,
     struct cling_symbol_table * symbol_table) {
-
-
+  assert (symbol_table->scope == 0 && "function should be inserted in global scope");
+  int kind=CL_FUNC;
+  struct utillib_json_value * type=utillib_json_object_at(self, "type");
+  struct utillib_json_value * name=utillib_json_object_at(self, "name");
+  kind |= ast_gettype(type);
+  cling_symbol_table_insert(symbol_table, ast_getname(name), kind, self, CL_GLOBAL);
 }
 
 void cling_ast_set_op(struct utillib_json_value *self, size_t op) {

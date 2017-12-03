@@ -1,4 +1,5 @@
 #include "cling.hpp"
+#include <string.h>
 
 namespace cling {
 
@@ -25,6 +26,12 @@ void scanner::shiftaway() {
 //
 // symbol_entry
 // 
+
+symbol_entry::symbol_entry() {}
+
+symbol_entry::symbol_entry(struct cling_symbol_entry const *entry) {
+  memcpy(&self, entry, sizeof self);
+}
 
 symbol_entry::symbol_entry(int kind, json_value value) {
   self.kind=kind;
@@ -59,16 +66,25 @@ void symbol_table::leave_scope() {
   cling_symbol_table_leave_scope(&self);
 }
 
-int symbol_table::insert(char const *name, const symbol_entry& entry) {
-  return  cling_symbol_table_insert(&self, name, entry.self.kind, entry.self.value);
+void symbol_table::insert(char const *name, const symbol_entry& entry, int scope_kind) {
+  cling_symbol_table_insert(&self, name, entry.kind(), entry.self.value, scope_kind);
 }
 
-void symbol_table::update(char const *name, const symbol_entry& entry) {
-  cling_symbol_table_update(&self, name, entry.self.kind, entry.self.value);
+bool symbol_table::exist_name(char const *name, int scope_kind) const {
+  return cling_symbol_table_exist_name(&self, name, scope_kind);
 }
 
-bool symbol_table::exist_name(char const *name, size_t level) const {
-  return cling_symbol_table_exist_name(&self, name, level);
+std::pair<bool, symbol_entry> 
+symbol_table::find(char const *name, int scope_kind) const {
+  auto result=cling_symbol_table_find(&self, name, scope_kind);
+  if (result) 
+    return std::make_pair(true, symbol_entry(result));
+  return std::make_pair(false, symbol_entry());
+}
+
+void symbol_table::reserve(char const *name, int scope_kind) {
+  cling_symbol_table_reserve(&self, name, scope_kind);
+
 }
 
 json_value symbol_table::tojson() const {
@@ -92,7 +108,15 @@ json_value parser::parse(scanner& scanner) {
   return val? json_value(val) : json_value();
 }
 
+void parser::report_errors() const {
+  cling_rd_parser_report_errors(&self);
+}
+
 ast_node::ast_node(json_object object): self(object) {}
+
+//
+// program
+// 
 
 program::program(json_value val): ast_node(val) {}
 
@@ -108,12 +132,69 @@ json_array program::func_decls() {
   return self.at("func_decls");
 }
 
+//
+// const_decl
+// 
+
 json_value const_decl::type() {
   return self.at("type");
 }
 
 json_array const_decl::const_defs() {
   return self.at("const_defs");
+}
+
+arglist::arglist(json_array array) :json_array(array) {}
+
+size_t arglist::argc() const {
+  return size();
+}
+
+json_array arglist::argv() {
+  return *this;
+}
+
+// 
+// function
+// 
+
+function::function(json_value val):ast_node(val) {}
+
+json_value function::name() {
+  return self.at("name");
+}
+
+json_array function::arglist() {
+  return self.at("arglist");
+}
+
+json_object function::composite_stmt() {
+  return self.at("comp");
+}
+
+
+//
+// expression
+// 
+
+json_value expression::op() {
+  return self.at("op");
+}
+
+json_value expression::lhs() {
+  return self.at("lhs");
+}
+
+json_value expression::rhs() {
+  return self.at("rhs");
+}
+
+json_value call_expr::callee() {
+  return lhs();
+}
+
+json_array call_expr::args() {
+  return rhs();
 }
 
 } // cling

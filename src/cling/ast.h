@@ -35,7 +35,18 @@ void cling_ast_insert_const(struct utillib_json_value *self,
 void cling_ast_insert_variable(struct utillib_json_value *self,
                                struct cling_symbol_table *symbols);
 
+void cling_ast_insert_arglist(struct utillib_json_value *self,
+                               struct cling_symbol_table *symbols);
+
+void cling_ast_insert_function(struct utillib_json_value *self,
+    struct cling_symbol_table * symbol_table);
+
 void cling_ast_set_op(struct utillib_json_value *self, size_t op);
+
+void cling_ast_set_opstr(struct utillib_json_value *self, size_t op);
+
+void cling_ast_set_extend(struct utillib_json_value *self,
+    size_t extend);
 
 void cling_ast_set_lhs(struct utillib_json_value *self,
                        struct utillib_json_value *lhs);

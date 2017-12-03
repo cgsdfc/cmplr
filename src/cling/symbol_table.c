@@ -61,6 +61,7 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self) {
   free(old_scope);
   --self->scope;
 }
+
 static struct cling_symbol_entry *
 symbol_entry_create(int kind, struct utillib_json_value *value) {
   struct cling_symbol_entry *new_entry = malloc(sizeof *new_entry);
@@ -69,68 +70,94 @@ symbol_entry_create(int kind, struct utillib_json_value *value) {
   return new_entry;
 }
 
-static struct utillib_hashmap *
-symbol_table_get_scope(struct cling_symbol_table const *self) {
-  if (self->scope == 0)
-    return &self->global_table;
-  return utillib_slist_front(&self->scope_table);
-}
-
-int cling_symbol_table_insert(struct cling_symbol_table *self, 
-                              char const *name,int kind,
-                              struct utillib_json_value *value) {
-  struct utillib_hashmap *scope = symbol_table_get_scope(self);
-  if (utillib_hashmap_at(scope, name))
-    return 1;
-  utillib_hashmap_insert(scope, strdup(name), symbol_entry_create(kind, value));
-  return 0;
-}
-
-void cling_symbol_table_reserve(struct cling_symbol_table *self,
-                                char const *name) {
-  struct utillib_hashmap *scope = symbol_table_get_scope(self);
-  size_t retv;
-  retv = utillib_hashmap_insert(scope, strdup(name), NULL);
-  assert(retv == 0);
-}
-
-void cling_symbol_table_update(struct cling_symbol_table *self, 
-                               char const *name,int kind,
-                               struct utillib_json_value *value) {
-  struct utillib_hashmap *scope = symbol_table_get_scope(self);
-  void *old_value =
-      utillib_hashmap_update(scope, name, symbol_entry_create(kind, value));
-  assert(old_value == NULL);
-}
-
-struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
-                        size_t level) {
-  struct utillib_hashmap *cur_scope = symbol_table_get_scope(self);
-  struct cling_symbol_entry *entry = utillib_hashmap_at(cur_scope, name);
-  if (level == 0 || self->scope == 0) {
-    return entry;
-  }
+static struct cling_symbol_entry *
+symbol_table_lexical_find(struct cling_symbol_table const *self, char const *name)
+{
   UTILLIB_SLIST_FOREACH(struct utillib_hashmap const *, scope,
                         &self->scope_table) {
-    entry = utillib_hashmap_at(scope, name);
-    if (entry)
-      return entry;
+  struct cling_symbol_entry * entry;
+  if ((entry=utillib_hashmap_at(scope, name)))
+    return entry;
   }
   return utillib_hashmap_at(&self->global_table, name);
 }
 
-bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
-                                   char const *name, size_t level) {
-  struct utillib_hashmap *cur_scope = symbol_table_get_scope(self);
-  if (level == 0 || self->scope == 0)
-    return utillib_hashmap_exist_key(cur_scope, name);
+static bool symbol_table_lexical_exist_name(struct cling_symbol_table const *self, char const *name)
+{
   UTILLIB_SLIST_FOREACH(struct utillib_hashmap const *, scope,
                         &self->scope_table) {
     if (utillib_hashmap_exist_key(scope, name))
       return true;
   }
   return utillib_hashmap_exist_key(&self->global_table, name);
+}
+
+void cling_symbol_table_insert(struct cling_symbol_table *self, 
+                              char const *name,int kind,
+                              struct utillib_json_value *value,
+                              int scope_kind) {
+  struct utillib_hashmap *scope;
+  void * should_be_NULL;
+
+  switch(scope_kind) {
+  case CL_GLOBAL:
+    scope=&self->global_table;
+    break;
+  case CL_LOCAL:
+    scope=utillib_slist_front(&self->scope_table);
+    break;
+  default:
+    assert(false);
+  }
+  should_be_NULL=utillib_hashmap_update(scope,
+      strdup(name), symbol_entry_create(kind, value));
+  assert (should_be_NULL == NULL);
+}
+
+void cling_symbol_table_reserve(struct cling_symbol_table *self,
+                                char const *name,
+                                int scope_kind) {
+  struct utillib_hashmap *scope;
+  int should_be_zero;
+
+  switch(scope_kind) {
+  case CL_LOCAL:
+    scope=utillib_slist_front(&self->scope_table);
+    break;
+  case CL_GLOBAL:
+    scope=&self->global_table;
+    break;
+  default:
+    assert(false);
+  }
+  should_be_zero=utillib_hashmap_insert(scope, strdup(name), NULL);
+  assert(should_be_zero == 0);
+}
+
+struct cling_symbol_entry *
+cling_symbol_table_find(struct cling_symbol_table const *self,
+    char const *name, int scope_kind) {
+  switch (scope_kind) {
+  case CL_LEXICAL:
+    return symbol_table_lexical_find(self, name);
+  case CL_GLOBAL:
+    return utillib_hashmap_at(&self->global_table, name);
+  case CL_LOCAL:
+    return utillib_hashmap_at(utillib_slist_front(&self->scope_table), name);
+  }
+}
+
+bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
+                                   char const *name, int scope_kind)
+{
+  switch(scope_kind) {
+  case CL_LEXICAL:
+    return symbol_table_lexical_exist_name(self, name);
+  case CL_GLOBAL:
+    return utillib_hashmap_exist_key(&self->global_table, name);
+  case CL_LOCAL:
+    return utillib_hashmap_exist_key(utillib_slist_front(&self->scope_table), name);
+  }
 }
 
 /*
