@@ -20,10 +20,13 @@
 */
 #include "scanner.h"
 #include "symbols.h"
-#include <ctype.h>
-#include <stdlib.h> // strtoul free
-#include <string.h>
+
 #include <utillib/print.h>
+
+#include <assert.h>
+#include <stdlib.h> 
+#include <string.h>
+#include <ctype.h>
 
 static struct pascal_scanner_error *
 scanner_error_create(int kind, char badch, size_t row, size_t col);
@@ -58,7 +61,6 @@ const size_t pascal_keywords_size =
 struct utillib_scanner_op const pascal_scanner_op = {
     .lookahead = (void *)pascal_scanner_lookahead,
     .shiftaway = (void *)pascal_scanner_shiftaway,
-    .semantic = (void *)pascal_scanner_semantic,
 };
 
 static bool is_idbegin(int ch) { return ch == '_' || isalpha(ch); }
@@ -268,17 +270,19 @@ void pascal_scanner_shiftaway(struct pascal_scanner *self) {
   scanner_read_input(self);
 }
 
-void const *pascal_scanner_semantic(struct pascal_scanner *self) {
+void pascal_scanner_semantic(struct pascal_scanner *self,
+    union pascal_semantic *value) {
   char const *str = utillib_string_c_str(&self->buffer);
-  if (self->code == SYM_IDEN) {
-    return strdup(str);
+  switch(self->code) {
+  case SYM_IDEN:
+    value->string=strdup(str);
+    return;
+  case SYM_UINT:
+    sscanf(str, "%lu", &value->unsigned_int);
+    return;
+  default:
+    assert(false);
   }
-  if (self->code == SYM_UINT) {
-    size_t uint_val;
-    uint_val = strtoul(str, NULL, 10);
-    return (void const *)uint_val;
-  }
-  return NULL;
 }
 
 void pascal_scanner_error_print(struct pascal_scanner_error const *self) {

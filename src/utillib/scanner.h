@@ -52,10 +52,8 @@ struct utillib_keyword_pair {
  * the blank of this table.
  */
 struct utillib_scanner_op {
-  size_t (*lookahead)(void *);
-  void (*shiftaway)(void *);
-  bool (*reacheof)(void *);
-  void const *(*semantic)(void *);
+  size_t (*lookahead)(void *self);
+  void (*shiftaway)(void *self);
 };
 
 /**
@@ -135,7 +133,6 @@ struct utillib_token_scanner_callback {
                       struct utillib_string *buffer);
   int (*error_handler)(struct utillib_char_scanner *chars,
                        struct utillib_token_scanner_error const *error);
-  void const *(*semantic_handler)(size_t value, char const *str);
 };
 
 /**
@@ -196,8 +193,8 @@ void utillib_symbol_scanner_init(struct utillib_symbol_scanner *self,
  * Returns pointer to a `struct utillib_symbol' corresponding
  * to the lookahead value as semantic of this token.
  */
-void const *
-utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self);
+void utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self,
+    struct utillib_symbol const **value);
 size_t utillib_symbol_scanner_lookahead(struct utillib_symbol_scanner *self);
 void utillib_symbol_scanner_shiftaway(struct utillib_symbol_scanner *self);
 bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self);
@@ -221,7 +218,7 @@ void utillib_token_scanner_init(
     struct utillib_token_scanner_callback const *callback);
 void utillib_token_scanner_destroy(struct utillib_token_scanner *self);
 size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self);
-void const *utillib_token_scanner_semantic(struct utillib_token_scanner *self);
+char const *utillib_token_scanner_semantic(struct utillib_token_scanner *self);
 void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self);
 bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self);
 

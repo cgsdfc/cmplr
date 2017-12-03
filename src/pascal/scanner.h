@@ -69,10 +69,15 @@ struct pascal_scanner {
   size_t code;
 };
 
+union pascal_semantic {
+  char *string;
+  size_t unsigned_int;
+};
+
 void pascal_scanner_init(struct pascal_scanner *self, FILE *file);
 size_t pascal_scanner_lookahead(struct pascal_scanner *self);
 void pascal_scanner_shiftaway(struct pascal_scanner *self);
-void const *pascal_scanner_semantic(struct pascal_scanner *self);
+void pascal_scanner_semantic(struct pascal_scanner *self, union pascal_semantic *value);
 void pascal_scanner_destroy(struct pascal_scanner *self);
 void pascal_scanner_error_print(struct pascal_scanner_error const *self);
 size_t pascal_scanner_check(struct pascal_scanner *self);

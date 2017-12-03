@@ -32,6 +32,15 @@
  * language-neutual.
  */
 
+union cling_semantic {
+  char signed_char;
+  char const *string;
+  long signed_int;
+  size_t unsigned_int;
+};
+
+void cling_ast_semantic(struct utillib_json_value const*self,
+    union cling_semantic *value);
 /*
  * Table insertion.
  */
@@ -54,12 +63,14 @@ void cling_ast_insert_function(struct utillib_json_value *self,
  * AST construction helpers.
  */
 
+struct utillib_json_value * cling_ast_string(char const *rawstr);
+
 void cling_ast_set_op(struct utillib_json_value *self, size_t op);
 
 void cling_ast_set_opstr(struct utillib_json_value *self, size_t op);
 
 void cling_ast_set_extend(struct utillib_json_value *self,
-    size_t extend);
+    struct utillib_json_value *extend);
 
 void cling_ast_set_lhs(struct utillib_json_value *self,
                        struct utillib_json_value *lhs);
@@ -68,7 +79,7 @@ void cling_ast_set_rhs(struct utillib_json_value *self,
                        struct utillib_json_value *rhs);
 
 struct utillib_json_value *cling_ast_constant(size_t code,
-                                              void const *semantic);
+    char const *rawstr);
 
 struct utillib_json_value *cling_ast_statement(size_t type);
 

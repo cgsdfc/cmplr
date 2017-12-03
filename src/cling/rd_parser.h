@@ -36,8 +36,6 @@
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
-  size_t context;
-  size_t expected;
   int tars[RD_PARSER_SKIP_MAX];
   struct utillib_json_value *root;
   struct cling_symbol_table *symbol_table;

@@ -47,17 +47,8 @@ static const struct utillib_keyword_pair cling_keywords[] = {
     {"switch", SYW_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-static const struct utillib_token_scanner_callback cling_scanner_callback = {
-    .read_handler = cling_scanner_read_handler,
-    .error_handler = cling_scanner_error_handler,
-    .semantic_handler = cling_scanner_semantic_handler,
-};
 
-void cling_scanner_init(struct utillib_token_scanner *self, FILE *file) {
-  utillib_token_scanner_init(self, file, &cling_scanner_callback);
-}
-
-int cling_scanner_read_char(struct utillib_char_scanner *chars,
+static int cling_scanner_read_char(struct utillib_char_scanner *chars,
                             struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
@@ -73,7 +64,7 @@ int cling_scanner_read_char(struct utillib_char_scanner *chars,
   return -CL_ECHRCHAR;
 }
 
-int cling_scanner_read_string(struct utillib_char_scanner *chars,
+static int cling_scanner_read_string(struct utillib_char_scanner *chars,
                               struct utillib_string *buffer) {
   char ch;
   for (; (ch = utillib_char_scanner_lookahead(chars)) != '\"';
@@ -90,7 +81,7 @@ int cling_scanner_read_string(struct utillib_char_scanner *chars,
   return SYM_STRING;
 }
 
-int cling_scanner_read_number(struct utillib_char_scanner *chars,
+static int cling_scanner_read_number(struct utillib_char_scanner *chars,
                               struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
@@ -100,7 +91,8 @@ int cling_scanner_read_number(struct utillib_char_scanner *chars,
   return SYM_UINT;
 }
 
-int cling_scanner_read_handler(struct utillib_char_scanner *chars,
+static int
+cling_scanner_read_handler(struct utillib_char_scanner *chars,
                                struct utillib_string *buffer) {
   utillib_token_scanner_skipspace(chars);
   if (utillib_char_scanner_reacheof(chars))
@@ -209,7 +201,7 @@ int cling_scanner_read_handler(struct utillib_char_scanner *chars,
   return -CL_EUNKNOWN;
 }
 
-int cling_scanner_error_handler(
+static int cling_scanner_error_handler(
     struct utillib_char_scanner *chars,
     struct utillib_token_scanner_error const *error) {
   char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
@@ -232,24 +224,14 @@ int cling_scanner_error_handler(
   return 1;
 }
 
-void const *cling_scanner_semantic_handler(size_t value, char const *str) {
-  size_t uint;
-  char ch;
-  switch (value) {
-  case SYM_UINT:
-    sscanf(str, "%lu", &uint);
-    return uint;
-  case SYM_IDEN:
-  case SYM_STRING:
-    return str;
-  case SYM_CHAR:
-    ch = str[0];
-    return ch;
-  default:
-    return NULL;
-  }
-}
+static const struct utillib_token_scanner_callback cling_scanner_callback = {
+    .read_handler = cling_scanner_read_handler,
+    .error_handler = cling_scanner_error_handler,
+};
 
+void cling_scanner_init(struct utillib_token_scanner *self, FILE *file) {
+  utillib_token_scanner_init(self, file, &cling_scanner_callback);
+}
 void cling_scanner_destroy(struct utillib_token_scanner *self) {
   utillib_token_scanner_destroy(self);
 }

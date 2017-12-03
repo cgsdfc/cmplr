@@ -26,7 +26,6 @@
 const struct utillib_scanner_op utillib_json_scanner_op = {
     .lookahead = utillib_json_scanner_lookahead,
     .shiftaway = utillib_json_scanner_shiftaway,
-    .semantic = utillib_json_scanner_semantic,
 };
 
 static int json_scanner_read_str(struct utillib_string_scanner *scanner,
@@ -210,7 +209,7 @@ void utillib_json_scanner_init(struct utillib_json_scanner *self,
   self->code = json_scanner_read(&self->scanner, &self->buffer);
 }
 
-size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self) {
+inline size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self) {
   return self->code;
 }
 
@@ -220,33 +219,43 @@ void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self) {
   self->code = code >= 0 ? code : UT_SYM_ERR;
 }
 
-void const *utillib_json_scanner_semantic(struct utillib_json_scanner *self) {
+void utillib_json_scanner_semantic(
+    struct utillib_json_scanner const *self,
+    struct utillib_json_value **value)
+{
   double real;
   long longv;
   char const *str;
   switch (self->code) {
   case UT_SYM_EOF:
   case UT_SYM_ERR:
-    return NULL;
+    *value=NULL;
+    return;
   case JSON_SYM_FALSE:
-    return &utillib_json_false;
+    *value=&utillib_json_false;
+    return;
   case JSON_SYM_TRUE:
-    return &utillib_json_true;
+    *value = &utillib_json_true;
+    return;
   case JSON_SYM_NULL:
-    return &utillib_json_null;
+    *value = &utillib_json_null;
+    return;
   case JSON_SYM_STR:
     str = utillib_string_c_str(&self->buffer);
-    return utillib_json_string_create(&str);
+    *value = utillib_json_string_create(&str);
+    return;
   case JSON_SYM_LONG:
     str = utillib_string_c_str(&self->buffer);
     sscanf(str, "%ld", &longv);
-    return utillib_json_long_create(&longv);
+    *value=utillib_json_long_create(&longv);
+    return;
   case JSON_SYM_REAL:
     str = utillib_string_c_str(&self->buffer);
     sscanf(str, "%lf", &real);
-    return utillib_json_real_create(&real);
+    *value=utillib_json_real_create(&real);
+    return;
   default:
-    return NULL;
+    assert(false && "unimplemented value");
   }
 }
 

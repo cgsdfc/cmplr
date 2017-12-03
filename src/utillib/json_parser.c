@@ -134,8 +134,9 @@ static void json_parser_rule_handler(void *_self,
    */
 static void json_parser_terminal_handler(struct utillib_json_parser *self,
                                          struct utillib_symbol const *symbol,
-                                         void const *semantic) {
+                                         void *input) {
   struct utillib_vector *values = &self->values;
+  struct utillib_json_value *value;
 
   switch (symbol->value) {
   case JSON_SYM_TRUE:
@@ -144,7 +145,8 @@ static void json_parser_terminal_handler(struct utillib_json_parser *self,
   case JSON_SYM_REAL:
   case JSON_SYM_LONG:
   case JSON_SYM_STR:
-    utillib_vector_push_back(values, semantic);
+    utillib_json_scanner_semantic(input, &value);
+    utillib_vector_push_back(values, value);
     return;
   default:
     break;

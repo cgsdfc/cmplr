@@ -33,8 +33,8 @@ UTILLIB_TEST_AUX(json_scanner_recognize, size_t const *kinds,
        ++expected_code) {
     size_t actual_code = utillib_json_scanner_lookahead(UT_FIXTURE);
     UTILLIB_TEST_ASSERT_EQ(actual_code, *expected_code);
-    struct utillib_json_value *value =
-        utillib_json_scanner_semantic(UT_FIXTURE);
+    struct utillib_json_value *value;
+    utillib_json_scanner_semantic(UT_FIXTURE, &value);
     if (value) {
       utillib_json_pretty_print(value, stderr);
       utillib_json_value_destroy(value);

@@ -27,6 +27,8 @@
 #include "symbol_table.h"
 #include "symbols.h"
 
+#include <utillib/hashmap.h>
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,6 +68,17 @@ static void rd_parser_error_push_back(struct cling_rd_parser *self,
   utillib_vector_push_back(&self->elist, error);
 }
 
+static int long_compare(void const* lhs, void const* rhs) {
+  return (long)lhs-(long)rhs;
+}
+
+static size_t long_hash(void const* self) {
+  return (long) self;
+}
+
+static const struct utillib_hashmap_callback case_constant_hash_callback={
+  .compare_handler=long_compare, .hash_handler=long_hash,
+};
 /*
  * Forward Declarations
  */
@@ -180,8 +193,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
 
   size_t code;
   char const * name;
-  size_t value;
-  struct utillib_json_value *object, *array;
+  struct utillib_json_value *object, *array, *value;
   struct cling_error * error;
   const size_t context=SYM_CONST_DEF;
 
@@ -217,11 +229,11 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
       goto skip;
     }
 
-    value = utillib_token_scanner_semantic(input);
+    value = cling_ast_constant(code, 
+        utillib_token_scanner_semantic(input));
     utillib_token_scanner_shiftaway(input);
 
-    utillib_json_object_push_back(object, "value",
-                                  utillib_json_size_t_create(&value));
+    utillib_json_object_push_back(object, "value", value);
     utillib_json_array_push_back(array, object);
 
     code = utillib_token_scanner_lookahead(input);
@@ -339,7 +351,6 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
                                            char const *first_iden,
                                            int scope_kind) {
   size_t code;
-  size_t extend;
   size_t expected;
   size_t const context = SYM_VAR_DEF;
   struct utillib_json_value *array = utillib_json_array_create_empty();
@@ -366,7 +377,7 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
         expected=SYM_UINT;
         goto expected;
       }
-      extend = utillib_token_scanner_semantic(input);
+      char const * extend = utillib_token_scanner_semantic(input);
       cling_ast_set_extend(object, extend);
       utillib_token_scanner_shiftaway(input);
       code = utillib_token_scanner_lookahead(input);
@@ -408,7 +419,7 @@ redefined:
 expected:
   rd_parser_error_push_back(self,
       cling_expected_error(input, expected, context));
-  switch (self->expected) {
+  switch (expected) {
   case SYM_UINT:
     self->tars[0] = SYM_RK;
     self->tars[1] = SYM_COMMA;
@@ -899,6 +910,7 @@ return_object:
 /*
  * Lookahead SYM_KW_CASE
  */
+
 static struct utillib_json_value *
 switch_stmt_cases(struct cling_rd_parser *self,
                   struct utillib_token_scanner *input) {
@@ -906,6 +918,8 @@ switch_stmt_cases(struct cling_rd_parser *self,
   struct utillib_json_value *array, *object, *stmt;
   const size_t context=SYM_CASE_CLAUSE;
   array = utillib_json_array_create_empty();
+  struct utillib_hashmap label_map;
+  utillib_hashmap_init(&label_map, &case_constant_hash_callback);
 
   while (true) {
   loop:
@@ -917,7 +931,7 @@ switch_stmt_cases(struct cling_rd_parser *self,
       utillib_token_scanner_shiftaway(input);
       code = utillib_token_scanner_lookahead(input);
       if (code != SYM_UINT && code != SYM_CHAR) {
-        goto expected_case;
+        goto expected_constant;
       }
       utillib_json_object_push_back(
           object, "case",
@@ -960,12 +974,13 @@ parse_stmt:
     goto loop;
   return_array:
   case SYM_KW_DEFAULT:
+    utillib_hashmap_destroy_owning(&label_map, NULL, NULL);
     return array;
   }
 
-expected_case:
+expected_constant:
   rd_parser_error_push_back(self,
-      cling_expected_error(input, SYM_KW_CASE, context));
+      cling_expected_error(input, SYM_CONSTANT, context));
   if (code != SYM_COLON)
     utillib_token_scanner_shiftaway(input);
   goto parse_colon;
@@ -1401,11 +1416,8 @@ printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
      *   "value": "string"
      * }
      */
-    strobj = utillib_json_object_create_empty();
-    utillib_json_object_push_back(strobj, "is_str", &utillib_json_true);
     string = utillib_token_scanner_semantic(input);
-    utillib_json_object_push_back(strobj, "value",
-                                  utillib_json_string_create(&string));
+    strobj = cling_ast_string(string);
     utillib_json_array_push_back(array, strobj);
     utillib_token_scanner_shiftaway(input);
     code = utillib_token_scanner_lookahead(input);

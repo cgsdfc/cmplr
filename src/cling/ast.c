@@ -26,6 +26,20 @@
 
 #include <utillib/json_foreach.h>
 
+size_t cling_ast_get_type(struct utillib_json_value *self)
+{
+  struct utillib_json_value * type=utillib_json_object_at(self, "type");
+  assert(type);
+  return type->as_size_t;
+}
+
+char const * cling_ast_get_string(struct utillib_json_value *self, char const *key)
+{
+  struct utillib_json_value *name = utillib_json_object_at(self, key);
+  assert(name);
+  return name->as_ptr;
+}
+
 static size_t ast_gettype(struct utillib_json_value *self) {
   switch(self->as_size_t) {
   case SYM_KW_INT:
@@ -43,6 +57,30 @@ static char const* ast_getname(struct utillib_json_value *self) {
   assert (self->kind == UT_JSON_STRING);
   return self->as_ptr;
 }
+
+void cling_ast_literal(struct utillib_json_value const*self,
+    union cling_semantic *value)
+{
+  size_t type=cling_ast_get_type(self);
+  char const *rawstr=cling_ast_get_string(self, "rawstr");
+  switch (type) {
+  case SYM_UINT:
+    sscanf(rawstr, "%lu", &value->unsigned_int);
+    return;
+  case SYM_INTEGER:
+    sscanf(rawstr, "%ld", &value->signed_int);
+    return;
+  case SYM_STRING:
+    value->string=strdup(rawstr);
+    return;
+  case SYM_CHAR:
+    sscanf(rawstr, "%c", &value->signed_char);
+    return;
+  default:
+    assert(false);
+  }
+}
+
 
 /**
  * \function cling_ast_insert_const
@@ -148,20 +186,18 @@ void cling_ast_set_rhs(struct utillib_json_value *self,
 }
 
 void cling_ast_set_extend(struct utillib_json_value *self,
-    size_t extend) {
-  utillib_json_object_push_back(self, "extend", utillib_json_size_t_create(&extend));
+    struct utillib_json_value *extend) {
+  utillib_json_object_push_back(self, "extend", extend);
 }
 
 
 struct utillib_json_value *cling_ast_constant(size_t code,
-                                              void const *semantic) {
-  switch (code) {
-  case SYM_CHAR:
-  case SYM_UINT:
-    return utillib_json_size_t_create(&semantic);
-  default:
-    assert(false);
-  }
+    char const *rawstr) {
+  struct utillib_json_value * object=utillib_json_object_create_empty();
+  cling_ast_set_type(object, code);
+  utillib_json_object_push_back(object, "rawstr",
+      utillib_json_string_create(&rawstr));
+  return object;
 }
 
 struct utillib_json_value *cling_ast_statement(size_t type) {
@@ -174,6 +210,15 @@ struct utillib_json_value *cling_ast_statement(size_t type) {
 void cling_ast_set_name(struct utillib_json_value *self, char const *name) {
   utillib_json_object_push_back(self, "name",
                                 utillib_json_string_create(&name));
+}
+
+struct utillib_json_value *
+cling_ast_string(char const *rawstr) {
+  struct utillib_json_value * strobj = utillib_json_object_create_empty();
+  utillib_json_object_push_back(strobj, "is_str", &utillib_json_true);
+  utillib_json_object_push_back(strobj, "value",
+      utillib_json_string_create(&rawstr));
+  return strobj;
 }
 
 void cling_ast_set_type(struct utillib_json_value *self, size_t type) {

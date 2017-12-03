@@ -137,7 +137,8 @@ void cling_error_print(struct cling_error const *self) {
     utillib_error_printf("undefined reference to `%s' in `%s'", einfo[0], einfo[1]);
     break;
   case CL_ENOTLVALUE:
-    utillib_error_printf("in `%s', operand `%s' is not left value", einfo[1], einfo[0]);
+    utillib_error_printf("`%s' is not assignable in `%s'", einfo[0], einfo[1]);
+    break;
   default:
     assert(false && "unimplemented");
   }

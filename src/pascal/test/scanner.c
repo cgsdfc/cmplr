@@ -141,16 +141,17 @@ UTILLIB_TEST(scanner_error_bad_ceq) {
 }
 
 UTILLIB_TEST_AUX(scanner_token_pretty_print) {
-  void const *value = pascal_scanner_semantic(UT_FIXTURE);
+  union pascal_semantic value;
+  pascal_scanner_semantic(UT_FIXTURE, &value);
   size_t code = pascal_scanner_lookahead(UT_FIXTURE);
   printf("%15s: %lu: ", pascal_symbol_kind_tostring(code), code);
   switch (code) {
   case SYM_IDEN:
-    printf("`%s'\n", (char const *)value);
-    free((void *)value);
+    printf("`%s'\n", value.string);
+    free(value.string);
     break;
   case SYM_UINT:
-    printf("`%lu'\n", (size_t)value);
+    printf("`%lu'\n", value.unsigned_int);
     break;
   default:
     puts("null");
