@@ -76,8 +76,8 @@ symbol_table_get_scope(struct cling_symbol_table const *self) {
   return utillib_slist_front(&self->scope_table);
 }
 
-int cling_symbol_table_insert(struct cling_symbol_table *self, int kind,
-                              char const *name,
+int cling_symbol_table_insert(struct cling_symbol_table *self, 
+                              char const *name,int kind,
                               struct utillib_json_value *value) {
   struct utillib_hashmap *scope = symbol_table_get_scope(self);
   if (utillib_hashmap_at(scope, name))
@@ -94,8 +94,8 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
   assert(retv == 0);
 }
 
-void cling_symbol_table_update(struct cling_symbol_table *self, int kind,
-                               char const *name,
+void cling_symbol_table_update(struct cling_symbol_table *self, 
+                               char const *name,int kind,
                                struct utillib_json_value *value) {
   struct utillib_hashmap *scope = symbol_table_get_scope(self);
   void *old_value =
@@ -120,7 +120,7 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
   return utillib_hashmap_at(&self->global_table, name);
 }
 
-bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
+bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
                                    char const *name, size_t level) {
   struct utillib_hashmap *cur_scope = symbol_table_get_scope(self);
   if (level == 0 || self->scope == 0)
@@ -147,7 +147,7 @@ symbol_table_scope_json_object_create(struct utillib_hashmap const *self) {
 }
 
 struct utillib_json_value *
-cling_symbol_table_json_object_create(struct cling_symbol_table *self) {
+cling_symbol_table_json_object_create(struct cling_symbol_table const *self) {
   struct utillib_json_value *object = utillib_json_object_create_empty();
   utillib_json_object_push_back(
       object, "global_table",

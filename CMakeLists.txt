@@ -159,4 +159,8 @@ add_executable(cling-scanner ./src/cling/smain.c)
 target_link_libraries(cling-scanner cling)
 add_executable(cling-parser ./src/cling/pmain.c)
 target_link_libraries(cling-parser cling)
+add_library(cling++ ./src/cling/cling.cpp)
+target_link_libraries(cling++ cling utillib++)
+add_executable(clingcppmain ./src/cling/cppmain.cpp)
+target_link_libraries(clingcppmain cling++)
 

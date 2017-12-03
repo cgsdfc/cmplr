@@ -91,8 +91,9 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
  * Inserts a new entry (name, kind, value) into the current scope
  * and fails if the entry already exists.
  */
-int cling_symbol_table_insert(struct cling_symbol_table *self, int kind,
+int cling_symbol_table_insert(struct cling_symbol_table *self, 
                               char const *name,
+                              int kind,
                               struct utillib_json_value *value);
 
 /**
@@ -128,8 +129,9 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
  * blank of it.
  * Notes that the name will not be strdup.
  */
-void cling_symbol_table_update(struct cling_symbol_table *self, int kind,
+void cling_symbol_table_update(struct cling_symbol_table *self,
                                char const *name,
+                               int kind,
                                struct utillib_json_value *value);
 
 /**
@@ -137,19 +139,13 @@ void cling_symbol_table_update(struct cling_symbol_table *self, int kind,
  * Parallel with `cling_symbol_table_find', but only answers
  * whether the name exists regardless of its entry.
  */
-bool cling_symbol_table_exist_name(struct cling_symbol_table *self,
+bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
                                    char const *name, size_t level);
 
 /*
  * JSON
  */
 struct utillib_json_value *
-cling_symbol_table_json_object_create(struct cling_symbol_table *self);
-
-void cling_symbol_table_insert_const(struct cling_symbol_table *symbols,
-                                     struct utillib_json_value *object);
-
-void cling_symbol_table_insert_variable(struct cling_symbol_table *symbols,
-                                        struct utillib_json_value *object);
+cling_symbol_table_json_object_create(struct cling_symbol_table const *self);
 
 #endif /* CLING_SYMBOL_TABLE_H */

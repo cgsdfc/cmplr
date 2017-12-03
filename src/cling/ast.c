@@ -45,7 +45,7 @@ void cling_ast_insert_const(struct utillib_json_value *self,
     struct utillib_json_value *name =
         utillib_json_object_at(obj, "name");
     assert(name);
-    cling_symbol_table_update(symbol_table, kind, name->as_ptr, obj);
+    cling_symbol_table_update(symbol_table, name->as_ptr,kind,  obj);
   }
 }
 
@@ -62,8 +62,8 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
         utillib_json_object_at(obj, "name");
     assert(name);
     cling_symbol_table_update(
-        symbol_table, utillib_json_object_at(obj, "extend") ? kind | CL_ARRAY : kind,
-        name->as_ptr, obj);
+        symbol_table, name->as_ptr,
+        utillib_json_object_at(obj, "extend") ? kind | CL_ARRAY : kind,obj);
   }
 }
 
@@ -76,7 +76,7 @@ void cling_ast_insert_formal_arg(struct utillib_json_value *self,
     struct utillib_json_value * type=utillib_json_object_at(object, "type");
     int kind=type->as_size_t == SYM_KW_INT ? CL_INT : CL_CHAR;
     struct utillib_json_value * name=utillib_json_object_at(object, "name");
-    cling_symbol_table_update(symbol_table, kind, name->as_ptr, object);
+    cling_symbol_table_update(symbol_table, name->as_ptr, kind, object);
   }
 }
 

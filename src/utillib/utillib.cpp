@@ -13,7 +13,28 @@ void json_value::destroy() { utillib_json_value_destroy(self); }
 bool json_value::is_null() const { return self == &utillib_json_null; }
 
 bool json_value::is_array() const { return self->kind == UT_JSON_ARRAY; }
+
 bool json_value::is_object() const { return self->kind == UT_JSON_OBJECT; }
+
+void json_value::pretty_print() const {
+  utillib_json_pretty_print(self, stdout);
+}
+
+json_value::operator json_object() const {
+  assert (self->kind == UT_JSON_OBJECT);
+  return *this;
+}
+
+json_value::operator json_array() const {
+  assert (self->kind == UT_JSON_ARRAY);
+  return *this;
+}
+
+string json_value::tostring() const {
+  string str;
+  utillib_json_tostring(self, &str.self);
+  return str;
+}
 
 //
 // json_array
@@ -22,7 +43,7 @@ void json_array::push_back(json_value element) {
   utillib_json_array_push_back(self, element.self);
 }
 
-json_value json_array::element(size_t index) {
+json_value json_array::at(size_t index) {
   auto val = utillib_json_array_at(self, index);
   return val == NULL ? json_value() : json_value(val);
 }
@@ -38,20 +59,11 @@ void json_object::push_back(char const *key, json_value value) {
   utillib_json_object_push_back(self, key, value.self);
 }
 
-json_value json_object::member(char const *key) {
+json_value json_object::at(char const *key) {
   auto val = utillib_json_object_at(self, key);
   return val == NULL ? json_value() : json_value(val);
 }
 
-void json_value::pretty_print() const {
-  utillib_json_pretty_print(self, stdout);
-}
-
-string json_value::tostring() const {
-  string str;
-  utillib_json_tostring(self, &str.self);
-  return str;
-}
 
 json_value json_object_create() {
   auto val = utillib_json_object_create_empty();
@@ -98,7 +110,7 @@ hashmap::hashmap(struct utillib_hashmap_callback const &callback) {
 void hashmap::destroy() { utillib_hashmap_destroy(&self); }
 
 void hashmap::destroy_owning(void (*key_destroy)(void *key),
-                             void (*value_destroy)(void *value)) {
+    void (*value_destroy)(void *value)) {
   utillib_hashmap_destroy_owning(&self, key_destroy, value_destroy);
 }
 
@@ -137,7 +149,7 @@ hashmap::tojson(utillib_json_value_create_func_t value_create) const {
 
 json_value
 hashmap::tojson(utillib_json_value_create_func_t key_create,
-                utillib_json_value_create_func_t value_create) const {
+    utillib_json_value_create_func_t value_create) const {
   return json_value(
       utillib_hashmap_json_array_create(&self, key_create, value_create));
 }
@@ -227,8 +239,8 @@ json_value bitset::tojson() const {
 // ll1_factory
 //
 ll1_factory::ll1_factory(int const *gentable,
-                         struct utillib_symbol const *symbols,
-                         struct utillib_rule_literal const *rules) {
+    struct utillib_symbol const *symbols,
+    struct utillib_rule_literal const *rules) {
   utillib_ll1_factory_gen_init(&self, gentable, symbols, rules);
 }
 

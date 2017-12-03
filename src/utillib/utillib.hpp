@@ -40,7 +40,7 @@ class json_object : public json_value {
     json_object() = delete;
     operator json_value() const;
     void push_back(char const *key, json_value value);
-    json_value member(const char *key);
+    json_value at(const char *key);
 };
 
 class json_array : public json_value {
@@ -48,7 +48,7 @@ class json_array : public json_value {
     json_array() = delete;
     operator json_value() const;
     void push_back(json_value element);
-    json_value element(size_t index);
+    json_value at(size_t index);
 };
 
 template <class T> json_value json_value_create(T val);
@@ -97,7 +97,7 @@ public:
 };
 
 class hashmap {
-private:
+public:
   struct utillib_hashmap self;
 
 public:
@@ -121,7 +121,7 @@ public:
 };
 
 class vector {
-private:
+public:
   struct utillib_vector self;
 
 public:
@@ -145,7 +145,7 @@ public:
 };
 
 class slist {
-private:
+public:
   struct utillib_slist self;
 
 public:
@@ -162,7 +162,7 @@ public:
 };
 
 class bitset {
-private:
+public:
   struct utillib_bitset self;
 
 public:
@@ -191,7 +191,7 @@ public:
 };
 
 class json_parser {
-private:
+public:
   struct utillib_json_parser self;
   struct factory {
     struct utillib_ll1_factory self;
