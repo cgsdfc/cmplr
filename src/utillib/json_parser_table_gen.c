@@ -27,8 +27,7 @@ static int porting_helper(void)
   struct utillib_ll1_generator gen;
   utillib_ll1_generator_init_from_code(&gen, utillib_json_symbols,
                                        utillib_json_rules);
-  bool good = utillib_ll1_generator_generate(&gen, UTILLIB_SOURCE_DIR
-                                             "json_parser_table.c");
+  bool good = utillib_ll1_generator_generate(&gen, "json_parser_table.c");
   utillib_ll1_generator_destroy(&gen);
   return !good;
 #else /* Due to UTILLIB_SOURCE_DIR, omitted on windows */

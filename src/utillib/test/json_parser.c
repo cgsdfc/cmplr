@@ -24,6 +24,12 @@
 #include <utillib/ll1_generator.h>
 #include <utillib/test.h>
 
+/*
+ * This file is out of date!
+ * Now json_parser needs **string**
+ * as input rather than utillib_symbol_scanner!
+ */
+
 static struct utillib_ll1_factory 
 parser_factory;
 

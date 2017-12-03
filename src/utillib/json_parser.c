@@ -27,9 +27,6 @@
 #include "pair.h"
 #include <assert.h>
 #include <stdlib.h>
-#ifndef NODEBUG
-static const double _PI = 3.1415926;
-#endif
 
 /**
  * \function json_parser_values_pop_back
@@ -195,7 +192,8 @@ static const struct utillib_ll1_parser_callback json_parser_callback = {
 
 void utillib_json_parser_factory_init(
     struct utillib_ll1_factory *self) {
-  utillib_ll1_factory_build_init(self, utillib_json_symbols, utillib_json_rules);
+  utillib_ll1_factory_gen_init(self, ll1_parser_table,
+      utillib_json_symbols, utillib_json_rules);
 }
 
 void utillib_json_parser_init(struct utillib_json_parser *self,

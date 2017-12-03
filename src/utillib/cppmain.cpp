@@ -5,9 +5,9 @@
 
 int main() 
 {
-  auto object=utillib::json_object_create();
-  object.pretty_print();
-  object.destroy();
 
+  utillib::json_parser jp;
+  auto result=jp.parse("{{{{{{{{{}}}}}}}}}");
+  result.pretty_print();
 
 }

@@ -109,7 +109,8 @@ add_executable(example-vector ./src/utillib/example/vector.c)
 target_link_libraries(example-vector utillib)
 add_executable(example-string ./src/utillib/example/string.c)
 target_link_libraries(example-string utillib)
-
+add_executable(json_parser_table_gen ./src/utillib/json_parser_table_gen.c)
+target_link_libraries(json_parser_table_gen utillib)
 
 ## Pascal 
 add_library(pascal
