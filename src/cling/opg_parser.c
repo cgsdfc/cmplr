@@ -139,19 +139,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
   return CL_OPG_ERR;
 }
 
-static struct utillib_json_value *
-opg_parser_factor_create(size_t code, void const *semantic) {
-  switch (code) {
-  case SYM_IDEN:
-    return utillib_json_string_create(&semantic);
-  case SYM_CHAR:
-  case SYM_UINT:
-    return utillib_json_size_t_create(&semantic);
-  default:
-    assert(false);
-  }
-}
-
 /*
  * Two debugging functions.
  * Show you the stack and opstack, repectedly.
@@ -358,9 +345,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     stacktop = utillib_vector_back(opstack);
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
         lookahead == SYM_CHAR) {
-      utillib_vector_push_back(
-          stack, opg_parser_factor_create(
-                     lookahead, utillib_token_scanner_semantic(input)));
+      utillib_vector_push_back(stack, 
+          cling_ast_factor(lookahead, utillib_token_scanner_semantic(input)));
       if (lookahead == SYM_IDEN)
         /*
          * SYM_IDEN matters in call_expr

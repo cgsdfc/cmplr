@@ -22,8 +22,8 @@
 #include "rd_parser.h"
 #include "ast.h"
 #include "ast_build.h"
+#include "ast_check.h"
 #include "error.h"
-#include "ir.h"
 #include "opg_parser.h"
 #include "symbol_table.h"
 #include "symbols.h"
@@ -1800,9 +1800,12 @@ unexpected:
 static struct utillib_json_value *mock(struct cling_rd_parser *self,
                                        struct utillib_token_scanner *input) {
   struct cling_opg_parser opg_parser ;
-  cling_opg_parser_init(&opg_parser, SYM_RP);
+  cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
   bool is_main;
-  /* return cling_opg_parser_parse(&opg_parser, input); */
+  struct utillib_json_value *val;
+  val=cling_opg_parser_parse(&opg_parser, input);
+  cling_opg_parser_destroy(&opg_parser);
+  return val;
   /* return function(self, input, &is_main); */
-  return program(self, input);
+  /* return program(self, input); */
 }

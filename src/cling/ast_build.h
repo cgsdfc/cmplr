@@ -34,6 +34,8 @@
  */
 struct utillib_json_value * cling_ast_string(char const *rawstr);
 
+struct utillib_json_value *cling_ast_factor(size_t code, char const *string);
+
 void cling_ast_set_op(struct utillib_json_value *self, size_t op);
 
 void cling_ast_set_opstr(struct utillib_json_value *self, size_t op);

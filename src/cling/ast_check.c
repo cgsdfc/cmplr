@@ -41,6 +41,7 @@ int cling_ast_check_assignable(char const *name,
 int cling_ast_check_expression(struct utillib_json_value *self,
     struct cling_rd_parser *parser)
 {
+  return 0;
 }
 
 int cling_ast_check_returnness(struct cling_rd_parser const *parser, 
