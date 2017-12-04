@@ -21,6 +21,7 @@
 
 #include "strhash.h"
 #include <stdlib.h>
+#include <string.h>
 
 size_t simple_strhash(char const *str) {
   size_t len=strlen(str);

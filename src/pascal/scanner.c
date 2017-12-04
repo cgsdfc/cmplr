@@ -281,7 +281,7 @@ void pascal_scanner_semantic(struct pascal_scanner *self,
     sscanf(str, "%lu", &value->unsigned_int);
     return;
   default:
-    assert(false);
+    return;
   }
 }
 

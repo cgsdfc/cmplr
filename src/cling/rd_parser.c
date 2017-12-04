@@ -96,7 +96,7 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input);
 
 static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input,
-                                           char const *first_iden, int scope_kind);
+                                           char *first_iden, int scope_kind);
 
 static struct utillib_json_value *for_stmt(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input);
@@ -229,8 +229,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
       goto skip;
     }
 
-    value = cling_ast_constant(code, 
-        utillib_token_scanner_semantic(input));
+    value = cling_ast_string(utillib_token_scanner_semantic(input));
     utillib_token_scanner_shiftaway(input);
 
     utillib_json_object_push_back(object, "value", value);
@@ -348,7 +347,7 @@ multiple_const_decl(struct cling_rd_parser *self,
  */
 static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input,
-                                           char const *first_iden,
+                                           char *first_iden,
                                            int scope_kind) {
   size_t code;
   size_t expected;
@@ -378,7 +377,8 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
         goto expected;
       }
       char const * extend = utillib_token_scanner_semantic(input);
-      cling_ast_set_extend(object, extend);
+      utillib_json_object_push_back(object, "extend",
+          cling_ast_string(extend));
       utillib_token_scanner_shiftaway(input);
       code = utillib_token_scanner_lookahead(input);
       if (code != SYM_RK) {
@@ -453,7 +453,7 @@ expected:
 static struct utillib_json_value *
 singel_var_decl(struct cling_rd_parser *self,
                 struct utillib_token_scanner *input, size_t type,
-                char const *first_iden,
+                char *first_iden,
                 int scope_kind) {
   size_t code;
   struct utillib_json_value *object = utillib_json_object_create_empty();
@@ -484,7 +484,7 @@ singel_var_decl(struct cling_rd_parser *self,
 static struct utillib_json_value *
 maybe_multiple_var_decls(struct cling_rd_parser *self,
                          struct utillib_token_scanner *input, size_t *type,
-                         char const **first_iden,
+                         char **first_iden,
                          int scope_kind) {
   size_t code = utillib_token_scanner_lookahead(input);
   const size_t context = SYM_VAR_DECL;
@@ -935,7 +935,7 @@ switch_stmt_cases(struct cling_rd_parser *self,
       }
       utillib_json_object_push_back(
           object, "case",
-          cling_ast_constant(code, utillib_token_scanner_semantic(input)));
+          cling_ast_string(utillib_token_scanner_semantic(input)));
       utillib_token_scanner_shiftaway(input);
     parse_colon:
       /*
@@ -1332,7 +1332,7 @@ composite_stmt(struct cling_rd_parser *self,
                bool new_scope) {
   size_t code;
   size_t type;
-  char const *first_iden;
+  char *first_iden;
   struct utillib_json_value *object, *const_decls, *var_decls, *stmts;
 
   object = cling_ast_statement(SYM_COMP_STMT);
@@ -1383,11 +1383,7 @@ static struct utillib_json_value *
 printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
   struct cling_opg_parser opg_parser;
-  struct utillib_json_value *array;
-  struct utillib_json_value *object;
-  struct utillib_json_value *expr;
-  struct utillib_json_value *strobj;
-  char const *string;
+  struct utillib_json_value *array,*object,*expr, *string;
   const size_t context=SYM_PRINTF_STMT;
 
   cling_opg_parser_init(&opg_parser, SYM_RP);
@@ -1416,9 +1412,8 @@ printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
      *   "value": "string"
      * }
      */
-    string = utillib_token_scanner_semantic(input);
-    strobj = cling_ast_string(string);
-    utillib_json_array_push_back(array, strobj);
+    string = cling_ast_string(utillib_token_scanner_semantic(input));
+    utillib_json_array_push_back(array, string);
     utillib_token_scanner_shiftaway(input);
     code = utillib_token_scanner_lookahead(input);
     switch (code) {
@@ -1611,11 +1606,18 @@ static struct utillib_json_value *
 first_ret_function(struct cling_rd_parser *self,
                    struct utillib_token_scanner *input, size_t type,
                    char const *name) {
+  const size_t context=SYM_FUNC_DECL;
   struct utillib_json_value *object;
-
   object = utillib_json_object_create_empty();
   cling_ast_set_type(object, type);
-  cling_ast_set_name(object, name);
+
+  if (cling_symbol_table_exist_name(self->symbol_table, name, CL_GLOBAL)) {
+    rd_parser_error_push_back(self,
+        cling_redefined_error(input, name, context));
+  } else {
+    cling_symbol_table_reserve(self->symbol_table, name, CL_GLOBAL);
+    cling_ast_set_name(object, name);
+  }
   return function_args_body(self, input, object);
 }
 
@@ -1625,7 +1627,7 @@ first_ret_function(struct cling_rd_parser *self,
 static struct utillib_json_value *
 multiple_function(struct cling_rd_parser *self,
                   struct utillib_token_scanner *input, size_t maybe_type,
-                  char const *maybe_name) {
+                  char *maybe_name) {
   size_t code;
   size_t type;
   char const *name;
@@ -1691,7 +1693,7 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
                                           struct utillib_token_scanner *input) {
   size_t code;
   size_t type;
-  char const *first_iden;
+  char *first_iden;
   struct utillib_json_value *const_decls, *var_decls, *func_decls;
 
   const size_t context = SYM_PROGRAM;
@@ -1742,6 +1744,6 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   cling_opg_parser_init(&opg_parser, SYM_RP);
   bool is_main;
   /* return cling_opg_parser_parse(&opg_parser, input); */
-  return function(self, input, &is_main);
-  /* return program(self, input); */
+  /* return function(self, input, &is_main); */
+  return program(self, input);
 }

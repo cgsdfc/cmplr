@@ -39,8 +39,6 @@ union cling_semantic {
   size_t unsigned_int;
 };
 
-void cling_ast_semantic(struct utillib_json_value const*self,
-    union cling_semantic *value);
 /*
  * Table insertion.
  */
