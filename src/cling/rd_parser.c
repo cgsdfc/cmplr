@@ -21,6 +21,7 @@
 
 #include "rd_parser.h"
 #include "ast.h"
+#include "ast_build.h"
 #include "error.h"
 #include "ir.h"
 #include "opg_parser.h"
@@ -151,6 +152,7 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
 void cling_rd_parser_init(struct cling_rd_parser *self,
                           struct cling_symbol_table *symbol_table,
                           struct cling_entity_list *entities) {
+  self->curfunc=NULL;
   self->symbol_table = symbol_table;
   self->entities = entities;
   utillib_vector_init(&self->elist);
@@ -772,7 +774,7 @@ expected_expr:
 
 /*
  * Lookahead SYM_KW_RETURN
- * Nonull, but expr maybe absent.
+ * Maybenull
  */
 static struct utillib_json_value *
 return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
@@ -781,6 +783,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   struct cling_opg_parser opg_parser;
   struct cling_error *error;
   const size_t context=SYM_RETURN_STMT;
+  int expr_type, func_type;
 
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
@@ -793,35 +796,84 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
      * If the optional expr is absent,
      * the expr member of this object is also absent.
      */
-    goto return_object;
+    expr_type=CL_VOID;
+    goto check_return;
   case SYM_LP:
-    /*
-     * If the expr is null, it will be absent.
-     */
     expr=cling_opg_parser_parse(&opg_parser, input);
-    if (expr != NULL) 
-      utillib_json_object_push_back(object, "expr", expr);
-    goto return_object;
+    if (expr == NULL) {
+    /*
+     * If the expr is null, which is a syntax error,
+     * there is no need to check for returnness.
+     */
+      rd_parser_error_push_back(self, 
+          cling_expected_error(input, SYM_EXPR, context));
+      goto return_null;
+    } 
+    if (!self->curfunc) {
+      /*
+       * We deos not have a valid name of function to check against.
+       */
+      utillib_json_value_destroy(expr);
+      goto return_null;
+    }
+    if ((expr_type=cling_ast_check_expression(expr, self))<0) {
+      /*
+       * If anything bad happened during expr_type computing,
+       * we does not check for returnness.
+       */
+      utillib_json_value_destroy(expr);
+      goto return_null;
+    } 
+    goto check_return;
   default:
     rd_parser_error_push_back(self, 
         cling_unexpected_error(input, context));
     goto skip;
   }
 
+check_return:
+  switch(cling_ast_check_returnness(self, expr_type, &func_type)) {
+    case 0:
+      /*
+       * Nice, expr_type is compatible with return_type.
+       */
+      utillib_json_object_push_back(object, "expr", expr);
+      goto return_object;
+    case CL_EINCTYPE:
+    /*
+     * We are in C, whether this is an error depends.
+     * Currently this is a warning.
+     * 1. int foo() { return; }
+     * where garbage will be returned.
+     * 2. void foo() { return (1); }
+     * return value will be discarded.
+     * In both case there is no need to compute the expression.
+     */
+      rd_parser_error_push_back(self,
+          cling_incompatible_type_error(input, expr_type, func_type, context));
+      utillib_json_value_destroy(expr);
+      goto return_object;
+  }
+
+
 return_object:
   cling_opg_parser_destroy(&opg_parser);
   return object;
+return_null:
+  cling_opg_parser_destroy(&opg_parser);
+  utillib_json_value_destroy(object);
+  return NULL;
 
 skip:
   /*
    * Again, just skip to SYM_SEMI and
-   * abort the whole expression.
+   * abort the whole statement.
    */
   rd_parser_skip_target_init(self);
   self->tars[0] = SYM_SEMI;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
-    goto return_object;
+    goto return_null;
   }
 }
 
@@ -1486,7 +1538,13 @@ function_args_body(struct cling_rd_parser *self,
   arglist = formal_arglist(self, input);
   cling_ast_insert_arglist(arglist, self->symbol_table);
   utillib_json_object_push_back(object, "arglist", arglist);
-  cling_ast_insert_function(object, self->symbol_table);
+  if (utillib_json_object_at(object, "name")) {
+    /*
+     * A function may lose its name due to redefinition.
+     * Check here.
+     */
+    cling_ast_insert_function(object, self->symbol_table);
+  }
 
   /*
    * Handle maybe-missing SYM_LB
@@ -1536,7 +1594,7 @@ static struct utillib_json_value *function(struct cling_rd_parser *self,
     goto redefined;
   }
   cling_symbol_table_reserve(self->symbol_table, name, CL_GLOBAL);
-  cling_ast_set_name(object, name);
+  self->curfunc=cling_ast_set_name(object, name);
 
 parse_args_body:
   /* SYM_IDEN */
@@ -1560,6 +1618,7 @@ unexpected:
   /*
    * We lost the name of the function.
    */
+  self->curfunc=NULL;
   rd_parser_error_push_back(self,
       cling_unexpected_error(input, context));
   rd_parser_skip_target_init(self);
@@ -1616,7 +1675,7 @@ first_ret_function(struct cling_rd_parser *self,
         cling_redefined_error(input, name, context));
   } else {
     cling_symbol_table_reserve(self->symbol_table, name, CL_GLOBAL);
-    cling_ast_set_name(object, name);
+    self->curfunc=cling_ast_set_name(object, name);
   }
   return function_args_body(self, input, object);
 }

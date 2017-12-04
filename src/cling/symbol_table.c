@@ -26,6 +26,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+UTILLIB_ETAB_BEGIN(cling_symbol_entry_kind)
+UTILLIB_ETAB_ELEM_INIT(CL_UNDEF, "undefined type")
+UTILLIB_ETAB_ELEM_INIT(CL_INT, "int")
+UTILLIB_ETAB_ELEM_INIT(CL_CHAR, "char")
+UTILLIB_ETAB_ELEM_INIT(CL_VOID, "void")
+UTILLIB_ETAB_ELEM_INIT(CL_CONST, "const")
+UTILLIB_ETAB_ELEM_INIT(CL_ARRAY, "array")
+UTILLIB_ETAB_ELEM_INIT(CL_FUNC, "function")
+UTILLIB_ETAB_END(cling_symbol_entry_kind);
+
 static struct cling_symbol_entry *
 symbol_entry_create(int kind, struct utillib_json_value *value) {
   struct cling_symbol_entry *new_entry = malloc(sizeof *new_entry);

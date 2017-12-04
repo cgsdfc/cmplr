@@ -20,7 +20,7 @@
 */
 
 #include "opg_parser.h"
-#include "ast.h"
+#include "ast_build.h"
 
 #include <assert.h>
 #include <stdlib.h>

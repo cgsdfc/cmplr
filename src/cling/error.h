@@ -29,16 +29,14 @@ UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
 UTILLIB_ENUM_ELEM(CL_EEXPECT)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
 UTILLIB_ENUM_ELEM(CL_EREDEFINED)
-UTILLIB_ENUM_ELEM(CL_EVAGUE)
-UTILLIB_ENUM_ELEM(CL_EEXPR)
-UTILLIB_ENUM_ELEM(CL_EPREMATURE)
-
+UTILLIB_ENUM_ELEM(CL_EINCTYPE)
 UTILLIB_ENUM_ELEM(CL_EUNDEFINED)
 UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
 UTILLIB_ENUM_END(cling_error_kind);
 
 struct cling_error {
   int kind;
+  char const *context;
   size_t row;
   size_t col;
   char const *einfo[CLING_ERROR_EMAX];
@@ -53,29 +51,21 @@ void cling_error_destroy(struct cling_error *self);
 struct cling_error *cling_expected_error(struct utillib_token_scanner *input,
                                          size_t expected, size_t context);
 
-struct cling_error *cling_noargs_error(struct utillib_token_scanner *input,
-                                       char const *name);
-
 struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
                                            size_t context);
 
-struct cling_error *cling_vague_error(struct utillib_token_scanner *input,
-                                      char const *errmsg);
-
-void cling_error_print(struct cling_error const *self);
-
-struct cling_error *cling_premature_error(struct utillib_token_scanner *input,
-                                          size_t context);
-
 struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
                                         char const *name, size_t context);
-
-struct cling_error *cling_expr_error(struct utillib_token_scanner *input);
 
 struct cling_error *cling_undefined_name_error(struct utillib_token_scanner *input,
     char const *name, size_t context);
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
     char const *name, size_t context);
+
+struct cling_error * cling_incompatible_type_error(struct utillib_token_scanner *input, 
+    int actual_type, int expected_type, size_t context);
+
+void cling_error_print(struct cling_error const *self);
 
 #endif /* CLING_ERROR_H */
