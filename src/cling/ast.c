@@ -20,9 +20,7 @@
 */
 #include "ast.h"
 #include "symbols.h"
-#include "rd_parser.h"
 #include "symbol_table.h"
-#include "error.h"
 
 #include <utillib/json_foreach.h>
 
@@ -157,27 +155,3 @@ void cling_ast_insert_function(struct utillib_json_value *self,
   cling_symbol_table_update(symbol_table, name->as_ptr, kind, new_object, CL_GLOBAL);
 }
 
-int cling_ast_check_assignable(char const *name, 
-    struct cling_symbol_table const * symbol_table) {
-  struct cling_symbol_entry * entry;
-  int kind;
-
-  entry=cling_symbol_table_find(symbol_table, name, CL_LEXICAL);
-  if (!entry)
-    return CL_EUNDEFINED;
-  kind=entry->kind;
-  if (kind & CL_FUNC || kind & CL_ARRAY || 
-      kind & CL_CONST)
-    return CL_ENOTLVALUE;
-  return 0;
-}
-
-int cling_ast_check_expression(struct utillib_json_value *self,
-    struct cling_rd_parser *parser)
-{
-}
-
-int cling_ast_check_returnness(struct cling_rd_parser const *parser, 
-    int expr_type, int *func_type)
-{
-}

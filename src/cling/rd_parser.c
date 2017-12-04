@@ -783,7 +783,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   struct cling_opg_parser opg_parser;
   struct cling_error *error;
   const size_t context=SYM_RETURN_STMT;
-  int expr_type, func_type;
+  int expr_type, return_type;
 
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
@@ -832,14 +832,14 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   }
 
 check_return:
-  switch(cling_ast_check_returnness(self, expr_type, &func_type)) {
+  switch(cling_ast_check_returnness(self, expr_type, &return_type)) {
     case 0:
       /*
        * Nice, expr_type is compatible with return_type.
        */
       utillib_json_object_push_back(object, "expr", expr);
       goto return_object;
-    case CL_EINCTYPE:
+    default:
     /*
      * We are in C, whether this is an error depends.
      * Currently this is a warning.
@@ -850,7 +850,7 @@ check_return:
      * In both case there is no need to compute the expression.
      */
       rd_parser_error_push_back(self,
-          cling_incompatible_type_error(input, expr_type, func_type, context));
+          cling_incompatible_type_error(input, expr_type, return_type, context));
       utillib_json_value_destroy(expr);
       goto return_object;
   }

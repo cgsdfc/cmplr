@@ -21,7 +21,6 @@
 #ifndef CLING_AST_H
 #define CLING_AST_H
 #include "symbol_table.h"
-#include "rd_parser.h"
 #include <utillib/json.h>
 
 /*
@@ -58,36 +57,5 @@ void cling_ast_insert_arglist(struct utillib_json_value *self,
 void cling_ast_insert_function(struct utillib_json_value *self,
     struct cling_symbol_table * symbol_table);
 
-
-/*
- * AST Semantic Checks
- */
-
-/*
- * Checks whether `name' exists and is assignable.
- * That is, not const, array and function.
- */
-int cling_ast_check_assignable(char const *name, 
-    struct cling_symbol_table const *symbol_table);
-
-/*
- * Computes type of the expression and throws errors to `parser'
- * during computation.
- * Return negative if error ever happened.
- * Return CL_VOID, CL_INT or CL_CHAR if succeeded.
- */
-int cling_ast_check_expression(struct utillib_json_value *self,
-    struct cling_rd_parser *parser);
-
-/*
- * Checks whether the return_type of a function
- * is compatible with `expr_type'.
- * Uses the `curfunc' and `symbol_table' of the parser.
- * The curfunc is assumed to exist and its return_type is
- * returned in `func_type'.
- * Return 0 or CL_EINCTYPE.
- */
-int cling_ast_check_returnness(struct cling_rd_parser const *parser, 
-    int expr_type, int *func_type);
 
 #endif /* CLING_AST_H */
