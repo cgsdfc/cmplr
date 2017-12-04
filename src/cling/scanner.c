@@ -47,9 +47,8 @@ static const struct utillib_keyword_pair cling_keywords[] = {
     {"switch", SYW_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-
 static int cling_scanner_read_char(struct utillib_char_scanner *chars,
-                            struct utillib_string *buffer) {
+                                   struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
       isalnum(ch)) {
@@ -65,7 +64,7 @@ static int cling_scanner_read_char(struct utillib_char_scanner *chars,
 }
 
 static int cling_scanner_read_string(struct utillib_char_scanner *chars,
-                              struct utillib_string *buffer) {
+                                     struct utillib_string *buffer) {
   char ch;
   for (; (ch = utillib_char_scanner_lookahead(chars)) != '\"';
        utillib_char_scanner_shiftaway(chars)) {
@@ -82,7 +81,7 @@ static int cling_scanner_read_string(struct utillib_char_scanner *chars,
 }
 
 static int cling_scanner_read_number(struct utillib_char_scanner *chars,
-                              struct utillib_string *buffer) {
+                                     struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
   char const *str = utillib_string_c_str(buffer);
@@ -91,9 +90,8 @@ static int cling_scanner_read_number(struct utillib_char_scanner *chars,
   return SYM_UINT;
 }
 
-static int
-cling_scanner_read_handler(struct utillib_char_scanner *chars,
-                               struct utillib_string *buffer) {
+static int cling_scanner_read_handler(struct utillib_char_scanner *chars,
+                                      struct utillib_string *buffer) {
   utillib_token_scanner_skipspace(chars);
   if (utillib_char_scanner_reacheof(chars))
     return UT_SYM_EOF;
@@ -201,9 +199,9 @@ cling_scanner_read_handler(struct utillib_char_scanner *chars,
   return -CL_EUNKNOWN;
 }
 
-static int cling_scanner_error_handler(
-    struct utillib_char_scanner *chars,
-    struct utillib_token_scanner_error const *error) {
+static int
+cling_scanner_error_handler(struct utillib_char_scanner *chars,
+                            struct utillib_token_scanner_error const *error) {
   char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
   utillib_error_printf("ERROR in line %lu, column %lu: %s\n", chars->row,
                        chars->col, errmsg);

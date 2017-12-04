@@ -37,7 +37,7 @@
  * time to clean your brain.
  * Notes that this opg_parser can recognize all the constructs
  * noted in opg_parser.h just in a stupid way.
- * 
+ *
  */
 enum { CL_OPG_GT, CL_OPG_LT, CL_OPG_ERR };
 
@@ -67,7 +67,7 @@ static bool opg_parser_is_relop(size_t op) {
  * If it is `CL_OPG_LT', we should shift rhs into stack.
  * If it is `CL_OPG_ERR', we hit an error.
  * Hack: The judgements are kept from low to high precedence, which means
- * the code can be less and cleaner. 
+ * the code can be less and cleaner.
  * What's worse, the order within the same group (lhs==..., rhs==...) matters.
  */
 static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
@@ -76,7 +76,7 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
   const bool lhs_is_relop = opg_parser_is_relop(lhs);
   const bool rhs_is_relop = opg_parser_is_relop(rhs);
 
-  if (lhs == eof_symbol && utillib_vector_size(&self->opstack)==1)
+  if (lhs == eof_symbol && utillib_vector_size(&self->opstack) == 1)
     /*
      * Make sure it is a true eof_symbol on the stacktop.
      */
@@ -134,7 +134,6 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
     return CL_OPG_GT;
   if (rhs == SYM_IDEN)
     return CL_OPG_LT;
-
 
   return CL_OPG_ERR;
 }
@@ -321,7 +320,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   while (!utillib_vector_empty(opstack)) {
     /* opg_parser_show_opstack(self); */
     lookahead = utillib_token_scanner_lookahead(input);
-    if (utillib_vector_size(opstack)==1 && lookahead == eof_symbol) {
+    if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
       /*
        * We will catch any success before the precedence is computed
        * since the success condition is correct and thus have higher
@@ -337,7 +336,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
        * in case of failure, all the partial nodes
        * will be destroyed using utillib_vector_destroy_owning.
        */
-      val=utillib_vector_back(stack);
+      val = utillib_vector_back(stack);
       utillib_vector_pop_back(stack);
       return val;
     }
@@ -345,7 +344,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     stacktop = utillib_vector_back(opstack);
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
         lookahead == SYM_CHAR) {
-      utillib_vector_push_back(stack, 
+      utillib_vector_push_back(
+          stack,
           cling_ast_factor(lookahead, utillib_token_scanner_semantic(input)));
       if (lookahead == SYM_IDEN)
         /*

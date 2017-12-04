@@ -32,14 +32,22 @@ UTILLIB_ENUM_ELEM(CL_EREDEFINED)
 UTILLIB_ENUM_ELEM(CL_EINCTYPE)
 UTILLIB_ENUM_ELEM(CL_EUNDEFINED)
 UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
+UTILLIB_ENUM_ELEM(CL_EINCARG)
+UTILLIB_ENUM_ELEM(CL_EARGCUNM)
 UTILLIB_ENUM_END(cling_error_kind);
+
+union cling_einfo {
+  char const *str;
+  size_t uint;
+};
 
 struct cling_error {
   int kind;
   char const *context;
   size_t row;
   size_t col;
-  char const *einfo[CLING_ERROR_EMAX];
+  union cling_einfo einfo[CLING_ERROR_EMAX];
+  ;
 };
 
 /**
@@ -55,16 +63,29 @@ struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
                                            size_t context);
 
 struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
-                                        char const *name, size_t context);
+                                          char const *name, size_t context);
 
-struct cling_error *cling_undefined_name_error(struct utillib_token_scanner *input,
-    char const *name, size_t context);
+struct cling_error *
+cling_undefined_name_error(struct utillib_token_scanner *input,
+                           char const *name, size_t context);
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-    char const *name, size_t context);
+                                           char const *name, size_t context);
 
-struct cling_error * cling_incompatible_type_error(struct utillib_token_scanner *input, 
-    int actual_type, int expected_type, size_t context);
+struct cling_error *
+cling_incompatible_type_error(struct utillib_token_scanner *input,
+                              int actual_type, int expected_type,
+                              size_t context);
+
+struct cling_error *
+cling_incompatible_arg_error(struct utillib_token_scanner *input, size_t argpos,
+                             int actual_type, int expected_type,
+                             size_t context);
+
+struct cling_error *
+cling_argc_unmatched_error(struct utillib_token_scanner *input,
+                           char const *func_name, int actual_argc,
+                           int expected_argc, size_t context);
 
 void cling_error_print(struct cling_error const *self);
 

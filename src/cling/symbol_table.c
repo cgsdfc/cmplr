@@ -21,6 +21,7 @@
 
 #include "symbol_table.h"
 #include <utillib/strhash.h>
+#include <utillib/string.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -35,6 +36,27 @@ UTILLIB_ETAB_ELEM_INIT(CL_CONST, "const")
 UTILLIB_ETAB_ELEM_INIT(CL_ARRAY, "array")
 UTILLIB_ETAB_ELEM_INIT(CL_FUNC, "function")
 UTILLIB_ETAB_END(cling_symbol_entry_kind);
+
+char const *cling_pretty_typename(int kind) {
+  struct utillib_string string;
+  utillib_string_init(&string);
+  if (kind & CL_CONST) {
+    utillib_string_append(&string, "const ");
+  }
+  if (kind & CL_INT) {
+    utillib_string_append(&string, "int ");
+  } else if (kind & CL_CHAR) {
+    utillib_string_append(&string, "char ");
+  } else if (kind & CL_VOID) {
+    utillib_string_append(&string, "void ");
+  }
+  if (kind & CL_ARRAY) {
+    utillib_string_append(&string, "[]");
+  } else if (kind & CL_FUNC) {
+    utillib_string_append(&string, "()");
+  }
+  return utillib_string_c_str(&string);
+}
 
 static struct cling_symbol_entry *
 symbol_entry_create(int kind, struct utillib_json_value *value) {
@@ -53,7 +75,7 @@ static const struct utillib_hashmap_callback symbol_hash_callback = {
     .hash_handler = mysql_strhash, .compare_handler = strcmp,
 };
 
-static struct utillib_hashmap * symbol_table_scope_create(void) {
+static struct utillib_hashmap *symbol_table_scope_create(void) {
   struct utillib_hashmap *new_scope = malloc(sizeof *new_scope);
   utillib_hashmap_init(new_scope, &symbol_hash_callback);
   return new_scope;
@@ -71,12 +93,13 @@ void cling_symbol_table_init(struct cling_symbol_table *self) {
 }
 
 void cling_symbol_table_destroy(struct cling_symbol_table *self) {
-  utillib_hashmap_destroy_owning(&self->global_table, free, symbol_entry_destroy);
+  utillib_hashmap_destroy_owning(&self->global_table, free,
+                                 symbol_entry_destroy);
   utillib_slist_destroy_owning(&self->scope_table, symbol_table_scope_destroy);
 }
 
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self) {
-  struct utillib_hashmap *new_scope=symbol_table_scope_create();
+  struct utillib_hashmap *new_scope = symbol_table_scope_create();
   utillib_slist_push_front(&self->scope_table, new_scope);
   ++self->scope;
 }
@@ -90,19 +113,20 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self) {
 }
 
 static struct cling_symbol_entry *
-symbol_table_lexical_find(struct cling_symbol_table const *self, char const *name)
-{
+symbol_table_lexical_find(struct cling_symbol_table const *self,
+                          char const *name) {
   UTILLIB_SLIST_FOREACH(struct utillib_hashmap const *, scope,
                         &self->scope_table) {
-  struct cling_symbol_entry * entry;
-  if ((entry=utillib_hashmap_at(scope, name)))
-    return entry;
+    struct cling_symbol_entry *entry;
+    if ((entry = utillib_hashmap_at(scope, name)))
+      return entry;
   }
   return utillib_hashmap_at(&self->global_table, name);
 }
 
-static bool symbol_table_lexical_exist_name(struct cling_symbol_table const *self, char const *name)
-{
+static bool
+symbol_table_lexical_exist_name(struct cling_symbol_table const *self,
+                                char const *name) {
   UTILLIB_SLIST_FOREACH(struct utillib_hashmap const *, scope,
                         &self->scope_table) {
     if (utillib_hashmap_exist_key(scope, name))
@@ -111,51 +135,50 @@ static bool symbol_table_lexical_exist_name(struct cling_symbol_table const *sel
   return utillib_hashmap_exist_key(&self->global_table, name);
 }
 
-void cling_symbol_table_update(struct cling_symbol_table *self, 
-                              char const *name,int kind,
-                              struct utillib_json_value *value,
-                              int scope_kind) {
+void cling_symbol_table_update(struct cling_symbol_table *self,
+                               char const *name, int kind,
+                               struct utillib_json_value *value,
+                               int scope_kind) {
   struct utillib_hashmap *scope;
-  void * should_be_NULL;
+  void *should_be_NULL;
 
-  switch(scope_kind) {
+  switch (scope_kind) {
   case CL_GLOBAL:
-    scope=&self->global_table;
+    scope = &self->global_table;
     break;
   case CL_LOCAL:
-    scope=utillib_slist_front(&self->scope_table);
+    scope = utillib_slist_front(&self->scope_table);
     break;
   default:
     assert(false);
   }
-  should_be_NULL=utillib_hashmap_update(scope,
-      name, symbol_entry_create(kind, value));
-  assert (should_be_NULL == NULL);
+  should_be_NULL =
+      utillib_hashmap_update(scope, name, symbol_entry_create(kind, value));
+  assert(should_be_NULL == NULL);
 }
 
 void cling_symbol_table_reserve(struct cling_symbol_table *self,
-                                char const *name,
-                                int scope_kind) {
+                                char const *name, int scope_kind) {
   struct utillib_hashmap *scope;
   int should_be_zero;
 
-  switch(scope_kind) {
+  switch (scope_kind) {
   case CL_LOCAL:
-    scope=utillib_slist_front(&self->scope_table);
+    scope = utillib_slist_front(&self->scope_table);
     break;
   case CL_GLOBAL:
-    scope=&self->global_table;
+    scope = &self->global_table;
     break;
   default:
     assert(false);
   }
-  should_be_zero=utillib_hashmap_insert(scope, strdup(name), NULL);
+  should_be_zero = utillib_hashmap_insert(scope, strdup(name), NULL);
   assert(should_be_zero == 0);
 }
 
 struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self,
-    char const *name, int scope_kind) {
+cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
+                        int scope_kind) {
   switch (scope_kind) {
   case CL_LEXICAL:
     return symbol_table_lexical_find(self, name);
@@ -167,15 +190,15 @@ cling_symbol_table_find(struct cling_symbol_table const *self,
 }
 
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
-                                   char const *name, int scope_kind)
-{
-  switch(scope_kind) {
+                                   char const *name, int scope_kind) {
+  switch (scope_kind) {
   case CL_LEXICAL:
     return symbol_table_lexical_exist_name(self, name);
   case CL_GLOBAL:
     return utillib_hashmap_exist_key(&self->global_table, name);
   case CL_LOCAL:
-    return utillib_hashmap_exist_key(utillib_slist_front(&self->scope_table), name);
+    return utillib_hashmap_exist_key(utillib_slist_front(&self->scope_table),
+                                     name);
   }
 }
 

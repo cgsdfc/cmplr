@@ -26,6 +26,8 @@
 #include <utillib/scanner.h>
 #include <utillib/vector.h>
 
+#include "error.h"
+
 #include <setjmp.h>
 
 #define RD_PARSER_SKIP_MAX 4
@@ -40,7 +42,7 @@ struct cling_rd_parser {
   int tars[RD_PARSER_SKIP_MAX];
   struct utillib_json_value *root;
   struct cling_symbol_table *symbol_table;
-  struct cling_entity_list * entities;
+  struct cling_entity_list *entities;
 };
 
 void cling_rd_parser_init(struct cling_rd_parser *self,
@@ -54,5 +56,8 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
                       struct utillib_token_scanner *input);
 
 void cling_rd_parser_report_errors(struct cling_rd_parser const *self);
+
+void rd_parser_error_push_back(struct cling_rd_parser *self,
+                               struct cling_error *error);
 
 #endif /* CLING_RD_PARSER_H */

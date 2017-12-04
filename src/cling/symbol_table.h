@@ -58,9 +58,9 @@ struct cling_symbol_entry {
  */
 
 UTILLIB_ENUM_BEGIN(cling_symbol_table_scope_kind)
-  UTILLIB_ENUM_ELEM(CL_GLOBAL)
-  UTILLIB_ENUM_ELEM(CL_LOCAL)
-  UTILLIB_ENUM_ELEM(CL_LEXICAL)
+UTILLIB_ENUM_ELEM(CL_GLOBAL)
+UTILLIB_ENUM_ELEM(CL_LOCAL)
+UTILLIB_ENUM_ELEM(CL_LEXICAL)
 UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
 
 /**
@@ -108,11 +108,10 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
  * \param scope_kind should be either CL_GLOBAL or CL_LOCAL.
  * Notes It updates the entry anyway.
  */
-void cling_symbol_table_update(struct cling_symbol_table *self, 
-                              char const *name,
-                              int kind,
-                              struct utillib_json_value *value,
-                              int scope_kind);
+void cling_symbol_table_update(struct cling_symbol_table *self,
+                               char const *name, int kind,
+                               struct utillib_json_value *value,
+                               int scope_kind);
 
 /**
  * \function cling_symbol_table_find
@@ -122,9 +121,8 @@ void cling_symbol_table_update(struct cling_symbol_table *self,
  * of it.
  */
 struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self, 
-    char const *name,
-    int scope_kind);
+cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
+                        int scope_kind);
 
 /**
  * \function cling_symbol_table_reserve
@@ -144,8 +142,13 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
  * whether the name exists regardless of its entry.
  */
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
-                                   char const *name, 
-                                   int scope_kind);
+                                   char const *name, int scope_kind);
+
+/*
+ * Use it to format actual type.
+ * Free string after use.
+ */
+char const *cling_pretty_typename(int kind);
 
 /*
  * JSON

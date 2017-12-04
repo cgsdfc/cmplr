@@ -24,7 +24,7 @@
 #include <utillib/json.h>
 
 /*
- * Every operation backed up by 
+ * Every operation backed up by
  * AST is held here including
  * some symbol_table lookup and
  * insertion. The reason is that
@@ -44,18 +44,16 @@ union cling_semantic {
  */
 
 void cling_ast_insert_const(struct utillib_json_value *self,
-                            struct cling_symbol_table *symbols,
-                            int scope_kind);
+                            struct cling_symbol_table *symbols, int scope_kind);
 
 void cling_ast_insert_variable(struct utillib_json_value *self,
                                struct cling_symbol_table *symbols,
                                int scope_kind);
 
 void cling_ast_insert_arglist(struct utillib_json_value *self,
-                               struct cling_symbol_table *symbols);
+                              struct cling_symbol_table *symbols);
 
 void cling_ast_insert_function(struct utillib_json_value *self,
-    struct cling_symbol_table * symbol_table);
-
+                               struct cling_symbol_table *symbol_table);
 
 #endif /* CLING_AST_H */

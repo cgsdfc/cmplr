@@ -33,11 +33,11 @@
  * Ths language construct this parser can recognize is as follow:
  * Chinese Version:
  * ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
- * ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’ 
+ * ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’
  *
  * factor : iden | iden [ expr ] | integer | char | ( expr ) | call_expr
  * call_expr : iden ( ) | iden (expr {, expr})
- * expr : cond_expr = cond_expr 
+ * expr : cond_expr = cond_expr
  * cond_expr : add_expr mulop add_expr
  * add_expr : factor addop factor
  */
