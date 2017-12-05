@@ -352,6 +352,11 @@ static int ast_check_arithmetic(struct utillib_json_value *self,
   int lhs_type, rhs_type;
   lhs_type=ast_check_operand(self, "lhs", parser, input, context);
   rhs_type=ast_check_operand(self, "rhs", parser, input, context);
+  if (lhs_type == CL_VOID || rhs_type == CL_VOID) {
+    rd_parser_error_push_back(parser, 
+        cling_incompatible_type_error(input, CL_INT, CL_VOID, context));
+    return CL_UNDEF;
+  }
   if (lhs_type == CL_CHAR && rhs_type == CL_CHAR)
     return CL_CHAR;
   if (lhs_type == CL_INT || rhs_type == CL_INT)
@@ -374,6 +379,11 @@ static int ast_check_boolean(struct utillib_json_value *self,
   int lhs_type, rhs_type;
   lhs_type=ast_check_operand(self, "lhs", parser, input, context);
   rhs_type=ast_check_operand(self, "rhs", parser, input, context);
+  if (lhs_type == CL_VOID || rhs_type == CL_VOID) {
+    rd_parser_error_push_back(parser, 
+        cling_incompatible_type_error(input, CL_INT, CL_VOID, context));
+    return CL_UNDEF;
+  }
   if (lhs_type != CL_UNDEF || rhs_type != CL_UNDEF)
     return CL_INT;
   return CL_UNDEF;
@@ -568,5 +578,128 @@ int cling_ast_check_expression(struct utillib_json_value *self,
     return CL_UNDEF;
   }
   return ast_check_expression(self, parser, input, context);
+}
+
+/*
+ * iden = expr
+ * That all we can do in `for' the initial part.
+ */
+int cling_ast_check_for_init(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context)
+{
+  struct utillib_json_value * lhs, *op, *type;
+  op=utillib_json_object_at(self, "op");
+  if (!op) 
+    goto error;
+  if (op->as_size_t != SYM_EQ)
+    goto error;
+  lhs=utillib_json_object_at(self, "lhs");
+  type=utillib_json_object_at(lhs, "type");
+  if (type->as_size_t != SYM_IDEN)
+    goto error;
+  return cling_ast_check_assign(self, parser, input, context);
+error:
+  rd_parser_error_push_back(parser,
+      cling_invalid_expr_error(input, self, context));
+  return CL_UNDEF;
+}
+
+/*
+ * condition ::= expr relop expr
+ * | expr
+ * In brief, condition **is** boolean_expr
+ * excluding assign_expr and call_expr that
+ * returns void.
+ */
+int cling_ast_check_condition(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context)
+{
+
+  struct utillib_json_value * lhs, *op, *type;
+  int bool_type;
+  struct cling_error *error;
+
+  op=utillib_json_object_at(self, "op");
+  if (op && op->as_size_t == SYM_EQ) {
+    error= cling_invalid_expr_error(input, self, context);
+    goto error;
+  }
+
+  bool_type= ast_check_boolean(self, parser, input, context);
+  if (!ast_integral_compatible(bool_type)) {
+    error=cling_incompatible_type_error(input, bool_type, CL_INT, context);
+    goto error;
+  }
+  return bool_type;
+
+error:
+  rd_parser_error_push_back(parser, error);
+  return CL_UNDEF;
+}
+
+/*
+ * This boring function is because the **grammar**
+ * put such an unreasonable|over-simplified restriction
+ * on the step part of `for'. It should not have done so...
+ *
+ * Now that opg_parser has accepted self, which is very
+ * uneasy for him (see opg_parser.c for why), we have to
+ * manually walk this ast not too deeply.
+ */
+int cling_ast_check_for_step(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context)
+{
+  struct utillib_json_value * lhs, *rhs, *op, *type;
+  op=utillib_json_object_at(self, "op");
+  if (!op || op->as_size_t != SYM_EQ) 
+    /*
+     * It is not assign_expr
+     */
+    goto error;
+
+  lhs=utillib_json_object_at(self, "lhs");
+  type=utillib_json_object_at(lhs, "type");
+  if (!type || type->as_size_t != SYM_IDEN)
+    /*
+     * The lhs is not iden.
+     */
+    goto error;
+  rhs=utillib_json_object_at(self, "rhs");
+  op=utillib_json_object_at(rhs, "op");
+  if (!op || 
+      op->as_size_t != SYM_ADD && op->as_size_t != SYM_MINUS)
+    /*
+     * The rhs is not additive expr
+     */
+    goto error;
+  lhs=utillib_json_object_at(rhs, "lhs");
+  type=utillib_json_object_at(lhs, "type");
+  if (!type || type->as_size_t != SYM_IDEN)
+    /*
+     * The lhs of the rhs of self is not iden
+     */
+    goto error;
+  rhs=utillib_json_object_at(rhs, "rhs");
+  type=utillib_json_object_at(rhs, "type");
+  if (!type || type->as_size_t != SYM_UINT)
+    /*
+     * The rhs of the rhs of self is not SYM_UINT
+     * Notes SYM_UINT should be non-zero.
+     */
+    goto error;
+  /*
+   * All the names need a check, so...
+   */
+  return cling_ast_check_assign(self, parser, input, context);
+error:
+  rd_parser_error_push_back(parser,
+      cling_invalid_expr_error(input, self, context));
+  return CL_UNDEF;
 }
 

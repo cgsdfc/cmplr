@@ -186,7 +186,7 @@ void cling_error_print(struct cling_error const *self) {
                          context, einfo[1].str, einfo[0].str);
     break;
   case CL_EINVEXPR:
-    utillib_error_printf("in `%s', `%s' is not allowed", context, einfo[0].str);
+    utillib_error_printf("in `%s', expression `%s' is not allowed", context, einfo[0].str);
     break;
   case CL_EDUPCASE:
     utillib_error_printf("in `%s', duplicated case label %d", context, einfo[0].int_);

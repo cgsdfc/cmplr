@@ -69,5 +69,31 @@ int cling_ast_check_returnness(
     size_t context,
     bool void_flag);
 
+/*
+ * iden = expr
+ * That all we can do in `for' the initial part.
+ */
+int cling_ast_check_for_init(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context);
+/*
+ * condition ::= expr relop expr
+ */
+int cling_ast_check_condition(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context);
+
+/*
+ * iden = iden (+|-) non-zero integer
+ * That is for `for' step part.
+ */
+int cling_ast_check_for_step(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context);
+
+
 
 #endif /* CLING_AST_CHECK_H */
