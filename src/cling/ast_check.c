@@ -41,6 +41,11 @@ static int ast_check_subscript(struct utillib_json_value *self,
                                struct utillib_token_scanner *input,
                                size_t context);
 
+static int ast_check_expression(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context);
+
 /*
  * Factors are SYM_IDEN, SYM_INTEGER, SYM_UINT, SYM_CHAR.
  * If self is `SYM_IDEN' and exists
@@ -108,7 +113,7 @@ static int ast_check_assign_lhs(struct utillib_json_value *self,
     /*
      * Although it is not assignable, we still need to check it.
      */
-    cling_ast_check_expression(self, parser, input, context);
+    ast_check_expression(self, parser, input, context);
     goto unassignable;
   }
   lhs_type=ast_check_subscript(self, parser, input, context);
@@ -197,7 +202,7 @@ static int ast_check_subscript(struct utillib_json_value *self,
     goto check_index_only;
   }
 
-  rhs_type=cling_ast_check_expression(rhs, parser, input, context);
+  rhs_type=ast_check_expression(rhs, parser, input, context);
   if (rhs_type != CL_UNDEF && !ast_integral_compatible(rhs_type)) {
     rd_parser_error_push_back(parser,
         cling_incompatible_type_error(input, rhs_type, CL_INT, context));
@@ -205,7 +210,7 @@ static int ast_check_subscript(struct utillib_json_value *self,
   return entry->kind & (~CL_ARRAY);
 
 check_index_only:
-  cling_ast_check_expression(rhs, parser, input, context);
+  ast_check_expression(rhs, parser, input, context);
   return CL_UNDEF;
 
 }
@@ -260,11 +265,11 @@ static int ast_check_call(struct utillib_json_value *self,
      */
     actual_arg = utillib_json_array_at(array, j);
     if (i >= formal_argc) {
-      cling_ast_check_expression(actual_arg, parser, input, context);
+      ast_check_expression(actual_arg, parser, input, context);
       continue;
     }
     actual_arg_type =
-        cling_ast_check_expression(actual_arg, parser, input, context);
+        ast_check_expression(actual_arg, parser, input, context);
     formal_arg = utillib_json_array_at(arglist, i);
     formal_arg_type = utillib_json_object_at(formal_arg, "type");
     if (actual_arg_type == CL_UNDEF)
@@ -296,7 +301,7 @@ check_args_only:
        * Since The name or the arglist of the callee
        * is missing, we can only check those subexpr.
        */
-      cling_ast_check_expression(arg, parser, input, context);
+      ast_check_expression(arg, parser, input, context);
     }
   } while (0);
   return CL_UNDEF;
@@ -323,7 +328,7 @@ static int ast_check_operand(struct utillib_json_value *self,
   struct utillib_json_value *object;
 
   object=utillib_json_object_at(self, operand);
-  type=cling_ast_check_expression(object, parser, input, context);
+  type=ast_check_expression(object, parser, input, context);
   if (type == CL_UNDEF)
     return CL_UNDEF;
   if (!ast_integral_compatible(type)) {
@@ -396,8 +401,10 @@ int cling_ast_check_assign(struct utillib_json_value *self,
 /*
  * Walks the expression tree
  * and checks for bad guys.
+ * This version checks for every kind of expressions
+ * that can be recognized by opg_parser.
  */
-int cling_ast_check_expression(struct utillib_json_value *self,
+static int ast_check_expression(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context) {
@@ -478,7 +485,7 @@ int cling_ast_check_returnness(
   if (void_flag)
     expr_type=CL_VOID;
   else
-    expr_type=cling_ast_check_expression(self, parser, input, context);
+    expr_type=ast_check_expression(self, parser, input, context);
   if (expr_type == CL_UNDEF)
     return CL_UNDEF;
   func_name=parser->curfunc;
@@ -535,7 +542,31 @@ int cling_ast_check_expr_stmt(struct utillib_json_value *self,
 
 error:
   rd_parser_error_push_back(parser,
-      cling_invalid_expr_stmt_error(input, self, context));
+      cling_invalid_expr_error(input, self, context));
   return CL_UNDEF;
+}
+
+/*
+ * We need to exclude certain variants of expressions
+ * since they are not allowed by the grammar.
+ * They are assign_expr and boolean_expr.
+ */
+int cling_ast_check_expression(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context)
+{
+  /*
+   * Picks out assign_expr and boolean expression.
+   */
+  struct utillib_json_value *op;
+  op=utillib_json_object_at(self, "op");
+  if (op && (op->as_size_t == SYM_EQ
+        || opg_parser_is_relop(op->as_size_t))) {
+    rd_parser_error_push_back(parser,
+        cling_invalid_expr_error(input, self, context));
+    return CL_UNDEF;
+  }
+  return ast_check_expression(self, parser, input, context);
 }
 

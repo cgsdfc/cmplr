@@ -20,8 +20,6 @@
 */
 #ifndef CLING_OPG_PARSER
 #define CLING_OPG_PARSER
-#include "symbols.h"
-
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 #include <utillib/vector.h>
@@ -46,7 +44,6 @@ struct cling_opg_parser {
   struct utillib_vector stack;
   struct utillib_vector opstack;
   size_t eof_symbol;
-  size_t last_error;
 };
 
 void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol);

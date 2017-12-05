@@ -20,7 +20,6 @@
 
 */
 #include "symbols.h"
-#include <assert.h>
 
 UTILLIB_ETAB_BEGIN(cling_symbol_kind)
 
@@ -97,3 +96,9 @@ UTILLIB_ETAB_ELEM_INIT(SYM_LP, "(")
 UTILLIB_ETAB_ELEM_INIT(SYM_RP, ")")
 
 UTILLIB_ETAB_END(cling_symbol_kind);
+
+bool opg_parser_is_relop(unsigned op) {
+  return op == SYM_NE || op == SYM_DEQ || op == SYM_LT || op == SYM_LE ||
+         op == SYM_GT || op == SYM_GE;
+}
+

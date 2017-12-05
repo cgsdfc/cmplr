@@ -20,8 +20,9 @@
 */
 #ifndef CLING_SYMBOLS_H
 #define CLING_SYMBOLS_H
+#include <utillib/symbol.h> 
 #include <utillib/enum.h>
-#include <utillib/symbol.h>
+#include <stdbool.h>
 
 #define cling_symbol_cast(code)                                                \
   ((code) == UT_SYM_EOF ? "EOF" : cling_symbol_kind_tostring((code)))
@@ -105,5 +106,7 @@ UTILLIB_ENUM_ELEM(SYM_LP)
 UTILLIB_ENUM_ELEM(SYM_RP)
 
 UTILLIB_ENUM_END(cling_symbol_kind);
+
+bool opg_parser_is_relop(unsigned op);
 
 #endif /* CLING_SYMBOLS_H */

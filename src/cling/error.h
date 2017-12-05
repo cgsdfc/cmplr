@@ -36,7 +36,7 @@ UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
 UTILLIB_ENUM_ELEM(CL_EINCARG)
 UTILLIB_ENUM_ELEM(CL_EARGCUNMAT)
 UTILLIB_ENUM_ELEM(CL_EDUPCASE)
-UTILLIB_ENUM_ELEM(CL_EINVEXPRSTMT)
+UTILLIB_ENUM_ELEM(CL_EINVEXPR)
 UTILLIB_ENUM_END(cling_error_kind);
 
 union cling_einfo {
@@ -81,7 +81,7 @@ cling_incompatible_type_error(struct utillib_token_scanner *input,
                               int actual_type, int expected_type,
                               size_t context);
 struct cling_error *
-cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
+cling_invalid_expr_error(struct utillib_token_scanner *input,
     struct utillib_json_value *value, size_t context);
 
 

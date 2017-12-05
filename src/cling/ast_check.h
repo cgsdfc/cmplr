@@ -23,8 +23,11 @@
 #define CLING_AST_CHECK_H
 
 #include "rd_parser.h"
-#include "symbol_table.h"
 #include <utillib/json.h>
+#include <utillib/scanner.h>
+
+#include <stddef.h>
+
 /*
  * AST Semantic Checks
  */
@@ -42,10 +45,7 @@ int cling_ast_check_iden_assignable(
     size_t context);
 
 /*
- * Computes type of the expression and throws errors to `parser'
- * during computation.
- * Return negative if error ever happened.
- * Return CL_VOID, CL_INT or CL_CHAR if succeeded.
+ * Excluding assign_expr and boolean_expr.
  */
 int cling_ast_check_expression(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
@@ -53,10 +53,9 @@ int cling_ast_check_expression(struct utillib_json_value *self,
                                size_t context);
 
 /*
- * Since the grammar only permises limited kinds
+ * Since the grammar only permits limited kinds
  * of expr_stmt, namely, assign_stmt, call_stmt,
  * we provide special check for that.
- * Makes errors when the expression
  */
 int cling_ast_check_expr_stmt(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,

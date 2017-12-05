@@ -22,11 +22,11 @@
 #ifndef CLING_RD_PARSER_H
 #define CLING_RD_PARSER_H
 
+#include "error.h"
+
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 #include <utillib/vector.h>
-
-#include "error.h"
 
 #include <setjmp.h>
 

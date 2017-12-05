@@ -20,6 +20,7 @@
 */
 
 #include "opg_parser.h"
+#include "symbols.h"
 #include "ast_build.h"
 
 #include <assert.h>
@@ -51,11 +52,6 @@ static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   utillib_vector_push_back(&self->opstack, self->eof_symbol);
-}
-
-static bool opg_parser_is_relop(size_t op) {
-  return op == SYM_NE || op == SYM_DEQ || op == SYM_LT || op == SYM_LE ||
-         op == SYM_GT || op == SYM_GE;
 }
 
 /**

@@ -22,6 +22,9 @@
 #define CL_AST_BUILD_H
 
 #include <utillib/json.h>
+
+#include <stddef.h>
+
 /*
  * AST construction helpers.
  * Deliberately separated out from

@@ -128,9 +128,9 @@ cling_argc_unmatched_error(struct utillib_token_scanner *input,
 }
 
 struct cling_error *
-cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
+cling_invalid_expr_error(struct utillib_token_scanner *input,
     struct utillib_json_value *value, size_t context) {
-  return ast_error(CL_EINVEXPRSTMT, input, value, context);
+  return ast_error(CL_EINVEXPR, input, value, context);
 }
 
 struct cling_error *
@@ -185,7 +185,7 @@ void cling_error_print(struct cling_error const *self) {
     utillib_error_printf("in `%s', incompatible type: expected `%s', got `%s'",
                          context, einfo[1].str, einfo[0].str);
     break;
-  case CL_EINVEXPRSTMT:
+  case CL_EINVEXPR:
     utillib_error_printf("in `%s', `%s' is not allowed", context, einfo[0].str);
     break;
   case CL_EDUPCASE:

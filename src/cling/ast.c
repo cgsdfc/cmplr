@@ -71,9 +71,23 @@ inline int cling_primary_intcmp(union cling_primary const* lhs,
   return lhs->signed_int- rhs->signed_int;
 }
 
+void cling_primary_toint(union cling_primary *self, size_t type)
+{
+  switch(type) {
+  case SYM_UINT:
+    self->signed_int=(int) self->unsigned_int;
+    break;
+  case SYM_CHAR:
+    self->signed_int=(char) self->signed_char;
+    break;
+  case SYM_INTEGER:
+    break;
+  }
+}
+
 void cling_primary_init(union cling_primary *self,
     size_t type,
-    char const *rawstr ) {
+    char const *rawstr) {
   switch (type) {
   case SYM_UINT:
     sscanf(rawstr, "%u", &self->unsigned_int);

@@ -35,4 +35,4 @@ Makefile
 *.rst
 .dirstamp
 *_test
-
+tags
