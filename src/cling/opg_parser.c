@@ -175,7 +175,6 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
   struct utillib_vector argstack;
   size_t stacktop = utillib_vector_back(opstack);
   size_t op = stacktop;
-  char const *opstr;
 
   /*
    * Since relop contains too much cases,
@@ -283,7 +282,7 @@ make_binary:
   lhs = utillib_vector_back(stack);
   utillib_vector_pop_back(stack);
   object = utillib_json_object_create_empty();
-  cling_ast_set_opstr(object, op);
+  cling_ast_set_op(object, op);
   cling_ast_set_lhs(object, lhs);
   cling_ast_set_rhs(object, rhs);
   utillib_vector_push_back(stack, object);

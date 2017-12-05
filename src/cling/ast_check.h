@@ -52,15 +52,12 @@ int cling_ast_check_expression(struct utillib_json_value *self,
                                struct utillib_token_scanner *input,
                                size_t context);
 
-/*
- * Checks whether the return_type of a function
- * is compatible with `expr_type'.
- * Uses the `curfunc' and `symbol_table' of the parser.
- * The curfunc is assumed to exist and its return_type is
- * returned in `return_type'.
- * Return 0 or CL_EINCTYPE.
- */
-int cling_ast_check_returnness(struct cling_rd_parser const *parser,
-                               int expr_type, int *return_type);
+int cling_ast_check_returnness(
+    struct utillib_json_value *self,
+    struct cling_rd_parser *parser,
+    struct utillib_token_scanner *input,
+    size_t context,
+    bool void_flag);
+
 
 #endif /* CLING_AST_CHECK_H */

@@ -197,5 +197,18 @@ json_array call_expr::args() {
   return rhs();
 }
 
+//
+// statement
+// 
+
+size_t statement::type() const {
+  return size_t(self.at("type"));
+};
+
+bool statement::is_printf_stmt() const {
+  return type() == SYM_PRINTF_STMT;
+}
+
+
 } // cling
 

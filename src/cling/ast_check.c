@@ -439,30 +439,47 @@ int cling_ast_check_expression(struct utillib_json_value *self,
   }
 }
 
-int cling_ast_check_returnness(struct cling_rd_parser const *parser,
-    int expr_type, int *return_type) {
-  assert(parser->curfunc);
-  struct cling_symbol_entry *entry;
-  int kind;
+/*
+ * Checks a return_expr when a return_stmt
+ * is seen.
+ * If the type is compatible, returns return_type,
+ * or else returns CL_UNDEF.
+ */
+int cling_ast_check_returnness(
+    struct utillib_json_value *self,
+    struct cling_rd_parser *parser,
+    struct utillib_token_scanner *input,
+    size_t context,
+    bool void_flag) {
+  /*
+   * 1. checks expr first.
+   */
+  int expr_type, return_type;
+  char const* func_name;
+  struct cling_symbol_entry *func_entry;
 
-  entry =
-    cling_symbol_table_find(parser->symbol_table, parser->curfunc, CL_GLOBAL);
-  assert(entry);
-  kind = entry->kind;
-  assert(kind & CL_FUNC);
-  *return_type = kind & (~CL_FUNC);
-  if (*return_type == expr_type)
-    return 0;
+  if (void_flag)
+    expr_type=CL_VOID;
+  else
+    expr_type=cling_ast_check_expression(self, parser, input, context);
+  if (expr_type == CL_UNDEF)
+    return CL_UNDEF;
+  func_name=parser->curfunc;
+  if (!func_name)
+    return CL_UNDEF;
+  func_entry=cling_symbol_table_find(parser->symbol_table,
+      func_name, CL_GLOBAL);
+  /*
+   * Valid func_name means valid entry.
+   * No verbose assertion here.
+   */
 
-  switch (expr_type) {
-    case CL_VOID:
-      return CL_RET_GARBAGE;
-    case CL_INT:
-    case CL_CHAR:
-      if (*return_type == CL_VOID)
-        return CL_RET_DISCARD;
-      return 0;
-    default:
-      assert(false);
-  }
+  return_type=func_entry->kind & (~CL_FUNC);
+  expr_type &= (~CL_CONST);
+  if (return_type == expr_type)
+    return return_type;
+  rd_parser_error_push_back(parser,
+      cling_incompatible_type_error(input, expr_type, return_type, context));
+
+  return CL_UNDEF;
 }

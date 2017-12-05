@@ -123,16 +123,24 @@ namespace cling {
       json_object composite_stmt();
   };
 
-  class scanf_stmt: private ast_node {
+  class statement: private ast_node {
+    public:
+      size_t type() const;
+      bool is_printf_stmt() const;
+      bool is_scanf_stmt() const;
+      bool is_composite_stmt() const;
+      bool is_empty_stmt() const;
+      bool is_expr_stmt() const;
+  };
+
+  class scanf_stmt: public statement {
     public:
       json_array args();
-      json_value type();
   };
 
   class printf_stmt : private ast_node {
     public:
       json_array args();
-      json_value type();
   };
       
   class expression : private ast_node {

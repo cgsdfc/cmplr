@@ -41,19 +41,19 @@ char const *cling_pretty_typename(int kind) {
   struct utillib_string string;
   utillib_string_init(&string);
   if (kind & CL_CONST) {
-    utillib_string_append(&string, "const ");
+    utillib_string_append(&string, "const");
   }
   if (kind & CL_INT) {
-    utillib_string_append(&string, "int ");
+    utillib_string_append(&string, " int");
   } else if (kind & CL_CHAR) {
-    utillib_string_append(&string, "char ");
+    utillib_string_append(&string, " char");
   } else if (kind & CL_VOID) {
-    utillib_string_append(&string, "void ");
+    utillib_string_append(&string, " void");
   }
   if (kind & CL_ARRAY) {
-    utillib_string_append(&string, "[]");
+    utillib_string_append(&string, " []");
   } else if (kind & CL_FUNC) {
-    utillib_string_append(&string, "()");
+    utillib_string_append(&string, " ()");
   }
   return utillib_string_c_str(&string);
 }

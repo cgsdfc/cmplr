@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
   FILE *file = fopen(argv[1], "r");
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
-  cling_rd_parser_init(&cling_parser, &cling_symbol_table, NULL);
+  cling_rd_parser_init(&cling_parser, &cling_symbol_table);
 
   json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
   if (!json_ast) {

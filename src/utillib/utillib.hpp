@@ -31,6 +31,8 @@ public:
   void pretty_print() const;
   operator json_object() const;
   operator json_array() const;
+  operator size_t() const;
+  operator double() const;
   string tostring() const;
 
 };

@@ -42,12 +42,10 @@ struct cling_rd_parser {
   int tars[RD_PARSER_SKIP_MAX];
   struct utillib_json_value *root;
   struct cling_symbol_table *symbol_table;
-  struct cling_entity_list *entities;
 };
 
 void cling_rd_parser_init(struct cling_rd_parser *self,
-                          struct cling_symbol_table *symbol_table,
-                          struct cling_entity_list *entities);
+                          struct cling_symbol_table *symbol_table);
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self);
 

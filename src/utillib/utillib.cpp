@@ -21,13 +21,23 @@ void json_value::pretty_print() const {
 }
 
 json_value::operator json_object() const {
-  assert (self->kind == UT_JSON_OBJECT);
+  json_value_check_kind(self, UT_JSON_OBJECT);
   return json_object(*this);
 }
 
 json_value::operator json_array() const {
-  assert (self->kind == UT_JSON_ARRAY);
+  json_value_check_kind(self, UT_JSON_ARRAY);
   return json_array(*this);
+}
+
+json_value::operator size_t() const { 
+  json_value_check_kind(self, UT_JSON_SIZE_T);
+  return self->as_size_t;
+}
+
+json_value::operator double() const { 
+  json_value_check_kind(self, UT_JSON_REAL);
+  return self->as_double;
 }
 
 string json_value::tostring() const {

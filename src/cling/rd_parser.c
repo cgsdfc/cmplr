@@ -144,16 +144,14 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
  * init/destroy
  */
 void cling_rd_parser_init(struct cling_rd_parser *self,
-                          struct cling_symbol_table *symbol_table,
-                          struct cling_entity_list *entities) {
+                          struct cling_symbol_table *symbol_table) {
   self->curfunc = NULL;
   self->symbol_table = symbol_table;
-  self->entities = entities;
   utillib_vector_init(&self->elist);
 }
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self) {
-  utillib_vector_destroy_owning(&self->elist, free);
+  utillib_vector_destroy_owning(&self->elist, cling_error_destroy);
 }
 
 struct utillib_json_value *
@@ -164,7 +162,8 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   case 0:
     return mock(self, input);
   default:
-    /* utillib_json_value_destroy(self->root); */
+    if (self->root)
+      utillib_json_value_destroy(self->root);
     return NULL;
   }
 }
@@ -772,11 +771,11 @@ expected_expr:
 static struct utillib_json_value *
 return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
-  struct utillib_json_value *expr, *object;
+  struct utillib_json_value *expr=NULL, *object;
   struct cling_opg_parser opg_parser;
   struct cling_error *error;
   const size_t context = SYM_RETURN_STMT;
-  int expr_type, return_type;
+  bool void_flag;
 
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
@@ -785,11 +784,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
 
   switch (code) {
   case SYM_SEMI:
-    /*
-     * If the optional expr is absent,
-     * the expr member of this object is also absent.
-     */
-    expr_type = CL_VOID;
+    void_flag=true;
     goto check_return;
   case SYM_LP:
     expr = cling_opg_parser_parse(&opg_parser, input);
@@ -802,22 +797,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
                                 cling_expected_error(input, SYM_EXPR, context));
       goto return_null;
     }
-    if (!self->curfunc) {
-      /*
-       * We deos not have a valid name of function to check against.
-       */
-      utillib_json_value_destroy(expr);
-      goto return_null;
-    }
-    expr_type = cling_ast_check_expression(expr, self, input, context);
-    if (expr_type == CL_UNDEF) {
-      /*
-       * If anything bad happened during expr_type computing,
-       * we does not check for returnness.
-       */
-      utillib_json_value_destroy(expr);
-      goto return_null;
-    }
+    void_flag=false;
     goto check_return;
   default:
     rd_parser_error_push_back(self, cling_unexpected_error(input, context));
@@ -825,34 +805,22 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   }
 
 check_return:
-  switch (cling_ast_check_returnness(self, expr_type, &return_type)) {
-  case 0:
-    /*
-     * Nice, expr_type is compatible with return_type.
-     */
-    utillib_json_object_push_back(object, "expr", expr);
-    goto return_object;
-  default:
-    /*
-     * We are in C, whether this is an error depends.
-     * Currently this is a warning.
-     * 1. int foo() { return; }
-     * where garbage will be returned.
-     * 2. void foo() { return (1); }
-     * return value will be discarded.
-     * In both case there is no need to compute the expression.
-     */
-    rd_parser_error_push_back(
-        self,
-        cling_incompatible_type_error(input, expr_type, return_type, context));
-    utillib_json_value_destroy(expr);
-    goto return_object;
-  }
+  if (CL_UNDEF == cling_ast_check_returnness(expr, self,
+        input, context,void_flag))
+    goto return_null;
+  goto return_object;
 
 return_object:
+  utillib_json_object_push_back(object, "expr", expr);
   cling_opg_parser_destroy(&opg_parser);
   return object;
+
 return_null:
+  /*
+   * Destroy everything.
+   */
+  if (expr) 
+    utillib_json_value_destroy(expr);
   cling_opg_parser_destroy(&opg_parser);
   utillib_json_value_destroy(object);
   return NULL;
@@ -1538,6 +1506,11 @@ function_args_body(struct cling_rd_parser *self,
   comp_stmt = composite_stmt_nolookahead(self, input, false);
   utillib_json_object_push_back(object, "comp", comp_stmt);
   cling_symbol_table_leave_scope(self->symbol_table);
+  /*
+   * It is important to reset the curfunc field
+   * since it may cause false positive.
+   */
+  self->curfunc=NULL;
   return object;
 }
 
@@ -1784,9 +1757,9 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
   bool is_main;
   struct utillib_json_value *val;
-  val = cling_opg_parser_parse(&opg_parser, input);
-  cling_opg_parser_destroy(&opg_parser);
-  return val;
-  /* return function(self, input, &is_main); */
+  /* val = cling_opg_parser_parse(&opg_parser, input); */
+  /* cling_opg_parser_destroy(&opg_parser); */
+  /* return val; */
+  return function(self, input, &is_main);
   /* return program(self, input); */
 }
