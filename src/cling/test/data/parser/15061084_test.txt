@@ -1,4 +1,3 @@
-
 const int const_int_decl=1;
 const int const_int_1=1, const_int_2=2,
       const_int_3=3, const_int_4=4;
@@ -36,7 +35,7 @@ int int_function_noargs()
   int local_sum;
 
   local_sum=0;
-  for (local_int_2=1; local_int_2 < 100; 
+  for (local_int_2=1; local_int_2 < 100;
       local_int_2 = local_int_2 + 1)
     local_sum=local_int_2+1;
   return (local_sum);
@@ -65,17 +64,17 @@ void void_function_noargs()
 void void_function_noargs_2()
 {
   int local_int_1;
+    int local_int_2;
+
   scanf(local_int_1);
   if (local_int_1 == 1) {
     void_function('a', local_int_1, 'b');
   } else if (local_int_1 == 2) {
-    int local_int_2;
     local_int_2=int_function_noargs();
     printf("Calls int_function_noargs returns ");
     printf(local_int_2);
   } else {
-    int local_int_2;
-    for (local_int_2=2; local_int_2 < 3; 
+    for (local_int_2=2; local_int_2 < 3;
        local_int_2=local_int_2+1) {
       printf("void_function_noargs_2 does loop ", local_int_2);
     }
@@ -107,27 +106,25 @@ void recursive_function_2(char A, char B,char C,int n)
 void recursive_function_3(int int_arg_1)
 {
   const int cnt=4;
+  int i,j,k;
 
   if (int_arg_1 == 0) {
     printf("End of recursive_function_3");
     return;
   }
   if (int_arg_1 == 1) {
-    int i;
     for (i=0; i<cnt; i= i+1) {
       recursive_function_3(i);
     }
     return;
   }
   if (int_arg_1 == 2) {
-    int i,j;
     for (i=0; i<cnt; i=i+1)
       for (j=0; j<cnt; j=j+1)
         recursive_function_3(i);
     return ;
   }
   if (int_arg_1 == 3) {
-    int i,j, k;
     for (i=0; i<cnt; i=i+1)
       for (j=0; j<cnt; j=j+1)
         for (k=0; k<cnt; k= k+1)
@@ -137,7 +134,7 @@ void recursive_function_3(int int_arg_1)
 }
 
 
-void print_usage() 
+void print_usage()
 {
   printf("Enter a number to select one function to run:");
   printf("  `0': int_function: takes one int arg and returns a local int variable");
@@ -170,9 +167,6 @@ void swap_sth()
 {
   int tmp;
   printf("Swaps int_1 and int_2");
-  tmp=int_1;
-  int_1=int_2;
-  int_2=tmp;
 }
 
 
@@ -197,9 +191,9 @@ void main()
       scanf(int_1);
       printf("int_function returns ");
       printf(int_1);
-}
+    }
     case 1:
-      printf("int_function_noargs returns ", int_function_noargs);
+      printf("int_function_noargs returns ", int_function_noargs());
     case 2: {
       printf("void_function takes one char. please input that:");
       scanf(char_1);
@@ -244,4 +238,3 @@ void main()
     }
   }
 }
-

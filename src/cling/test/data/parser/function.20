@@ -1,0 +1,11 @@
+
+char upper(){
+	if (isUp(table[i])){
+		table[i]=table[i];
+	}
+	else{
+		table[i]=table[i]-32;
+	}
+	return (table[i]);
+}
+

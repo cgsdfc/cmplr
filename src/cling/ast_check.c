@@ -629,7 +629,9 @@ int cling_ast_check_condition(struct utillib_json_value *self,
     goto error;
   }
 
-  bool_type= ast_check_boolean(self, parser, input, context);
+  bool_type= ast_check_expression(self, parser, input, context);
+  if (bool_type == CL_UNDEF)
+    return CL_UNDEF;
   if (!ast_integral_compatible(bool_type)) {
     error=cling_incompatible_type_error(input, bool_type, CL_INT, context);
     goto error;
