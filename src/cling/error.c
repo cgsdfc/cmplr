@@ -120,8 +120,8 @@ struct cling_error *
 cling_argc_unmatched_error(struct utillib_token_scanner *input,
                            char const *func_name, int actual_argc,
                            int expected_argc, size_t context) {
-  struct cling_error *self = cling_error_create(CL_EARGCUNM, input, context);
-  self->einfo[0].str = func_name;
+  struct cling_error *self = cling_error_create(CL_EARGCUNMAT, input, context);
+  self->einfo[0].str = strdup(func_name);
   self->einfo[1].uint = actual_argc;
   self->einfo[2].uint = expected_argc;
   return self;
@@ -132,6 +132,16 @@ cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
     struct utillib_json_value *value, size_t context) {
   return ast_error(CL_EINVEXPRSTMT, input, value, context);
 }
+
+struct cling_error *
+cling_dupcase_error(struct utillib_token_scanner *input,
+    int label, size_t context)
+{
+  struct cling_error *self=cling_error_create(CL_EDUPCASE, input, context);
+  self->einfo[0].int_=label;
+  return self;
+}
+
 
 void cling_error_print(struct cling_error const *self) {
   utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
@@ -166,7 +176,7 @@ void cling_error_print(struct cling_error const *self) {
         "incompatible type of argument %lu in `%s': expected `%s', got `%s'",
         einfo[0].uint, context, einfo[2].str, einfo[3].str);
     break;
-  case CL_EARGCUNM:
+  case CL_EARGCUNMAT:
     utillib_error_printf(
         "in `%s', function `%s' expects %lu arguments, got %lu", context,
         einfo[0].str, einfo[2].uint, einfo[1].uint);
@@ -177,6 +187,9 @@ void cling_error_print(struct cling_error const *self) {
     break;
   case CL_EINVEXPRSTMT:
     utillib_error_printf("in `%s', `%s' is not allowed", context, einfo[0].str);
+    break;
+  case CL_EDUPCASE:
+    utillib_error_printf("in `%s', duplicated case label %d", context, einfo[0].int_);
     break;
   default:
     assert(false && "unimplemented");
@@ -189,6 +202,7 @@ void cling_error_destroy(struct cling_error *self) {
   case CL_EREDEFINED:
   case CL_EUNDEFINED:
   case CL_ENOTLVALUE:
+  case CL_EARGCUNMAT:
     free(self->einfo[0].str);
     break;
   }

@@ -29,6 +29,7 @@
 #include "symbols.h"
 
 #include <utillib/hashmap.h>
+#include <utillib/strhash.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -63,6 +64,10 @@ static size_t rd_parser_skipto(struct cling_rd_parser *self,
   assert(false);
 }
 
+bool cling_rd_parser_has_errors(struct cling_rd_parser const *self) {
+  return !utillib_vector_empty(&self->elist);
+}
+
 void rd_parser_error_push_back(struct cling_rd_parser *self,
                                struct cling_error *error) {
   utillib_vector_push_back(&self->elist, error);
@@ -72,11 +77,7 @@ static int long_compare(void const *lhs, void const *rhs) {
   return (long)lhs - (long)rhs;
 }
 
-static size_t long_hash(void const *self) { return (long)self; }
 
-static const struct utillib_hashmap_callback case_constant_hash_callback = {
-    .compare_handler = long_compare, .hash_handler = long_hash,
-};
 /*
  * Forward Declarations
  */
@@ -917,24 +918,34 @@ return_object:
 }
 
 /*
- * Lookahead SYM_KW_CASE
+ * We use int as key to check case label duplication.
  */
 
+static const struct utillib_hashmap_callback label_map_callback = {
+    .compare_handler = cling_primary_intcmp,
+    .hash_handler = cling_primary_inthash,
+};
+
+/*
+ * Lookahead SYM_KW_CASE
+ */
 static struct utillib_json_value *
 switch_stmt_cases(struct cling_rd_parser *self,
                   struct utillib_token_scanner *input) {
   size_t code;
   struct utillib_json_value *array, *object, *stmt;
+  union cling_primary label;
+  struct utillib_hashmap label_map;
+
   const size_t context = SYM_CASE_CLAUSE;
   array = utillib_json_array_create_empty();
-  struct utillib_hashmap label_map;
-  utillib_hashmap_init(&label_map, &case_constant_hash_callback);
+  utillib_hashmap_init(&label_map, &label_map_callback);
 
   while (true) {
   loop:
     code = utillib_token_scanner_lookahead(input);
     switch (code) {
-    parse_case:
+parse_case:
     case SYM_KW_CASE:
       object = utillib_json_object_create_empty();
       utillib_token_scanner_shiftaway(input);
@@ -942,9 +953,26 @@ switch_stmt_cases(struct cling_rd_parser *self,
       if (code != SYM_UINT && code != SYM_CHAR) {
         goto expected_constant;
       }
+      cling_primary_init(&label, code,
+          utillib_token_scanner_semantic(input));
+      if (utillib_hashmap_exist_key(&label_map, &label)) {
+        /*
+         * If a case label is duplicated, we parse the stmt
+         * but not add it to ast.
+         */
+        rd_parser_error_push_back(self,
+            cling_dupcase_error(input, label.signed_int, context));
+        stmt=statement(self, input);
+        utillib_json_value_destroy(stmt);
+        goto loop;
+      }
+      utillib_hashmap_insert(&label_map, cling_primary_copy(&label), NULL);
+      /*
+       * Reuse this cling_primary.
+       */
+      label.string=utillib_token_scanner_semantic(input);
       utillib_json_object_push_back(
-          object, "case",
-          cling_ast_string(utillib_token_scanner_semantic(input)));
+          object, "case", cling_ast_string(label.string));
       utillib_token_scanner_shiftaway(input);
     parse_colon:
       /*
@@ -983,7 +1011,7 @@ parse_stmt:
     goto loop;
   return_array:
   case SYM_KW_DEFAULT:
-    utillib_hashmap_destroy_owning(&label_map, NULL, NULL);
+    utillib_hashmap_destroy_owning(&label_map, free, NULL);
     return array;
   }
 
@@ -1757,6 +1785,6 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   /* val = cling_opg_parser_parse(&opg_parser, input); */
   /* cling_opg_parser_destroy(&opg_parser); */
   /* return val; */
-  return function(self, input, &is_main);
-  /* return program(self, input); */
+  /* return function(self, input, &is_main); */
+  return program(self, input);
 }

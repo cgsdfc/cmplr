@@ -24,6 +24,9 @@
 
 #include <utillib/json_foreach.h>
 
+#include <stdlib.h>
+#include <string.h>
+
 size_t cling_ast_get_type(struct utillib_json_value const *self) {
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
   assert(type);
@@ -50,20 +53,39 @@ static size_t ast_type2kind(size_t type) {
   }
 }
 
-void cling_ast_semantic(char const *rawstr, size_t type,
-                        union cling_semantic *value) {
+union cling_primary *
+cling_primary_copy(union cling_primary const* self) {
+  union cling_primary *other=malloc(sizeof *other);
+  memcpy(other, self, sizeof *other);
+  return other;
+}
+  
+inline size_t cling_primary_inthash(union cling_primary const* lhs)
+{
+  return lhs->signed_int;
+}
+
+inline int cling_primary_intcmp(union cling_primary const* lhs, 
+    union cling_primary const* rhs)
+{
+  return lhs->signed_int- rhs->signed_int;
+}
+
+void cling_primary_init(union cling_primary *self,
+    size_t type,
+    char const *rawstr ) {
   switch (type) {
   case SYM_UINT:
-    sscanf(rawstr, "%lu", &value->unsigned_int);
+    sscanf(rawstr, "%u", &self->unsigned_int);
     return;
   case SYM_INTEGER:
-    sscanf(rawstr, "%ld", &value->signed_int);
+    sscanf(rawstr, "%d", &self->signed_int);
     return;
   case SYM_STRING:
-    value->string = strdup(rawstr);
+    self->string = rawstr;
     return;
   case SYM_CHAR:
-    sscanf(rawstr, "%c", &value->signed_char);
+    sscanf(rawstr, "%c", &self->signed_char);
     return;
   default:
     assert(false);

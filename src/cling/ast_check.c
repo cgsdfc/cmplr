@@ -27,25 +27,50 @@
 #include <assert.h>
 #include <utillib/json_foreach.h>
 
-static void cling_ast_unreachable(size_t code) {
-  puts(cling_symbol_kind_tostring(code));
-  assert(false);
-}
+/*
+ * Semantic checking for Expressions.
+ */
+
+/*
+ * Subscription:
+ * int or char [defined] = int or char
+ * Otherwise undef
+ */
 static int ast_check_subscript(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context);
 
+/*
+ * Factors are SYM_IDEN, SYM_INTEGER, SYM_UINT, SYM_CHAR.
+ * If self is `SYM_IDEN' and exists
+ * in symbol_table, the symbol_entry of it
+ * will be returned together with its kind.
+ * If self is other things, the corresponding CL_XXX is returned.
+ */
 static int ast_check_factor(struct utillib_json_value *self,
     struct cling_rd_parser *parser,
     struct utillib_token_scanner *input,
     size_t context,
     struct cling_symbol_entry **entry);
 
+/*
+ * Assignment.lhs:
+ * Makes sure lhs is a left value.
+ * If it is an array subscription, return the type of element.
+ * If it is a single variable, return its type.
+ * If it is not a lvalue, returns CL_UNDEF.
+ */
 static int ast_check_assign_lhs(struct utillib_json_value *self, 
     struct cling_rd_parser *parser,
     struct utillib_token_scanner *input,
     size_t context);
+
+
+static void cling_ast_unreachable(size_t code) {
+  puts(cling_symbol_kind_tostring(code));
+  assert(false);
+}
 
 int cling_ast_check_iden_assignable(
     struct utillib_json_value *self,
@@ -56,14 +81,6 @@ int cling_ast_check_iden_assignable(
   return ast_check_assign_lhs(self, parser, input, context);
 }
 
-/*
- * Assignment.lhs:
- * Makes sure lhs of an assignment is a left value.
- * If it is an array subscription, return the type of element
- * if the array is defined or undef if it is undefined.
- * If it is a single variable, return its type if it is defined
- * or undefined if it is not.
- */
 static int ast_check_assign_lhs(struct utillib_json_value *self, 
     struct cling_rd_parser *parser,
     struct utillib_token_scanner *input,
@@ -119,11 +136,6 @@ static bool ast_integral_compatible(int kind) {
   return false;
 }
 
-/*
- * If self is `SYM_IDEN' and exists
- * in symbol_table, the symbol_entry of it
- * will be returned.
- */
 static int ast_check_factor(struct utillib_json_value *self,
     struct cling_rd_parser *parser,
     struct utillib_token_scanner *input,
@@ -157,11 +169,6 @@ static int ast_check_factor(struct utillib_json_value *self,
 }
 
 
-/*
- * Subscription:
- * int or char [whatever] = int or char
- * undef[whatever] = undef
- */
 static int ast_check_subscript(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
@@ -206,23 +213,21 @@ check_index_only:
 /*
  * Assumes "op" == SYM_RP
  * Call:
- * undef(whatever) = undef
- * defined(whatever) = defined
+ * defined(defined) = defined
+ * Otherwise undef
  */
 static int ast_check_call(struct utillib_json_value *self,
                           struct cling_rd_parser *parser,
                           struct utillib_token_scanner *input, size_t context) {
-  struct utillib_json_value *callee, *array;
+  struct utillib_json_value *callee, *array, *func_name;
   struct utillib_json_value *arglist, *formal_arg_type;
   struct utillib_json_value *formal_arg, *actual_arg;
-  char const *func_name;
   int lhs_type, arg_type;
   struct cling_symbol_entry *entry;
   size_t formal_argc, actual_argc;
   int i, j, actual_arg_type;
 
   callee = utillib_json_object_at(self, "lhs");
-  func_name=callee->as_ptr;
   array = utillib_json_object_at(self, "rhs");
   lhs_type = ast_check_factor(callee, parser, input, context, &entry);
   if (lhs_type == CL_UNDEF) {
@@ -248,16 +253,20 @@ static int ast_check_call(struct utillib_json_value *self,
   formal_argc = utillib_json_array_size(arglist);
   actual_argc = utillib_json_array_size(array);
 
-  for (i = 0, j = 0; i < formal_argc && j < actual_argc; ++i, ++j) {
+  for (i = 0, j = 0; j < actual_argc; ++i, ++j) {
     /*
      * 1. computes the type of each argument.
      * 2. compares it with the corresponding formal argument.
      */
-    formal_arg = utillib_json_array_at(arglist, i);
     actual_arg = utillib_json_array_at(array, j);
-    formal_arg_type = utillib_json_object_at(formal_arg, "type");
+    if (i >= formal_argc) {
+      cling_ast_check_expression(actual_arg, parser, input, context);
+      continue;
+    }
     actual_arg_type =
         cling_ast_check_expression(actual_arg, parser, input, context);
+    formal_arg = utillib_json_array_at(arglist, i);
+    formal_arg_type = utillib_json_object_at(formal_arg, "type");
     if (actual_arg_type == CL_UNDEF)
       continue;
     if (ast_integral_compatible(actual_arg_type))
@@ -266,10 +275,12 @@ static int ast_check_call(struct utillib_json_value *self,
           cling_incompatible_arg_error(input, i, formal_arg_type->as_size_t,
                                        actual_arg_type, context));
   }
-  if (i != j) {
+  if (i != formal_argc) {
+    func_name=utillib_json_object_at(entry->value, "name");
     rd_parser_error_push_back(
-        parser, cling_argc_unmatched_error(input, func_name, actual_argc,
+        parser, cling_argc_unmatched_error(input, func_name->as_ptr, actual_argc,
                                            formal_argc, context));
+    return CL_UNDEF;
   }
   return entry->kind & (~CL_FUNC);
 
@@ -295,6 +306,10 @@ check_args_only:
  * lhs_type=ast_check_operand(self, "lhs", ...);
  * Filter out the undefined iden and not integral
  * guys all to be CL_UNDEF and pushes error properly.
+ * Notes since all our expression effectly operate
+ * on integral type, there is actually no need to
+ * check compatibility of operands based on each
+ * operator. They all need to be integral.
  */
 static int ast_check_operand(struct utillib_json_value *self,
     char const *operand,
@@ -313,7 +328,7 @@ static int ast_check_operand(struct utillib_json_value *self,
     return CL_UNDEF;
   if (!ast_integral_compatible(type)) {
     rd_parser_error_push_back(parser,
-        cling_incompatible_type_error(input, CL_INT, type, context));
+        cling_incompatible_type_error(input, type, CL_INT, context));
     return CL_UNDEF;
   }
   return type;

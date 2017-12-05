@@ -24,20 +24,25 @@
 #include <utillib/json.h>
 
 /*
- * Every operation backed up by
- * AST is held here including
- * some symbol_table lookup and
- * insertion. The reason is that
- * I want to keep the symbol_table
- * language-neutual.
+ * This union is **untyped**
+ * so all its usage is based
+ * on context and it cannot hold
+ * memory on heap.
  */
-
-union cling_semantic {
+union cling_primary {
   char signed_char;
   char const *string;
-  long signed_int;
-  size_t unsigned_int;
+  int signed_int;
+  unsigned int unsigned_int;
 };
+
+union cling_primary *
+cling_primary_copy(union cling_primary const* self);
+size_t cling_primary_inthash(union cling_primary const* lhs);
+int cling_primary_intcmp(union cling_primary const* lhs, 
+    union cling_primary const* rhs);
+void cling_primary_init(union cling_primary *self,
+     size_t type,char const *rawstr);
 
 /*
  * Table insertion.

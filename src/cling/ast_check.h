@@ -30,8 +30,10 @@
  */
 
 /*
- * Checks whether `name' exists and is assignable.
- * That is, not const, array and function.
+ * Specially for scanf_stmt where
+ * only idens are allows as arguments.
+ * Checks whether an iden is lvalue.
+ * Return its type or CL_UNDEF. 
  */
 int cling_ast_check_iden_assignable(
     struct utillib_json_value *self,
