@@ -40,11 +40,24 @@ cling_error_create(int kind, struct utillib_token_scanner *input,
 }
 
 static struct cling_error *
-name_context_error(int kind, struct utillib_token_scanner *input,
+name_error(int kind, struct utillib_token_scanner *input,
                    char const *name, size_t context) {
   struct cling_error *self = cling_error_create(kind, input, context);
   /* Free needed */
   self->einfo[0].str = strdup(name);
+  return self;
+}
+
+static struct cling_error *
+ast_error(int kind, struct utillib_token_scanner *input,
+    struct utillib_json_value * value, size_t context) {
+  struct utillib_string string;
+  struct cling_error *self;
+
+  self=cling_error_create(kind, input, context);
+  cling_ast_pretty_expr(value, &string);
+  /* Free needed */
+  self->einfo[0].str=utillib_string_c_str(&string);
   return self;
 }
 
@@ -67,25 +80,19 @@ struct cling_error *cling_unexpected_error(struct utillib_token_scanner *input,
 
 struct cling_error *cling_redefined_error(struct utillib_token_scanner *input,
                                           char const *name, size_t context) {
-  return name_context_error(CL_EREDEFINED, input, name, context);
+  return name_error(CL_EREDEFINED, input, name, context);
 }
 
 struct cling_error *
 cling_undefined_name_error(struct utillib_token_scanner *input,
                            char const *name, size_t context) {
-  return name_context_error(CL_EUNDEFINED, input, name, context);
+  return name_error(CL_EUNDEFINED, input, name, context);
 }
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
                                            struct utillib_json_value *value, size_t context)
 {
-  struct utillib_string string;
-  struct cling_error *self;
-
-  self=cling_error_create(CL_ENOTLVALUE, input, context);
-  cling_ast_pretty_expr(value, &string);
-  self->einfo[0].str=utillib_string_c_str(&string);
-  return self;
+  return ast_error(CL_ENOTLVALUE, input, value, context);
 }
 
 struct cling_error *
@@ -122,10 +129,8 @@ cling_argc_unmatched_error(struct utillib_token_scanner *input,
 
 struct cling_error *
 cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
-    size_t actual_code, size_t context) {
-  struct cling_error *self=cling_error_create(CL_EINVEXPRSTMT, input, context);
-  self->einfo[0].str=cling_symbol_cast(actual_code);
-  return self;
+    struct utillib_json_value *value, size_t context) {
+  return ast_error(CL_EINVEXPRSTMT, input, value, context);
 }
 
 void cling_error_print(struct cling_error const *self) {
@@ -169,6 +174,9 @@ void cling_error_print(struct cling_error const *self) {
   case CL_EINCTYPE:
     utillib_error_printf("in `%s', incompatible type: expected `%s', got `%s'",
                          context, einfo[1].str, einfo[0].str);
+    break;
+  case CL_EINVEXPRSTMT:
+    utillib_error_printf("in `%s', `%s' is not allowed", context, einfo[0].str);
     break;
   default:
     assert(false && "unimplemented");

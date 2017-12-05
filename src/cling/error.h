@@ -80,7 +80,7 @@ cling_incompatible_type_error(struct utillib_token_scanner *input,
                               size_t context);
 struct cling_error *
 cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
-    size_t actual_code, size_t context);
+    struct utillib_json_value *value, size_t context);
 
 
 struct cling_error *

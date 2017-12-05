@@ -730,11 +730,19 @@ expr_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   if (expr == NULL) {
     goto expected_expr;
   }
-  utillib_json_object_push_back(object, "expr", expr);
+  if (CL_UNDEF == cling_ast_check_expr_stmt(expr, self, input, context)){
+    utillib_json_value_destroy(expr);
+    goto return_null;
+  }
 
-return_object:
+  utillib_json_object_push_back(object, "expr", expr);
   cling_opg_parser_destroy(&opg_parser);
   return object;
+
+return_null:
+  cling_opg_parser_destroy(&opg_parser);
+  utillib_json_value_destroy(object);
+  return NULL;
 
 expected_expr:
   /*
@@ -749,7 +757,7 @@ expected_expr:
   self->tars[0] = SYM_SEMI;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
-    goto return_object;
+    goto return_null;
   }
 }
 

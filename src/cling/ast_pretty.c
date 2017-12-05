@@ -110,5 +110,6 @@ void cling_ast_pretty_expr(struct utillib_json_value const *self,
     struct utillib_string *string)
 {
   utillib_string_init(string);
+  ast_pretty_expr(self, string);
 }
 

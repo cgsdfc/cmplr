@@ -363,21 +363,18 @@ static int ast_check_boolean(struct utillib_json_value *self,
  * Assignment:
  * When array subscription appears on the left-hand-side
  * it become assignable.
- * int = int = int
- * char = char = char
- * undef = char or int = rhs
- * undef = undef = undef
+ * defined '=' defined = defined
+ * Otherwise undef
  */
 int cling_ast_check_assign(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context) {
-  int lhs_type=ast_check_assign_lhs(self, parser, input, context);
+  struct utillib_json_value *lhs=utillib_json_object_at(self, "lhs");
+  int lhs_type=ast_check_assign_lhs(lhs, parser, input, context);
   int rhs_type=ast_check_operand(self, "rhs", parser, input, context);
-  if (lhs_type != CL_UNDEF)
+  if (lhs_type != CL_UNDEF  &&  rhs_type != CL_UNDEF)
     return lhs_type;
-  if (rhs_type != CL_UNDEF)
-    return rhs_type;
   return CL_UNDEF;
 }
 
@@ -490,9 +487,7 @@ int cling_ast_check_returnness(
 }
 
 /*
- * Only assign_expr and call_expr can be used!
- * Other expressions cause an cling_unexpected_error
- * to be thrown.
+ * Only assign_expr and call_expr are allowed!
  */
 int cling_ast_check_expr_stmt(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
@@ -500,14 +495,13 @@ int cling_ast_check_expr_stmt(struct utillib_json_value *self,
                                size_t context)
 {
   struct utillib_json_value *op;
-  struct utillib_json_value *actual_type;
-  size_t actual_code;
 
   op=utillib_json_object_at(self, "op");
   if (!op) {
-    actual_type=utillib_json_object_at(self, "type");
-    actual_code=actual_type->as_size_t;
-    goto unexpected;
+    /*
+     * We see a factor.
+     */
+    goto error;
   }
   switch(op->as_size_t) {
   case SYM_RP:
@@ -521,13 +515,12 @@ int cling_ast_check_expr_stmt(struct utillib_json_value *self,
      */
     return cling_ast_check_assign(self, parser, input, context);
   default:
-    actual_code=op->as_size_t;
-    goto unexpected;
+    goto error;
   }
 
-unexpected:
+error:
   rd_parser_error_push_back(parser,
-      cling_invalid_expr_stmt_error(input, actual_code, context));
+      cling_invalid_expr_stmt_error(input, self, context));
   return CL_UNDEF;
 }
 
