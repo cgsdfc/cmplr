@@ -227,10 +227,10 @@ utillib_json_array_create(void const *data,
 static void json_value_tostring(struct utillib_json_value const *,
                                 struct utillib_string *);
 /**
- * \function json_arrayostring
+ * \function json_array_tostring
  */
 
-static void json_arrayostring(struct utillib_json_array const *self,
+static void json_array_tostring(struct utillib_json_array const *self,
                               struct utillib_string *string) {
   utillib_string_append(string, "[");
   if (utillib_vector_empty(&self->elements)) {
@@ -303,7 +303,7 @@ static void json_value_tostring(struct utillib_json_value const *self,
     utillib_string_append(string, str);
     return;
   case UT_JSON_ARRAY:
-    json_arrayostring(self->as_ptr, string);
+    json_array_tostring(self->as_ptr, string);
     return;
   case UT_JSON_OBJECT:
     json_object_tostring(self->as_ptr, string);

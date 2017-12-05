@@ -44,7 +44,7 @@ static const struct utillib_keyword_pair cling_keywords[] = {
     {"if", SYM_KW_IF},         {"int", SYM_KW_INT},
     {"main", SYM_KW_MAIN},     {"printf", SYM_KW_PRINTF},
     {"return", SYM_KW_RETURN}, {"scanf", SYM_KW_SCANF},
-    {"switch", SYW_KW_SWITCH}, {"void", SYM_KW_VOID},
+    {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
 static int cling_scanner_read_char(struct utillib_char_scanner *chars,

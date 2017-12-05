@@ -34,6 +34,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
 /**
  * File cling/rd_parser.c
@@ -41,14 +42,29 @@
  * go here.
  */
 
+#define rd_parser_skip_init(self, ...) do {\
+  rd_parser_skip_target_init(self, __VA_ARGS__, -1);\
+} while(0)
+
+static bool rd_parser_is_stmt_lookahead(size_t code);
+
 static void rd_parser_fatal(struct cling_rd_parser *self) {
   longjmp(self->fatal_saver, 1);
 }
 
-static void rd_parser_skip_target_init(struct cling_rd_parser *self) {
-  memset(self->tars, -1, sizeof self->tars);
+static void rd_parser_skip_target_init(struct cling_rd_parser *self, ...) {
+  va_list ap;
+  va_start(ap, self);
+  for (int i=0, tar=va_arg(ap, int);
+      tar!=-1; tar=va_arg(ap, int), ++i) {
+    self->tars[i]=tar;
+  }
 }
 
+/*
+ * When the skip targets are less than 4, use this
+ * function. Otherwise, use special skipto_XXX functions.
+ */
 static size_t rd_parser_skipto(struct cling_rd_parser *self,
                                struct utillib_token_scanner *input) {
   size_t code;
@@ -61,7 +77,41 @@ static size_t rd_parser_skipto(struct cling_rd_parser *self,
         return code;
     utillib_token_scanner_shiftaway(input);
   }
-  assert(false);
+}
+
+/*
+ * Skips to the lookaheads of a statement.
+ */
+
+static int rd_parser_skipto_stmt(struct cling_rd_parser *self, 
+    struct utillib_token_scanner *input) {
+  size_t code;
+  while (true) {
+    code = utillib_token_scanner_lookahead(input);
+    if (code == UT_SYM_EOF || code == UT_SYM_ERR)
+      rd_parser_fatal(self);
+    if (rd_parser_is_stmt_lookahead(code))
+        return code;
+    utillib_token_scanner_shiftaway(input);
+  }
+}
+
+/*
+ * Skips to lookaheads of a declaration, const_decls, var_decls, 
+ * func_decls.
+ */
+static int rd_parser_skipto_decl(struct cling_rd_parser *self, 
+    struct utillib_token_scanner *input) {
+  size_t code;
+  while (true) {
+    code = utillib_token_scanner_lookahead(input);
+    if (code == UT_SYM_EOF || code == UT_SYM_ERR)
+      rd_parser_fatal(self);
+    if (code == SYM_KW_CONST || code == SYM_KW_INT ||
+        code == SYM_KW_VOID || code == SYM_CHAR)
+        return code;
+    utillib_token_scanner_shiftaway(input);
+  }
 }
 
 bool cling_rd_parser_has_errors(struct cling_rd_parser const *self) {
@@ -72,11 +122,6 @@ void rd_parser_error_push_back(struct cling_rd_parser *self,
                                struct cling_error *error) {
   utillib_vector_push_back(&self->elist, error);
 }
-
-static int long_compare(void const *lhs, void const *rhs) {
-  return (long)lhs - (long)rhs;
-}
-
 
 /*
  * Forward Declarations
@@ -250,9 +295,7 @@ return_array:
 
 skip:
   rd_parser_error_push_back(self, error);
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_COMMA;
-  self->tars[1] = SYM_SEMI;
+  rd_parser_skip_init(self, SYM_COMMA, SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
   case SYM_COMMA:
     goto before_comma;
@@ -300,9 +343,7 @@ single_const_decl(struct cling_rd_parser *self,
 
 skip:
   rd_parser_error_push_back(self, error);
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
-  self->tars[1] = SYM_KW_CONST;
+  rd_parser_skip_init(self, SYM_SEMI, SYM_KW_CONST);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     utillib_token_scanner_shiftaway(input);
@@ -354,7 +395,6 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
 
   if (cling_symbol_table_exist_name(self->symbol_table, first_iden,
                                     scope_kind)) {
-    rd_parser_skip_target_init(self);
     goto redefined;
   }
   cling_ast_set_name(object, first_iden);
@@ -418,9 +458,7 @@ expected:
                             cling_expected_error(input, expected, context));
   switch (expected) {
   case SYM_UINT:
-    self->tars[0] = SYM_RK;
-    self->tars[1] = SYM_COMMA;
-    self->tars[2] = SYM_SEMI;
+    rd_parser_skip_init(self, SYM_RK, SYM_COMMA, SYM_SEMI);
     switch (rd_parser_skipto(self, input)) {
     case SYM_RK:
       goto before_rk;
@@ -432,8 +470,7 @@ expected:
       assert(false);
     }
   case SYM_IDEN:
-    self->tars[0] = SYM_COMMA;
-    self->tars[1] = SYM_SEMI;
+    rd_parser_skip_init(self, SYM_COMMA, SYM_SEMI);
     switch (rd_parser_skipto(self, input)) {
     case SYM_COMMA:
       goto before_comma;
@@ -536,9 +573,8 @@ return_array:
   return array;
 
 skip:
-  rd_parser_skip_target_init(self);
+  rd_parser_skip_init(self, SYM_SEMI);
   rd_parser_error_push_back(self, error);
-  self->tars[0] = SYM_SEMI;
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     utillib_token_scanner_shiftaway(input);
@@ -611,10 +647,7 @@ return_object:
 
 skip:
   rd_parser_error_push_back(self, error);
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_IDEN;
-  self->tars[1] = SYM_SEMI;
-  self->tars[2] = SYM_COMMA;
+  rd_parser_skip_init(self, SYM_IDEN, SYM_SEMI, SYM_COMMA);
   switch (rd_parser_skipto(self, input)) {
   case SYM_COMMA:
     goto before_comma;
@@ -704,8 +737,7 @@ skip:
    * can we interpret it as
    * int foo(int i, char b) ?
    */
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_RP;
+  rd_parser_skip_init(self, SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto return_array;
@@ -754,8 +786,7 @@ expected_expr:
    */
   rd_parser_error_push_back(
       self, cling_expected_error(input, SYM_EXPR, SYM_EXPR_STMT));
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
+  rd_parser_skip_init(self, SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto return_null;
@@ -809,7 +840,12 @@ check_return:
   goto return_object;
 
 return_object:
-  utillib_json_object_push_back(object, "expr", expr);
+  if (!void_flag)
+    /*
+     * We are guarding NULL entering our
+     * AST, which is a disaster.
+     */
+    utillib_json_object_push_back(object, "expr", expr);
   cling_opg_parser_destroy(&opg_parser);
   return object;
 
@@ -828,8 +864,7 @@ skip:
    * Again, just skip to SYM_SEMI and
    * abort the whole statement.
    */
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
+  rd_parser_skip_init(self, SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto return_null;
@@ -880,8 +915,7 @@ skip:
    * Again, the error expr causes us to
    * skip to SYM_RP and return null.
    */
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_RP;
+  rd_parser_skip_init(self,SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto return_expr;
@@ -925,6 +959,77 @@ static const struct utillib_hashmap_callback label_map_callback = {
     .compare_handler = cling_primary_intcmp,
     .hash_handler = cling_primary_inthash,
 };
+
+/*
+ * Lookahead SYM_KW_CASE | SYM_KW_DEFAULT
+ */
+static struct utillib_json_value *
+switch_stmt_case_clause(struct cling_rd_parser *self,
+                  struct utillib_token_scanner *input,
+                  struct utillib_json_value *array,
+                  struct utillib_hashmap *label_map) {
+  size_t code;
+  union cling_primary label;
+  struct cling_error *error=NULL;
+  struct utillib_json_value *object, *stmt;
+  const size_t context=SYM_CASE_CLAUSE;
+
+  object=utillib_json_object_create_empty();
+  code=utillib_token_scanner_lookahead(input);
+  utillib_token_scanner_shiftaway(input);
+  switch (code) {
+    case SYM_KW_DEFAULT:
+      goto parse_colon_stmt;
+    case SYM_KW_CASE:
+      code = utillib_token_scanner_lookahead(input);  
+      switch(code) {
+      case SYM_INTEGER:
+      case SYM_UINT:
+      case SYM_CHAR:
+        cling_primary_init(&label, code,
+            utillib_token_scanner_semantic(input));
+        if (utillib_hashmap_exist_key(label_map, &label)) {
+        /*
+         * If a case label is duplicated, we parse the stmt
+         * but not add it to ast.
+         */
+        rd_parser_error_push_back(self,
+            error=cling_dupcase_error(input, label.signed_int, context));
+        label.string=utillib_token_scanner_semantic(input);
+        goto parse_colon_stmt;
+      }
+      utillib_hashmap_insert(label_map, cling_primary_copy(&label), NULL);
+      /*
+       * Reuse this cling_primary.
+       */
+      label.string=utillib_token_scanner_semantic(input);
+      utillib_json_object_push_back(
+          object, "case", cling_ast_string(label.string));
+      utillib_token_scanner_shiftaway(input);
+      goto parse_colon_stmt;
+      default:
+      rd_parser_error_push_back(self,
+          error=cling_expected_error(input, SYM_CONSTANT, context));
+      }
+    default:
+      assert(false);
+  }
+parse_colon_stmt:
+  code = utillib_token_scanner_lookahead(input);
+  if (code != SYM_COLON) {
+    rd_parser_error_push_back(
+        self, cling_expected_error(input, SYM_COLON, context));
+    rd_parser_skipto_stmt(self, input);
+  }
+  utillib_token_scanner_shiftaway(input);
+  stmt = statement(self, input);
+  utillib_json_object_push_back(object, "stmt", stmt);
+  utillib_json_array_push_back(array, object);
+
+        
+
+
+}
 
 /*
  * Lookahead SYM_KW_CASE
@@ -1025,10 +1130,7 @@ expected_constant:
 unexpected:
   rd_parser_error_push_back(self,
                             cling_unexpected_error(input, SYM_CASE_CLAUSE));
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_KW_CASE;
-  self->tars[1] = SYM_KW_DEFAULT;
-  self->tars[2] = SYM_RB;
+  rd_parser_skip_init(self, SYM_KW_CASE,SYM_KW_DEFAULT, SYM_RB);
   switch (rd_parser_skipto(self, input)) {
   case SYM_KW_CASE:
     goto parse_case;
@@ -1078,9 +1180,7 @@ return_object:
 
 expected_lb:
   rd_parser_error_push_back(self, error);
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_KW_CASE;
-  self->tars[1] = SYM_RB;
+  rd_parser_skip_init(self, SYM_KW_CASE,SYM_RB);
   switch (rd_parser_skipto(self, input)) {
   case SYM_KW_CASE:
     goto parse_cases;
@@ -1119,7 +1219,7 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   case SYM_KW_IF:
     object = if_stmt(self, input);
     goto return_object;
-  case SYW_KW_SWITCH:
+  case SYM_KW_SWITCH:
     object = switch_stmt(self, input);
     goto return_object;
   case SYM_IDEN:
@@ -1152,8 +1252,7 @@ return_object:
   return object;
 
 unexpected:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
+  rd_parser_skip_init(self,SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto return_null;
@@ -1237,9 +1336,7 @@ parse_stmt:
   return object;
 
 expected_lp:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
-  self->tars[1] = SYM_RP;
+  rd_parser_skip_init(self,SYM_SEMI, SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_cond;
@@ -1248,9 +1345,7 @@ expected_lp:
   }
 
 expected_init:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
-  self->tars[1] = SYM_RP;
+  rd_parser_skip_init(self, SYM_SEMI, SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_cond;
@@ -1258,9 +1353,7 @@ expected_init:
     goto parse_stmt;
   }
 expected_cond:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_SEMI;
-  self->tars[1] = SYM_RP;
+  rd_parser_skip_init(self, SYM_SEMI, SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_SEMI:
     goto parse_step;
@@ -1268,20 +1361,18 @@ expected_cond:
     goto parse_stmt;
   }
 expected_step:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_RP;
+  rd_parser_skip_init(self, SYM_RP);
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto parse_stmt;
   }
 expected_rp:
-  rd_parser_skip_target_init(self);
   goto parse_stmt;
 }
 
 static bool rd_parser_is_stmt_lookahead(size_t code) {
   return code == SYM_KW_PRINTF || code == SYM_KW_SCANF || code == SYM_KW_FOR ||
-         code == SYM_KW_IF || code == SYW_KW_SWITCH || code == SYM_KW_RETURN ||
+         code == SYM_KW_IF || code == SYM_KW_SWITCH || code == SYM_KW_RETURN ||
          code == SYM_LB || code == SYM_SEMI || code == SYM_IDEN;
 }
 
@@ -1343,10 +1434,7 @@ expected_lb:
    * by skipping to its Lookaheads.
    */
   rd_parser_error_push_back(self, cling_expected_error(input, SYM_LB, context));
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_KW_CONST;
-  self->tars[1] = SYM_KW_INT;
-  self->tars[2] = SYM_KW_CHAR;
+  rd_parser_skip_init(self,SYM_KW_CONST,SYM_KW_INT,SYM_KW_CHAR);
   switch (rd_parser_skipto(self, input)) {
   case SYM_KW_CONST:
   case SYM_KW_INT:
@@ -1492,9 +1580,7 @@ unexpected:
   rd_parser_error_push_back(self, cling_unexpected_error(input, context));
 
 skip:
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_RP;
-  self->tars[1] = SYM_SEMI;
+  rd_parser_skip_init(self, SYM_RP, SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     goto parse_rp;
@@ -1602,10 +1688,7 @@ unexpected:
    */
   self->curfunc = NULL;
   rd_parser_error_push_back(self, cling_unexpected_error(input, context));
-  rd_parser_skip_target_init(self);
-  self->tars[0] = SYM_LP;
-  self->tars[1] = SYM_RP;
-  self->tars[2] = SYM_LB;
+  rd_parser_skip_init(self, SYM_LP, SYM_RP, SYM_LB);
   switch (rd_parser_skipto(self, input)) {
   case SYM_LP:
     goto parse_args_body;
@@ -1616,10 +1699,8 @@ unexpected:
     goto parse_comp;
   }
 expected_lp:
-  rd_parser_skip_target_init(self);
+  rd_parser_skip_init(self, SYM_RP, SYM_LB);
   rd_parser_error_push_back(self, cling_expected_error(input, SYM_LP, context));
-  self->tars[0] = SYM_RP;
-  self->tars[1] = SYM_LB;
   switch (rd_parser_skipto(self, input)) {
   case SYM_RP:
     utillib_token_scanner_shiftaway(input);
@@ -1761,11 +1842,7 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
   return self->root;
 unexpected:
   rd_parser_error_push_back(self, cling_unexpected_error(input, SYM_PROGRAM));
-  self->tars[0] = SYM_KW_CONST;
-  self->tars[1] = SYM_KW_INT;
-  self->tars[2] = SYM_KW_CHAR;
-  self->tars[3] = SYM_KW_VOID;
-  switch (rd_parser_skipto(self, input)) {
+  switch (rd_parser_skipto_decl(self, input)) {
   case SYM_KW_CONST:
     goto parse_const;
   case SYM_KW_INT:
@@ -1787,4 +1864,5 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   /* return val; */
   /* return function(self, input, &is_main); */
   return program(self, input);
+  /* return switch_stmt_cases(self, input); */
 }
