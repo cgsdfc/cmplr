@@ -117,6 +117,10 @@ size_t string::capacity() const { return utillib_string_capacity(&self); }
 
 void string::reserve(size_t size) { utillib_string_reserve(&self, size); }
 
+void string::erase_last() { utillib_string_erase_last(&self); }
+
+void string::replace_last(char ch) { utillib_string_replace_last(&self, ch); }
+
 //
 // hashmap
 //

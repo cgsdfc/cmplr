@@ -97,6 +97,8 @@ public:
   bool empty() const;
   void clear();
   void reserve(size_t size);
+  void erase_last();
+  void replace_last(char ch);
 };
 
 class hashmap {

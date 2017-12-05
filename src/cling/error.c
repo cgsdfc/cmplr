@@ -21,6 +21,7 @@
 #include "error.h"
 #include "symbol_table.h"
 #include "symbols.h"
+#include "ast_pretty.h"
 
 #include <utillib/print.h>
 
@@ -76,8 +77,15 @@ cling_undefined_name_error(struct utillib_token_scanner *input,
 }
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-                                           char const *name, size_t context) {
-  return name_context_error(CL_ENOTLVALUE, input, name, context);
+                                           struct utillib_json_value *value, size_t context)
+{
+  struct utillib_string string;
+  struct cling_error *self;
+
+  self=cling_error_create(CL_ENOTLVALUE, input, context);
+  cling_ast_pretty_expr(value, &string);
+  self->einfo[0].str=utillib_string_c_str(&string);
+  return self;
 }
 
 struct cling_error *
@@ -112,6 +120,14 @@ cling_argc_unmatched_error(struct utillib_token_scanner *input,
   return self;
 }
 
+struct cling_error *
+cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
+    size_t actual_code, size_t context) {
+  struct cling_error *self=cling_error_create(CL_EINVEXPRSTMT, input, context);
+  self->einfo[0].str=cling_symbol_cast(actual_code);
+  return self;
+}
+
 void cling_error_print(struct cling_error const *self) {
   utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
                        self->col + 1);
@@ -137,7 +153,7 @@ void cling_error_print(struct cling_error const *self) {
                          context);
     break;
   case CL_ENOTLVALUE:
-    utillib_error_printf("`%s' is not assignable in `%s'", einfo[0].str,
+    utillib_error_printf("`%s' is not lvalue in `%s'", einfo[0].str,
                          context);
     break;
   case CL_EINCARG:

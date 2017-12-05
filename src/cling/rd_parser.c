@@ -552,7 +552,7 @@ skip:
 static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
-  char const *name;
+  struct utillib_json_value *name;
   struct utillib_json_value *array;
   struct utillib_json_value *object;
   /*
@@ -584,20 +584,9 @@ scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
       goto skip;
     }
   before_iden:
-    name = utillib_token_scanner_semantic(input);
-    switch (cling_ast_check_assignable(name, self->symbol_table)) {
-    case CL_EUNDEFINED:
-      rd_parser_error_push_back(
-          self, error = cling_undefined_name_error(input, name, context));
-      break;
-    case CL_ENOTLVALUE:
-      rd_parser_error_push_back(
-          self, error = cling_not_lvalue_error(input, name, context));
-      break;
-    case 0:
-      utillib_json_array_push_back(array, utillib_json_string_create(&name));
-      break;
-    }
+    name = cling_ast_factor(code, utillib_token_scanner_semantic(input));
+    if (CL_UNDEF != cling_ast_check_iden_assignable(name, self, input, context))
+      utillib_json_array_push_back(array, name);
     utillib_token_scanner_shiftaway(input);
     code = utillib_token_scanner_lookahead(input);
     switch (code) {

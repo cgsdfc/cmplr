@@ -22,6 +22,7 @@
 #define CLING_ERROR_H
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
+#include <utillib/json.h>
 #define CLING_ERROR_EMAX 4
 
 UTILLIB_ENUM_BEGIN(cling_error_kind)
@@ -34,6 +35,7 @@ UTILLIB_ENUM_ELEM(CL_EUNDEFINED)
 UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
 UTILLIB_ENUM_ELEM(CL_EINCARG)
 UTILLIB_ENUM_ELEM(CL_EARGCUNM)
+UTILLIB_ENUM_ELEM(CL_EINVEXPRSTMT)
 UTILLIB_ENUM_END(cling_error_kind);
 
 union cling_einfo {
@@ -70,12 +72,16 @@ cling_undefined_name_error(struct utillib_token_scanner *input,
                            char const *name, size_t context);
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-                                           char const *name, size_t context);
+                                           struct utillib_json_value *value, size_t context);
 
 struct cling_error *
 cling_incompatible_type_error(struct utillib_token_scanner *input,
                               int actual_type, int expected_type,
                               size_t context);
+struct cling_error *
+cling_invalid_expr_stmt_error(struct utillib_token_scanner *input,
+    size_t actual_code, size_t context);
+
 
 struct cling_error *
 cling_incompatible_arg_error(struct utillib_token_scanner *input, size_t argpos,

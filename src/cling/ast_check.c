@@ -42,18 +42,18 @@ static int ast_check_factor(struct utillib_json_value *self,
     size_t context,
     struct cling_symbol_entry **entry);
 
-int cling_ast_check_assignable(char const *name,
-                               struct cling_symbol_table const *symbol_table) {
-  struct cling_symbol_entry *entry;
-  int kind;
+static int ast_check_assign_lhs(struct utillib_json_value *self, 
+    struct cling_rd_parser *parser,
+    struct utillib_token_scanner *input,
+    size_t context);
 
-  entry = cling_symbol_table_find(symbol_table, name, CL_LEXICAL);
-  if (!entry)
-    return CL_EUNDEFINED;
-  kind = entry->kind;
-  if (kind & CL_FUNC || kind & CL_ARRAY || kind & CL_CONST)
-    return CL_ENOTLVALUE;
-  return 0;
+int cling_ast_check_iden_assignable(
+    struct utillib_json_value *self,
+    struct cling_rd_parser *parser,
+    struct utillib_token_scanner *input,
+    size_t context)
+{ 
+  return ast_check_assign_lhs(self, parser, input, context);
 }
 
 /*
@@ -84,7 +84,7 @@ static int ast_check_assign_lhs(struct utillib_json_value *self,
     if (lhs_type == CL_UNDEF) 
       return CL_UNDEF;
     if (lhs_type & CL_FUNC || lhs_type & CL_ARRAY || lhs_type & CL_CONST)
-      return CL_UNDEF;
+      goto unassignable;
     return lhs_type & (CL_INT | CL_CHAR);
   }
   if (op->as_size_t != SYM_RK) {
@@ -92,12 +92,17 @@ static int ast_check_assign_lhs(struct utillib_json_value *self,
      * Although it is not assignable, we still need to check it.
      */
     cling_ast_check_expression(self, parser, input, context);
-    return CL_UNDEF;
+    goto unassignable;
   }
   lhs_type=ast_check_subscript(self, parser, input, context);
   if (lhs_type == CL_UNDEF)
     return CL_UNDEF;
+
   return lhs_type;
+unassignable:
+  rd_parser_error_push_back(parser,
+      cling_not_lvalue_error(input, self, context));
+  return CL_UNDEF;
 }
 
 /*
@@ -363,7 +368,7 @@ static int ast_check_boolean(struct utillib_json_value *self,
  * undef = char or int = rhs
  * undef = undef = undef
  */
-static int cling_ast_check_assign(struct utillib_json_value *self,
+int cling_ast_check_assign(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context) {
@@ -483,3 +488,46 @@ int cling_ast_check_returnness(
 
   return CL_UNDEF;
 }
+
+/*
+ * Only assign_expr and call_expr can be used!
+ * Other expressions cause an cling_unexpected_error
+ * to be thrown.
+ */
+int cling_ast_check_expr_stmt(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context)
+{
+  struct utillib_json_value *op;
+  struct utillib_json_value *actual_type;
+  size_t actual_code;
+
+  op=utillib_json_object_at(self, "op");
+  if (!op) {
+    actual_type=utillib_json_object_at(self, "type");
+    actual_code=actual_type->as_size_t;
+    goto unexpected;
+  }
+  switch(op->as_size_t) {
+  case SYM_RP:
+    /*
+     * call_expr
+     */
+    return ast_check_call(self, parser, input, context);
+  case SYM_EQ:
+    /*
+     * assign_expr
+     */
+    return cling_ast_check_assign(self, parser, input, context);
+  default:
+    actual_code=op->as_size_t;
+    goto unexpected;
+  }
+
+unexpected:
+  rd_parser_error_push_back(parser,
+      cling_invalid_expr_stmt_error(input, actual_code, context));
+  return CL_UNDEF;
+}
+

@@ -29,17 +29,15 @@
  * AST Semantic Checks
  */
 
-enum cling_return_kind {
-  CL_RET_GARBAGE = 1,
-  CL_RET_DISCARD,
-};
-
 /*
  * Checks whether `name' exists and is assignable.
  * That is, not const, array and function.
  */
-int cling_ast_check_assignable(char const *name,
-                               struct cling_symbol_table const *symbol_table);
+int cling_ast_check_iden_assignable(
+    struct utillib_json_value *self,
+    struct cling_rd_parser *parser,
+    struct utillib_token_scanner *input,
+    size_t context);
 
 /*
  * Computes type of the expression and throws errors to `parser'
@@ -48,6 +46,17 @@ int cling_ast_check_assignable(char const *name,
  * Return CL_VOID, CL_INT or CL_CHAR if succeeded.
  */
 int cling_ast_check_expression(struct utillib_json_value *self,
+                               struct cling_rd_parser *parser,
+                               struct utillib_token_scanner *input,
+                               size_t context);
+
+/*
+ * Since the grammar only permises limited kinds
+ * of expr_stmt, namely, assign_stmt, call_stmt,
+ * we provide special check for that.
+ * Makes errors when the expression
+ */
+int cling_ast_check_expr_stmt(struct utillib_json_value *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context);
