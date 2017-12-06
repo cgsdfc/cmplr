@@ -41,7 +41,7 @@ UTILLIB_TEST(rule_index_init) {
 UTILLIB_TEST(rule_index_json) {
   struct utillib_json_value *val =
       utillib_rule_index_json_object_create(UT_FIXTURE);
-  utillib_json_pretty_print(val, stderr);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 

@@ -160,7 +160,7 @@ UTILLIB_TEST(ll1_builder_build_table_correct) {
 UTILLIB_TEST(ll1_builder_build_table_json) {
   struct utillib_json_value *val = utillib_vector2_json_array_create(
       &ll1_table, utillib_rule_json_object_create);
-  utillib_json_pretty_print(val, stderr);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 
@@ -172,7 +172,7 @@ UTILLIB_TEST(ll1_builder_build_table_json) {
 UTILLIB_TEST(ll1_builder_json) {
   struct utillib_json_value *val =
       utillib_ll1_builder_json_object_create(UT_FIXTURE);
-  utillib_json_pretty_print(val, stderr);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 

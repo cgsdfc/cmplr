@@ -1,6 +1,4 @@
 for (i=1; i<10; i=i+1) {
-  const char a='a';
-  int sum;
   sum=a;
   printf(1);
 }

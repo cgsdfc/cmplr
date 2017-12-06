@@ -391,7 +391,7 @@ struct utillib_json_value *utillib_json_null_create(void) {
  * Convenient function combining `utillib_json_tostring'
  * and `utillib_printer_print_json'.
  */
-void utillib_json_pretty_print(struct utillib_json_value const *self,
+void utillib_json_pretty_fprint(struct utillib_json_value const *self,
                                FILE *file) {
   struct utillib_string json;
   struct utillib_printer_t print;
@@ -475,5 +475,10 @@ size_t utillib_json_array_size(struct utillib_json_value const *self)
 {
   json_value_check_kind(self, UT_JSON_ARRAY);
   return utillib_vector_size(_JSON_ARRAY(self));
+}
+
+void utillib_json_pretty_print(struct utillib_json_value const *self)
+{
+  return utillib_json_pretty_fprint(self, stdout);
 }
 

@@ -210,7 +210,8 @@ utillib_json_array_at(struct utillib_json_value const *self, size_t index);
 void utillib_json_tostring(struct utillib_json_value const *self,
                            struct utillib_string *str);
 
-void utillib_json_pretty_print(struct utillib_json_value const *self,
+void utillib_json_pretty_print(struct utillib_json_value const *self);
+void utillib_json_pretty_fprint(struct utillib_json_value const *self,
                                FILE *file);
 
 struct utillib_json_value *utillib_json_string_create(char const *const *base);

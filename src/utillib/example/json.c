@@ -42,7 +42,7 @@ UTILLIB_JSON_OBJECT_FIELD_END(CompilationEntry_Fields);
 
 void print_json_stdout(char const *msg, struct utillib_json_value const *val) {
   puts(msg);
-  utillib_json_pretty_print(val, stdout);
+  utillib_json_pretty_print(val);
 }
 
 void use_primary_type(void) {

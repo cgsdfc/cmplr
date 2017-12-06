@@ -87,7 +87,7 @@ bool utillib_symbol_check(struct utillib_symbol const *symbols,
     printf("Empty Entry at `%d' detected\n", prev->value + 1);
     struct utillib_json_value *val = utillib_symbol_json_object_create(prev);
     puts("\tPrevious symbol is");
-    utillib_json_pretty_print(val, stdout);
+    utillib_json_pretty_print(val);
     utillib_json_value_destroy(val);
     return false;
   }

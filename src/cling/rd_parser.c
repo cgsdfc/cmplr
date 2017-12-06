@@ -144,13 +144,15 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
 static struct utillib_json_value *for_stmt(struct cling_rd_parser *self,
                                            struct utillib_token_scanner *input);
 
+enum { COMP_NO_SCOPE_AND_DECL=0, COMP_ALLOW_DECL=1, COMP_ENTER_SCOPE=2 };
+
 static struct utillib_json_value *
 composite_stmt_nolookahead(struct cling_rd_parser *self,
-                           struct utillib_token_scanner *input, bool new_scope);
+                           struct utillib_token_scanner *input, int comp_flag);
 
 static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
-               struct utillib_token_scanner *input, bool new_scope);
+               struct utillib_token_scanner *input, int comp_flag);
 
 static struct utillib_json_value *
 formal_arglist(struct cling_rd_parser *self,
@@ -1074,8 +1076,8 @@ switch_stmt_cases(struct cling_rd_parser *self,
   utillib_hashmap_init(&label_map, &label_map_callback);
 
   while (true) {
-    code = utillib_token_scanner_lookahead(input);
 loop:
+    code = utillib_token_scanner_lookahead(input);
     switch (code) {
     case SYM_KW_DEFAULT:
       object = switch_stmt_case_clause(self, input, &label_map);
@@ -1215,7 +1217,7 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
      * not a function, we need a new scope.
      *
      */
-    object = composite_stmt_nolookahead(self, input, true);
+    object = composite_stmt_nolookahead(self, input, COMP_NO_SCOPE_AND_DECL);
     goto return_object;
   case SYM_SEMI:
   return_null:
@@ -1402,7 +1404,7 @@ multiple_statement(struct cling_rd_parser *self,
 static struct utillib_json_value *
 composite_stmt_nolookahead(struct cling_rd_parser *self,
                            struct utillib_token_scanner *input,
-                           bool new_scope) {
+                           int comp_flag) {
 
   size_t code;
   const size_t context = SYM_COMP_STMT;
@@ -1414,7 +1416,7 @@ composite_stmt_nolookahead(struct cling_rd_parser *self,
   utillib_token_scanner_shiftaway(input);
 
 parse_comp:
-  return composite_stmt(self, input, new_scope);
+  return composite_stmt(self, input, comp_flag);
 
 expected_lb:
   /*
@@ -1438,40 +1440,52 @@ expected_lb:
  */
 static struct utillib_json_value *
 composite_stmt(struct cling_rd_parser *self,
-               struct utillib_token_scanner *input, bool new_scope) {
+               struct utillib_token_scanner *input, int comp_flag) {
   size_t code;
   size_t type;
   char *first_iden;
   struct utillib_json_value *object, *const_decls, *var_decls, *stmts;
+  const size_t context=SYM_COMP_STMT;
 
   object = cling_ast_statement(SYM_COMP_STMT);
   code = utillib_token_scanner_lookahead(input);
-  if (new_scope)
+  if (comp_flag & COMP_ENTER_SCOPE)
     /*
-     * Since the arguments of a function belong to
-     * the same scope of the its composite_stmt,
-     * in which case the insertion of these arguments
-     * means the scope should be created
-     * by the function rather than composite_stmt.
-     * This bool is to tell that.
+     * Sometimes scope is entered by `function_args_body'
      */
     cling_symbol_table_enter_scope(self->symbol_table);
+  if (code == SYM_RB)
+    /*
+     * Handle the empty composite_stmt.
+     */
+    goto parse_rb;
 
-  if (code == SYM_KW_CONST) {
-    const_decls = multiple_const_decl(self, input, CL_LOCAL);
-    utillib_json_object_push_back(object, "const_decls", const_decls);
-  }
-  code = utillib_token_scanner_lookahead(input);
-  if (code == SYM_KW_CHAR || code == SYM_KW_INT) {
-    var_decls =
+  if (comp_flag & COMP_ALLOW_DECL) {
+    /*
+     * function-scope composite_stmt can
+     * have decls.
+     */
+    if (code == SYM_KW_CONST) {
+      const_decls = multiple_const_decl(self, input, CL_LOCAL);
+      utillib_json_object_push_back(object, "const_decls", const_decls);
+    }
+    code = utillib_token_scanner_lookahead(input);
+    if (code == SYM_KW_CHAR || code == SYM_KW_INT) {
+      var_decls =
         maybe_multiple_var_decls(self, input, &type, &first_iden, CL_LOCAL);
-    utillib_json_object_push_back(object, "var_decls", var_decls);
+      utillib_json_object_push_back(object, "var_decls", var_decls);
+    }
   }
   code = utillib_token_scanner_lookahead(input);
-  if (rd_parser_is_stmt_lookahead(code)) {
-    stmts = multiple_statement(self, input);
-    utillib_json_object_push_back(object, "stmts", stmts);
+  if (!rd_parser_is_stmt_lookahead(code)) {
+    rd_parser_error_push_back(self,
+        cling_unexpected_error(input, context));
+    rd_parser_skipto_stmt(self, input);
   }
+  stmts = multiple_statement(self, input);
+  utillib_json_object_push_back(object, "stmts", stmts);
+
+parse_rb:
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_RB) {
     rd_parser_error_push_back(
@@ -1480,7 +1494,7 @@ composite_stmt(struct cling_rd_parser *self,
     utillib_token_scanner_shiftaway(input);
   }
 
-  if (new_scope)
+  if (comp_flag & COMP_ENTER_SCOPE)
     cling_symbol_table_leave_scope(self->symbol_table);
   return object;
 }
@@ -1603,7 +1617,7 @@ function_args_body(struct cling_rd_parser *self,
   /*
    * Handle maybe-missing SYM_LB
    */
-  comp_stmt = composite_stmt_nolookahead(self, input, false);
+  comp_stmt = composite_stmt_nolookahead(self, input, COMP_ALLOW_DECL);
   utillib_json_object_push_back(object, "comp", comp_stmt);
   cling_symbol_table_leave_scope(self->symbol_table);
   /*
@@ -1704,7 +1718,8 @@ parse_comp:
    * we directly enter a new scope in
    * composite_stmt_nolookahead.
    */
-  comp = composite_stmt_nolookahead(self, input, true);
+  comp = composite_stmt_nolookahead(self, input,
+      COMP_ALLOW_DECL | COMP_ENTER_SCOPE);
   utillib_json_object_push_back(object, "comp", comp);
   return object;
 }
@@ -1854,9 +1869,10 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
   struct utillib_json_value *val;
   /* val = cling_opg_parser_parse(&opg_parser, input); */
   /* cling_opg_parser_destroy(&opg_parser); */
-  /* return val; */
-  /* return function(self, input, &is_main); */
-  return program(self, input);
+  /* return program(self, input); */
   /* return switch_stmt_cases(self, input); */
   /* return printf_stmt(self, input); */
+  val=function(self, input, &is_main);
+  utillib_json_pretty_print(val);
+  return val;
 }

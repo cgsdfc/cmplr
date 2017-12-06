@@ -230,7 +230,7 @@ bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
                                        &utillib_symbol_scanner_op);
   UTILLIB_VECTOR_FOREACH(struct utillib_json_value const *, val,
                          &self->values) {
-    utillib_json_pretty_print(val, stderr);
+    utillib_json_pretty_print(val);
   }
   return good;
 }

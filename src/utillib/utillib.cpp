@@ -17,7 +17,7 @@ bool json_value::is_array() const { return self->kind == UT_JSON_ARRAY; }
 bool json_value::is_object() const { return self->kind == UT_JSON_OBJECT; }
 
 void json_value::pretty_print() const {
-  utillib_json_pretty_print(self, stdout);
+  utillib_json_pretty_print(self);
 }
 
 json_value::operator json_object() const {

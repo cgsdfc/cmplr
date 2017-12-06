@@ -147,7 +147,7 @@ static void opg_parser_show_opstack(struct cling_opg_parser const *self) {
 
 static void opg_parser_show_stack(struct cling_opg_parser const *self) {
   UTILLIB_VECTOR_FOREACH(struct utillib_json_value *, val, &self->stack) {
-    utillib_json_pretty_print(val, stderr);
+    utillib_json_pretty_print(val);
   }
 }
 

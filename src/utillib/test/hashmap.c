@@ -106,7 +106,7 @@ UTILLIB_TEST(hashmap_json_object)
 
   struct utillib_json_value *val=utillib_hashmap_json_object_create(UT_FIXTURE,
       utillib_symbol_json_object_create);
-  utillib_json_pretty_print(val, stderr);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 
@@ -126,7 +126,7 @@ UTILLIB_TEST(hashmap_json_array)
   struct utillib_json_value *val=utillib_hashmap_json_array_create(UT_FIXTURE,
       json_string_create_adapted,
       utillib_symbol_json_object_create);
-  utillib_json_pretty_print(val, stderr);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 

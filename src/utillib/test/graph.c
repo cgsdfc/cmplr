@@ -15,7 +15,7 @@ UTILLIB_TEST(edge_list_json)
   
   struct utillib_json_value *val=utillib_edge_list_json_object_create(
       &edge_list, NULL, utillib_json_string_create_adaptor);
-  utillib_json_pretty_print(val,stderr);
+  utillib_json_pretty_print(val);
 
 }
 

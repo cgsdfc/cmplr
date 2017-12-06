@@ -122,7 +122,7 @@ void utillib_ll1_generator_dump_set(struct utillib_ll1_generator *self,
   }
   struct utillib_json_value *val =
       ll1_builder_set_json_object_create(&self->builder, kind, symbol);
-  utillib_json_pretty_print(val, stdout);
+  utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
 
@@ -130,7 +130,7 @@ void utillib_ll1_generator_dump_all(struct utillib_ll1_generator *self) {
   if (!self->builder_val) {
     self->builder_val = utillib_ll1_builder_json_object_create(&self->builder);
   }
-  utillib_json_pretty_print(self->builder_val, stdout);
+  utillib_json_pretty_print(self->builder_val);
 }
 
 void utillib_ll1_generator_destroy(struct utillib_ll1_generator *self) {
