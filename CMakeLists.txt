@@ -136,7 +136,6 @@ target_link_libraries(pascal_ll1_table_gen pascal)
 
 ## Cling
 add_library(cling
-  ./src/cling/entity.c
   ./src/cling/symbol_table.c
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
@@ -147,7 +146,6 @@ add_library(cling
   ./src/cling/ast_check.c
   ./src/cling/error.c
   ./src/cling/opg_parser.c
-  ./src/cling/ir.c
   )	
 target_link_libraries(cling utillib)
 
@@ -160,8 +158,12 @@ target_link_libraries(cling utillib)
 # add_test(Cling_Test cling_test)
 # add_executable(cling-scanner ./src/cling/smain.c)
 # target_link_libraries(cling-scanner cling)
-add_executable(cling-parser ./src/cling/pmain.c)
-target_link_libraries(cling-parser cling)
+set(cling-app cling-parser cling-pretty)
+foreach(app ${cling-app})
+  add_executable(${app} ./src/cling/${app}.c)
+  target_link_libraries(${app} cling)
+endforeach()
+
 # add_library(cling++ ./src/cling/cling.cpp)
 # target_link_libraries(cling++ cling utillib++)
 # add_executable(clingcppmain ./src/cling/cppmain.cpp)

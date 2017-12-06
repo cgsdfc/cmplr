@@ -18,16 +18,14 @@
    02110-1301 USA
 
 */
-#ifndef CLING_AST_PRETTY_H
-#define CLING_AST_PRETTY_H
-#include <utillib/string.h>
-#include <utillib/json.h>
+#ifndef CLING_CLING_H
+#define CLING_CLING_H
 
-void cling_ast_pretty_expr(struct utillib_json_value const *self,
-    struct utillib_string *string);
+#include <cling/rd_parser.h>
+#include <cling/opg_parser.h>
+#include <cling/scanner.h>
+#include <cling/symbol_table.h>
+#include <cling/ast_pretty.h>
 
-void cling_ast_pretty_program(struct utillib_json_value const *self,
-  struct utillib_string* string);
-
-#endif /* CLING_AST_PRETTY_H */
+#endif /* CLING_CLING_H */
 

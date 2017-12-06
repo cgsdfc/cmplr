@@ -22,6 +22,9 @@
 #ifndef CLING_RD_PARSER_H
 #define CLING_RD_PARSER_H
 
+/**
+ * A predictive recursive-decent parser.
+ */
 #include "error.h"
 
 #include <utillib/json.h>
@@ -31,10 +34,7 @@
 #include <setjmp.h>
 
 #define RD_PARSER_SKIP_MAX 4
-/**
- * \struct cling_rd_parser
- * A regular recursive-decent parser.
- */
+
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;

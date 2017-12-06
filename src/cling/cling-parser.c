@@ -19,11 +19,7 @@
 
 */
 
-#include "entity.h"
-#include "opg_parser.h"
-#include "rd_parser.h"
-#include "scanner.h"
-#include "symbol_table.h"
+#include <cling/cling.h>
 
 #include <stdlib.h>
 

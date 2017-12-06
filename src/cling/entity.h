@@ -21,6 +21,8 @@
 
 #ifndef CLING_ENTITY_H
 #define CLING_ENTITY_H
+#include "ast.h"
+
 #include <utillib/json.h>
 #include <utillib/vector.h>
 
@@ -40,12 +42,9 @@ struct cling_variable {
 };
 
 struct cling_ir {
+  int opcode;
+  union cling_primary operands[CLING_AST_IR_MAX];
   size_t opcode;
-  union {
-    size_t uint;
-    long integer;
-    struct cling_variable const *var;
-  } operands[3];
 };
 
 void cling_entity_list_init(struct cling_entity_list *self);

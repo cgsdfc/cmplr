@@ -1048,7 +1048,7 @@ switch_stmt_case_clause(struct cling_rd_parser *self,
        */
       label.string=utillib_token_scanner_semantic(input);
       utillib_json_object_push_back(
-          object, "case", cling_ast_string(label.string));
+          object, "case", cling_ast_factor(code, label.string));
       utillib_token_scanner_shiftaway(input);
       goto parse_colon_stmt;
       default:

@@ -1,0 +1,171 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
+#ifndef CLING_AST_IR_H
+#define CLING_AST_IR_H
+#include "ast.h" /* union cling_primary */
+
+#include <utillib/vector.h>
+#include <utillib/hashmap.h>
+
+/*
+ * Well, we are gonna generate
+ * quarternary form of our code.
+ * OMG, such a weird name!
+ */
+#define CLING_AST_IR_MAX 3
+
+/* 三、 中间代码格式 */
+/* 原则上按照中缀表达式格式输出中间代码，
+ * 即，形如x = y op z，其中x为结果，y为左操作数，z为右操作数，
+ * op为操作符。以下根据基本语法现象举例说明。 */
+/* 1. 函数声明 */
+/* 源码形如： */
+/* 	int foo( int a, int b, int c, int d) */
+/* 中间代码： */
+/* 	int foo() */
+/* 	para int a */
+/* 	para int b */
+/* 	para int c */
+/* 	para int d */
+/* 2. 函数调用 */
+/* 源码形如： */
+/* 	i = tar(x,y) */
+/* 中间代码： */
+/* 	push x */
+/* 	push y */
+/* 	call tar */
+/* 	i = RET */
+/* 3. 函数返回 */
+/* 源码形如： */
+/* 	return (x) */
+/* 中间代码： */
+/* 	ret x */
+/* 4. 变量声明 */
+/* 源码形如： */
+/* 	int i, j; */
+/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
+/* 	var int i */
+/* 	var int j */
+/* 5. 常数声明 */
+/* 源码形如： */
+/* 	const int c = 10 */ 
+/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
+/* 	const int c = 10 */
+/* 6. 表达式 */
+/* 源码形如： */
+/* 	x = a * (b + c) */
+/* 中间代码（可优化）： */
+/* 	t1 = b + c */
+/* 	t2 = a * t1 */
+/* 	x = t2 */
+/* 7. 条件判断 */
+/* 源码形如： */
+/* 	x == y */
+/* 中间代码： */
+/* 	x == y */
+/* 8. 条件或无条件跳转 */
+/* 中间代码： */
+/* GOTO LABEL1 //无条件跳转到LABEL1 */
+/* BNZ LABEL1 //满足条件跳转到LABEL1 */
+/* BZ LABEL1 //不满足条件跳转到LABEL1 */
+/* 9. 带标号语句 */
+/* 源码形如： */
+/* 	Label_1: x = a + b */
+/* 中间代码： */
+/* 	Label_1 : */
+/* 	x = a + b */
+/* 10. 数组赋值或取值 */
+/* 源码形如： */
+/* 	a[i] = b * c[j] */
+/* 中间代码： */
+/* 	t1 = c[j] */ 
+/* t2 = b * t1 */
+/* a[i] = t2 */ 
+/* 11. 其他本文档未涉及到的语法现象，或者程序员自行定义的四元式操作，
+ * 原则上均按照“x = y op z”形式的中缀表达式进行表达。 */
+
+
+UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
+UTILLIB_ENUM_ELEM(OP_DEF)
+UTILLIB_ENUM_ELEM(OP_PARA)
+UTILLIB_ENUM_ELEM(OP_RET)
+UTILLIB_ENUM_ELEM(OP_PUSH)
+UTILLIB_ENUM_ELEM(OP_VAR)
+UTILLIB_ENUM_ELEM(OP_CONST)
+UTILLIB_ENUM_ELEM(OP_ADD)
+UTILLIB_ENUM_ELEM(OP_SUB)
+UTILLIB_ENUM_ELEM(OP_IDX)
+UTILLIB_ENUM_ELEM(OP_CAL)
+UTILLIB_ENUM_ELEM(OP_DIV)
+UTILLIB_ENUM_ELEM(OP_MUL)
+UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_END(cling_ast_opcode_kind);
+
+/*
+ * This ir is still very far from
+ * actual ASM code since its preference
+ * to label and iden rather than number
+ * and address. It might not be possible
+ * to execute the ir but it is good at
+ * decripting the structure of the program
+ * in a form similar to instruction.
+ */
+
+UTILLIB_ENUM_BEGIN(cling_operand_kind)
+  UTILLIB_ENUM_ELEM(CL_ASCI)
+  UTILLIB_ENUM_ELEM(CL_TEMP)
+  UTILLIB_ENUM_ELEM(CL_IMME)
+  UTILLIB_ENUM_ELEM(CL_LABL)
+  UTILLIB_ENUM_ELEM(CL_GLBL)
+  UTILLIB_ENUM_ELEM(CL_LOCL)
+  UTILLIB_ENUM_ELEM(CL_BYTE)
+  UTILLIB_ENUM_ELEM(CL_WORD)
+UTILLIB_ENUM_END(cling_opcode_kind);
+
+struct cling_operand {
+  int kind;
+  int wide;
+  union { 
+    char const *text;
+    unsigned int value;
+  };
+};
+
+struct cling_ir {
+  int opcode;
+  union cling_ast_operand
+    operands[CLING_AST_IR_MAX];
+};
+
+struct cling_ir_gen {
+  unsigned int temp_alloc;
+  struct cling_operand *operand;
+  struct cling_symbol_table *symbol_table;
+  struct utillib_vector *opstack;
+  struct cling_program *program;
+};
+
+struct cling_program {
+  struct utillib_vector code;
+  struct utillib_hashmap label_map;
+};
+
+#endif /* CLING_AST_IR_H */
