@@ -209,7 +209,8 @@ void utillib_json_scanner_init(struct utillib_json_scanner *self,
   self->code = json_scanner_read(&self->scanner, &self->buffer);
 }
 
-inline size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self) {
+inline size_t
+utillib_json_scanner_lookahead(struct utillib_json_scanner *self) {
   return self->code;
 }
 
@@ -219,20 +220,18 @@ void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self) {
   self->code = code >= 0 ? code : UT_SYM_ERR;
 }
 
-void utillib_json_scanner_semantic(
-    struct utillib_json_scanner const *self,
-    struct utillib_json_value **value)
-{
+void utillib_json_scanner_semantic(struct utillib_json_scanner const *self,
+                                   struct utillib_json_value **value) {
   double real;
   long longv;
   char const *str;
   switch (self->code) {
   case UT_SYM_EOF:
   case UT_SYM_ERR:
-    *value=NULL;
+    *value = NULL;
     return;
   case JSON_SYM_FALSE:
-    *value=&utillib_json_false;
+    *value = &utillib_json_false;
     return;
   case JSON_SYM_TRUE:
     *value = &utillib_json_true;
@@ -247,12 +246,12 @@ void utillib_json_scanner_semantic(
   case JSON_SYM_LONG:
     str = utillib_string_c_str(&self->buffer);
     sscanf(str, "%ld", &longv);
-    *value=utillib_json_long_create(&longv);
+    *value = utillib_json_long_create(&longv);
     return;
   case JSON_SYM_REAL:
     str = utillib_string_c_str(&self->buffer);
     sscanf(str, "%lf", &real);
-    *value=utillib_json_real_create(&real);
+    *value = utillib_json_real_create(&real);
     return;
   default:
     assert(false && "unimplemented value");

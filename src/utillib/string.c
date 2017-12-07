@@ -137,7 +137,9 @@ char const *utillib_string_c_str(struct utillib_string const *self) {
  * \function utillib_string_size
  * \return size.
  */
-size_t utillib_string_size(struct utillib_string const *self) { return self->size; }
+size_t utillib_string_size(struct utillib_string const *self) {
+  return self->size;
+}
 
 /**
  * \function utillib_string_capacity
@@ -168,7 +170,8 @@ bool utillib_string_empty(struct utillib_string const *self) {
  * Returns yes if `self' and `t' satisfy the relation `op'.
  */
 bool utillib_string_richcmp(struct utillib_string const *self,
-                            struct utillib_string const *t, enum string_cmpop op) {
+                            struct utillib_string const *t,
+                            enum string_cmpop op) {
 #define UTILLIB_STR_CMP(self, T, OP)                                           \
   (strcmp(UTILLIB_C_STR(self), UTILLIB_C_STR(T)) OP 0)
   switch (op) {
@@ -198,4 +201,3 @@ FILE *utillib_string_fmemopen(struct utillib_string *self) {
   return fmemopen((void *)buf, self->size, "r");
 }
 #endif /* WITH_WINDOWS */
-

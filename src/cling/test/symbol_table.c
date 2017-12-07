@@ -18,22 +18,18 @@
    02110-1301 USA
 
 */
-#include <utillib/test.h>
 #include "cling/symbol_table.h"
+#include <utillib/test.h>
 
-UTILLIB_TEST_SET_UP(){
-  cling_symbol_table_init(UT_FIXTURE);
-}
-UTILLIB_TEST_TEAR_DOWN() {
-  cling_symbol_table_destroy(UT_FIXTURE);
-}
+UTILLIB_TEST_SET_UP() { cling_symbol_table_init(UT_FIXTURE); }
+UTILLIB_TEST_TEAR_DOWN() { cling_symbol_table_destroy(UT_FIXTURE); }
 
 UTILLIB_TEST(symbol_table_insert) {
-  cling_symbol_table_insert(UT_FIXTURE, "x",
-      CL_INT|CL_CONST,utillib_json_null_create(), CL_LOCAL);
-  struct utillib_json_value *val=cling_symbol_table_json_object_create(UT_FIXTURE);
+  cling_symbol_table_insert(UT_FIXTURE, "x", CL_INT | CL_CONST,
+                            utillib_json_null_create(), CL_LOCAL);
+  struct utillib_json_value *val =
+      cling_symbol_table_json_object_create(UT_FIXTURE);
   utillib_json_pretty_print(val, stderr);
-  
 }
 
 UTILLIB_TEST_DEFINE(Cling_SymbolTable) {
@@ -43,4 +39,3 @@ UTILLIB_TEST_DEFINE(Cling_SymbolTable) {
   UTILLIB_TEST_FIXTURE(struct cling_symbol_table)
   UTILLIB_TEST_RETURN(Cling_SymbolTable)
 }
-

@@ -1,13 +1,13 @@
 #ifndef UTILLIB_GRAPH_H
 #define UTILLIB_GRAPH_H
-#include "vector.h"
 #include "enum.h"
 #include "json.h"
+#include "vector.h"
 
 struct utillib_edge {
   size_t srcid;
   size_t dstid;
-  void const * value;
+  void const *value;
 };
 
 /**
@@ -15,14 +15,14 @@ struct utillib_edge {
  * A list of edges which merely
  * holds the all the relationships between
  * nodes and provides traversal over all
- * the nodes and all the edges. 
- * This is useful when a graph is the 
+ * the nodes and all the edges.
+ * This is useful when a graph is the
  * output of some algorithms ready to
  * be processed by another one. It therefore
  * assumes nothing about how clients will use
  * its data.
  * To that minimum functionality, it does assign
- * each node an integer to identify it. 
+ * each node an integer to identify it.
  * It also allows you to walk through all the edges
  * visiting value on edges and getting value on nodes
  * by their IDs.
@@ -41,7 +41,7 @@ void utillib_edge_list_init(struct utillib_edge_list *self);
 
 /**
  * \function utillib_edge_list_destroy
- * Destroys the edge list but does not destroy 
+ * Destroys the edge list but does not destroy
  * the value on nodes and edges.
  */
 void utillib_edge_list_destroy(struct utillib_edge_list *self);
@@ -55,8 +55,8 @@ void utillib_edge_list_destroy(struct utillib_edge_list *self);
  * If both is NULL, use `utillib_edge_list_destroy' instead.
  */
 void utillib_edge_list_destroy_owning(struct utillib_edge_list *self,
-    void (*node_destroy) (void*), 
-    void (*edge_destroy) (void*));
+                                      void (*node_destroy)(void *),
+                                      void (*edge_destroy)(void *));
 
 /**
  * \function utillib_edge_list_add_edge
@@ -68,8 +68,8 @@ void utillib_edge_list_destroy_owning(struct utillib_edge_list *self,
  * came from `utillib_edge_list_add_node' so if you can add edges directly
  * without adding any nodes.
  */
-size_t  utillib_edge_list_add_edge(struct utillib_edge_list *self,
-    size_t srcid, size_t dstid, void const * value);
+size_t utillib_edge_list_add_edge(struct utillib_edge_list *self, size_t srcid,
+                                  size_t dstid, void const *value);
 
 /**
  * \function utillib_edge_list_add_node
@@ -79,14 +79,15 @@ size_t  utillib_edge_list_add_edge(struct utillib_edge_list *self,
  * visiting edges.
  * It returns the ID of the newly added node.
  */
-size_t utillib_edge_list_add_node(struct utillib_edge_list *self, void const * value);
+size_t utillib_edge_list_add_node(struct utillib_edge_list *self,
+                                  void const *value);
 
 /*
  * JSON interface
  */
-struct utillib_json_value * 
-utillib_edge_list_json_object_create(struct utillib_edge_list const *self,
-    struct utillib_json_value * (*node_create) (void const *node),
-    struct utillib_json_value * (*edge_create) (void const *edge));
+struct utillib_json_value *utillib_edge_list_json_object_create(
+    struct utillib_edge_list const *self,
+    struct utillib_json_value *(*node_create)(void const *node),
+    struct utillib_json_value *(*edge_create)(void const *edge));
 
 #endif /* UTILLIB_GRAPH_H */

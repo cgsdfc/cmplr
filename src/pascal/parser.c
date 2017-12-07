@@ -120,7 +120,7 @@ static void parser_semi_handler(struct utillib_vector *ast_nodes) {
   val = utillib_vector_back(ast_nodes);
   utillib_vector_pop_back(ast_nodes);
   handle = utillib_vector_back(ast_nodes);
-  int kind ;
+  int kind;
   switch (kind) {
   case SYM_PROC_DECL:
     /* utillib_json_object_set(handle, "name", val); */

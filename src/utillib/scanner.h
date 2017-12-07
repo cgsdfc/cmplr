@@ -153,7 +153,6 @@ struct utillib_token_scanner {
   size_t code;
 };
 
-
 /**
  * \struct utillib_string_scanner
  * Does scanning on a `char const*'.
@@ -194,7 +193,7 @@ void utillib_symbol_scanner_init(struct utillib_symbol_scanner *self,
  * to the lookahead value as semantic of this token.
  */
 void utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self,
-    struct utillib_symbol const **value);
+                                     struct utillib_symbol const **value);
 size_t utillib_symbol_scanner_lookahead(struct utillib_symbol_scanner *self);
 void utillib_symbol_scanner_shiftaway(struct utillib_symbol_scanner *self);
 bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self);

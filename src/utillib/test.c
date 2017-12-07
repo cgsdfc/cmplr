@@ -22,7 +22,7 @@
 #include "test.h"
 #include "print.h"
 #include "test_impl.h" // colorful stuff and json
-#include <stdarg.h> // for va_list
+#include <stdarg.h>    // for va_list
 #include <string.h>
 #include <time.h> // for time
 
@@ -207,8 +207,8 @@ static void utillib_test_setup(struct utillib_test_env *self) {
 }
 
 static void utillib_test_report_failure(struct utillib_test_env *self) {
-  for (struct utillib_test_entry const *test = self->cases;
-       test->func != NULL; ++test) {
+  for (struct utillib_test_entry const *test = self->cases; test->func != NULL;
+       ++test) {
     if (test->status != UT_STATUS_RUN)
       continue;
     if (test->succeeded)
@@ -308,9 +308,9 @@ void utillib_test_message(char const *func_name, size_t line, char const *fmt,
   va_end(ap);
 }
 
-static void
-utillib_test_suite_report_failure(struct utillib_test_suite *self) {
-  UTILLIB_VECTOR_FOREACH(struct utillib_test_env *, env, &self->tests) {
+static void utillib_test_suite_report_failure(struct utillib_test_suite *self) {
+  struct utillib_test_env *env;
+  UTILLIB_VECTOR_FOREACH(env, &self->tests) {
     utillib_test_report_failure(env);
   }
 }
@@ -323,11 +323,13 @@ int utillib_test_suite_run_all(struct utillib_test_suite *self, int argc,
                                char **argv) {
   size_t test_failure = 0;
   size_t test_suites = utillib_vector_size(&self->tests);
+  struct utillib_test_env *env;
+
   filename_status_output(self->filename);
   status_output(GREEN_BANG, "%lu test suites found.", test_suites);
   status_output(GREEN_BANG, "Global testing environment sets up.");
   fputs("\n", stderr);
-  UTILLIB_VECTOR_FOREACH(struct utillib_test_env *, env, &self->tests) {
+  UTILLIB_VECTOR_FOREACH(env, &self->tests) {
     test_failure += utillib_test_run_suite(env);
     fputs("\n", stderr);
   }

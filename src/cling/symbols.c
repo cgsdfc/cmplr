@@ -101,4 +101,3 @@ bool opg_parser_is_relop(unsigned op) {
   return op == SYM_NE || op == SYM_DEQ || op == SYM_LT || op == SYM_LE ||
          op == SYM_GT || op == SYM_GE;
 }
-

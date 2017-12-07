@@ -19,9 +19,9 @@
 
 */
 #include "error.h"
+#include "ast_pretty.h"
 #include "symbol_table.h"
 #include "symbols.h"
-#include "ast_pretty.h"
 
 #include <utillib/print.h>
 
@@ -39,25 +39,26 @@ cling_error_create(int kind, struct utillib_token_scanner *input,
   return self;
 }
 
-static struct cling_error *
-name_error(int kind, struct utillib_token_scanner *input,
-                   char const *name, size_t context) {
+static struct cling_error *name_error(int kind,
+                                      struct utillib_token_scanner *input,
+                                      char const *name, size_t context) {
   struct cling_error *self = cling_error_create(kind, input, context);
   /* Free needed */
   self->einfo[0].str = strdup(name);
   return self;
 }
 
-static struct cling_error *
-ast_error(int kind, struct utillib_token_scanner *input,
-    struct utillib_json_value * value, size_t context) {
+static struct cling_error *ast_error(int kind,
+                                     struct utillib_token_scanner *input,
+                                     struct utillib_json_value *value,
+                                     size_t context) {
   struct utillib_string string;
   struct cling_error *self;
 
-  self=cling_error_create(kind, input, context);
+  self = cling_error_create(kind, input, context);
   cling_ast_pretty_expr(value, &string);
   /* Free needed */
-  self->einfo[0].str=utillib_string_c_str(&string);
+  self->einfo[0].str = utillib_string_c_str(&string);
   return self;
 }
 
@@ -90,8 +91,8 @@ cling_undefined_name_error(struct utillib_token_scanner *input,
 }
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-                                           struct utillib_json_value *value, size_t context)
-{
+                                           struct utillib_json_value *value,
+                                           size_t context) {
   return ast_error(CL_ENOTLVALUE, input, value, context);
 }
 
@@ -129,19 +130,16 @@ cling_argc_unmatched_error(struct utillib_token_scanner *input,
 
 struct cling_error *
 cling_invalid_expr_error(struct utillib_token_scanner *input,
-    struct utillib_json_value *value, size_t context) {
+                         struct utillib_json_value *value, size_t context) {
   return ast_error(CL_EINVEXPR, input, value, context);
 }
 
-struct cling_error *
-cling_dupcase_error(struct utillib_token_scanner *input,
-    int label, size_t context)
-{
-  struct cling_error *self=cling_error_create(CL_EDUPCASE, input, context);
-  self->einfo[0].int_=label;
+struct cling_error *cling_dupcase_error(struct utillib_token_scanner *input,
+                                        int label, size_t context) {
+  struct cling_error *self = cling_error_create(CL_EDUPCASE, input, context);
+  self->einfo[0].int_ = label;
   return self;
 }
-
 
 void cling_error_print(struct cling_error const *self) {
   utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
@@ -168,8 +166,7 @@ void cling_error_print(struct cling_error const *self) {
                          context);
     break;
   case CL_ENOTLVALUE:
-    utillib_error_printf("`%s' is not lvalue in `%s'", einfo[0].str,
-                         context);
+    utillib_error_printf("`%s' is not lvalue in `%s'", einfo[0].str, context);
     break;
   case CL_EINCARG:
     utillib_error_printf(
@@ -186,10 +183,12 @@ void cling_error_print(struct cling_error const *self) {
                          context, einfo[1].str, einfo[0].str);
     break;
   case CL_EINVEXPR:
-    utillib_error_printf("in `%s', expression `%s' is not allowed", context, einfo[0].str);
+    utillib_error_printf("in `%s', expression `%s' is not allowed", context,
+                         einfo[0].str);
     break;
   case CL_EDUPCASE:
-    utillib_error_printf("in `%s', duplicated case label %d", context, einfo[0].int_);
+    utillib_error_printf("in `%s', duplicated case label %d", context,
+                         einfo[0].int_);
     break;
   default:
     assert(false && "unimplemented");

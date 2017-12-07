@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
   if (!json_ast) {
     goto cleanup;
   }
-  /* utillib_json_pretty_print(json_ast); */
+/* utillib_json_pretty_print(json_ast); */
 
 cleanup:
   cling_rd_parser_report_errors(&cling_parser);

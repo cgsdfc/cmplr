@@ -140,7 +140,6 @@ struct utillib_json_array_desc {
   size_t size;
 };
 
-
 /**
  * \struct utillib_json_value
  * A type-feild based polynormial representation
@@ -212,7 +211,7 @@ void utillib_json_tostring(struct utillib_json_value const *self,
 
 void utillib_json_pretty_print(struct utillib_json_value const *self);
 void utillib_json_pretty_fprint(struct utillib_json_value const *self,
-                               FILE *file);
+                                FILE *file);
 
 struct utillib_json_value *utillib_json_string_create(char const *const *base);
 struct utillib_json_value *utillib_json_real_create(double const *base);
@@ -223,7 +222,8 @@ struct utillib_json_value *utillib_json_long_create(long const *base);
 struct utillib_json_value *utillib_json_float_create(float const *base);
 struct utillib_json_value *utillib_json_null_create(void);
 struct utillib_json_value *utillib_json_null_array_create(size_t size);
-struct utillib_json_value *utillib_json_string_create_adaptor(char const * str);
-struct utillib_json_value *utillib_json_value_copy(struct utillib_json_value const *self);
+struct utillib_json_value *utillib_json_string_create_adaptor(char const *str);
+struct utillib_json_value *
+utillib_json_value_copy(struct utillib_json_value const *self);
 size_t utillib_json_array_size(struct utillib_json_value const *self);
 #endif /* UTILLIB_JSON_H */

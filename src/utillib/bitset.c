@@ -146,11 +146,10 @@ bool utillib_bitset_is_intersect(struct utillib_bitset const *self,
   return false;
 }
 
-size_t utillib_bitset_hash(struct utillib_bitset const * self)
-{
-  size_t hash=0;
-  for (int i=0; i<self->size; ++i) {
-    hash+=self->bits[i];
+size_t utillib_bitset_hash(struct utillib_bitset const *self) {
+  size_t hash = 0;
+  for (int i = 0; i < self->size; ++i) {
+    hash += self->bits[i];
   }
   return hash;
 }
@@ -164,8 +163,7 @@ size_t utillib_bitset_hash(struct utillib_bitset const * self)
  * Dumps the elements that is in the bitset.
  */
 struct utillib_json_value *
-utillib_bitset_json_array_create(struct utillib_bitset const *self)
-{
+utillib_bitset_json_array_create(struct utillib_bitset const *self) {
   struct utillib_json_value *array = utillib_json_array_create_empty();
   for (size_t i = 0; i < self->N; ++i) {
     if (utillib_bitset_contains(self, i)) {
@@ -174,4 +172,3 @@ utillib_bitset_json_array_create(struct utillib_bitset const *self)
   }
   return array;
 }
-

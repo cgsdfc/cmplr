@@ -81,7 +81,8 @@ static void ll1_parser_expand_rule(struct utillib_ll1_parser *self,
                                    struct utillib_rule const *rule) {
   if (rule == UTILLIB_RULE_EPS) {
     struct utillib_symbol const *LHS = utillib_vector_back(&self->symbol_stack);
-    self->callback->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS, NULL);
+    self->callback->terminal_handler(self->client_data, UTILLIB_SYMBOL_EPS,
+                                     NULL);
     utillib_vector_pop_back(&self->symbol_stack);
     return;
   }
@@ -231,7 +232,8 @@ bool utillib_ll1_parser_parse(struct utillib_ll1_parser *self, void *input,
     top_symbol = utillib_vector_back(&self->symbol_stack);
     if (top_symbol->kind == UT_SYMBOL_TERMINAL) {
       if (top_symbol->value == input_symbol_value) {
-        self->callback->terminal_handler(self->client_data, input_symbol,input);
+        self->callback->terminal_handler(self->client_data, input_symbol,
+                                         input);
       } else {
         result = false;
         ll1_parser_error_init(&error, UT_LL1_EBADTOKEN, input_symbol,

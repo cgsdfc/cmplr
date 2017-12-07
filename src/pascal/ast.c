@@ -142,6 +142,8 @@ struct pascal_ast_node *pascal_ast_node_create(int kind) {
 
 void pascal_ast_node_destroy(struct pascal_ast_node *self) {
   struct utillib_vector *items;
+  struct utillib_pair *pair;
+
   switch (self->kind) {
   case PAS_AST_IDEN:
     free(self->as_iden);
@@ -150,7 +152,7 @@ void pascal_ast_node_destroy(struct pascal_ast_node *self) {
     break;
   case PAS_AST_CONST:
     items = self->as_ptr;
-    UTILLIB_VECTOR_FOREACH(struct utillib_pair *, pair, items) {
+    UTILLIB_VECTOR_FOREACH(pair, items) {
       pascal_ast_node_destroy(pair->up_first);
       pascal_ast_node_destroy(pair->up_second);
       free(pair);

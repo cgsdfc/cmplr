@@ -31,8 +31,7 @@ struct utillib_json_parser {
 
 void utillib_json_parser_factory_init(struct utillib_ll1_factory *self);
 
-void utillib_json_parser_factory_destroy(
-    struct utillib_ll1_factory *self);
+void utillib_json_parser_factory_destroy(struct utillib_ll1_factory *self);
 
 void utillib_json_parser_init(struct utillib_json_parser *self,
                               struct utillib_ll1_factory *factory);

@@ -30,8 +30,7 @@
  * as input rather than utillib_symbol_scanner!
  */
 
-static struct utillib_ll1_factory 
-parser_factory;
+static struct utillib_ll1_factory parser_factory;
 
 UTILLIB_TEST_AUX(json_parser_dump_all) {
   struct utillib_ll1_generator gen;

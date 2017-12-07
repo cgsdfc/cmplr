@@ -23,4 +23,3 @@
 #define UTILLIB_LR_BUILDER_IMPL_H
 #include "vector.h"
 #endif /* UTILLIB_LR_BUILDER_IMPL_H */
-

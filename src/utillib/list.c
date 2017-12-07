@@ -20,97 +20,79 @@
 */
 #include "list.h"
 
-void utillib_list_init(struct utillib_list *self)
-{
-  self->head=NULL;
-  self->tail=NULL;
+void utillib_list_init(struct utillib_list *self) {
+  self->head = NULL;
+  self->tail = NULL;
 }
 
-void utillib_list_destroy(struct utillib_list *self)
-{
+void utillib_list_destroy(struct utillib_list *self) {
   while (self->head) {
-    struct utillib_list_node * old_node=self->head;
-    self->head=old_node->next;
+    struct utillib_list_node *old_node = self->head;
+    self->head = old_node->next;
     free(old_node);
   }
 }
 
-void * utillib_list_front(struct utillib_list *self)
-{
-  assert (self->head && "should not be empty");
-  return (void*) self->head->value;
+void *utillib_list_front(struct utillib_list *self) {
+  assert(self->head && "should not be empty");
+  return (void *)self->head->value;
 }
 
-void * utillib_list_back(struct utillib_list *self)
-{
-  assert (self->tail && "should not be empty");
-  return (void*) self->tail->value;
+void *utillib_list_back(struct utillib_list *self) {
+  assert(self->tail && "should not be empty");
+  return (void *)self->tail->value;
 }
 
-size_t utillib_list_size(struct utillib_list *self)
-{
-  size_t size=0;
-  for (struct utillib_list_node const *node=self->head;
-      node != NULL ; node=node->next;)
+size_t utillib_list_size(struct utillib_list *self) {
+  size_t size = 0;
+  for (struct utillib_list_node const *node = self->head; node != NULL;
+       node = node->next;)
     ++size;
   return size;
 }
 
-bool utillib_list_empty(struct utillib_list *self)
-{
+bool utillib_list_empty(struct utillib_list *self) {
   return self->head == NULL;
 }
 
-void utillib_list_push_front(struct utillib_list *self, void const *value)
-{
-  struct utillib_list_node * new_node;
-  new_node=malloc(sizeof *new_node);
-  new_node->value=value;
-  new_node->next=self->head;
-  new_node->prev=NULL;
-  self->head->prev=new_node;
-  self->head=new_node;
+void utillib_list_push_front(struct utillib_list *self, void const *value) {
+  struct utillib_list_node *new_node;
+  new_node = malloc(sizeof *new_node);
+  new_node->value = value;
+  new_node->next = self->head;
+  new_node->prev = NULL;
+  self->head->prev = new_node;
+  self->head = new_node;
   if (!self->tail)
-    self->tail=new_node;
+    self->tail = new_node;
 }
 
-void utillib_list_push_back(struct utillib_list *self, void const *value)
-{
-  struct utillib_list_node * new_node;
-  new_node=malloc(sizeof *new_node);
-  new_node->value=value;
-  new_node->next=NULL;
-  new_node->prev=self->tail;
-  self->tail->next=new_node;
-  self->tail=new_node;
+void utillib_list_push_back(struct utillib_list *self, void const *value) {
+  struct utillib_list_node *new_node;
+  new_node = malloc(sizeof *new_node);
+  new_node->value = value;
+  new_node->next = NULL;
+  new_node->prev = self->tail;
+  self->tail->next = new_node;
+  self->tail = new_node;
   if (!self->head)
-    self->head=new_node;
+    self->head = new_node;
 }
 
-void utillib_list_pop_front(struct utillib_list *self)
-{
-  assert (self->head && "should not be empty");
-  struct utillib_list_node * old_node;
-  old_node=self->head;
-  self->head=old_node->next;
-  self->head->prev=NULL;
+void utillib_list_pop_front(struct utillib_list *self) {
+  assert(self->head && "should not be empty");
+  struct utillib_list_node *old_node;
+  old_node = self->head;
+  self->head = old_node->next;
+  self->head->prev = NULL;
   free(old_node);
 }
 
-void utillib_list_pop_back(struct utillib_list *self)
-{
-  assert (self->tail && "should not be empty");
-  struct utillib_list_node * old_node;
-  old_node=self->tail;
-  self->tail=old_node->prev;
-  self->tail->next=NULL;
+void utillib_list_pop_back(struct utillib_list *self) {
+  assert(self->tail && "should not be empty");
+  struct utillib_list_node *old_node;
+  old_node = self->tail;
+  self->tail = old_node->prev;
+  self->tail->next = NULL;
   free(old_node);
 }
-
-
-
-
-
-
-
-

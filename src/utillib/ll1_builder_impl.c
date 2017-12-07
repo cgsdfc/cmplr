@@ -138,7 +138,9 @@ ll1_builder_set_json_array_create(struct utillib_ll1_set const *self,
                                   int kind) {
   struct utillib_vector const *terminals = &rule_index->terminals;
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, terminals) {
+  struct utillib_symbol const *symbol;
+
+  UTILLIB_VECTOR_FOREACH(symbol, terminals) {
     if (utillib_ll1_set_contains(self, symbol->value)) {
       utillib_json_array_push_back(array,
                                    utillib_symbol_json_string_create(symbol));
@@ -188,8 +190,9 @@ utillib_ll1_builder_json_object_create(struct utillib_ll1_builder const *self) {
   struct utillib_rule_index const *rule_index = self->rule_index;
   struct utillib_vector const *symbol_vector = &rule_index->non_terminals;
   struct utillib_json_value *array = utillib_json_array_create_empty();
+  struct utillib_symbol const *symbol;
 
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, symbol_vector) {
+  UTILLIB_VECTOR_FOREACH(symbol, symbol_vector) {
     utillib_json_array_push_back(
         array, ll1_builder_set_json_object_create(self, UT_LL1_FIRST, symbol));
     utillib_json_array_push_back(

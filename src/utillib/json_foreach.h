@@ -23,8 +23,8 @@
 #define UTILLIB_JSON_FOREACH_H
 #include "json.h"
 #include "json_impl.h"
-#include "vector.h"
 #include "pair.h"
+#include "vector.h"
 
 /**
  * File json_foreach.h
@@ -39,19 +39,19 @@
  */
 
 #ifndef JSON_CHECK_FOREACH
-#define UTILLIB_JSON_ARRAY_FOREACH(VALUE, ARRAY) \
-UTILLIB_VECTOR_FOREACH(struct utillib_json_value*, (VALUE), _JSON_ARRAY(ARRAY))
+#define UTILLIB_JSON_ARRAY_FOREACH(VALUE, ARRAY)                               \
+  UTILLIB_VECTOR_FOREACH((VALUE), _JSON_ARRAY(ARRAY))
 
-#define UTILLIB_JSON_OBJECT_FOREACH(PAIR, OBJECT) \
-UTILLIB_VECTOR_FOREACH(struct utillib_pair*, (PAIR), _JSON_OBJECT(OBJECT))
+#define UTILLIB_JSON_OBJECT_FOREACH(PAIR, OBJECT)                              \
+  UTILLIB_VECTOR_FOREACH((PAIR), _JSON_OBJECT(OBJECT))
 #else
-#define UTILLIB_JSON_ARRAY_FOREACH(VALUE, ARRAY) \
-json_value_check_kind(ARRAY, UT_JSON_ARRAY); \
-UTILLIB_VECTOR_FOREACH(struct utillib_json_value*, (VALUE), _JSON_ARRAY(ARRAY))
+#define UTILLIB_JSON_ARRAY_FOREACH(VALUE, ARRAY)                               \
+  json_value_check_kind(ARRAY, UT_JSON_ARRAY);                                 \
+  UTILLIB_VECTOR_FOREACH((VALUE), _JSON_ARRAY(ARRAY))
 
-#define UTILLIB_JSON_OBJECT_FOREACH(PAIR, OBJECT) \
-json_value_check_kind(OBJECT, UT_JSON_OBJECT); \
-UTILLIB_VECTOR_FOREACH(struct utillib_json_value*, (VALUE), _JSON_OBJECT(OBJECT))
+#define UTILLIB_JSON_OBJECT_FOREACH(PAIR, OBJECT)                              \
+  json_value_check_kind(OBJECT, UT_JSON_OBJECT);                               \
+  UTILLIB_VECTOR_FOREACH((VALUE), _JSON_OBJECT(OBJECT))
 #endif /* JSON_CHECK_FOREACH */
 
 #endif /* UTILLIB_JSON_FOREACH_H */

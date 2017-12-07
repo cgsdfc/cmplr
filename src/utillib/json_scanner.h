@@ -38,6 +38,6 @@ size_t utillib_json_scanner_lookahead(struct utillib_json_scanner *self);
 void utillib_json_scanner_shiftaway(struct utillib_json_scanner *self);
 void utillib_json_scanner_destroy(struct utillib_json_scanner *self);
 void utillib_json_scanner_semantic(struct utillib_json_scanner const *self,
-    struct utillib_json_value **value);
+                                   struct utillib_json_value **value);
 
 #endif /* UTILLIB_JSON_SCANNER_H */

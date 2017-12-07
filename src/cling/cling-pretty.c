@@ -51,8 +51,7 @@ static void pretty(void) {
   }
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   if (argc != 2)
     abort();
   FILE *file = fopen(argv[1], "r");

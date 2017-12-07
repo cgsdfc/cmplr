@@ -213,7 +213,7 @@ typedef void *utillib_test_fixture_t;
  */
 #define UTILLIB_TEST_RUN_ALL(ARGC, ARGV, ...)                                  \
   do {                                                                         \
-    static struct utillib_test_suite static_suite = {.filename = __FILE__};  \
+    static struct utillib_test_suite static_suite = {.filename = __FILE__};    \
     utillib_test_suite_init(&static_suite, ##__VA_ARGS__, NULL);               \
     size_t rc = utillib_test_suite_run_all(&static_suite, (ARGC), (ARGV));     \
     utillib_test_suite_destroy(&static_suite);                                 \
@@ -226,7 +226,7 @@ typedef void *utillib_test_fixture_t;
  * whatever arguments it likes.
  */
 #define UTILLIB_TEST_AUX(NAME, ...)                                            \
-  static void NAME(struct utillib_test_entry *_UTILLIB_TEST_ENTRY_SELF,      \
+  static void NAME(struct utillib_test_entry *_UTILLIB_TEST_ENTRY_SELF,        \
                    utillib_test_fixture_t UT_FIXTURE, ##__VA_ARGS__)
 /*
  * \macro UTILLIB_TEST_AUX_INVOKE
@@ -269,7 +269,7 @@ typedef void *utillib_test_fixture_t;
  * \param NAME The name of the test function.
  */
 #define UTILLIB_TEST(NAME)                                                     \
-  static void NAME(struct utillib_test_entry *_UTILLIB_TEST_ENTRY_SELF,      \
+  static void NAME(struct utillib_test_entry *_UTILLIB_TEST_ENTRY_SELF,        \
                    utillib_test_fixture_t UT_FIXTURE)
 /**
  * \macro UTILLIB_TEST_DEFINE
@@ -297,7 +297,7 @@ typedef void *utillib_test_fixture_t;
   { 0 }                                                                        \
   }                                                                            \
   ;                                                                            \
-  static struct utillib_test_env static_test_env = {                         \
+  static struct utillib_test_env static_test_env = {                           \
       .cases = static_test_entries, .case_name = #NAME, .filename = __FILE__};
 /*
  * \macro UTILLIB_TEST_RETURN
@@ -388,7 +388,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_ASSERT(EXPR)                                              \
   do {                                                                         \
-    struct utillib_test_predicate predicate;                                 \
+    struct utillib_test_predicate predicate;                                   \
     _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_ASSERT);                  \
     if (utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate)) {        \
       break;                                                                   \
@@ -402,7 +402,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_EXPECT(EXPR)                                              \
   do {                                                                         \
-    struct utillib_test_predicate predicate;                                 \
+    struct utillib_test_predicate predicate;                                   \
     _UTILLIB_INIT_PRED(&predicate, (EXPR), #EXPR, US_EXPECT);                  \
     (void)utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);        \
   } while (0)
@@ -413,7 +413,7 @@ UTILLIB_ENUM_END(utillib_test_severity_kind);
  */
 #define UTILLIB_TEST_ABORT(MSG)                                                \
   do {                                                                         \
-    struct utillib_test_predicate predicate;                                 \
+    struct utillib_test_predicate predicate;                                   \
     _UTILLIB_INIT_PRED(&predicate, false, (MSG), US_ABORT);                    \
     utillib_test_predicate(_UTILLIB_TEST_ENTRY_SELF, &predicate);              \
     return;                                                                    \
@@ -523,8 +523,8 @@ struct utillib_test_suite {
 /**
  * Initilizes a predicate.
  */
-void utillib_test_predicate_init(struct utillib_test_predicate *, bool,
-                                 size_t, char const *, int);
+void utillib_test_predicate_init(struct utillib_test_predicate *, bool, size_t,
+                                 char const *, int);
 /**
  * Do pass-or-fail on a predicate.
  */

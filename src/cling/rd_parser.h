@@ -38,9 +38,9 @@
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
-  char const *curfunc;                  /* used to check returnness */
-  int tars[RD_PARSER_SKIP_MAX];         /* used to skip to a list of targets */
-  struct utillib_json_value *root;      /* the root of AST */
+  char const *curfunc;             /* used to check returnness */
+  int tars[RD_PARSER_SKIP_MAX];    /* used to skip to a list of targets */
+  struct utillib_json_value *root; /* the root of AST */
   struct cling_symbol_table *symbol_table;
 };
 

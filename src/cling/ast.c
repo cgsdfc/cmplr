@@ -53,41 +53,36 @@ static size_t ast_type2kind(size_t type) {
   }
 }
 
-union cling_primary *
-cling_primary_copy(union cling_primary const* self) {
-  union cling_primary *other=malloc(sizeof *other);
+union cling_primary *cling_primary_copy(union cling_primary const *self) {
+  union cling_primary *other = malloc(sizeof *other);
   memcpy(other, self, sizeof *other);
   return other;
 }
-  
-inline size_t cling_primary_inthash(union cling_primary const* lhs)
-{
+
+inline size_t cling_primary_inthash(union cling_primary const *lhs) {
   return lhs->signed_int;
 }
 
-inline int cling_primary_intcmp(union cling_primary const* lhs, 
-    union cling_primary const* rhs)
-{
-  return lhs->signed_int- rhs->signed_int;
+inline int cling_primary_intcmp(union cling_primary const *lhs,
+                                union cling_primary const *rhs) {
+  return lhs->signed_int - rhs->signed_int;
 }
 
-void cling_primary_toint(union cling_primary *self, size_t type)
-{
-  switch(type) {
+void cling_primary_toint(union cling_primary *self, size_t type) {
+  switch (type) {
   case SYM_UINT:
-    self->signed_int=(int) self->unsigned_int;
+    self->signed_int = (int)self->unsigned_int;
     break;
   case SYM_CHAR:
-    self->signed_int=(char) self->signed_char;
+    self->signed_int = (char)self->signed_char;
     break;
   case SYM_INTEGER:
     break;
   }
 }
 
-void cling_primary_init(union cling_primary *self,
-    size_t type,
-    char const *rawstr) {
+void cling_primary_init(union cling_primary *self, size_t type,
+                        char const *rawstr) {
   switch (type) {
   case SYM_UINT:
     sscanf(rawstr, "%u", &self->unsigned_int);
@@ -122,6 +117,7 @@ void cling_ast_insert_const(struct utillib_json_value *self,
       utillib_json_object_at(self, "const_defs");
   int kind = CL_CONST | ast_type2kind(type);
 
+  struct utillib_json_value *object;
   UTILLIB_JSON_ARRAY_FOREACH(object, const_defs) {
     char const *name = cling_ast_get_string(object, "name");
     struct utillib_json_value *new_object = utillib_json_value_copy(object);
@@ -137,6 +133,7 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
       utillib_json_object_at(self, "var_defs");
   const int base_kind = ast_type2kind(type);
 
+  struct utillib_json_value *object;
   UTILLIB_JSON_ARRAY_FOREACH(object, var_defs) {
     int kind = base_kind;
     char const *name = cling_ast_get_string(object, "name");
@@ -153,6 +150,7 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
  */
 void cling_ast_insert_arglist(struct utillib_json_value *self,
                               struct cling_symbol_table *symbol_table) {
+  struct utillib_json_value *object;
   UTILLIB_JSON_ARRAY_FOREACH(object, self) {
     size_t type = cling_ast_get_type(object);
     int kind = ast_type2kind(type);

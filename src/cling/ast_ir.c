@@ -22,7 +22,6 @@
 #include "symbols.h"
 #include <assert.h>
 
-
 UTILLIB_ETAB_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ETAB_ELEM(OP_ADD)
 UTILLIB_ETAB_ELEM(OP_SUB)
@@ -33,57 +32,68 @@ UTILLIB_ETAB_ELEM(OP_MUL)
 UTILLIB_ETAB_ELEM(OP_STORE)
 UTILLIB_ETAB_END(cling_ast_opcode_kind);
 
-static void ast_ir_emit_factor(struct utillib_json_value *self,
-    struct cling_ir_gen *gen)
-{
-
-
-}
-
-static int ast_ir_emit_expression(struct utillib_json_value *self,
-    struct cling_ir_gen *gen)
-{
-  struct utillib_json_value *op, *lhs, *rhs;
-  op=utillib_json_object_at(self, "op");
+static struct utillib_json_value *
+polan_ir_node_json_object_create(struct utillib_json_value *self) {
+  /*
+   * Make a node look more like an operator or operand.
+   */
+  struct utillib_json_value *op, *value;
+  char const *opstr;
+  op = utillib_json_object_at(self, "op");
   if (!op) {
-
-
-}
-
-
-static void ast_ir_emit_for_stmt(struct utillib_json_value *self,
-    struct cling_program *program)
-{}
-
-
-static void ast_ir_emit_if_stmt(struct utillib_json_value *self,
-    struct cling_program *program)
-{
-  struct utillib_json_value *expr, *then_clause, *else_clause;
-  expr=utillib_json_object_at(self, "expr");
-  assert(expr);
-
-
-
-
-}
-
-static void ast_ir_emit_statement(struct utillib_json_value *self,
-    struct cling_program *program)
-{
-  struct utillib_json_value *type;
-  type=utillib_json_object_at(self, "type");
-  assert(type);
-  switch (type->as_size_t) {
-    case SYM_IF_STMT:
-      ast_ir_emit_if_stmt(self, program);
-      return;
-    case SYM_FOR_STMT:
-      ast_ir_emit_for_stmt(self, program);
-      return;
-    default:
-      assert(false);
+    /*
+     * Get the string of this node
+     */
+    value = utillib_json_object_at(self, "value");
+    return utillib_json_value_copy(value);
   }
+  /*
+   * Get the opstr from op
+   */
+  opstr = cling_symbol_kind_tostring(op->as_size_t);
+  return utillib_json_string_create(&opstr);
 }
 
+static void polan_ir_post_order(struct cling_polan_ir *self,
+                                struct utillib_json_value const *node) {
+  assert(node);
+  struct utillib_json_value *op, *lhs, *rhs;
+  op = utillib_json_object_at(node, "op");
+  if (!op) {
+    /*
+     * Trivial case.
+     */
+    utillib_vector_push_back(&self->stack, node);
+    return;
+  }
+  lhs = utillib_json_object_at(node, "lhs");
+  rhs = utillib_json_object_at(node, "rhs");
+  polan_ir_post_order(self, lhs);
+  polan_ir_post_order(self, rhs);
+  utillib_vector_push_back(&self->stack, node);
+}
 
+void cling_polan_ir_init(struct cling_polan_ir *self) {
+  utillib_vector_init(&self->stack);
+}
+
+void cling_polan_ir_destroy(struct cling_polan_ir *self) {
+  utillib_vector_destroy(&self->stack);
+}
+
+void cling_polan_ir_walk(struct cling_polan_ir *self,
+                         struct utillib_json_value const *root) {
+  polan_ir_post_order(self, root);
+}
+
+struct utillib_json_value *
+cling_polan_ir_json_array_create(struct cling_polan_ir const *self) {
+  struct utillib_json_value *array;
+  struct utillib_json_value const *node;
+
+  array = utillib_json_array_create_empty();
+  UTILLIB_VECTOR_FOREACH(node, &self->stack) {
+    utillib_json_array_push_back(array, polan_ir_node_json_object_create(node));
+  }
+  return array;
+}

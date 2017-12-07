@@ -20,14 +20,13 @@
 */
 #ifndef CLING_AST_PRETTY_H
 #define CLING_AST_PRETTY_H
-#include <utillib/string.h>
 #include <utillib/json.h>
+#include <utillib/string.h>
 
 void cling_ast_pretty_expr(struct utillib_json_value const *self,
-    struct utillib_string *string);
+                           struct utillib_string *string);
 
 void cling_ast_pretty_program(struct utillib_json_value const *self,
-  struct utillib_string* string);
+                              struct utillib_string *string);
 
 #endif /* CLING_AST_PRETTY_H */
-

@@ -91,10 +91,11 @@ struct utillib_ll1_parser_error {
  */
 struct utillib_ll1_parser_callback {
   void (*terminal_handler)(void *client_data,
-       struct utillib_symbol const *symbol, void *input);
+                           struct utillib_symbol const *symbol, void *input);
   void (*rule_handler)(void *client_data, struct utillib_rule const *rule);
-  void (*error_handler)(void *client_data, 
-      struct utillib_ll1_parser_error const *error, void *input);
+  void (*error_handler)(void *client_data,
+                        struct utillib_ll1_parser_error const *error,
+                        void *input);
 };
 
 /**

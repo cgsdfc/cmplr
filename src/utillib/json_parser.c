@@ -192,10 +192,9 @@ static const struct utillib_ll1_parser_callback json_parser_callback = {
     .error_handler = json_parser_error_handler,
 };
 
-void utillib_json_parser_factory_init(
-    struct utillib_ll1_factory *self) {
-  utillib_ll1_factory_gen_init(self, ll1_parser_table,
-      utillib_json_symbols, utillib_json_rules);
+void utillib_json_parser_factory_init(struct utillib_ll1_factory *self) {
+  utillib_ll1_factory_gen_init(self, ll1_parser_table, utillib_json_symbols,
+                               utillib_json_rules);
 }
 
 void utillib_json_parser_init(struct utillib_json_parser *self,
@@ -225,13 +224,12 @@ utillib_json_parser_parse(struct utillib_json_parser *self, char const *str) {
 bool utillib_json_parser_parse_dbg(struct utillib_json_parser *self,
                                    size_t const *symbols) {
   struct utillib_symbol_scanner scanner;
+  struct utillib_json_value const *val;
+
   utillib_symbol_scanner_init(&scanner, symbols, utillib_json_symbols);
   bool good = utillib_ll1_parser_parse(&self->parser, &scanner,
                                        &utillib_symbol_scanner_op);
-  UTILLIB_VECTOR_FOREACH(struct utillib_json_value const *, val,
-                         &self->values) {
-    utillib_json_pretty_print(val);
-  }
+  UTILLIB_VECTOR_FOREACH(val, &self->values) { utillib_json_pretty_print(val); }
   return good;
 }
 #endif

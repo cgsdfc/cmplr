@@ -28,7 +28,7 @@
  * stealed from famous softwares.
  */
 
-size_t simple_strhash(char const *str) ;
+size_t simple_strhash(char const *str);
 size_t mysql_strhash(char const *key);
 unsigned long php_strhash(char const *arKey);
 unsigned long lh_strhash(char const *str);

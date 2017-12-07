@@ -159,7 +159,8 @@ void utillib_vector_destroy(struct utillib_vector *self) {
 
 void utillib_vector_destroy_owning(struct utillib_vector *self,
                                    void (*destroy)(void *)) {
-  UTILLIB_VECTOR_FOREACH(void const *, elem, self) { destroy((void *)elem); }
+  void const *elem;
+  UTILLIB_VECTOR_FOREACH(elem, self) { destroy((void *)elem); }
   free(self->begin);
 }
 
@@ -252,7 +253,6 @@ void utillib_vector_reserve(struct utillib_vector *self, size_t new_cap) {
     do_realloc(self, new_cap);
   }
 }
-
 
 /**
  * JSON interfaces

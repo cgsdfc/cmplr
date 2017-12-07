@@ -19,9 +19,9 @@
 
 */
 #include "test_impl.h"
-#include "test.h"
 #include "enum.h"
 #include "json.h"
+#include "test.h"
 
 /*
  * JSON interface
@@ -52,8 +52,8 @@ test_entry_json_object_create(struct utillib_test_entry const *self) {
 static struct utillib_json_value *
 test_entry_json_array_create(struct utillib_test_env const *self) {
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  for (struct utillib_test_entry const *item = self->cases;
-       item->func != NULL; ++item) {
+  for (struct utillib_test_entry const *item = self->cases; item->func != NULL;
+       ++item) {
     utillib_json_array_push_back(array, test_entry_json_object_create(item));
   }
   return array;

@@ -26,7 +26,7 @@
 struct utillib_list_node {
   struct utillib_list_node *prev;
   struct utillib_list_node *next;
-  void const * value;
+  void const *value;
 };
 
 /**
@@ -37,15 +37,15 @@ struct utillib_list_node {
  */
 
 struct utillib_list {
-  struct utillib_list_node * head;
-  struct utillib_list_node * tail;
+  struct utillib_list_node *head;
+  struct utillib_list_node *tail;
 };
 
 void utillib_list_init(struct utillib_list *self);
 void utillib_list_destroy(struct utillib_list *self);
 
-void * utillib_list_front(struct utillib_list *self);
-void * utillib_list_back(struct utillib_list *self);
+void *utillib_list_front(struct utillib_list *self);
+void *utillib_list_back(struct utillib_list *self);
 size_t utillib_list_size(struct utillib_list *self);
 bool utillib_list_empty(struct utillib_list *self);
 
@@ -54,6 +54,4 @@ void utillib_list_push_back(struct utillib_list *self, void const *value);
 void utillib_list_pop_front(struct utillib_list *self);
 void utillib_list_pop_back(struct utillib_list *self);
 
-
 #endif /* UTILLIB_LIST_H */
-

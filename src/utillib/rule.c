@@ -218,8 +218,10 @@ void utillib_rule_index_build_LHS_index(struct utillib_rule_index *self) {
     return;
   }
   size_t non_terminals_size = self->non_terminals_size;
+  struct utillib_rule const *rule;
+
   self->LHS_index = calloc(sizeof self->LHS_index[0], non_terminals_size);
-  UTILLIB_VECTOR_FOREACH(struct utillib_rule const *, rule, &self->rules) {
+  UTILLIB_VECTOR_FOREACH(rule, &self->rules) {
     struct utillib_symbol const *LHS = rule->LHS;
     size_t pos = utillib_rule_index_symbol_index(self, LHS);
     assert(pos < non_terminals_size &&
@@ -267,10 +269,11 @@ utillib_rule_json_object_create(struct utillib_rule const *self) {
   }
   struct utillib_json_value *object = utillib_json_object_create_empty();
   struct utillib_json_value *array = utillib_json_array_create_empty();
+  struct utillib_symbol const *symbol;
 
   utillib_json_object_push_back(object, "LHS",
                                 utillib_symbol_json_string_create(self->LHS));
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, &self->RHS) {
+  UTILLIB_VECTOR_FOREACH(symbol, &self->RHS) {
     utillib_json_array_push_back(array,
                                  utillib_symbol_json_string_create(symbol));
   }

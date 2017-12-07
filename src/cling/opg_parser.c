@@ -20,8 +20,8 @@
 */
 
 #include "opg_parser.h"
-#include "symbols.h"
 #include "ast_build.h"
+#include "symbols.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -139,16 +139,17 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
  * Show you the stack and opstack, repectedly.
  */
 static void opg_parser_show_opstack(struct cling_opg_parser const *self) {
-  UTILLIB_VECTOR_FOREACH(size_t, op, &self->opstack) {
+  size_t op;
+  UTILLIB_VECTOR_FOREACH(op, &self->opstack) {
     printf("%s ", cling_symbol_kind_tostring(op));
   }
   puts("");
 }
 
 static void opg_parser_show_stack(struct cling_opg_parser const *self) {
-  UTILLIB_VECTOR_FOREACH(struct utillib_json_value *, val, &self->stack) {
-    utillib_json_pretty_print(val);
-  }
+  struct utillib_json_value *val;
+
+  UTILLIB_VECTOR_FOREACH(val, &self->stack) { utillib_json_pretty_print(val); }
 }
 
 static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {

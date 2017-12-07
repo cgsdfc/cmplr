@@ -20,9 +20,9 @@
 */
 #include "scanner.h"
 #include "symbol.h"
+#include <ctype.h>
 #include <stdlib.h> // bsearch
 #include <string.h> // strcmp
-#include <ctype.h>
 
 static int keyword_pair_cmp(struct utillib_keyword_pair const *lhs,
                             struct utillib_keyword_pair const *rhs) {
@@ -59,7 +59,8 @@ void utillib_symbol_scanner_init(struct utillib_symbol_scanner *self,
   self->table = table;
 }
 
-inline size_t utillib_symbol_scanner_lookahead(struct utillib_symbol_scanner *self) {
+inline size_t
+utillib_symbol_scanner_lookahead(struct utillib_symbol_scanner *self) {
   return symbol_scanner_deref(self);
 }
 
@@ -69,13 +70,15 @@ void utillib_symbol_scanner_shiftaway(struct utillib_symbol_scanner *self) {
   ++self->symbols;
 }
 
-inline bool utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self) {
+inline bool
+utillib_symbol_scanner_reacheof(struct utillib_symbol_scanner *self) {
   return symbol_scanner_eof(self);
 }
 
-inline void utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self,
-    struct utillib_symbol const **value) {
-  *value= &self->table[symbol_scanner_deref(self)];
+inline void
+utillib_symbol_scanner_semantic(struct utillib_symbol_scanner *self,
+                                struct utillib_symbol const **value) {
+  *value = &self->table[symbol_scanner_deref(self)];
 }
 
 /*
@@ -169,11 +172,13 @@ void utillib_token_scanner_destroy(struct utillib_token_scanner *self) {
   utillib_char_scanner_destroy(&self->chars);
 }
 
-inline size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
+inline size_t
+utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
   return self->code;
 }
 
-inline char const *utillib_token_scanner_semantic(struct utillib_token_scanner *self) {
+inline char const *
+utillib_token_scanner_semantic(struct utillib_token_scanner *self) {
   return utillib_string_c_str(&self->buffer);
 }
 
@@ -195,7 +200,8 @@ void utillib_string_scanner_init(struct utillib_string_scanner *self,
   self->pos = 0;
 }
 
-inline size_t utillib_string_scanner_lookahead(struct utillib_string_scanner *self) {
+inline size_t
+utillib_string_scanner_lookahead(struct utillib_string_scanner *self) {
   return *self->str;
 }
 
@@ -206,7 +212,8 @@ void utillib_string_scanner_shiftaway(struct utillib_string_scanner *self) {
   ++self->pos;
 }
 
-inline bool utillib_string_scanner_reacheof(struct utillib_string_scanner *self) {
+inline bool
+utillib_string_scanner_reacheof(struct utillib_string_scanner *self) {
   return *self->str == '\0';
 }
 

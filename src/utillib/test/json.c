@@ -187,34 +187,32 @@ UTILLIB_TEST(json_array_create) {
 }
 
 UTILLIB_TEST(json_array_foreach) {
-  struct utillib_json_value * array=utillib_json_array_create_empty();
-  UTILLIB_JSON_ARRAY_FOREACH(val, array) {
-    utillib_json_pretty_print(val);
-  }
+  struct utillib_json_value *array = utillib_json_array_create_empty();
+  struct utillib_json_value *val;
+
+  UTILLIB_JSON_ARRAY_FOREACH(val, array) { utillib_json_pretty_print(val); }
   utillib_json_array_push_back(array, utillib_json_null_create());
   utillib_json_array_push_back(array, utillib_json_null_create());
   utillib_json_array_push_back(array, utillib_json_null_create());
   utillib_json_array_push_back(array, utillib_json_null_create());
-  UTILLIB_JSON_ARRAY_FOREACH(val_, array) {
-    utillib_json_pretty_print(val_);
-  }
+  UTILLIB_JSON_ARRAY_FOREACH(val, array) { utillib_json_pretty_print(val); }
   utillib_json_value_destroy(array);
 }
 
 UTILLIB_TEST(json_object_foreach) {
-  struct utillib_json_value * object=utillib_json_object_create_empty();
-  UTILLIB_JSON_OBJECT_FOREACH(pair_, object) {
-    puts(pair_->up_first);
-    utillib_json_pretty_print(pair_->up_second);
+  struct utillib_json_value *object = utillib_json_object_create_empty();
+  struct utillib_pair *pair;
+  UTILLIB_JSON_OBJECT_FOREACH(pair, object) {
+    puts(pair->up_first);
+    utillib_json_pretty_print(pair->up_second);
   }
-  bool _false=false;
-  utillib_json_object_push_back(object, "key1", 
-      utillib_json_bool_create(&_false));
-  _false=true;
+  bool _false = false;
+  utillib_json_object_push_back(object, "key1",
+                                utillib_json_bool_create(&_false));
+  _false = true;
   utillib_json_object_push_back(object, "key2",
-      utillib_json_bool_create(&_false));
-  utillib_json_object_push_back(object, "key3",
-      utillib_json_null_create());
+                                utillib_json_bool_create(&_false));
+  utillib_json_object_push_back(object, "key3", utillib_json_null_create());
   UTILLIB_JSON_OBJECT_FOREACH(pair, object) {
     puts(pair->up_first);
     utillib_json_pretty_print(pair->up_second);

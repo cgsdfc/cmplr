@@ -22,120 +22,107 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#define slist_check_front(self) do {\
-  assert((self)->head && "Slist should not be empty");\
-} while (0)
+#define slist_check_front(self)                                                \
+  do {                                                                         \
+    assert((self)->head && "Slist should not be empty");                       \
+  } while (0)
 
-void utillib_slist_init(struct utillib_slist *self)
-{
-  self->head=NULL;
-}
+void utillib_slist_init(struct utillib_slist *self) { self->head = NULL; }
 
-void utillib_slist_destroy(struct utillib_slist *self)
-{
-  struct utillib_slist_node *node=self->head;
+void utillib_slist_destroy(struct utillib_slist *self) {
+  struct utillib_slist_node *node = self->head;
   while (node) {
-    struct utillib_slist_node *next=node->next;
+    struct utillib_slist_node *next = node->next;
     free(node);
-    node=next;
+    node = next;
   }
 }
 
 void utillib_slist_destroy_owning(struct utillib_slist *self,
-                                  void (*destroy)(void *elem))
-{
-  struct utillib_slist_node *node=self->head;
+                                  void (*destroy)(void *elem)) {
+  struct utillib_slist_node *node = self->head;
   while (node) {
-    struct utillib_slist_node *next=node->next;
+    struct utillib_slist_node *next = node->next;
     destroy(node->value);
     free(node);
-    node=next;
+    node = next;
   }
 }
 
-bool utillib_slist_empty(struct utillib_slist const *self)
-{
+bool utillib_slist_empty(struct utillib_slist const *self) {
   return NULL == self->head;
 }
 
-size_t utillib_slist_size(struct utillib_slist const *self)
-{
-  size_t size=0;
-  struct utillib_slist_node *node=self->head;
+size_t utillib_slist_size(struct utillib_slist const *self) {
+  size_t size = 0;
+  struct utillib_slist_node *node = self->head;
   while (node) {
-    struct utillib_slist_node *next=node->next;
+    struct utillib_slist_node *next = node->next;
     ++size;
-    node=next;
+    node = next;
   }
   return size;
 }
 
-void *utillib_slist_front(struct utillib_slist const *self)
-{
+void *utillib_slist_front(struct utillib_slist const *self) {
   slist_check_front(self);
   return self->head->value;
 }
 
-void utillib_slist_push_front(struct utillib_slist *self, void const *value)
-{
-  struct utillib_slist ** phead=&self->head;
-  struct utillib_slist_node * new_node=malloc(sizeof *new_node);
-  new_node->value=value;
-  new_node->next=*phead;
-  *phead=new_node;
+void utillib_slist_push_front(struct utillib_slist *self, void const *value) {
+  struct utillib_slist **phead = &self->head;
+  struct utillib_slist_node *new_node = malloc(sizeof *new_node);
+  new_node->value = value;
+  new_node->next = *phead;
+  *phead = new_node;
 }
 
-void * utillib_slist_erase(struct utillib_slist *self, size_t pos)
-{
-  void * old_value;
-  struct utillib_slist_node * old_node;
-  struct utillib_slist_node * node;
+void *utillib_slist_erase(struct utillib_slist *self, size_t pos) {
+  void *old_value;
+  struct utillib_slist_node *old_node;
+  struct utillib_slist_node *node;
 
   if (!self->head)
     return NULL;
   if (pos == 0) {
-    old_node=self->head;
-    old_value=old_node->value;
-    self->head=self->head->next;
+    old_node = self->head;
+    old_value = old_node->value;
+    self->head = self->head->next;
     free(old_node);
     return old_value;
   }
 
-  node=self->head;
-  for (int i=0; i<pos-1; ++i) {
-    node=node->next;
+  node = self->head;
+  for (int i = 0; i < pos - 1; ++i) {
+    node = node->next;
     if (!node->next)
       return NULL;
   }
-  old_node=node->next;
-  old_value=old_node->value;
-  node->next=old_node->next;
+  old_node = node->next;
+  old_value = old_node->value;
+  node->next = old_node->next;
   free(old_node);
   return old_value;
 }
 
-void utillib_slist_pop_front(struct utillib_slist *self)
-{
+void utillib_slist_pop_front(struct utillib_slist *self) {
   slist_check_front(self);
-  struct utillib_slist_node * old_node=self->head;
-  self->head=self->head->next;
+  struct utillib_slist_node *old_node = self->head;
+  self->head = self->head->next;
   free(old_node);
 }
 
-void utillib_slist_clear(struct utillib_slist *self)
-{
+void utillib_slist_clear(struct utillib_slist *self) {
   utillib_slist_destroy(self);
-  self->head=NULL;
+  self->head = NULL;
 }
 
 struct utillib_json_value *
 utillib_slist_json_array_create(struct utillib_slist const *self,
-    utillib_json_value_create_func_t create_func)
-{
-  struct utillib_json_value * array=utillib_json_array_create_empty();
-  UTILLIB_SLIST_FOREACH(void const* , elem, self) {
+                                utillib_json_value_create_func_t create_func) {
+  struct utillib_json_value *array = utillib_json_array_create_empty();
+  UTILLIB_SLIST_FOREACH(void const *, elem, self) {
     utillib_json_array_push_back(array, create_func(elem));
   }
   return array;
 }
-

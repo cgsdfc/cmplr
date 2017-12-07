@@ -24,9 +24,9 @@
 #include <utillib/print.h>
 
 #include <assert.h>
-#include <stdlib.h> 
-#include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 static struct pascal_scanner_error *
 scanner_error_create(int kind, char badch, size_t row, size_t col);
@@ -271,11 +271,11 @@ void pascal_scanner_shiftaway(struct pascal_scanner *self) {
 }
 
 void pascal_scanner_semantic(struct pascal_scanner *self,
-    union pascal_semantic *value) {
+                             union pascal_semantic *value) {
   char const *str = utillib_string_c_str(&self->buffer);
-  switch(self->code) {
+  switch (self->code) {
   case SYM_IDEN:
-    value->string=strdup(str);
+    value->string = strdup(str);
     return;
   case SYM_UINT:
     sscanf(str, "%lu", &value->unsigned_int);
@@ -309,10 +309,11 @@ void pascal_scanner_error_print(struct pascal_scanner_error const *self) {
  */
 size_t pascal_scanner_check(struct pascal_scanner *self) {
   size_t size = utillib_vector_size(&self->errors);
+  struct pascal_scanner_error const *err;
+
   if (0 == size)
     return 0;
-  UTILLIB_VECTOR_FOREACH(struct pascal_scanner_error const *, err,
-                         &self->errors) {
+  UTILLIB_VECTOR_FOREACH(err, &self->errors) {
     pascal_scanner_error_print(err);
     utillib_error_printf("\n");
   }

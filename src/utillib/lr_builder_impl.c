@@ -19,4 +19,3 @@
 
 */
 #include "lr_builder_impl.h"
-

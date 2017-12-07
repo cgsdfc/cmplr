@@ -21,10 +21,12 @@
 #ifndef UTILLIB_HASHMAP_IMPL_H
 #define UTILLIB_HASHMAP_IMPL_H
 #include "hashmap.h"
-#define hashmap_indexof(key, hash_handler, buckets_size) (hash_handler(key) & (buckets_size-1))
-#define hashmap_check_range(index, buckets_size) do {\
-  assert (( index ) < ( buckets_size ) && "Index out of range");\
-} while (0)
+#define hashmap_indexof(key, hash_handler, buckets_size)                       \
+  (hash_handler(key) & (buckets_size - 1))
+#define hashmap_check_range(index, buckets_size)                               \
+  do {                                                                         \
+    assert((index) < (buckets_size) && "Index out of range");                  \
+  } while (0)
 
 /**
  * \struct utillib_hashmap_search_result
@@ -32,14 +34,12 @@
  */
 struct utillib_hashmap_search_result {
   size_t itempos;
-  struct utillib_slist  * bucket;
-  struct utillib_pair * pair;
+  struct utillib_slist *bucket;
+  struct utillib_pair *pair;
 };
 
 void utillib_hashmap_search_result_init(
     struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap const *hashmap,
-    void const *key);
+    struct utillib_hashmap const *hashmap, void const *key);
 
 #endif /* UTILLIB_HASHMAP_IMPL_H */
-

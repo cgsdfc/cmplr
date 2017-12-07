@@ -62,7 +62,9 @@ UTILLIB_TEST(rule_index_json) {
 
 UTILLIB_TEST_AUX(rule_index_index_not_overflow_helper,
                  struct utillib_vector const *vector, size_t symbols_size) {
-  UTILLIB_VECTOR_FOREACH(struct utillib_symbol const *, symbol, vector) {
+  struct utillib_symbol const *symbol;
+
+  UTILLIB_VECTOR_FOREACH(symbol, vector) {
     size_t index = utillib_rule_index_symbol_index(UT_FIXTURE, symbol);
     UTILLIB_TEST_EXPECT_GE(index, 0);
     UTILLIB_TEST_EXPECT_LT(index, symbols_size);

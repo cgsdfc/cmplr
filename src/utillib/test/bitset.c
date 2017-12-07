@@ -64,8 +64,7 @@ UTILLIB_TEST_AUX(fill_with_odd_number, size_t N) {
 
 UTILLIB_TEST(bitset_json_array) {
   UTILLIB_TEST_AUX_INVOKE(fill_with_odd_number, 10);
-  struct utillib_json_value *val =
-      utillib_bitset_json_array_create(UT_FIXTURE);
+  struct utillib_json_value *val = utillib_bitset_json_array_create(UT_FIXTURE);
   utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }
@@ -73,8 +72,7 @@ UTILLIB_TEST(bitset_json_array) {
 UTILLIB_TEST(bitset_json_empty) {
   struct utillib_bitset *EMPTY = UT_FIXTURE;
   utillib_bitset_init(EMPTY, 10);
-  struct utillib_json_value *val =
-      utillib_bitset_json_array_create(EMPTY);
+  struct utillib_json_value *val = utillib_bitset_json_array_create(EMPTY);
   utillib_json_pretty_print(val);
   utillib_json_value_destroy(val);
 }

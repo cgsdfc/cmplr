@@ -20,9 +20,9 @@
 */
 #ifndef CLING_SYMBOLS_H
 #define CLING_SYMBOLS_H
-#include <utillib/symbol.h> 
-#include <utillib/enum.h>
 #include <stdbool.h>
+#include <utillib/enum.h>
+#include <utillib/symbol.h>
 
 #define cling_symbol_cast(code)                                                \
   ((code) == UT_SYM_EOF ? "EOF" : cling_symbol_kind_tostring((code)))

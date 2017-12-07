@@ -40,7 +40,7 @@
  * the value in a HashMap and a struct can use
  * different fields as keys each of which comprises
  * a HashMap.
- * 
+ *
  * Rehashing policy
  * When the elements of a HashMap increase, most likely
  * the speed of lookup will decrease. A HashMap is said
@@ -48,12 +48,12 @@
  * itself and adjust the size of buckets accordingly.
  * However, since this implementation aims at small
  * size of struct and simple logic, it does not rehash
- * automatically, but rather requires the client to 
+ * automatically, but rather requires the client to
  * decide when should do the rehashing. This means the
  * implementation does provide way to count elements
  * and way to do rehashing. All the client needs to do
  * is analyzing the statistic and rehash.
- * 
+ *
  */
 
 #include "config.h"
@@ -71,19 +71,19 @@
  * using the same function, the
  * hasing logic can still vary a lot due to
  * the time-space trade-off.
- * 
+ *
  * Notices for the second reason the callback
  * for the frequently used string is not provided
  * in this module.
  */
 struct utillib_hashmap_callback {
-  size_t (*hash_handler )(void const *self);
-  int (*compare_handler )(void const *lhs, void const *rhs);
+  size_t (*hash_handler)(void const *self);
+  int (*compare_handler)(void const *lhs, void const *rhs);
 };
 
 struct utillib_hashmap {
   struct utillib_hashmap_callback const *callback;
-  struct utillib_slist * buckets;
+  struct utillib_slist *buckets;
   size_t buckets_size;
 };
 
@@ -91,14 +91,14 @@ struct utillib_hashmap {
  * \function utillib_hashmap_init
  * Initializes an empty hashmap with a default
  * buckets_size and a bucket array of that size.
- * The `callback' determines how the keys will be 
+ * The `callback' determines how the keys will be
  * hashed and compared from then on.
  * The default buckets_size is 16 and can be changed
  * at compile-time by defining `UTILLIB_HASHMAP_DEFAULT_BUCKETS_SIZE'
  * to a different value which should be the power of 2.
  */
 void utillib_hashmap_init(struct utillib_hashmap *self,
-                                struct utillib_hashmap_callback const *callback);
+                          struct utillib_hashmap_callback const *callback);
 
 /**
  * \function utillib_hashmap_destroy
@@ -108,7 +108,7 @@ void utillib_hashmap_destroy(struct utillib_hashmap *self);
 
 /**
  * \function utillib_hashmap_destroy_owning
- * Destructs `self' and passes each key to 
+ * Destructs `self' and passes each key to
  * `key_destroy', each value to `value_destroy'.
  * Notices that one of `key_destroy' and `value_destroy'
  * can be `NULL', which will not be called. If both are
@@ -116,17 +116,18 @@ void utillib_hashmap_destroy(struct utillib_hashmap *self);
  * more efficient.
  */
 void utillib_hashmap_destroy_owning(struct utillib_hashmap *self,
-                                          void (*key_destroy)(void *key),
-                                          void (*value_destroy)(void *value));
+                                    void (*key_destroy)(void *key),
+                                    void (*value_destroy)(void *value));
 
 /**
  * \function utillib_hashmap_insert
- * Inserts the key-value pair to self. If 
+ * Inserts the key-value pair to self. If
  * the key already existed, the insertion failed.
  * Returns zero if insertion success.
  * Returns non-zero if insertion failed.
  */
-int utillib_hashmap_insert(struct utillib_hashmap *self, void const *key, void const *value);
+int utillib_hashmap_insert(struct utillib_hashmap *self, void const *key,
+                           void const *value);
 
 /**
  * \function utillib_hashmap_update
@@ -135,12 +136,13 @@ int utillib_hashmap_insert(struct utillib_hashmap *self, void const *key, void c
  * at `key' is returned.
  * This function alway modifies `self'.
  */
-void * utillib_hashmap_update(struct utillib_hashmap *self, void const *key, void const *value);
+void *utillib_hashmap_update(struct utillib_hashmap *self, void const *key,
+                             void const *value);
 
 /**
  * \function utillib_hashmap_discard
  * Discards the value at `key'. If no such value at `key',
- * `NULL' is returned. Otherwise, the discarded value is 
+ * `NULL' is returned. Otherwise, the discarded value is
  * returned.
  */
 void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key);
@@ -158,7 +160,8 @@ void utillib_hashmap_rehash(struct utillib_hashmap *self);
  * \function utillib_hashmap_exist_key
  * Returns whether this `key' exists.
  */
-bool utillib_hashmap_exist_key(struct utillib_hashmap const *self, void const *key);
+bool utillib_hashmap_exist_key(struct utillib_hashmap const *self,
+                               void const *key);
 
 /**
  * \function utillib_hashmap_at
@@ -166,7 +169,7 @@ bool utillib_hashmap_exist_key(struct utillib_hashmap const *self, void const *k
  * and return the address of the value if it was found.
  * Returns `NULL' if not.
  */
-void * utillib_hashmap_at(struct utillib_hashmap const* self, void const *key);
+void *utillib_hashmap_at(struct utillib_hashmap const *self, void const *key);
 /**
  * \function utillib_hashmap_size
  * Counts the elements and return the number of them.
@@ -204,7 +207,7 @@ size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self);
  * waste your code.
  * Last but not least, primary types unfortunately includes `char const*'
  * so take care of yourselves and use `utillib_hashmap_json_object_create'
- * 
+ *
  */
 
 /**
@@ -217,8 +220,8 @@ size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self);
  * Notices that if the type of key is not `char const*',
  * disaster will happen so be clear.
  */
-struct utillib_json_value*
-utillib_hashmap_json_object_create(struct utillib_hashmap const *self,
+struct utillib_json_value *utillib_hashmap_json_object_create(
+    struct utillib_hashmap const *self,
     utillib_json_value_create_func_t create_func);
 
 /**
@@ -227,8 +230,8 @@ utillib_hashmap_json_object_create(struct utillib_hashmap const *self,
  * Creates a JSON array of JSON objects each of which
  * has the form { "key": key_value, "value": value_value }.
  */
-struct utillib_json_value *
-utillib_hashmap_json_array_create(struct utillib_hashmap const *self,
+struct utillib_json_value *utillib_hashmap_json_array_create(
+    struct utillib_hashmap const *self,
     utillib_json_value_create_func_t key_create,
     utillib_json_value_create_func_t value_create);
 

@@ -23,33 +23,29 @@
 #include "slist.h"
 #include <assert.h>
 
-static void search_result_lookup(
-    struct utillib_hashmap_search_result  *self,
-    void const *key, int (*compare_handler) (void const* lhs, void const *rhs))
-{
-  UTILLIB_SLIST_FOREACH(struct utillib_pair*, pair, self->bucket) {
+static void search_result_lookup(struct utillib_hashmap_search_result *self,
+                                 void const *key,
+                                 int (*compare_handler)(void const *lhs,
+                                                        void const *rhs)) {
+  UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, self->bucket) {
     if (0 == compare_handler(pair->up_first, key)) {
-      self->pair=pair;
-      return ;
+      self->pair = pair;
+      return;
     }
     ++self->itempos;
   }
-  self->pair=NULL;
+  self->pair = NULL;
 }
 
 void utillib_hashmap_search_result_init(
     struct utillib_hashmap_search_result *self,
-    struct utillib_hashmap const *hashmap,
-    void const *key)
-{
-  struct utillib_hashmap_callback const * callback=hashmap->callback;
-  assert (callback && "Callback should not be NULL");
-  size_t index=hashmap_indexof(key, callback->hash_handler, hashmap->buckets_size);
+    struct utillib_hashmap const *hashmap, void const *key) {
+  struct utillib_hashmap_callback const *callback = hashmap->callback;
+  assert(callback && "Callback should not be NULL");
+  size_t index =
+      hashmap_indexof(key, callback->hash_handler, hashmap->buckets_size);
   hashmap_check_range(index, hashmap->buckets_size);
-  self->bucket=&hashmap->buckets[index];
-  self->itempos=0;
+  self->bucket = &hashmap->buckets[index];
+  self->itempos = 0;
   search_result_lookup(self, key, callback->compare_handler);
 }
-
-
-

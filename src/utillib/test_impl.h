@@ -27,16 +27,16 @@
  * Colorful status bar for display.
  */
 
-#define WHITE_SKIP       "[  SKIPPED ]"
+#define WHITE_SKIP "[  SKIPPED ]"
 
 #ifndef WITH_WINDOWS
 
-#define GREEN_BANG       COLOR_STRING_UNBOLD(GREEN, "[==========]")
-#define GREEN_DASH       COLOR_STRING_UNBOLD(GREEN, "[----------]")
-#define RED_DASH         COLOR_STRING_UNBOLD(RED, "[----------]")
-#define GREEN_RUN        COLOR_STRING_UNBOLD(GREEN, "[ RUN      ]")
-#define GREEN_OK         COLOR_STRING_UNBOLD(GREEN, "[       OK ]")
-#define RED_BAD          COLOR_STRING_UNBOLD(RED, "[ BAD      ]")
+#define GREEN_BANG COLOR_STRING_UNBOLD(GREEN, "[==========]")
+#define GREEN_DASH COLOR_STRING_UNBOLD(GREEN, "[----------]")
+#define RED_DASH COLOR_STRING_UNBOLD(RED, "[----------]")
+#define GREEN_RUN COLOR_STRING_UNBOLD(GREEN, "[ RUN      ]")
+#define GREEN_OK COLOR_STRING_UNBOLD(GREEN, "[       OK ]")
+#define RED_BAD COLOR_STRING_UNBOLD(RED, "[ BAD      ]")
 
 #else /* Be less colorful */
 

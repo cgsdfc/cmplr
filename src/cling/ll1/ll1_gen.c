@@ -24,7 +24,8 @@
 
 int main(void) {
   struct utillib_ll1_generator gen;
-  utillib_ll1_generator_init_from_code(&gen, cling_ll1_symbols, cling_ll1_rules);
+  utillib_ll1_generator_init_from_code(&gen, cling_ll1_symbols,
+                                       cling_ll1_rules);
   utillib_ll1_generator_dump_all(&gen);
   utillib_ll1_generator_generate(&gen, "cling_ll1_table.c");
   utillib_ll1_generator_destroy(&gen);

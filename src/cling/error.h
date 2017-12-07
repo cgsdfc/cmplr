@@ -21,8 +21,8 @@
 #ifndef CLING_ERROR_H
 #define CLING_ERROR_H
 #include <utillib/enum.h>
-#include <utillib/scanner.h>
 #include <utillib/json.h>
+#include <utillib/scanner.h>
 #define CLING_ERROR_EMAX 4
 
 UTILLIB_ENUM_BEGIN(cling_error_kind)
@@ -74,7 +74,8 @@ cling_undefined_name_error(struct utillib_token_scanner *input,
                            char const *name, size_t context);
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-                                           struct utillib_json_value *value, size_t context);
+                                           struct utillib_json_value *value,
+                                           size_t context);
 
 struct cling_error *
 cling_incompatible_type_error(struct utillib_token_scanner *input,
@@ -82,8 +83,7 @@ cling_incompatible_type_error(struct utillib_token_scanner *input,
                               size_t context);
 struct cling_error *
 cling_invalid_expr_error(struct utillib_token_scanner *input,
-    struct utillib_json_value *value, size_t context);
-
+                         struct utillib_json_value *value, size_t context);
 
 struct cling_error *
 cling_incompatible_arg_error(struct utillib_token_scanner *input, size_t argpos,
@@ -95,9 +95,8 @@ cling_argc_unmatched_error(struct utillib_token_scanner *input,
                            char const *func_name, int actual_argc,
                            int expected_argc, size_t context);
 
-struct cling_error *
-cling_dupcase_error(struct utillib_token_scanner *input,
-    int label, size_t context);
+struct cling_error *cling_dupcase_error(struct utillib_token_scanner *input,
+                                        int label, size_t context);
 
 void cling_error_print(struct cling_error const *self);
 

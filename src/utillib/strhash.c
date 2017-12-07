@@ -24,49 +24,45 @@
 #include <string.h>
 
 size_t simple_strhash(char const *str) {
-  size_t len=strlen(str);
-  size_t hash=str[0] + str[len-1] +(len << 4);
+  size_t len = strlen(str);
+  size_t hash = str[0] + str[len - 1] + (len << 4);
   return hash;
 }
 
-size_t mysql_strhash(char const *key)
-{ 
-  size_t length=strlen(key);
-  register size_t nr=1, nr2=4; 
-  while (length--) 
-  { 
-    nr^= (((nr & 63)+nr2)*((size_t) (unsigned char) *key++))+ (nr << 8); 
-    nr2+=3; 
-  } 
-  return nr; 
+size_t mysql_strhash(char const *key) {
+  size_t length = strlen(key);
+  register size_t nr = 1, nr2 = 4;
+  while (length--) {
+    nr ^= (((nr & 63) + nr2) * ((size_t)(unsigned char)*key++)) + (nr << 8);
+    nr2 += 3;
+  }
+  return nr;
 }
 
-unsigned long php_strhash(char const *arKey)
-{ 
-  unsigned int nKeyLength=strlen(arKey);
-  unsigned long h = 0, g; 
-  char *arEnd=arKey+nKeyLength;
-  while (arKey < arEnd) { 
-    h = (h << 4) + *arKey++; 
-    if ((g = (h & 0xF0000000))) { 
-      h = h ^ (g >> 24); 
-      h = h ^ g; 
-    } 
-  } 
-  return h; 
-} 
+unsigned long php_strhash(char const *arKey) {
+  unsigned int nKeyLength = strlen(arKey);
+  unsigned long h = 0, g;
+  char *arEnd = arKey + nKeyLength;
+  while (arKey < arEnd) {
+    h = (h << 4) + *arKey++;
+    if ((g = (h & 0xF0000000))) {
+      h = h ^ (g >> 24);
+      h = h ^ g;
+    }
+  }
+  return h;
+}
 
-unsigned long lh_strhash(char const *str) 
-{ 
-  int i,l; 
-  unsigned long ret=0; 
+unsigned long lh_strhash(char const *str) {
+  int i, l;
+  unsigned long ret = 0;
   unsigned short *s;
 
-
-  if (str == NULL) return(0); 
-  l=(strlen(str)+1)/2; 
-  s=(unsigned short *)str; 
-  for (i=0; i < l; ++i) 
-    ret^=(s[i]<<(i&0x0f)); 
-  return(ret); 
+  if (str == NULL)
+    return (0);
+  l = (strlen(str) + 1) / 2;
+  s = (unsigned short *)str;
+  for (i = 0; i < l; ++i)
+    ret ^= (s[i] << (i & 0x0f));
+  return (ret);
 }

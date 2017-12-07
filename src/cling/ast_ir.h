@@ -22,8 +22,8 @@
 #define CLING_AST_IR_H
 #include "ast.h" /* union cling_primary */
 
-#include <utillib/vector.h>
 #include <utillib/hashmap.h>
+#include <utillib/vector.h>
 
 /*
  * Well, we are gonna generate
@@ -66,7 +66,7 @@
 /* 	var int j */
 /* 5. 常数声明 */
 /* 源码形如： */
-/* 	const int c = 10 */ 
+/* 	const int c = 10 */
 /* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
 /* 	const int c = 10 */
 /* 6. 表达式 */
@@ -96,12 +96,11 @@
 /* 源码形如： */
 /* 	a[i] = b * c[j] */
 /* 中间代码： */
-/* 	t1 = c[j] */ 
+/* 	t1 = c[j] */
 /* t2 = b * t1 */
-/* a[i] = t2 */ 
+/* a[i] = t2 */
 /* 11. 其他本文档未涉及到的语法现象，或者程序员自行定义的四元式操作，
  * 原则上均按照“x = y op z”形式的中缀表达式进行表达。 */
-
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ENUM_ELEM(OP_DEF)
@@ -130,29 +129,32 @@ UTILLIB_ENUM_END(cling_ast_opcode_kind);
  */
 
 UTILLIB_ENUM_BEGIN(cling_operand_kind)
-  UTILLIB_ENUM_ELEM(CL_ASCI)
-  UTILLIB_ENUM_ELEM(CL_TEMP)
-  UTILLIB_ENUM_ELEM(CL_IMME)
-  UTILLIB_ENUM_ELEM(CL_LABL)
-  UTILLIB_ENUM_ELEM(CL_GLBL)
-  UTILLIB_ENUM_ELEM(CL_LOCL)
-  UTILLIB_ENUM_ELEM(CL_BYTE)
-  UTILLIB_ENUM_ELEM(CL_WORD)
+UTILLIB_ENUM_ELEM(CL_ASCI)
+UTILLIB_ENUM_ELEM(CL_TEMP)
+UTILLIB_ENUM_ELEM(CL_IMME)
+UTILLIB_ENUM_ELEM(CL_LABL)
+UTILLIB_ENUM_ELEM(CL_GLBL)
+UTILLIB_ENUM_ELEM(CL_LOCL)
+UTILLIB_ENUM_ELEM(CL_BYTE)
+UTILLIB_ENUM_ELEM(CL_WORD)
 UTILLIB_ENUM_END(cling_opcode_kind);
 
 struct cling_operand {
   int kind;
   int wide;
-  union { 
+  union {
     char const *text;
     unsigned int value;
   };
 };
 
-struct cling_ir {
+struct cling_polan_ir {
+  struct utillib_vector stack;
+};
+
+struct cling_ast_ir {
   int opcode;
-  union cling_ast_operand
-    operands[CLING_AST_IR_MAX];
+  union cling_ast_operand operands[CLING_AST_IR_MAX];
 };
 
 struct cling_ir_gen {
@@ -163,9 +165,22 @@ struct cling_ir_gen {
   struct cling_program *program;
 };
 
+struct cling_function {
+  char const *name;
+  unsigned int temps;
+  struct utillib_vector instrs;
+};
+
 struct cling_program {
   struct utillib_vector code;
   struct utillib_hashmap label_map;
 };
+
+void cling_polan_ir_init(struct cling_polan_ir *self);
+
+void cling_polan_ir_destroy(struct cling_polan_ir *self);
+
+struct utillib_json_value *
+cling_polan_ir_json_array_create(struct cling_polan_ir const *self);
 
 #endif /* CLING_AST_IR_H */

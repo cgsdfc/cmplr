@@ -21,8 +21,8 @@
 #ifndef UTILLIB_JSON_IMPL_H
 #define UTILLIB_JSON_IMPL_H
 
-#include <assert.h>
 #include "vector.h"
+#include <assert.h>
 
 /*
  * Since client never see
@@ -30,8 +30,10 @@
  * struct but always see json
  * value, they can be hidden.
  */
-#define _JSON_ARRAY(VALUE) &(((struct utillib_json_array*) (VALUE)->as_ptr)->elements)
-#define _JSON_OBJECT(VALUE) &(((struct utillib_json_object*) (VALUE)->as_ptr)->members)
+#define _JSON_ARRAY(VALUE)                                                     \
+  &(((struct utillib_json_array *)(VALUE)->as_ptr)->elements)
+#define _JSON_OBJECT(VALUE)                                                    \
+  &(((struct utillib_json_object *)(VALUE)->as_ptr)->members)
 
 /**
  * \struct utillib_json_object
@@ -54,9 +56,9 @@ struct utillib_json_array {
   do {                                                                         \
     assert((VAL)->kind == (KIND));                                             \
   } while (0)
-#define json_check_create_func(FUNC) \
-do { \
-  assert (FUNC && "create_func should not be NULL");\
-} while(0)
+#define json_check_create_func(FUNC)                                           \
+  do {                                                                         \
+    assert(FUNC && "create_func should not be NULL");                          \
+  } while (0)
 
 #endif /* UTILLIB_JSON_IMPL_H */

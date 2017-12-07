@@ -23,20 +23,18 @@
 #define UTILLIB_SLIST_H
 
 #include "config.h" /* for bool */
-#include <stddef.h> /* for size_t */
 #include "json.h"
+#include <stddef.h> /* for size_t */
 
 #define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
   T X;                                                                         \
-  for (struct utillib_slist_node *_p = (L)->head;                           \
+  for (struct utillib_slist_node *_p = (L)->head;                              \
        _p != NULL && (((X) = _p->value) || 1); _p = _p->next)
-
 
 struct utillib_slist_node {
   struct utillib_slist_node *next;
   void *value;
 };
-
 
 struct utillib_slist {
   struct utillib_slist_node *head;
@@ -59,17 +57,17 @@ void utillib_slist_push_front(struct utillib_slist *self, void const *value);
 
 /**
  * \function utillib_slist_erase
- * Removes the node in the `pos' of the list 
+ * Removes the node in the `pos' of the list
  * and returns the value held by this node.
  * If there is no `pos' in the list, `NULL'
  * is returned.
  */
-void * utillib_slist_erase(struct utillib_slist *self, size_t pos);
+void *utillib_slist_erase(struct utillib_slist *self, size_t pos);
 void utillib_slist_pop_front(struct utillib_slist *self);
 void utillib_slist_clear(struct utillib_slist *self);
 
 struct utillib_json_value *
 utillib_slist_json_array_create(struct utillib_slist const *self,
-    utillib_json_value_create_func_t create_func);
+                                utillib_json_value_create_func_t create_func);
 
 #endif /* UTILLIB_SLIST_H */

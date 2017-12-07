@@ -32,21 +32,14 @@
 #include "config.h" /* for bool */
 #include <stddef.h> /* size_t */
 
-#define UTILLIB_VECTOR_HAS_NEXT(B, E) ((B) != (E))
-#define UTILLIB_VECTOR_BEGIN(V) ((V)->begin)
-#define UTILLIB_VECTOR_END(V) ((V)->end)
-
 /**
  * \macro UTILLIB_VECTOR_FOREACH
  * Inline triversal code for vector.
- * Notes that it is not suitable for
- * nested invoke.
  */
 
-#define UTILLIB_VECTOR_FOREACH(T, X, V)                                        \
-  T X;                                                                         \
+#define UTILLIB_VECTOR_FOREACH(X, V)                                           \
   for (void const **_begin = (V)->begin, **_end = (V)->end;                    \
-       _begin != _end && ((X = (T)*_begin) || 1); ++_begin)
+       _begin != _end && ((X = *_begin) || 1); ++_begin)
 
 /** \brief the element of utillib_vector is generic pointer */
 struct utillib_vector {
