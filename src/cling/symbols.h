@@ -26,6 +26,7 @@
 
 #define cling_symbol_cast(code)                                                \
   ((code) == UT_SYM_EOF ? "EOF" : cling_symbol_kind_tostring((code)))
+#define CL_MASK(VAL, MSK) ((VAL) & ~(MSK))
 
 UTILLIB_ENUM_BEGIN(cling_symbol_kind)
 

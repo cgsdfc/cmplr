@@ -59,6 +59,7 @@ static void rd_parser_skip_target_init(struct cling_rd_parser *self, ...) {
        tar = va_arg(ap, int), ++i) {
     self->tars[i] = tar;
   }
+  self->tars[RD_PARSER_SKIP_MAX-1]=-1;
   va_end(ap);
 }
 

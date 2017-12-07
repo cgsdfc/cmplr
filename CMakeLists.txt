@@ -144,6 +144,7 @@ add_library(cling
   ./src/cling/ast_build.c
   ./src/cling/ast_pretty.c
   ./src/cling/ast_check.c
+  ./src/cling/ast_ir.c
   ./src/cling/error.c
   ./src/cling/opg_parser.c
   )	

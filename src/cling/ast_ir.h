@@ -103,7 +103,9 @@
  * 原则上均按照“x = y op z”形式的中缀表达式进行表达。 */
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
-UTILLIB_ENUM_ELEM(OP_DEF)
+UTILLIB_ENUM_ELEM(OP_DEFVAR)
+UTILLIB_ENUM_ELEM(OP_DEFUNC)
+UTILLIB_ENUM_ELEM(OP_DEFCON)
 UTILLIB_ENUM_ELEM(OP_PARA)
 UTILLIB_ENUM_ELEM(OP_RET)
 UTILLIB_ENUM_ELEM(OP_PUSH)
@@ -139,13 +141,9 @@ UTILLIB_ENUM_ELEM(CL_BYTE)
 UTILLIB_ENUM_ELEM(CL_WORD)
 UTILLIB_ENUM_END(cling_opcode_kind);
 
-struct cling_operand {
-  int kind;
-  int wide;
-  union {
-    char const *text;
-    unsigned int value;
-  };
+union cling_ast_operand {
+  char const *text;
+  unsigned int scalar;
 };
 
 struct cling_polan_ir {
@@ -155,6 +153,7 @@ struct cling_polan_ir {
 struct cling_ast_ir {
   int opcode;
   union cling_ast_operand operands[CLING_AST_IR_MAX];
+  int info[CLING_AST_IR_MAX];
 };
 
 struct cling_ir_gen {
@@ -165,18 +164,19 @@ struct cling_ir_gen {
   struct cling_program *program;
 };
 
-struct cling_function {
-  char const *name;
+struct cling_ast_function {
+  char *name;
   unsigned int temps;
   struct utillib_vector instrs;
 };
 
-struct cling_program {
+struct cling_ast_program {
   struct utillib_vector code;
   struct utillib_hashmap label_map;
 };
 
-void cling_polan_ir_init(struct cling_polan_ir *self);
+void cling_polan_ir_init(struct cling_polan_ir *self,
+    struct utillib_json_value const* root);
 
 void cling_polan_ir_destroy(struct cling_polan_ir *self);
 
