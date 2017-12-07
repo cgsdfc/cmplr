@@ -230,7 +230,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
                       struct utillib_token_scanner *input) {
   switch (setjmp(self->fatal_saver)) {
   case 0:
-    return mock(self, input);
+    return program(self, input);
   default:
     if (self->root)
       utillib_json_value_destroy(self->root);
@@ -1250,15 +1250,23 @@ statement(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
     object = composite_stmt_nolookahead(self, input, COMP_NO_SCOPE_AND_DECL);
     goto return_object;
   case SYM_SEMI:
-  return_null:
+    /*
+     * It is important that the empty
+     * statement is retained as json_null.
+     * because it is critical to grammatical
+     * correctness which the AST should reflect.
+     */
     utillib_token_scanner_shiftaway(input);
-    return NULL;
+    return utillib_json_null_create();
   default:
     rd_parser_error_push_back(self, cling_unexpected_error(input, context));
     goto unexpected;
   }
 return_object:
   return object;
+return_null:
+  utillib_token_scanner_shiftaway(input);
+  return NULL;
 
 unexpected:
   rd_parser_skip_init(self,SYM_SEMI);
