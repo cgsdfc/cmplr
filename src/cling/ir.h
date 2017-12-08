@@ -146,6 +146,12 @@ UTILLIB_ENUM_ELEM_INIT(CL_LABL, 128)
 UTILLIB_ENUM_ELEM_INIT(CL_STRG, 256)
 UTILLIB_ENUM_END(cling_operand_info_kind);
 
+struct cling_ast_ir_global {
+  struct cling_symbol_table *symbol_table;
+  unsigned int temps;
+  unsigned int instrs;
+};
+
 union cling_ast_operand {
   char const *text;
   int scalar;

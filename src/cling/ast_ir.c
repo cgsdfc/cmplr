@@ -74,9 +74,8 @@ static void emit_printf_stmt(
       ir->operands[0].text=value->as_ptr;
       ir->info[0]=CL_STRG;
     } else {
-      cling_polish_ir_init(&polish_ir, global->temps, object);
+      cling_polish_ir_init(&polish_ir, object, global);
       cling_polish_ir_emit(&polish_ir, instrs);
-      global->temps=polish_ir.temps;
       ir=emit_ir(OP_WRITE);
       cling_polish_ir_result(&polish_ir, ir, 0);
       cling_polish_ir_destroy(&polish_ir);
@@ -125,11 +124,10 @@ static void emit_for_stmt(
   step = utillib_json_object_at(self, "step");
   stmt = utillib_json_object_at(self, "stmt");
 
-  cling_polish_ir_init(&polish_ir, global->temps, init);
+  cling_polish_ir_init(&polish_ir, init,global );
   cling_polish_ir_emit(&polish_ir, instrs);
   tricky_jump=emit_ir(OP_JMP);
   utillib_vector_push_back(instrs, tricky_jump);
-  global->temps=polish_ir.temps;
   /*
    * The JTA of loop_jump
    * is the next instr of the tricky_jump,
@@ -141,7 +139,7 @@ static void emit_for_stmt(
   /*
    * cond.
    */
-  cling_polish_ir_init(&polish_ir, global->temps, cond);
+  cling_polish_ir_init(&polish_ir, cond,global );
   cling_polish_ir_emit(&polish_ir, instrs);
   cond_test=emit_ir(OP_BEZ);
   /*
@@ -155,7 +153,6 @@ static void emit_for_stmt(
    * body.
    */
   tricky_jump->operands[0].scalar=utillib_vector_size(instrs);
-  global->temps=polish_ir.temps;
   cling_polish_ir_destroy(&polish_ir);
 
   /*
@@ -166,9 +163,8 @@ static void emit_for_stmt(
   /*
    * step
    */
-  cling_polish_ir_init(&polish_ir, global->temps, step);
+  cling_polish_ir_init(&polish_ir, step, global);
   cling_polish_ir_emit(&polish_ir, instrs);
-  global->temps=polish_ir.temps;
   /*
    * The JTA of cond_test is the next instr 
    * of loop_jump. 
@@ -237,7 +233,7 @@ static void emit_switch_stmt(
   utillib_vector_init(&break_jumps);
   expr=utillib_json_object_at(self, "expr");
   case_clause=utillib_json_object_at(self, "cases");
-  cling_polish_ir_init(&polish_ir, global->temps, expr);
+  cling_polish_ir_init(&polish_ir, expr, global);
   cling_polish_ir_emit(&polish_ir, instrs);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, case_clause) {
@@ -283,8 +279,7 @@ static void emit_expr_stmt(
   struct cling_polish_ir polish_ir;
 
   expr=utillib_json_object_at(self, "expr");
-  cling_polish_ir_init(&polish_ir, global->temps, expr);
-  global->temps=polish_ir.temps;
+  cling_polish_ir_init(&polish_ir, expr, global);
   cling_polish_ir_emit(&polish_ir, instrs);
   cling_polish_ir_destroy(&polish_ir);
 }
@@ -301,10 +296,9 @@ static void emit_return_stmt(
   expr=utillib_json_object_at(self, "expr");
   ir=emit_ir(OP_RET);
   if (expr) {
-    cling_polish_ir_init(&polish_ir, global->temps, expr);
+    cling_polish_ir_init(&polish_ir, expr, global);
     cling_polish_ir_emit(&polish_ir, instrs);
     cling_polish_ir_result(&polish_ir, ir, 0);
-    global->temps=polish_ir.temps;
     cling_polish_ir_destroy(&polish_ir);
   } else {
     ir->info[0]=CL_NULL;
@@ -324,9 +318,8 @@ static void emit_if_stmt(
   struct cling_ast_ir *skip_branch, *jump;
 
   expr=utillib_json_object_at(self, "expr");
-  cling_polish_ir_init(&polish_ir, global->temps, expr);
+  cling_polish_ir_init(&polish_ir, expr, global);
   cling_polish_ir_emit(&polish_ir, instrs);
-  global->temps=polish_ir.temps;
 
   then_clause=utillib_json_object_at(self, "then");
   skip_branch=emit_ir(OP_BEZ);
@@ -500,6 +493,7 @@ void cling_ast_ir_emit_program(
   maybe_emit_decls(self, &program->init_code);
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
     func=cling_ast_ir_emit_function(object, &global);
+    cling_ast_ir_print(&func->instrs);
     utillib_vector_push_back(&program->funcs, func);
   }
 }

@@ -125,8 +125,8 @@ static void polish_ir_emit_factor(
 static struct utillib_json_value *
 polish_ir_make_temp(struct cling_polish_ir *self) {
   struct utillib_json_value *temp;
-  temp=utillib_json_int_create(&self->temps);
-  ++self->temps;
+  temp=utillib_json_int_create(&self->global->temps);
+  ++self->global->temps;
   return temp;
 }
 
@@ -281,9 +281,11 @@ cling_polish_ir_json_array_create(struct cling_polish_ir const *self) {
   return array;
 }
 
-void cling_polish_ir_init(struct cling_polish_ir *self,  int temps,
-                         struct utillib_json_value const *root) {
-  self->temps=temps;
+void cling_polish_ir_init(struct cling_polish_ir *self,
+    struct utillib_json_value const* root,
+    struct cling_ast_ir_global * global)
+{
+  self->global=global;
   utillib_vector_init(&self->stack);
   utillib_vector_init(&self->opstack);
   polish_ir_post_order(self, root);

@@ -35,12 +35,12 @@ struct cling_polish_ir {
   /*
    * From which temps counter starts
    */
-  int temps;
+  struct cling_ast_ir_global *global;
 };
 
 void cling_polish_ir_init(struct cling_polish_ir *self,
-    int temps,
-    struct utillib_json_value const* root);
+    struct utillib_json_value const* root,
+    struct cling_ast_ir_global * global);
 
 void cling_polish_ir_destroy(struct cling_polish_ir *self);
 

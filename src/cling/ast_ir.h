@@ -27,11 +27,6 @@
  * quarternary form of our code.
  * OMG, such a weird name!
  */
-struct cling_ast_ir_global {
-  unsigned int temps;
-  unsigned int instrs;
-};
-
 
 void cling_ast_ir_emit_program(
     struct utillib_json_value const *self,
