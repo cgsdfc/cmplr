@@ -101,8 +101,6 @@ UTILLIB_ENUM_ELEM(OP_DEFCON)
 UTILLIB_ENUM_ELEM(OP_PARA)
 UTILLIB_ENUM_ELEM(OP_RET)
 UTILLIB_ENUM_ELEM(OP_PUSH)
-UTILLIB_ENUM_ELEM(OP_VAR)
-UTILLIB_ENUM_ELEM(OP_CONST)
 UTILLIB_ENUM_ELEM(OP_ADD)
 UTILLIB_ENUM_ELEM(OP_SUB)
 UTILLIB_ENUM_ELEM(OP_BNZ)
@@ -122,6 +120,7 @@ UTILLIB_ENUM_ELEM(OP_GE)
 UTILLIB_ENUM_ELEM(OP_STORE)
 UTILLIB_ENUM_ELEM(OP_WRITE)
 UTILLIB_ENUM_ELEM(OP_READ)
+UTILLIB_ENUM_ELEM(OP_NOP)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
 
 /*
@@ -134,18 +133,18 @@ UTILLIB_ENUM_END(cling_ast_opcode_kind);
  * in a form similar to instruction.
  */
 
-UTILLIB_ENUM_BEGIN(cling_operand_kind)
-UTILLIB_ENUM_ELEM(CL_STRG)
-UTILLIB_ENUM_ELEM(CL_NAME)
-UTILLIB_ENUM_ELEM(CL_TEMP)
-UTILLIB_ENUM_ELEM(CL_IMME)
-UTILLIB_ENUM_ELEM(CL_LABL)
-UTILLIB_ENUM_ELEM(CL_GLBL)
-UTILLIB_ENUM_ELEM(CL_LOCL)
-UTILLIB_ENUM_ELEM(CL_BYTE)
-UTILLIB_ENUM_ELEM(CL_WORD)
-UTILLIB_ENUM_ELEM(CL_NULL)
-UTILLIB_ENUM_END(cling_opcode_kind);
+UTILLIB_ENUM_BEGIN(cling_operand_info_kind)
+UTILLIB_ENUM_ELEM_INIT(CL_NULL,0)
+UTILLIB_ENUM_ELEM_INIT(CL_BYTE, 1)
+UTILLIB_ENUM_ELEM_INIT(CL_WORD, 2)
+UTILLIB_ENUM_ELEM_INIT(CL_GLBL, 4)
+UTILLIB_ENUM_ELEM_INIT(CL_LOCL, 8)
+UTILLIB_ENUM_ELEM_INIT(CL_NAME, 16)
+UTILLIB_ENUM_ELEM_INIT(CL_TEMP, 32)
+UTILLIB_ENUM_ELEM_INIT(CL_IMME, 64)
+UTILLIB_ENUM_ELEM_INIT(CL_LABL, 128)
+UTILLIB_ENUM_ELEM_INIT(CL_STRG, 256)
+UTILLIB_ENUM_END(cling_operand_info_kind);
 
 union cling_ast_operand {
   char const *text;
@@ -170,22 +169,65 @@ struct cling_ast_program {
   struct utillib_vector funcs;
 };
 
-struct cling_ast_ir * emit_ir(int type);
+struct cling_ast_ir * 
+emit_ir(int type);
 
+/*
+ * read name
+ */
+struct cling_ast_ir *
+emit_read(char const *name);
+
+/*
+ * write string | temp
+ */
+
+/*
+ * defcon type name value
+ */
 struct cling_ast_ir *
 emit_defcon(int type, char const *name, char const *value);
 
+/*
+ * defvar type name [extend]
+ */
 struct cling_ast_ir *
 emit_defvar(int type, char const* name, char const *extend);
 
+/*
+ * defunc type name
+ */
 struct cling_ast_ir *
 emit_defunc(int type, char const *name);
 
+/*
+ * para type name
+ */
 struct cling_ast_ir *
 emit_para(int type, char const *name);
 
+/*
+ * call [temp] name
+ */
 struct cling_ast_ir *
 emit_call(int value, char const *name);
+
+int emit_type(size_t type);
+
+struct cling_ast_ir *
+emit_nop(void);
+
+/*
+ * push type name | temp | imme
+ */
+
+/*
+ * jmp relative-address
+ */
+
+/*
+ * bez name | temp | imme relative-address
+ */
 
 void cling_ast_function_init(struct cling_ast_function *self, char const *name);
 
@@ -195,5 +237,11 @@ void cling_ast_function_push_back(struct cling_ast_function *self,
     struct cling_ast_ir const* ast_ir);
 
 void cling_ast_program_init(struct cling_ast_program *self);
+
+void cling_ast_program_destroy(struct cling_ast_program *self);
+
+void cling_ast_ir_print(struct utillib_vector const *instrs);
+
+void cling_ast_program_print(struct cling_ast_program const* self);
 
 #endif /* CLING_IR_H */

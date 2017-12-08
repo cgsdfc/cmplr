@@ -97,8 +97,15 @@ static void polish_ir_emit_factor(
 
   if (var->kind == UT_JSON_INT) {
     ir->operands[index].scalar=var->as_int;
-    ir->info[index]=CL_TEMP;
+    /*
+     * Temps are all words.
+     */
+    ir->info[index]=CL_TEMP | CL_WORD;
   } else {
+    /*
+     * TODO: lookup symbol_table to
+     * figure out its name and scope.
+     */
     type=utillib_json_object_at(var, "type");
     value=utillib_json_object_at(var, "value");
     ir->operands[index].text=value->as_ptr;
@@ -121,6 +128,11 @@ polish_ir_make_temp(struct cling_polish_ir *self) {
   return temp;
 }
 
+/*
+ * TODO: use symbol_table 
+ * to figure out void and non-void
+ * functions.
+ */
 static void polish_ir_emit_call(struct cling_polish_ir *self,
     struct utillib_vector *instrs)
 {
@@ -237,7 +249,7 @@ void cling_polish_ir_emit(struct cling_polish_ir *self,
   }
 }
 
-void cling_polish_ir_result(struct cling_polish_ir *self,
+void cling_polish_ir_result(struct cling_polish_ir const *self,
     struct cling_ast_ir *ir, int index)
 {
   struct utillib_json_value *result=utillib_vector_back(&self->opstack);
@@ -266,8 +278,7 @@ void cling_polish_ir_init(struct cling_polish_ir *self,  int temps,
 
 void cling_polish_ir_destroy(struct cling_polish_ir *self) {
   utillib_vector_destroy(&self->stack);
-  utillib_vector_destroy_owning(&self->opstack,
-      utillib_json_value_destroy);
+  utillib_vector_destroy(&self->opstack);
 }
 
 

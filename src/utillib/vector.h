@@ -71,6 +71,8 @@ void utillib_vector_reserve(struct utillib_vector *self, size_t);
 void utillib_vector_set(struct utillib_vector *self, size_t, void const *);
 void utillib_vector_clear(struct utillib_vector *self);
 void utillib_vector_fill(struct utillib_vector *self, void const *data);
+void utillib_vector_append(struct utillib_vector *self, 
+    struct utillib_vector const* other);
 
 struct utillib_json_value *utillib_vector_json_array_create(
     struct utillib_vector const *self,

@@ -60,10 +60,11 @@ static void emit_printf_stmt(
   struct cling_polish_ir polish_ir;
 
   arglist=utillib_json_object_at(self, "arglist");
+
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     type=utillib_json_object_at(object, "type");
     if (type && type->as_size_t == SYM_STRING) {
-      value=utillib_json_object_at(self, "value");
+      value=utillib_json_object_at(object, "value");
       ir=emit_ir(OP_WRITE);
       ir->operands[0].text=value->as_ptr;
       ir->info[0]=CL_STRG;
@@ -98,9 +99,8 @@ static void emit_for_stmt(
    */
   struct cling_ast_ir *tricky_jump, *cond_test, *loop_jump;
   struct cling_polish_ir polish_ir;
-  int loop_jump_jta, tricky_jump_jta, initial;
+  int loop_jump_jta, tricky_jump_jta;
 
-  initial=utillib_vector_size(instrs);
   init = utillib_json_object_at(self, "init");
   cond = utillib_json_object_at(self, "cond");
   step = utillib_json_object_at(self, "step");
@@ -116,7 +116,7 @@ static void emit_for_stmt(
    * is the next instr of the tricky_jump,
    * which is also the beginning of cond_test.
    */
-  loop_jump_jta=utillib_vector_size(instrs)+1-initial;
+  loop_jump_jta=utillib_vector_size(instrs)+1;
   cling_polish_ir_destroy(&polish_ir);
   
   /*
@@ -135,7 +135,7 @@ static void emit_for_stmt(
    * cond_test, which is also the beginning of
    * body.
    */
-  tricky_jump->operands[0].scalar=utillib_vector_size(instrs)+1-initial;
+  tricky_jump->operands[0].scalar=utillib_vector_size(instrs)+1;
   global->temps=polish_ir.temps;
   cling_polish_ir_destroy(&polish_ir);
 
@@ -154,7 +154,7 @@ static void emit_for_stmt(
    * The JTA of cond_test is the next instr 
    * of step, which goes out of the for-stmt.
    */
-  cond_test->operands[0].scalar=utillib_vector_size(instrs)+1-initial;
+  cond_test->operands[0].scalar=utillib_vector_size(instrs)+1;
   loop_jump=emit_ir(OP_JMP);
   loop_jump->operands[0].scalar=loop_jump_jta;
   utillib_vector_push_back(instrs, loop_jump);
@@ -163,6 +163,25 @@ static void emit_for_stmt(
    * Clean up
    */
   cling_polish_ir_destroy(&polish_ir);
+}
+
+/*
+ * A case_gaurd is the first instr of a
+ * case clause. 
+ * It is a OP_BNE taking the switch-expr and
+ * case_label as operands to compare and its
+ * BTA is the next case_gaurd.
+ * The function creates a case_gaurd without
+ * BTA which should be filled in later.
+ */
+static struct cling_ast_ir *
+emit_case_gaurd(size_t type, char const *value, 
+    struct cling_polish_ir const* polish_ir) {
+  struct cling_ast_ir *case_gaurd=emit_ir(OP_BNE);
+  case_gaurd->operands[0].text=value;
+  case_gaurd->info[0]=emit_wide(type) | CL_IMME;
+  cling_polish_ir_result(polish_ir, case_gaurd, 1);
+  return case_gaurd;
 }
 
 static void emit_switch_stmt(
@@ -180,7 +199,6 @@ static void emit_switch_stmt(
    * the end of switch_stmt later.
    */
   struct utillib_vector break_jumps;
-  const int initial=utillib_vector_size(instrs);
   int break_jump_jta;
 
   utillib_vector_init(&break_jumps);
@@ -195,13 +213,13 @@ static void emit_switch_stmt(
     if (case_)  {
       value=utillib_json_object_at(case_, "value");
       type=utillib_json_object_at(case_, "type");
-      case_gaurd=emit_ir(OP_BNE);
-      case_gaurd->operands[0].text=value->as_ptr;
-      case_gaurd->info[0]=type->as_size_t;
-      cling_polish_ir_result(&polish_ir, case_gaurd, 1);
+      case_gaurd=emit_case_gaurd(type->as_size_t, value->as_ptr, &polish_ir);
       utillib_vector_push_back(instrs, case_gaurd);
       emit_statement(stmt, global, instrs);
-      case_gaurd->operands[2].scalar=utillib_vector_size(instrs)-initial+1;
+      /*
+       * Fills in the BTA of case_gaurd.
+       */
+      case_gaurd->operands[2].scalar=utillib_vector_size(instrs)+1;
       break_jump=emit_ir(OP_JMP);
       utillib_vector_push_back(instrs, break_jump);
       utillib_vector_push_back(&break_jumps, break_jump);
@@ -210,7 +228,7 @@ static void emit_switch_stmt(
        * default clause does not need a break_jump.
        */
       emit_statement(stmt, global, instrs);
-      break_jump_jta=utillib_vector_size(instrs)+1-initial;
+      break_jump_jta=utillib_vector_size(instrs)+1;
     }
   }
 
@@ -356,7 +374,7 @@ static void emit_var_decls(
       ir=emit_defvar(type->as_size_t, name->as_ptr, extend->as_ptr);
     else
       ir=emit_defvar(type->as_size_t, name->as_ptr, NULL);
-      utillib_vector_push_back(instrs, ir);
+    utillib_vector_push_back(instrs, ir);
   }
 }
 
@@ -380,14 +398,16 @@ static void emit_const_decls(
 static void maybe_emit_decls(
     struct utillib_json_value const *self,
     struct utillib_vector *instrs) {
-  struct utillib_json_value *const_decls, *var_decls;
+  struct utillib_json_value *object, *const_decls, *var_decls;
 
   const_decls=utillib_json_object_at(self, "const_decls");
   var_decls=utillib_json_object_at(self, "var_decls");
-  if (const_decls)
-    emit_const_decls(const_decls,instrs );
+  if (const_decls) 
+    UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) 
+      emit_const_decls(object ,instrs );
   if (var_decls) 
-    emit_var_decls(var_decls,instrs );
+    UTILLIB_JSON_ARRAY_FOREACH(object, var_decls)
+      emit_var_decls(object,instrs );
 }
 
 
@@ -399,9 +419,10 @@ static void emit_composite(
   struct utillib_json_value const *object, *stmts;
   stmts=utillib_json_object_at(self, "stmts");
   maybe_emit_decls(self, instrs);
-  UTILLIB_JSON_ARRAY_FOREACH(object, stmts) {
-    emit_statement(object, global, instrs);
-  }
+  if (stmts) 
+    UTILLIB_JSON_ARRAY_FOREACH(object, stmts) {
+      emit_statement(object, global, instrs);
+    }
 }
 
 /*
@@ -418,7 +439,7 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
   struct utillib_json_value const *arg;
 
   cling_ast_function_init(self, name->as_ptr);
-  cling_ast_function_push_back(self,
+  utillib_vector_push_back(&self->instrs,
       emit_defunc(type->as_size_t, name->as_ptr));
 
   UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
@@ -429,6 +450,7 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
         emit_para(type->as_size_t, name->as_ptr));
   }
   emit_composite(comp, global, &self->instrs);
+  utillib_vector_push_back(&self->instrs, emit_nop());
   return self;
 }
 

@@ -26,5 +26,7 @@
 #include <cling/rd_parser.h>
 #include <cling/scanner.h>
 #include <cling/symbol_table.h>
+#include <cling/ast_ir.h>
+#include <cling/ir.h>
 
 #endif /* CLING_CLING_H */

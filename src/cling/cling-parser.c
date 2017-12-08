@@ -27,7 +27,7 @@ static struct utillib_token_scanner cling_scanner;
 static struct cling_rd_parser cling_parser;
 static struct cling_symbol_table cling_symbol_table;
 static struct utillib_json_value *json_ast;
-
+static struct cling_ast_program program;
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -42,13 +42,16 @@ int main(int argc, char *argv[]) {
   if (!json_ast) {
     goto cleanup;
   }
+  cling_ast_ir_emit_program(json_ast, &program);
+  cling_ast_program_print(&program);
+
 /* utillib_json_pretty_print(json_ast); */
 
 cleanup:
   cling_rd_parser_report_errors(&cling_parser);
   if (json_ast)
     utillib_json_value_destroy(json_ast);
-
+  cling_ast_program_destroy(&program);
   cling_rd_parser_destroy(&cling_parser);
   cling_symbol_table_destroy(&cling_symbol_table);
   cling_scanner_destroy(&cling_scanner);

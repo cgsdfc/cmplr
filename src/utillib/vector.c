@@ -271,3 +271,10 @@ utillib_vector_json_array_create(struct utillib_vector const *self,
   }
   return array;
 }
+void utillib_vector_append(struct utillib_vector *self, 
+    struct utillib_vector const* other)
+{
+  void const *elem;
+  UTILLIB_VECTOR_FOREACH(elem, other)
+    utillib_vector_push_back(self, elem);
+}

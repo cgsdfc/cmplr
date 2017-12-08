@@ -54,7 +54,7 @@ void cling_polish_ir_emit(struct cling_polish_ir *self,
  * Put the final result of polish_ir into
  * operands[index].
  */
-void cling_polish_ir_result(struct cling_polish_ir *self,
+void cling_polish_ir_result(struct cling_polish_ir const *self,
     struct cling_ast_ir *ir, int index);
 
 struct utillib_json_value *
