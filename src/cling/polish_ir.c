@@ -70,15 +70,17 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
   }
   lhs = utillib_json_object_at(node, "lhs");
   rhs = utillib_json_object_at(node, "rhs");
-  polish_ir_post_order(self, lhs);
   if (op->as_size_t == SYM_RP) {
     /*
      * call_expr case
+     * first arglist, then name.
      */
     UTILLIB_JSON_ARRAY_FOREACH(arg, rhs) {
       polish_ir_post_order(self, arg);
     }
+    polish_ir_post_order(self, lhs);
   } else {
+    polish_ir_post_order(self, lhs);
     polish_ir_post_order(self, rhs);
   }
   utillib_vector_push_back(&self->stack, node);
@@ -142,6 +144,14 @@ static void polish_ir_emit_call(struct cling_polish_ir *self,
   lhs=utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
   while (!utillib_vector_empty(&self->opstack)) {
+    /*
+     * We use C's Reversed push order here.
+     * That is, foo(a, b, c) will become,
+     * push c
+     * push b
+     * push a
+     * call foo
+     */
     arg=utillib_vector_back(&self->opstack);
     utillib_vector_pop_back(&self->opstack);
     ir=emit_ir(OP_PUSH);
@@ -163,11 +173,14 @@ static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
   struct utillib_json_value *lhs, *rhs, *temp;
   struct cling_ast_ir *ir;
 
-  lhs=utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
   rhs=utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
+  lhs=utillib_vector_back(&self->opstack);
+  utillib_vector_pop_back(&self->opstack);
   switch(op) {
+    case SYM_EQ:
+      ir=emit_ir(OP_STORE);
+      break;
     case SYM_ADD:
       ir=emit_ir(OP_ADD);
       break;
@@ -180,7 +193,7 @@ static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
     case SYM_DIV:
       ir=emit_ir(OP_DIV);
       break;
-    case SYM_EQ:
+    case SYM_DEQ:
       ir=emit_ir(OP_EQ);
       break;
     case SYM_NE:

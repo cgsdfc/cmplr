@@ -32,6 +32,11 @@ static void emit_statement(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs);
 
+static void emit_composite(
+    struct utillib_json_value const *self,
+    struct cling_ast_ir_global *global,
+    struct utillib_vector *instrs);
+
 static void emit_scanf_stmt(
     struct utillib_json_value const *self,
     struct cling_ast_ir_global *global,
@@ -80,6 +85,20 @@ static void emit_printf_stmt(
   }
 }
 
+/*
+ * An ordinary for-stmt is:
+ * <init>
+ * tricky_jump <body>
+ * <cond>
+ * cond_test: bez cond_expr <endfor>
+ * <body>
+ * <step>
+ * loop_jump <cond>
+ * <endfor>
+ * 
+ * Notes, tricky_jump is inserted
+ * for special purpose, see below.
+ */
 static void emit_for_stmt(
     struct utillib_json_value const *self,
     struct cling_ast_ir_global *global,
@@ -116,7 +135,7 @@ static void emit_for_stmt(
    * is the next instr of the tricky_jump,
    * which is also the beginning of cond_test.
    */
-  loop_jump_jta=utillib_vector_size(instrs)+1;
+  loop_jump_jta=utillib_vector_size(instrs);
   cling_polish_ir_destroy(&polish_ir);
   
   /*
@@ -135,7 +154,7 @@ static void emit_for_stmt(
    * cond_test, which is also the beginning of
    * body.
    */
-  tricky_jump->operands[0].scalar=utillib_vector_size(instrs)+1;
+  tricky_jump->operands[0].scalar=utillib_vector_size(instrs);
   global->temps=polish_ir.temps;
   cling_polish_ir_destroy(&polish_ir);
 
@@ -152,12 +171,12 @@ static void emit_for_stmt(
   global->temps=polish_ir.temps;
   /*
    * The JTA of cond_test is the next instr 
-   * of step, which goes out of the for-stmt.
+   * of loop_jump. 
    */
-  cond_test->operands[0].scalar=utillib_vector_size(instrs)+1;
   loop_jump=emit_ir(OP_JMP);
   loop_jump->operands[0].scalar=loop_jump_jta;
   utillib_vector_push_back(instrs, loop_jump);
+  cond_test->operands[1].scalar=utillib_vector_size(instrs);
 
   /*
    * Clean up
@@ -173,6 +192,20 @@ static void emit_for_stmt(
  * BTA is the next case_gaurd.
  * The function creates a case_gaurd without
  * BTA which should be filled in later.
+ */
+/*
+ * Ordinary switch-case statement
+ * can be interpreted as:
+ * <eval-switch-expr>
+ * bne <case-label-1> <switch-expr> <next-bne>
+ * <case-1-stmt>
+ * break_jump <endswitch>
+ * bne <case-label-2> <switch-expr> <default>
+ * <case-2-stmt>
+ * break_jump <endswitch>
+ * <default>:
+ * <default-stmt>
+ * <endswitch>
  */
 static struct cling_ast_ir *
 emit_case_gaurd(size_t type, char const *value, 
@@ -216,19 +249,20 @@ static void emit_switch_stmt(
       case_gaurd=emit_case_gaurd(type->as_size_t, value->as_ptr, &polish_ir);
       utillib_vector_push_back(instrs, case_gaurd);
       emit_statement(stmt, global, instrs);
-      /*
-       * Fills in the BTA of case_gaurd.
-       */
-      case_gaurd->operands[2].scalar=utillib_vector_size(instrs)+1;
       break_jump=emit_ir(OP_JMP);
       utillib_vector_push_back(instrs, break_jump);
       utillib_vector_push_back(&break_jumps, break_jump);
+      /*
+       * Fills in the BTA of case_gaurd, which
+       * is the next instr of break_jump.
+       */
+      case_gaurd->operands[2].scalar=utillib_vector_size(instrs);
     } else {
       /*
        * default clause does not need a break_jump.
        */
       emit_statement(stmt, global, instrs);
-      break_jump_jta=utillib_vector_size(instrs)+1;
+      break_jump_jta=utillib_vector_size(instrs);
     }
   }
 
@@ -287,8 +321,7 @@ static void emit_if_stmt(
 {
   struct utillib_json_value *expr, *then_clause, *else_clause;
   struct cling_polish_ir polish_ir;
-  struct utillib_vector else_ir, then_ir;
-  struct cling_ast_ir *ir;
+  struct cling_ast_ir *skip_branch, *jump;
 
   expr=utillib_json_object_at(self, "expr");
   cling_polish_ir_init(&polish_ir, global->temps, expr);
@@ -296,30 +329,20 @@ static void emit_if_stmt(
   global->temps=polish_ir.temps;
 
   then_clause=utillib_json_object_at(self, "then");
-  utillib_vector_init(&then_ir);
-  emit_statement(then_clause, global, &then_ir);
-  ir=emit_ir(OP_BNZ);
-  cling_polish_ir_result(&polish_ir, ir, 0);
-  ir->operands[1].scalar=utillib_vector_size(&then_ir)+1;
-  utillib_vector_push_back(instrs, ir);
+  skip_branch=emit_ir(OP_BEZ);
+  cling_polish_ir_result(&polish_ir, skip_branch, 0);
+  utillib_vector_push_back(instrs, skip_branch);
 
+  emit_statement(then_clause, global, instrs);
   else_clause=utillib_json_object_at(self, "else");
   if (else_clause) {
-    utillib_vector_init(&else_ir);
-    emit_statement(self, global, &else_ir);
-    /*
-     * Jump over else_clause directly after
-     * then_clause
-     */
-    ir=emit_ir(OP_JMP);
-    ir->operands[0].scalar=utillib_vector_size(&else_ir)+1;
-    utillib_vector_push_back(&then_ir , ir);
-  }
-  utillib_vector_append(instrs, &then_ir);
-  utillib_vector_destroy(&then_ir);
-  if (else_clause) {
-    utillib_vector_append(instrs, &else_ir);
-    utillib_vector_destroy(&else_ir);
+    jump=emit_ir(OP_JMP);
+    utillib_vector_push_back(instrs, jump);
+    skip_branch->operands[1].scalar=utillib_vector_size(instrs);
+    emit_statement(else_clause, global, instrs);
+    jump->operands[0].scalar=utillib_vector_size(instrs);
+  } else {
+    skip_branch->operands[1].scalar=utillib_vector_size(instrs);
   }
   cling_polish_ir_destroy(&polish_ir);
 }
@@ -353,7 +376,11 @@ static void emit_statement(
     case SYM_EXPR_STMT:
       emit_expr_stmt(self, global, instrs);
       return;
+    case SYM_COMP_STMT:
+      emit_composite(self, global, instrs);
+      return;
     default:
+      puts(cling_symbol_kind_tostring(type->as_size_t));
       assert(false);
   }
 }

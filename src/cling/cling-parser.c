@@ -39,16 +39,17 @@ int main(int argc, char *argv[]) {
   cling_rd_parser_init(&cling_parser, &cling_symbol_table);
 
   json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
-  if (!json_ast) {
+  if (cling_rd_parser_has_errors(&cling_parser)) {
+    cling_rd_parser_report_errors(&cling_parser);
     goto cleanup;
   }
+
   cling_ast_ir_emit_program(json_ast, &program);
   cling_ast_program_print(&program);
 
 /* utillib_json_pretty_print(json_ast); */
 
 cleanup:
-  cling_rd_parser_report_errors(&cling_parser);
   if (json_ast)
     utillib_json_value_destroy(json_ast);
   cling_ast_program_destroy(&program);

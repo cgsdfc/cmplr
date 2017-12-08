@@ -386,6 +386,14 @@ static void write_tostring(struct cling_ast_ir const* self,
   factor_tostring(self, 0, string);
 }
 
+static void store_tostring(struct cling_ast_ir const* self,
+    struct utillib_string *string) {
+  utillib_string_append(string, "store ");
+  factor_tostring(self, 0, string);
+  utillib_string_append(string, " ");
+  factor_tostring(self, 1, string);
+}
+
 void cling_ast_ir_tostring(struct cling_ast_ir const* self,
     struct utillib_string *string)
 {
@@ -433,6 +441,12 @@ void cling_ast_ir_tostring(struct cling_ast_ir const* self,
       return;
     case OP_WRITE:
       write_tostring(self, string);
+      return;
+    case OP_STORE:
+      store_tostring(self, string);
+      return;
+    case OP_PUSH:
+      push_tostring(self, string);
       return;
     default:
       puts(cling_ast_opcode_kind_tostring(self->opcode));
