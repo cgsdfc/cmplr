@@ -22,5 +22,178 @@
 #define CLING_IR_H
 
 #include <utillib/enum.h>
+#include <utillib/vector.h>
+
+/* 三、 中间代码格式 */
+/* 原则上按照中缀表达式格式输出中间代码，
+ * 即，形如x = y op z，其中x为结果，y为左操作数，z为右操作数，
+ * op为操作符。以下根据基本语法现象举例说明。 */
+/* 1. 函数声明 */
+/* 源码形如： */
+/* 	int foo( int a, int b, int c, int d) */
+/* 中间代码： */
+/* 	int foo() */
+/* 	para int a */
+/* 	para int b */
+/* 	para int c */
+/* 	para int d */
+/* 2. 函数调用 */
+/* 源码形如： */
+/* 	i = tar(x,y) */
+/* 中间代码： */
+/* 	push x */
+/* 	push y */
+/* 	call tar */
+/* 	i = RET */
+/* 3. 函数返回 */
+/* 源码形如： */
+/* 	return (x) */
+/* 中间代码： */
+/* 	ret x */
+/* 4. 变量声明 */
+/* 源码形如： */
+/* 	int i, j; */
+/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
+/* 	var int i */
+/* 	var int j */
+/* 5. 常数声明 */
+/* 源码形如： */
+/* 	const int c = 10 */
+/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
+/* 	const int c = 10 */
+/* 6. 表达式 */
+/* 源码形如： */
+/* 	x = a * (b + c) */
+/* 中间代码（可优化）： */
+/* 	t1 = b + c */
+/* 	t2 = a * t1 */
+/* 	x = t2 */
+/* 7. 条件判断 */
+/* 源码形如： */
+/* 	x == y */
+/* 中间代码： */
+/* 	x == y */
+/* 8. 条件或无条件跳转 */
+/* 中间代码： */
+/* GOTO LABEL1 //无条件跳转到LABEL1 */
+/* BNZ LABEL1 //满足条件跳转到LABEL1 */
+/* BZ LABEL1 //不满足条件跳转到LABEL1 */
+/* 9. 带标号语句 */
+/* 源码形如： */
+/* 	Label_1: x = a + b */
+/* 中间代码： */
+/* 	Label_1 : */
+/* 	x = a + b */
+/* 10. 数组赋值或取值 */
+/* 源码形如： */
+/* 	a[i] = b * c[j] */
+/* 中间代码： */
+/* 	t1 = c[j] */
+/* t2 = b * t1 */
+/* a[i] = t2 */
+/* 11. 其他本文档未涉及到的语法现象，或者程序员自行定义的四元式操作，
+ * 原则上均按照“x = y op z”形式的中缀表达式进行表达。 */
+
+UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
+UTILLIB_ENUM_ELEM(OP_DEFVAR)
+UTILLIB_ENUM_ELEM(OP_DEFUNC)
+UTILLIB_ENUM_ELEM(OP_DEFCON)
+UTILLIB_ENUM_ELEM(OP_PARA)
+UTILLIB_ENUM_ELEM(OP_RET)
+UTILLIB_ENUM_ELEM(OP_PUSH)
+UTILLIB_ENUM_ELEM(OP_VAR)
+UTILLIB_ENUM_ELEM(OP_CONST)
+UTILLIB_ENUM_ELEM(OP_ADD)
+UTILLIB_ENUM_ELEM(OP_SUB)
+UTILLIB_ENUM_ELEM(OP_BNZ)
+UTILLIB_ENUM_ELEM(OP_BEZ)
+  UTILLIB_ENUM_ELEM(OP_BNE)
+  UTILLIB_ENUM_ELEM(OP_JMP)
+UTILLIB_ENUM_ELEM(OP_IDX)
+UTILLIB_ENUM_ELEM(OP_CAL)
+UTILLIB_ENUM_ELEM(OP_DIV)
+UTILLIB_ENUM_ELEM(OP_MUL)
+UTILLIB_ENUM_ELEM(OP_EQ)
+UTILLIB_ENUM_ELEM(OP_NE)
+UTILLIB_ENUM_ELEM(OP_LT)
+UTILLIB_ENUM_ELEM(OP_LE)
+UTILLIB_ENUM_ELEM(OP_GT)
+UTILLIB_ENUM_ELEM(OP_GE)
+UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_ELEM(OP_WRITE)
+UTILLIB_ENUM_ELEM(OP_READ)
+UTILLIB_ENUM_END(cling_ast_opcode_kind);
+
+/*
+ * This ir is still very far from
+ * actual ASM code since its preference
+ * to label and iden rather than number
+ * and address. It might not be possible
+ * to execute the ir but it is good at
+ * decripting the structure of the program
+ * in a form similar to instruction.
+ */
+
+UTILLIB_ENUM_BEGIN(cling_operand_kind)
+UTILLIB_ENUM_ELEM(CL_STRG)
+UTILLIB_ENUM_ELEM(CL_NAME)
+UTILLIB_ENUM_ELEM(CL_TEMP)
+UTILLIB_ENUM_ELEM(CL_IMME)
+UTILLIB_ENUM_ELEM(CL_LABL)
+UTILLIB_ENUM_ELEM(CL_GLBL)
+UTILLIB_ENUM_ELEM(CL_LOCL)
+UTILLIB_ENUM_ELEM(CL_BYTE)
+UTILLIB_ENUM_ELEM(CL_WORD)
+UTILLIB_ENUM_ELEM(CL_NULL)
+UTILLIB_ENUM_END(cling_opcode_kind);
+
+union cling_ast_operand {
+  char const *text;
+  int scalar;
+};
+
+struct cling_ast_ir {
+#define CLING_AST_IR_MAX 3
+  int opcode;
+  union cling_ast_operand operands[CLING_AST_IR_MAX];
+  int info[CLING_AST_IR_MAX];
+};
+
+struct cling_ast_function {
+  char *name;
+  unsigned int temps;
+  struct utillib_vector instrs;
+};
+
+struct cling_ast_program {
+  struct utillib_vector init_code;
+  struct utillib_vector funcs;
+};
+
+struct cling_ast_ir * emit_ir(int type);
+
+struct cling_ast_ir *
+emit_defcon(int type, char const *name, char const *value);
+
+struct cling_ast_ir *
+emit_defvar(int type, char const* name, char const *extend);
+
+struct cling_ast_ir *
+emit_defunc(int type, char const *name);
+
+struct cling_ast_ir *
+emit_para(int type, char const *name);
+
+struct cling_ast_ir *
+emit_call(int value, char const *name);
+
+void cling_ast_function_init(struct cling_ast_function *self, char const *name);
+
+void cling_ast_function_destroy(struct cling_ast_function *self);
+
+void cling_ast_function_push_back(struct cling_ast_function *self,
+    struct cling_ast_ir const* ast_ir);
+
+void cling_ast_program_init(struct cling_ast_program *self);
 
 #endif /* CLING_IR_H */

@@ -302,8 +302,7 @@ static void ast_pretty_expr_stmt(struct utillib_json_value const *self,
   struct utillib_json_value *expr;
   expr = utillib_json_object_at(self, "expr");
   ast_pretty_indent(string, indent_level);
-  if (expr)
-    ast_pretty_expr(expr, string);
+  ast_pretty_expr(expr, string);
 }
 
 static void ast_pretty_return_stmt(struct utillib_json_value const *self,

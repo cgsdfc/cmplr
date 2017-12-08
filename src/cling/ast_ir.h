@@ -20,167 +20,21 @@
 */
 #ifndef CLING_AST_IR_H
 #define CLING_AST_IR_H
-#include "ast.h" /* union cling_primary */
-
-#include <utillib/hashmap.h>
-#include <utillib/vector.h>
+#include "ir.h"
 
 /*
  * Well, we are gonna generate
  * quarternary form of our code.
  * OMG, such a weird name!
  */
-#define CLING_AST_IR_MAX 3
-
-/* 三、 中间代码格式 */
-/* 原则上按照中缀表达式格式输出中间代码，
- * 即，形如x = y op z，其中x为结果，y为左操作数，z为右操作数，
- * op为操作符。以下根据基本语法现象举例说明。 */
-/* 1. 函数声明 */
-/* 源码形如： */
-/* 	int foo( int a, int b, int c, int d) */
-/* 中间代码： */
-/* 	int foo() */
-/* 	para int a */
-/* 	para int b */
-/* 	para int c */
-/* 	para int d */
-/* 2. 函数调用 */
-/* 源码形如： */
-/* 	i = tar(x,y) */
-/* 中间代码： */
-/* 	push x */
-/* 	push y */
-/* 	call tar */
-/* 	i = RET */
-/* 3. 函数返回 */
-/* 源码形如： */
-/* 	return (x) */
-/* 中间代码： */
-/* 	ret x */
-/* 4. 变量声明 */
-/* 源码形如： */
-/* 	int i, j; */
-/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
-/* 	var int i */
-/* 	var int j */
-/* 5. 常数声明 */
-/* 源码形如： */
-/* 	const int c = 10 */
-/* 中间代码（符号表信息输出，程序中可不生成真正的中间代码）： */
-/* 	const int c = 10 */
-/* 6. 表达式 */
-/* 源码形如： */
-/* 	x = a * (b + c) */
-/* 中间代码（可优化）： */
-/* 	t1 = b + c */
-/* 	t2 = a * t1 */
-/* 	x = t2 */
-/* 7. 条件判断 */
-/* 源码形如： */
-/* 	x == y */
-/* 中间代码： */
-/* 	x == y */
-/* 8. 条件或无条件跳转 */
-/* 中间代码： */
-/* GOTO LABEL1 //无条件跳转到LABEL1 */
-/* BNZ LABEL1 //满足条件跳转到LABEL1 */
-/* BZ LABEL1 //不满足条件跳转到LABEL1 */
-/* 9. 带标号语句 */
-/* 源码形如： */
-/* 	Label_1: x = a + b */
-/* 中间代码： */
-/* 	Label_1 : */
-/* 	x = a + b */
-/* 10. 数组赋值或取值 */
-/* 源码形如： */
-/* 	a[i] = b * c[j] */
-/* 中间代码： */
-/* 	t1 = c[j] */
-/* t2 = b * t1 */
-/* a[i] = t2 */
-/* 11. 其他本文档未涉及到的语法现象，或者程序员自行定义的四元式操作，
- * 原则上均按照“x = y op z”形式的中缀表达式进行表达。 */
-
-UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
-UTILLIB_ENUM_ELEM(OP_DEFVAR)
-UTILLIB_ENUM_ELEM(OP_DEFUNC)
-UTILLIB_ENUM_ELEM(OP_DEFCON)
-UTILLIB_ENUM_ELEM(OP_PARA)
-UTILLIB_ENUM_ELEM(OP_RET)
-UTILLIB_ENUM_ELEM(OP_PUSH)
-UTILLIB_ENUM_ELEM(OP_VAR)
-UTILLIB_ENUM_ELEM(OP_CONST)
-UTILLIB_ENUM_ELEM(OP_ADD)
-UTILLIB_ENUM_ELEM(OP_SUB)
-UTILLIB_ENUM_ELEM(OP_IDX)
-UTILLIB_ENUM_ELEM(OP_CAL)
-UTILLIB_ENUM_ELEM(OP_DIV)
-UTILLIB_ENUM_ELEM(OP_MUL)
-UTILLIB_ENUM_ELEM(OP_STORE)
-UTILLIB_ENUM_END(cling_ast_opcode_kind);
-
-/*
- * This ir is still very far from
- * actual ASM code since its preference
- * to label and iden rather than number
- * and address. It might not be possible
- * to execute the ir but it is good at
- * decripting the structure of the program
- * in a form similar to instruction.
- */
-
-UTILLIB_ENUM_BEGIN(cling_operand_kind)
-UTILLIB_ENUM_ELEM(CL_ASCI)
-UTILLIB_ENUM_ELEM(CL_TEMP)
-UTILLIB_ENUM_ELEM(CL_IMME)
-UTILLIB_ENUM_ELEM(CL_LABL)
-UTILLIB_ENUM_ELEM(CL_GLBL)
-UTILLIB_ENUM_ELEM(CL_LOCL)
-UTILLIB_ENUM_ELEM(CL_BYTE)
-UTILLIB_ENUM_ELEM(CL_WORD)
-UTILLIB_ENUM_END(cling_opcode_kind);
-
-union cling_ast_operand {
-  char const *text;
-  unsigned int scalar;
-};
-
-struct cling_polan_ir {
-  struct utillib_vector stack;
-};
-
-struct cling_ast_ir {
-  int opcode;
-  union cling_ast_operand operands[CLING_AST_IR_MAX];
-  int info[CLING_AST_IR_MAX];
-};
-
-struct cling_ir_gen {
-  unsigned int temp_alloc;
-  struct cling_operand *operand;
-  struct cling_symbol_table *symbol_table;
-  struct utillib_vector *opstack;
-  struct cling_program *program;
-};
-
-struct cling_ast_function {
-  char *name;
+struct cling_ast_ir_global {
   unsigned int temps;
-  struct utillib_vector instrs;
+  unsigned int instrs;
 };
 
-struct cling_ast_program {
-  struct utillib_vector code;
-  struct utillib_hashmap label_map;
-};
 
-void cling_polan_ir_init(struct cling_polan_ir *self,
-    struct utillib_json_value const* root);
-
-void cling_polan_ir_destroy(struct cling_polan_ir *self);
-
-struct utillib_json_value *
-cling_polan_ir_json_array_create(struct cling_polan_ir const *self);
+void cling_ast_ir_emit_program(
+    struct utillib_json_value const *self,
+    struct cling_ast_program *program);
 
 #endif /* CLING_AST_IR_H */
