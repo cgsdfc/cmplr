@@ -44,6 +44,7 @@ int main(int argc, char *argv[]) {
     goto cleanup;
   }
 
+  cling_ast_program_init(&program);
   cling_ast_ir_emit_program(json_ast, &cling_symbol_table, &program);
   cling_ast_program_print(&program);
 

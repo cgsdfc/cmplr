@@ -153,35 +153,8 @@ emit_para(int type, char const *name) {
   return self;
 }
 
-static void ast_ir_destroy(struct cling_ast_ir *self) {
+void cling_ast_ir_destroy(struct cling_ast_ir *self) {
   free(self);
-}
-
-void cling_ast_function_init(struct cling_ast_function *self, char const *name)
-{
-  self->name=strdup(name);
-  self->temps=0;
-  utillib_vector_init(&self->instrs);
-}
-
-void cling_ast_function_destroy(struct cling_ast_function *self)
-{
-  free(self->name);
-  utillib_vector_destroy_owning(&self->instrs, ast_ir_destroy);
-  free(self);
-}
-void cling_ast_program_init(struct cling_ast_program *self)
-{
-  utillib_vector_init(&self->init_code);
-  utillib_vector_init(&self->funcs);
-}
-
-void cling_ast_program_destroy(struct cling_ast_program *self)
-{
-  utillib_vector_destroy_owning(&self->funcs, 
-      cling_ast_function_destroy);
-  utillib_vector_destroy_owning(&self->init_code,
-      ast_ir_destroy);
 }
 
 static char const* wide_tostring(int wide) {
@@ -462,15 +435,3 @@ void cling_ast_ir_print(struct utillib_vector const *instrs) {
   }
   utillib_string_destroy(&buffer);
 }
-
-void cling_ast_program_print(struct cling_ast_program const* self)
-{
-  struct cling_ast_function const* func;
-
-  cling_ast_ir_print(&self->init_code);
-  UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
-    cling_ast_ir_print(&func->instrs);
-  }
-}
-
-

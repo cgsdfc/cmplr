@@ -44,7 +44,7 @@ static void emit_scanf_stmt(
     struct utillib_vector *instrs)
 {
   struct utillib_json_value *value, *arglist;
-  struct utillib_json_value *object;
+  struct utillib_json_value const *object;
   struct cling_ast_ir *ir;
 
   arglist=utillib_json_object_at(self, "arglist");
@@ -479,10 +479,37 @@ static void emit_composite(
     }
 }
 
+static void cling_ast_function_init(struct cling_ast_function *self, char const *name)
+{
+  self->name=strdup(name);
+  self->temps=0;
+  utillib_vector_init(&self->instrs);
+}
+
+static void cling_ast_function_destroy(struct cling_ast_function *self)
+{
+  free(self->name);
+  utillib_vector_destroy_owning(&self->instrs, cling_ast_ir_destroy);
+  free(self);
+}
+
+void cling_ast_program_init(struct cling_ast_program *self)
+{
+  utillib_vector_init(&self->init_code);
+  utillib_vector_init(&self->funcs);
+}
+
+void cling_ast_program_destroy(struct cling_ast_program *self)
+{
+  utillib_vector_destroy_owning(&self->funcs, 
+      cling_ast_function_destroy);
+  utillib_vector_destroy_owning(&self->init_code,
+      cling_ast_ir_destroy);
+}
 /*
  * Create an cling_ast_function from the func_node.
  */
-struct cling_ast_function *
+static struct cling_ast_function *
 cling_ast_ir_emit_function(struct utillib_json_value const* func_node, 
     struct cling_ast_ir_global *global) {
   struct cling_ast_function *self=malloc(sizeof *self);
@@ -511,7 +538,6 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
 static void ast_ir_global_init(struct cling_ast_ir_global *self,
     struct cling_symbol_table const* symbol_table) {
   self->temps=0;
-  self->instrs=0;
   self->symbol_table=symbol_table;
 }
 
@@ -523,14 +549,31 @@ void cling_ast_ir_emit_program(
   struct utillib_json_value *func_decls, *object;
   struct cling_ast_function *func;
   struct cling_ast_ir_global global;
+  int temps;
 
   ast_ir_global_init(&global, symbol_table);
-  cling_ast_program_init(program);
-  func_decls=utillib_json_object_at(self, "func_decls");
   maybe_emit_decls(self, &global, &program->init_code);
+  func_decls=utillib_json_object_at(self, "func_decls");
+
+  /*
+   * All functions.
+   */
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
+    temps=global.temps;
     func=cling_ast_ir_emit_function(object, &global);
+    func->temps=global.temps-temps;
     utillib_vector_push_back(&program->funcs, func);
   }
 }
+
+void cling_ast_program_print(struct cling_ast_program const* self)
+{
+  struct cling_ast_function const* func;
+
+  cling_ast_ir_print(&self->init_code);
+  UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
+    cling_ast_ir_print(&func->instrs);
+  }
+}
+
 

@@ -146,17 +146,32 @@ UTILLIB_ENUM_ELEM_INIT(CL_LABL, 128)
 UTILLIB_ENUM_ELEM_INIT(CL_STRG, 256)
 UTILLIB_ENUM_END(cling_operand_info_kind);
 
+/*
+ * Holds global information
+ * that ast_ir need to access.
+ */
 struct cling_ast_ir_global {
-  struct cling_symbol_table *symbol_table;
+  struct cling_symbol_table const *symbol_table;
   unsigned int temps;
-  unsigned int instrs;
 };
 
+/*
+ * text maybe a name, a imme
+ * while scalar maybe an address,
+ * a temp. Their meanings are decided
+ * by the corresponding info field.
+ */
 union cling_ast_operand {
   char const *text;
   int scalar;
 };
 
+/*
+ * operands holds content which
+ * is only meaningful under the
+ * description of info, which takes
+ * value from `cling_operand_info_kind'.
+ */
 struct cling_ast_ir {
 #define CLING_AST_IR_MAX 3
   int opcode;
@@ -164,17 +179,11 @@ struct cling_ast_ir {
   int info[CLING_AST_IR_MAX];
 };
 
-struct cling_ast_function {
-  char *name;
-  unsigned int temps;
-  struct utillib_vector instrs;
-};
 
-struct cling_ast_program {
-  struct utillib_vector init_code;
-  struct utillib_vector funcs;
-};
-
+/*
+ * IR emission functions used by ast_ir.
+ * Their operands are doced as well.
+ */
 struct cling_ast_ir * 
 emit_ir(int type);
 
@@ -189,14 +198,14 @@ emit_read(char const *name);
  */
 
 /*
- * defcon type name value
+ * defcon name(wide|scope) value
  */
 struct cling_ast_ir *
 emit_defcon(int type, char const *name,
    int scope_bit, char const *value);
 
 /*
- * defvar type name [extend]
+ * defvar name(wide|scope) [extend]
  */
 struct cling_ast_ir *
 emit_defvar(int type, char const* name, int scope_bit,
@@ -205,53 +214,48 @@ emit_defvar(int type, char const* name, int scope_bit,
 int emit_wide(int type);
 
 /*
- * defunc type name
+ * defunc name(wide)
  */
 struct cling_ast_ir *
 emit_defunc(int type, char const *name);
 
 /*
- * para type name
+ * para name(wide)
  */
 struct cling_ast_ir *
 emit_para(int type, char const *name);
 
 /*
- * call name [temp]
+ * call name [temp = RET] 
  */
 struct cling_ast_ir *
 emit_call(int type, int value, char const *name);
 
+/*
+ * SYM_XXX => CL_WORD | CL_BYTE
+ */
 int emit_type(size_t type);
 
+/*
+ * nop
+ */
 struct cling_ast_ir *
 emit_nop(void);
 
 /*
- * push type name | temp | imme
+ * push name | temp | imme(wide|scope)
  */
 
 /*
- * jmp relative-address
+ * jmp address-in-function
  */
 
 /*
- * bez name | temp | imme relative-address
+ * bez name | temp | imme address-in-function
  */
-
-void cling_ast_function_init(struct cling_ast_function *self, char const *name);
-
-void cling_ast_function_destroy(struct cling_ast_function *self);
-
-void cling_ast_function_push_back(struct cling_ast_function *self,
-    struct cling_ast_ir const* ast_ir);
-
-void cling_ast_program_init(struct cling_ast_program *self);
-
-void cling_ast_program_destroy(struct cling_ast_program *self);
+void cling_ast_ir_destroy(struct cling_ast_ir *self);
 
 void cling_ast_ir_print(struct utillib_vector const *instrs);
 
-void cling_ast_program_print(struct cling_ast_program const* self);
 
 #endif /* CLING_IR_H */
