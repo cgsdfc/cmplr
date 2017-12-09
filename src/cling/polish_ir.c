@@ -21,6 +21,7 @@
 #include "polish_ir.h"
 #include "ir.h"
 #include "symbols.h"
+#include "symbol_table.h"
 
 #include <utillib/json.h>
 #include <utillib/json_foreach.h>
@@ -79,7 +80,16 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
       polish_ir_post_order(self, arg);
     }
     polish_ir_post_order(self, lhs);
+  } else if (op->as_size_t == SYM_EQ){
+    /*
+     * Assignment is right associative.
+     */
+    polish_ir_post_order(self, rhs);
+    polish_ir_post_order(self, lhs);
   } else {
+    /*
+     * Other left associative binary operators.
+     */
     polish_ir_post_order(self, lhs);
     polish_ir_post_order(self, rhs);
   }
@@ -92,10 +102,16 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
  * the `index' operand of `ir'.
  */
 static void polish_ir_emit_factor(
+    struct cling_polish_ir const* self,
     struct utillib_json_value const* var,
     struct cling_ast_ir *ir, int index)
 {
   struct utillib_json_value *value, *type;
+  /*
+   * Since we only have 2 scopes: global and local,
+   * a scope_bit will be sufficient.
+   */
+  int scope_bit;
 
   if (var->kind == UT_JSON_INT) {
     ir->operands[index].scalar=var->as_int;
@@ -104,20 +120,23 @@ static void polish_ir_emit_factor(
      */
     ir->info[index]=CL_TEMP | CL_WORD;
   } else {
-    /*
-     * TODO: lookup symbol_table to
-     * figure out its name and scope.
-     */
     type=utillib_json_object_at(var, "type");
     value=utillib_json_object_at(var, "value");
     ir->operands[index].text=value->as_ptr;
     switch(type->as_size_t) {
       case SYM_IDEN:
         ir->info[index]=CL_NAME;
-        break;
+        if (cling_symbol_table_exist_name(
+              self->global->symbol_table,
+              value->as_ptr, CL_GLOBAL))
+          scope_bit=CL_GLBL;
+        else 
+          scope_bit=CL_LOCL;
+        ir->info[index] |= scope_bit;
+        return;
       default:
         ir->info[index]=CL_IMME;
-        break;
+        return;
     }
   }
 }
@@ -130,41 +149,69 @@ polish_ir_make_temp(struct cling_polish_ir *self) {
   return temp;
 }
 
+static void polish_ir_maybe_release_temp(struct utillib_json_value *maybe_temp)
+{
+  if (maybe_temp->kind == UT_JSON_INT)
+    utillib_json_value_destroy(maybe_temp);
+}
+
+static int polish_ir_fetch_argc(struct cling_polish_ir *self,
+    char const *name)
+{
+  struct cling_symbol_entry *entry;
+  struct utillib_json_value *arglist;
+  entry=cling_symbol_table_find(self->global->symbol_table, name, CL_GLOBAL);
+  arglist=utillib_json_object_at(entry->value, "arglist");
+  return utillib_json_array_size(arglist);
+}
+
+static int polish_ir_fetch_return_type(struct cling_polish_ir *self,
+    char const *name)
+{
+  struct cling_symbol_entry *entry;
+  entry=cling_symbol_table_find(self->global->symbol_table, name, CL_GLOBAL);
+  return entry->kind & (~CL_FUNC);
+}
+  
 /*
- * TODO: use symbol_table 
- * to figure out void and non-void
- * functions.
+ * Notes, __cdecl's Reversed order is 
+ * determined in this function.
  */
 static void polish_ir_emit_call(struct cling_polish_ir *self,
     struct utillib_vector *instrs)
 {
-  struct utillib_json_value *lhs, *arg, *value, *temp;
+  struct utillib_json_value *lhs, *arg;
+  struct utillib_json_value *value, *temp;
   struct cling_ast_ir *ir;
+  int argc, return_type;
 
   lhs=utillib_vector_back(&self->opstack);
+  value=utillib_json_object_at(lhs, "value");
+  argc=polish_ir_fetch_argc(self, value->as_ptr);
+  return_type=polish_ir_fetch_return_type(self, value->as_ptr); 
   utillib_vector_pop_back(&self->opstack);
-  while (!utillib_vector_empty(&self->opstack)) {
-    /*
-     * We use C's Reversed push order here.
-     * That is, foo(a, b, c) will become,
-     * push c
-     * push b
-     * push a
-     * call foo
-     */
+  for (int i=0; i<argc; ++i) {
     arg=utillib_vector_back(&self->opstack);
     utillib_vector_pop_back(&self->opstack);
     ir=emit_ir(OP_PUSH);
-    polish_ir_emit_factor(arg, ir, 0);
+    polish_ir_emit_factor(self, arg, ir, 0);
     utillib_vector_push_back(instrs, ir);
-    if (arg->kind == UT_JSON_INT)
-      utillib_json_value_destroy(arg);
+    polish_ir_maybe_release_temp(arg);
   }
-  value=utillib_json_object_at(lhs, "value");
-  temp=polish_ir_make_temp(self);
-  ir=emit_call(temp->as_int, value->as_ptr);
+  if (return_type != CL_VOID) {
+    /*
+     * If function has a return value,
+     * the call will have a temp to hold that.
+     * Otherwise, no temp is made or the temp
+     * is simply CL_NULL.
+     */
+    temp=polish_ir_make_temp(self);
+    ir=emit_call(CL_WORD, temp->as_int, value->as_ptr);
+    utillib_vector_push_back(&self->opstack, temp);
+  } else {
+    ir=emit_call(CL_NULL, -1, value->as_ptr);
+  }
   utillib_vector_push_back(instrs, ir);
-  utillib_vector_push_back(&self->opstack, temp);
 }
 
 static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
@@ -178,8 +225,8 @@ static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
   lhs=utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
   switch(op) {
-    case SYM_EQ:
-      ir=emit_ir(OP_STORE);
+    case SYM_RK:
+      ir=emit_ir(OP_IDX);
       break;
     case SYM_ADD:
       ir=emit_ir(OP_ADD);
@@ -211,22 +258,48 @@ static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
     case SYM_GE:
       ir=emit_ir(OP_GE);
       break;
-    case SYM_RK:
-      ir=emit_ir(OP_IDX);
-      break;
     default:
       assert(false);
   }
   temp=polish_ir_make_temp(self);
-  polish_ir_emit_factor(temp, ir, 0);
-  polish_ir_emit_factor(lhs, ir, 1);
-  polish_ir_emit_factor(rhs, ir, 2);
+  polish_ir_emit_factor(self, temp, ir, 0);
+  polish_ir_emit_factor(self, lhs, ir, 1);
+  polish_ir_emit_factor(self, rhs, ir, 2);
   utillib_vector_push_back(&self->opstack, temp);
   utillib_vector_push_back(instrs, ir);
-  if (lhs->kind == UT_JSON_INT)
-    utillib_json_value_destroy(lhs);
-  if (rhs->kind == UT_JSON_INT)
-    utillib_json_value_destroy(rhs);
+  polish_ir_maybe_release_temp(lhs);
+  polish_ir_maybe_release_temp(rhs);
+
+}
+
+static void polish_ir_emit_assign(struct cling_polish_ir *self,
+    struct utillib_vector *instrs)
+{
+  /*
+   * OP_STORE name | temp1 temp2
+   * stores temp2 to the address referred by `name'
+   * or pointed to by `temp1'.
+   * How to map a name to an address is out of concern
+   * here.
+   */
+
+  struct utillib_json_value *lhs, *rhs;
+  struct cling_ast_ir *ir;
+
+  lhs=utillib_vector_back(&self->opstack);
+  utillib_vector_pop_back(&self->opstack);
+  rhs=utillib_vector_back(&self->opstack);
+  utillib_vector_pop_back(&self->opstack);
+  ir=emit_ir(OP_STORE);
+  polish_ir_emit_factor(self, lhs, ir, 0);
+  polish_ir_emit_factor(self, rhs, ir, 1);
+  utillib_vector_push_back(instrs, ir);
+  /*
+   * According to the grammar, assign_expr
+   * has no value so no need allocate temp.
+   */
+  polish_ir_maybe_release_temp(lhs);
+  polish_ir_maybe_release_temp(rhs);
 }
 
 void cling_polish_ir_emit(struct cling_polish_ir *self,
@@ -251,6 +324,9 @@ void cling_polish_ir_emit(struct cling_polish_ir *self,
       case SYM_RP:
         polish_ir_emit_call(self, instrs);
         break;
+      case SYM_EQ:
+        polish_ir_emit_assign(self, instrs);
+        break;
       default:
         /*
          * polish_ir_emit_binary handles all the
@@ -266,7 +342,7 @@ void cling_polish_ir_result(struct cling_polish_ir const *self,
     struct cling_ast_ir *ir, int index)
 {
   struct utillib_json_value *result=utillib_vector_back(&self->opstack);
-  polish_ir_emit_factor(result, ir, index);
+  polish_ir_emit_factor(self, result, ir, index);
 }
 
 struct utillib_json_value *

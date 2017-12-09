@@ -94,19 +94,18 @@ emit_ir(int opcode) {
   return self;
 }
 
-/*
- * call temp name
- * operands[0]=temp.
- * operands[1]=name.
- */
 struct cling_ast_ir *
-emit_call(int value, char const *name)
+emit_call(int type, int value, char const *name)
 {
   struct cling_ast_ir *self=emit_ir(OP_CAL);
-  self->info[0]=CL_TEMP;
-  self->info[1]=CL_NAME;
-  self->operands[0].scalar=value;
-  self->operands[1].text=name;
+  self->operands[0].text=name;
+  self->info[0]=CL_NAME;
+  self->info[1]=type;
+  if (self->info[1] == CL_NULL)
+    return self;
+  self->info[1] |= CL_TEMP;
+  self->operands[1].scalar=value;
+  return self;
 }
 
 
@@ -117,42 +116,27 @@ emit_read(char const *name) {
   return self;
 }
 
-/*
- * info[0]=wide.
- * operands[0]=name.
- * info[1]=scope.
- * operands[1]=value.
- */
 struct cling_ast_ir *
-emit_defcon(int type, char const *name, char const *value) {
+emit_defcon(int type, char const *name, 
+    int scope_bit, char const *value) {
   struct cling_ast_ir *self=emit_ir(OP_DEFCON);
-  self->info[0]=emit_wide(type);
+  self->info[0]=emit_wide(type) | scope_bit;
   self->operands[0].text=name;
   self->operands[1].text=value;
   return self;
 }
 
-/*
- * info[0]=wide.
- * operands[0]=name.
- * operands[1]=extend.
- * info[1]=scope.
- * info[2]=is_array.
- */
 struct cling_ast_ir *
-emit_defvar(int type, char const* name, char const *extend) {
+emit_defvar(int type, char const* name, int scope_bit,
+    char const *extend) {
   struct cling_ast_ir *self=emit_ir(OP_DEFVAR);
-  self->info[0]=emit_wide(type);
-  self->info[2]=extend?1:0;
+  self->info[0]=emit_wide(type) | scope_bit;
+  self->info[1]=extend?1:0;
   self->operands[0].text=name;
   self->operands[1].text=extend;
   return self;
 }
 
-/*
- * info[0]=wide.
- * operands[0]=name.
- */
 struct cling_ast_ir *
 emit_defunc(int type, char const *name) {
   struct cling_ast_ir *self=emit_ir(OP_DEFUNC);
@@ -161,10 +145,6 @@ emit_defunc(int type, char const *name) {
   return self;
 }
 
-/*
- * info[0]=wide.
- * operands[0]=name.
- */
 struct cling_ast_ir *
 emit_para(int type, char const *name) {
   struct cling_ast_ir *self=emit_ir(OP_PARA);
@@ -204,15 +184,19 @@ void cling_ast_program_destroy(struct cling_ast_program *self)
       ast_ir_destroy);
 }
 
-/*
- * const int local A=1
- * const char global B='b'
- */
+static char const* wide_tostring(int wide) {
+  if (wide & CL_WORD)
+    return "int";
+  if (wide & CL_BYTE)
+    return "char";
+  return "void";
+}
+
 static void defcon_tostring(struct cling_ast_ir const *self,
     struct utillib_string *string)
 {
   utillib_string_append(string, "const ");
-  utillib_string_append(string, self->info[0]==CL_WORD?"int":"char");
+  utillib_string_append(string, wide_tostring(self->info[0]));
   utillib_string_append(string, " ");
   utillib_string_append(string, self->operands[0].text);
   utillib_string_append(string, " = ");
@@ -223,10 +207,10 @@ static void defvar_tostring(struct cling_ast_ir const *self,
     struct utillib_string *string)
 {
   utillib_string_append(string, "var ");
-  utillib_string_append(string, self->info[0]==CL_WORD?"int":"char");
+  utillib_string_append(string, wide_tostring(self->info[0]));
   utillib_string_append(string, " ");
   utillib_string_append(string, self->operands[0].text);
-  if (self->info[2]) {
+  if (self->info[1]) {
     utillib_string_append(string, "[");
     utillib_string_append(string, self->operands[1].text);
     utillib_string_append(string, "]");
@@ -237,8 +221,7 @@ static void defunc_tostring(struct cling_ast_ir const *self,
     struct utillib_string *string)
 {
   int type=self->info[0];
-  utillib_string_append(string,
-      type==CL_WORD?"int":type==CL_NULL?"void":"char");
+  utillib_string_append(string,wide_tostring(self->info[0]));
   utillib_string_append(string, " ");
   utillib_string_append(string, self->operands[0].text);
   utillib_string_append(string, "()");
@@ -290,9 +273,16 @@ static void binary_tostring(struct cling_ast_ir const *self,
    */
   switch(op) {
     case OP_CAL:
+      utillib_string_append(string, "call ");
       factor_tostring(self, 0, string);
-      utillib_string_append(string, " = call ");
-      utillib_string_append(string, self->operands[1].text);
+      if (self->info[1] == CL_NULL)
+        return;
+      /*
+       * If it has something to return,
+       * a `t1 = RET' will be printed'.
+       */
+      utillib_string_append(string, " RET = ");
+      factor_tostring(self, 1, string);
       return;
     case OP_IDX:
       /*
@@ -329,7 +319,7 @@ static void para_tostring(struct cling_ast_ir const* self,
     struct utillib_string *string)
 {
   utillib_string_append(string, "para ");
-  utillib_string_append(string, self->info[0]==CL_WORD?"int":"char");
+  utillib_string_append(string, wide_tostring(self->info[0]));
   utillib_string_append(string, " ");
   utillib_string_append(string, self->operands[0].text);
 }
@@ -386,6 +376,10 @@ static void write_tostring(struct cling_ast_ir const* self,
   factor_tostring(self, 0, string);
 }
 
+/*
+ * store addr | name value
+ * Stores the value to name or addr.
+ */
 static void store_tostring(struct cling_ast_ir const* self,
     struct utillib_string *string) {
   utillib_string_append(string, "store ");

@@ -21,6 +21,7 @@
 #include "ast_ir.h"
 #include "symbols.h"
 #include "polish_ir.h"
+#include "symbol_table.h"
 
 #include <utillib/json_foreach.h>
 
@@ -378,45 +379,75 @@ static void emit_statement(
   }
 }
 
+/*
+ * Emits defvar ir.
+ * defvar name(wide|scope) extend(is_array)
+ */
 static void emit_var_decls(
     struct utillib_json_value const *self,
+    struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
   struct utillib_json_value const *defs, *decl;
   struct utillib_json_value  *extend, *name, *type;
   struct cling_ast_ir *ir;
+  int scope_bit;
+  char const* extend_val;
 
   type=utillib_json_object_at(self, "type");
   defs=utillib_json_object_at(self, "var_defs");
   UTILLIB_JSON_ARRAY_FOREACH(decl, defs) {
     name=utillib_json_object_at(decl, "name");
-    extend=utillib_json_object_at(decl, "value");
-    if (extend)
-      ir=emit_defvar(type->as_size_t, name->as_ptr, extend->as_ptr);
+    extend=utillib_json_object_at(decl, "extend");
+    if (cling_symbol_table_exist_name(global->symbol_table,
+          name->as_ptr, CL_GLOBAL))
+      scope_bit=CL_GLBL;
     else
-      ir=emit_defvar(type->as_size_t, name->as_ptr, NULL);
+      scope_bit=CL_LOCL;
+    if (extend)
+      extend_val=extend->as_ptr;
+    else
+      extend_val=NULL;
+    ir=emit_defvar(type->as_size_t, name->as_ptr,
+        scope_bit, extend_val);
     utillib_vector_push_back(instrs, ir);
   }
 }
 
-
+/*
+ * Emits defcon ir.
+ * defcon name(wide|scope) value
+ */
 static void emit_const_decls(
     struct utillib_json_value const *self, 
+    struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
   struct utillib_json_value const *defs, *decl;
   struct utillib_json_value  *value, *name, *type;
+  int scope_bit;
 
   type=utillib_json_object_at(self, "type");
   defs=utillib_json_object_at(self, "const_defs");
   UTILLIB_JSON_ARRAY_FOREACH(decl, defs) {
     name=utillib_json_object_at(decl, "name");
     value=utillib_json_object_at(decl, "value");
+    if (cling_symbol_table_exist_name(global->symbol_table,
+          name->as_ptr, CL_GLOBAL))
+      scope_bit=CL_GLBL;
+    else
+      scope_bit=CL_LOCL;
     utillib_vector_push_back(instrs, 
-        emit_defcon(type->as_size_t, name->as_ptr, value->as_ptr));
+        emit_defcon(type->as_size_t, name->as_ptr, 
+          scope_bit, value->as_ptr));
   }
 }
 
+/*
+ * Wrapper around emit_const_decls
+ * and emit_var_decls.
+ */
 static void maybe_emit_decls(
     struct utillib_json_value const *self,
+    struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
   struct utillib_json_value *object, *const_decls, *var_decls;
 
@@ -424,10 +455,10 @@ static void maybe_emit_decls(
   var_decls=utillib_json_object_at(self, "var_decls");
   if (const_decls) 
     UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) 
-      emit_const_decls(object ,instrs );
+      emit_const_decls(object , global, instrs);
   if (var_decls) 
-    UTILLIB_JSON_ARRAY_FOREACH(object, var_decls)
-      emit_var_decls(object,instrs );
+    UTILLIB_JSON_ARRAY_FOREACH(object,  var_decls)
+      emit_var_decls(object,global,instrs );
 }
 
 
@@ -438,8 +469,11 @@ static void emit_composite(
 {
   struct utillib_json_value const *object, *stmts;
   stmts=utillib_json_object_at(self, "stmts");
-  maybe_emit_decls(self, instrs);
+  maybe_emit_decls(self, global, instrs);
   if (stmts) 
+    /*
+     * Watch out the empty case!
+     */
     UTILLIB_JSON_ARRAY_FOREACH(object, stmts) {
       emit_statement(object, global, instrs);
     }
@@ -474,26 +508,28 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
   return self;
 }
 
-static void ast_ir_global_init(struct cling_ast_ir_global *self) {
+static void ast_ir_global_init(struct cling_ast_ir_global *self,
+    struct cling_symbol_table const* symbol_table) {
   self->temps=0;
   self->instrs=0;
+  self->symbol_table=symbol_table;
 }
 
 void cling_ast_ir_emit_program(
     struct utillib_json_value const *self,
+    struct cling_symbol_table const *symbol_table,
     struct cling_ast_program *program)
 {
   struct utillib_json_value *func_decls, *object;
   struct cling_ast_function *func;
   struct cling_ast_ir_global global;
 
-  ast_ir_global_init(&global);
+  ast_ir_global_init(&global, symbol_table);
   cling_ast_program_init(program);
   func_decls=utillib_json_object_at(self, "func_decls");
-  maybe_emit_decls(self, &program->init_code);
+  maybe_emit_decls(self, &global, &program->init_code);
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
     func=cling_ast_ir_emit_function(object, &global);
-    cling_ast_ir_print(&func->instrs);
     utillib_vector_push_back(&program->funcs, func);
   }
 }

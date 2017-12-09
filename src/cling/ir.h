@@ -192,13 +192,17 @@ emit_read(char const *name);
  * defcon type name value
  */
 struct cling_ast_ir *
-emit_defcon(int type, char const *name, char const *value);
+emit_defcon(int type, char const *name,
+   int scope_bit, char const *value);
 
 /*
  * defvar type name [extend]
  */
 struct cling_ast_ir *
-emit_defvar(int type, char const* name, char const *extend);
+emit_defvar(int type, char const* name, int scope_bit,
+    char const *extend);
+
+int emit_wide(int type);
 
 /*
  * defunc type name
@@ -213,10 +217,10 @@ struct cling_ast_ir *
 emit_para(int type, char const *name);
 
 /*
- * call [temp] name
+ * call name [temp]
  */
 struct cling_ast_ir *
-emit_call(int value, char const *name);
+emit_call(int type, int value, char const *name);
 
 int emit_type(size_t type);
 
