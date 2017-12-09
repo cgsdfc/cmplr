@@ -149,9 +149,11 @@ UTILLIB_ENUM_END(cling_operand_info_kind);
 /*
  * Holds global information
  * that ast_ir need to access.
+ * Notes the symbol_table will
+ * be reentered.
  */
 struct cling_ast_ir_global {
-  struct cling_symbol_table const *symbol_table;
+  struct cling_symbol_table *symbol_table;
   unsigned int temps;
 };
 
@@ -179,6 +181,11 @@ struct cling_ast_ir {
   int info[CLING_AST_IR_MAX];
 };
 
+
+void emit_factor(
+    struct cling_ast_ir *ir, int index,
+    struct utillib_json_value const* var,
+    struct cling_symbol_table const* symbol_table);
 
 /*
  * IR emission functions used by ast_ir.

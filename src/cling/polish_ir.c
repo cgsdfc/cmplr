@@ -28,6 +28,21 @@
 #include <stdlib.h>
 #include <assert.h>
 
+static void polish_ir_emit_factor(
+    struct cling_polish_ir const *self,
+    struct utillib_json_value const* var,
+    struct cling_ast_ir *ir, int index) {
+  if (var->kind == UT_JSON_INT) {
+    ir->operands[index].scalar=var->as_int;
+    /*
+     * Temps are all words.
+     */
+    ir->info[index]=CL_TEMP | CL_WORD;
+    return;
+  } 
+  emit_factor(ir, index, var, self->global->symbol_table);
+}
+
 /*
  * First walk the ast to generate
  * Reversed-Polish form of ir and
@@ -96,51 +111,6 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
   utillib_vector_push_back(&self->stack, node);
 }
 
-/*
- * Translates the `factor' to one of CL_NAME,
- * CL_TEMP or CL_IMME and put it onto to
- * the `index' operand of `ir'.
- */
-static void polish_ir_emit_factor(
-    struct cling_polish_ir const* self,
-    struct utillib_json_value const* var,
-    struct cling_ast_ir *ir, int index)
-{
-  struct utillib_json_value *value, *type;
-  /*
-   * Since we only have 2 scopes: global and local,
-   * a scope_bit will be sufficient.
-   */
-  int scope_bit;
-
-  if (var->kind == UT_JSON_INT) {
-    ir->operands[index].scalar=var->as_int;
-    /*
-     * Temps are all words.
-     */
-    ir->info[index]=CL_TEMP | CL_WORD;
-  } else {
-    type=utillib_json_object_at(var, "type");
-    value=utillib_json_object_at(var, "value");
-    ir->operands[index].text=value->as_ptr;
-    switch(type->as_size_t) {
-      case SYM_IDEN:
-        ir->info[index]=CL_NAME;
-        if (cling_symbol_table_exist_name(
-              self->global->symbol_table,
-              value->as_ptr, CL_GLOBAL))
-          scope_bit=CL_GLBL;
-        else 
-          scope_bit=CL_LOCL;
-        ir->info[index] |= scope_bit;
-        return;
-      default:
-        ir->info[index]=CL_IMME;
-        return;
-    }
-  }
-}
-
 static struct utillib_json_value *
 polish_ir_make_temp(struct cling_polish_ir *self) {
   struct utillib_json_value *temp;
@@ -155,14 +125,14 @@ static void polish_ir_maybe_release_temp(struct utillib_json_value *maybe_temp)
     utillib_json_value_destroy(maybe_temp);
 }
 
-static int polish_ir_fetch_argc(struct cling_polish_ir *self,
+static size_t polish_ir_fetch_argc(struct cling_polish_ir *self,
     char const *name)
 {
   struct cling_symbol_entry *entry;
-  struct utillib_json_value *arglist;
+  struct utillib_json_value *argc;
   entry=cling_symbol_table_find(self->global->symbol_table, name, CL_GLOBAL);
-  arglist=utillib_json_object_at(entry->value, "arglist");
-  return utillib_json_array_size(arglist);
+  argc=utillib_json_object_at(entry->value, "argc");
+  return argc->as_size_t;
 }
 
 static int polish_ir_fetch_return_type(struct cling_polish_ir *self,
@@ -183,7 +153,7 @@ static void polish_ir_emit_call(struct cling_polish_ir *self,
   struct utillib_json_value *lhs, *arg;
   struct utillib_json_value *value, *temp;
   struct cling_ast_ir *ir;
-  int argc, return_type;
+  size_t argc, return_type;
 
   lhs=utillib_vector_back(&self->opstack);
   value=utillib_json_object_at(lhs, "value");

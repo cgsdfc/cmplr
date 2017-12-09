@@ -140,7 +140,6 @@ void cling_symbol_table_update(struct cling_symbol_table *self,
                                struct utillib_json_value *value,
                                int scope_kind) {
   struct utillib_hashmap *scope;
-  void *should_be_NULL;
 
   switch (scope_kind) {
   case CL_GLOBAL:
@@ -152,9 +151,7 @@ void cling_symbol_table_update(struct cling_symbol_table *self,
   default:
     assert(false);
   }
-  should_be_NULL =
-      utillib_hashmap_update(scope, name, symbol_entry_create(kind, value));
-  assert(should_be_NULL == NULL);
+  utillib_hashmap_update(scope, name, symbol_entry_create(kind, value));
 }
 
 void cling_symbol_table_reserve(struct cling_symbol_table *self,

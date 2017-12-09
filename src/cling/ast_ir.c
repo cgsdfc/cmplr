@@ -21,7 +21,7 @@
 #include "ast_ir.h"
 #include "symbols.h"
 #include "polish_ir.h"
-#include "symbol_table.h"
+#include "ast.h"
 
 #include <utillib/json_foreach.h>
 
@@ -383,7 +383,7 @@ static void emit_statement(
  * Emits defvar ir.
  * defvar name(wide|scope) extend(is_array)
  */
-static void emit_var_decls(
+static void emit_var_defs(
     struct utillib_json_value const *self,
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
@@ -417,7 +417,7 @@ static void emit_var_decls(
  * Emits defcon ir.
  * defcon name(wide|scope) value
  */
-static void emit_const_decls(
+static void emit_const_defs(
     struct utillib_json_value const *self, 
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
@@ -442,23 +442,32 @@ static void emit_const_decls(
 }
 
 /*
- * Wrapper around emit_const_decls
- * and emit_var_decls.
+ * Wrapper around emit_const_defs
+ * and emit_var_defs.
+ * Notes it will insert const_decls and
+ * var_decls into symbol_table.
  */
 static void maybe_emit_decls(
     struct utillib_json_value const *self,
     struct cling_ast_ir_global *global,
+    int scope_kind,
     struct utillib_vector *instrs) {
   struct utillib_json_value *object, *const_decls, *var_decls;
 
   const_decls=utillib_json_object_at(self, "const_decls");
   var_decls=utillib_json_object_at(self, "var_decls");
-  if (const_decls) 
+  if (const_decls) {
     UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) 
-      emit_const_decls(object , global, instrs);
-  if (var_decls) 
-    UTILLIB_JSON_ARRAY_FOREACH(object,  var_decls)
-      emit_var_decls(object,global,instrs );
+      cling_ast_insert_const(object, global->symbol_table, scope_kind); 
+      emit_const_defs(object , global, instrs);
+  }
+
+  if (var_decls) {
+    UTILLIB_JSON_ARRAY_FOREACH(object,  var_decls) {
+      cling_ast_insert_variable(object, global->symbol_table, scope_kind);
+      emit_var_defs(object,global,instrs );
+    }
+  }
 }
 
 
@@ -469,7 +478,7 @@ static void emit_composite(
 {
   struct utillib_json_value const *object, *stmts;
   stmts=utillib_json_object_at(self, "stmts");
-  maybe_emit_decls(self, global, instrs);
+  maybe_emit_decls(self, global, CL_LOCAL, instrs);
   if (stmts) 
     /*
      * Watch out the empty case!
@@ -520,6 +529,8 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
   struct utillib_json_value const *arg;
 
   cling_ast_function_init(self, name->as_ptr);
+  cling_symbol_table_enter_scope(global->symbol_table);
+  cling_ast_insert_arglist(arglist, global->symbol_table); 
   utillib_vector_push_back(&self->instrs,
       emit_defunc(type->as_size_t, name->as_ptr));
 
@@ -532,11 +543,12 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
   }
   emit_composite(comp, global, &self->instrs);
   utillib_vector_push_back(&self->instrs, emit_nop());
+  cling_symbol_table_leave_scope(global->symbol_table);
   return self;
 }
 
 static void ast_ir_global_init(struct cling_ast_ir_global *self,
-    struct cling_symbol_table const* symbol_table) {
+    struct cling_symbol_table * symbol_table) {
   self->temps=0;
   self->symbol_table=symbol_table;
 }
@@ -552,7 +564,11 @@ void cling_ast_ir_emit_program(
   int temps;
 
   ast_ir_global_init(&global, symbol_table);
-  maybe_emit_decls(self, &global, &program->init_code);
+  /*
+   * Enters these names to global-scope.
+   */
+  maybe_emit_decls(self, &global, CL_GLOBAL, 
+      &program->init_code );
   func_decls=utillib_json_object_at(self, "func_decls");
 
   /*

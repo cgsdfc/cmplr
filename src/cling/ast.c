@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 size_t cling_ast_get_type(struct utillib_json_value const *self) {
   struct utillib_json_value *type = utillib_json_object_at(self, "type");
@@ -109,7 +110,7 @@ void cling_primary_init(union cling_primary *self, size_t type,
  * Inserts into the current scope.
  */
 
-void cling_ast_insert_const(struct utillib_json_value *self,
+void cling_ast_insert_const(struct utillib_json_value const *self,
                             struct cling_symbol_table *symbol_table,
                             int scope_kind) {
   size_t type = cling_ast_get_type(self);
@@ -125,7 +126,7 @@ void cling_ast_insert_const(struct utillib_json_value *self,
   }
 }
 
-void cling_ast_insert_variable(struct utillib_json_value *self,
+void cling_ast_insert_variable(struct utillib_json_value const *self,
                                struct cling_symbol_table *symbol_table,
                                int scope_kind) {
   size_t type = cling_ast_get_type(self);
@@ -148,7 +149,7 @@ void cling_ast_insert_variable(struct utillib_json_value *self,
 /*
  * Inserts arglist into the local scope of the function.
  */
-void cling_ast_insert_arglist(struct utillib_json_value *self,
+void cling_ast_insert_arglist(struct utillib_json_value const *self,
                               struct cling_symbol_table *symbol_table) {
   struct utillib_json_value *object;
   UTILLIB_JSON_ARRAY_FOREACH(object, self) {
@@ -165,19 +166,21 @@ void cling_ast_insert_arglist(struct utillib_json_value *self,
  * and return a deep copy of it.
  */
 static struct utillib_json_value *
-ast_extract_prototype(struct utillib_json_value *self,
+ast_extract_prototype(struct utillib_json_value const *self,
                       struct utillib_json_value const *type,
                       struct utillib_json_value const *name) {
   struct utillib_json_value *object = utillib_json_object_create_empty();
   struct utillib_json_value *arglist = utillib_json_object_at(self, "arglist");
+  size_t argc=utillib_json_array_size(arglist);
   utillib_json_object_push_back(object, "type", utillib_json_value_copy(type));
   utillib_json_object_push_back(object, "name", utillib_json_value_copy(name));
   utillib_json_object_push_back(object, "arglist",
                                 utillib_json_value_copy(arglist));
+  utillib_json_object_push_back(object, "argc", utillib_json_size_t_create(&argc));
   return object;
 }
 
-void cling_ast_insert_function(struct utillib_json_value *self,
+void cling_ast_insert_function(struct utillib_json_value const *self,
                                struct cling_symbol_table *symbol_table) {
   int kind = CL_FUNC;
   struct utillib_json_value *type = utillib_json_object_at(self, "type");

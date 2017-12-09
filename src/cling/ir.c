@@ -20,6 +20,7 @@
 */
 #include "ir.h"
 #include "symbols.h"
+#include "symbol_table.h"
 #include <utillib/json.h>
 
 #include <stdio.h>
@@ -68,7 +69,18 @@ UTILLIB_ETAB_ELEM(CL_WORD)
 UTILLIB_ETAB_ELEM(CL_NULL)
 UTILLIB_ETAB_END(cling_operand_info_kind);
 
+static void set_text(struct cling_ast_ir *self, int index, char const* text)
+{
+  self->operands[index].text=strdup(text);
+}
+
 int emit_wide(int type) {
+  if (type & CL_INT)
+    return CL_WORD;
+  if (type & CL_CHAR)
+    return CL_BYTE;
+  if (type & CL_VOID)
+    return CL_NULL;
   switch(type) {
     case SYM_INTEGER:
     case SYM_KW_INT:
@@ -80,6 +92,67 @@ int emit_wide(int type) {
     default:
       return CL_NULL;
   }
+}
+
+void emit_factor(
+    struct cling_ast_ir *self, int index,
+    struct utillib_json_value const* var,
+    struct cling_symbol_table const* symbol_table)
+{
+  struct utillib_json_value *value, *type;
+  struct cling_symbol_entry *entry;
+  char const *imme, *name;
+  int wide;
+  int scope_bit;
+
+  /*
+   * We distinguish between name, imme.
+   * A literal and a named constant is imme
+   * while name is the variable.
+   * Notes the term imme does not mean it must
+   * goes into instruction field.
+   */
+  type=utillib_json_object_at(var, "type");
+  value=utillib_json_object_at(var, "value");
+  switch(type->as_size_t) {
+    case SYM_IDEN:
+      entry=cling_symbol_table_find(symbol_table, value->as_ptr, CL_LEXICAL);
+      if (entry->kind & CL_CONST) {
+        /*
+         * Here, we transfer named constant 
+         * to imme.
+         */
+        value=utillib_json_object_at(entry->value, "value");
+        imme=value->as_ptr;
+        wide=emit_wide(entry->kind);
+        goto handle_imme;
+      }
+      if (cling_symbol_table_find(symbol_table, value->as_ptr, CL_GLOBAL))
+        scope_bit=CL_GLBL;
+      else
+        scope_bit=CL_LOCL;
+      name=value->as_ptr;
+      wide=emit_wide(entry->kind);
+      goto handle_name;
+    case SYM_INTEGER:
+    case SYM_UINT:
+      wide=CL_WORD;
+      imme=value->as_ptr;
+      goto handle_imme;
+    case SYM_CHAR:
+      wide=CL_BYTE;
+      imme=value->as_ptr;
+      goto handle_imme;
+  }
+handle_name:
+  self->info[index]=CL_NAME|wide|scope_bit;
+  set_text(self, index, name);
+  return;
+
+handle_imme:
+  self->info[index]=CL_IMME|wide;
+  set_text(self, index, imme);
+  return;
 }
 
 inline struct cling_ast_ir *
@@ -98,7 +171,7 @@ struct cling_ast_ir *
 emit_call(int type, int value, char const *name)
 {
   struct cling_ast_ir *self=emit_ir(OP_CAL);
-  self->operands[0].text=name;
+  set_text(self, 0, name);
   self->info[0]=CL_NAME;
   self->info[1]=type;
   if (self->info[1] == CL_NULL)
@@ -112,7 +185,7 @@ emit_call(int type, int value, char const *name)
 struct cling_ast_ir *
 emit_read(char const *name) {
   struct cling_ast_ir *self=emit_ir(OP_READ);
-  self->operands[0].text=name;
+  set_text(self, 0, name);
   return self;
 }
 
@@ -121,8 +194,8 @@ emit_defcon(int type, char const *name,
     int scope_bit, char const *value) {
   struct cling_ast_ir *self=emit_ir(OP_DEFCON);
   self->info[0]=emit_wide(type) | scope_bit;
-  self->operands[0].text=name;
-  self->operands[1].text=value;
+  set_text(self, 0, name);
+  set_text(self, 1, value);
   return self;
 }
 
@@ -132,8 +205,13 @@ emit_defvar(int type, char const* name, int scope_bit,
   struct cling_ast_ir *self=emit_ir(OP_DEFVAR);
   self->info[0]=emit_wide(type) | scope_bit;
   self->info[1]=extend?1:0;
-  self->operands[0].text=name;
-  self->operands[1].text=extend;
+  set_text(self, 0, name);
+  if (extend) {
+    self->info[1]=1;
+    set_text(self, 1, extend);
+  } else {
+    self->info[1]=0;
+  }
   return self;
 }
 
@@ -141,7 +219,7 @@ struct cling_ast_ir *
 emit_defunc(int type, char const *name) {
   struct cling_ast_ir *self=emit_ir(OP_DEFUNC);
   self->info[0]=emit_wide(type);
-  self->operands[0].text=name;
+  set_text(self, 0, name);
   return self;
 }
 
@@ -149,7 +227,7 @@ struct cling_ast_ir *
 emit_para(int type, char const *name) {
   struct cling_ast_ir *self=emit_ir(OP_PARA);
   self->info[0]=emit_wide(type);
-  self->operands[0].text=name;
+  set_text(self, 0, name);
   return self;
 }
 

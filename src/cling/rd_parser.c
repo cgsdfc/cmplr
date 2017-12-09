@@ -1483,23 +1483,17 @@ composite_stmt(struct cling_rd_parser *self,
   const size_t context = SYM_COMP_STMT;
 
   object = cling_ast_statement(SYM_COMP_STMT);
-  code = utillib_token_scanner_lookahead(input);
   if (comp_flag & COMP_ENTER_SCOPE)
     /*
      * Sometimes scope is entered by `function_args_body'
      */
     cling_symbol_table_enter_scope(self->symbol_table);
-  if (code == SYM_RB)
-    /*
-     * Handle the empty composite_stmt.
-     */
-    goto parse_rb;
-
   if (comp_flag & COMP_ALLOW_DECL) {
     /*
      * function-scope composite_stmt can
      * have decls.
      */
+    code = utillib_token_scanner_lookahead(input);
     if (code == SYM_KW_CONST) {
       const_decls = multiple_const_decl(self, input, CL_LOCAL);
       utillib_json_object_push_back(object, "const_decls", const_decls);
@@ -1511,6 +1505,13 @@ composite_stmt(struct cling_rd_parser *self,
       utillib_json_object_push_back(object, "var_decls", var_decls);
     }
   }
+  code = utillib_token_scanner_lookahead(input);
+  if (code == SYM_RB)
+    /*
+     * Handle the empty composite_stmt.
+     */
+    goto parse_rb;
+
   code = utillib_token_scanner_lookahead(input);
   if (!rd_parser_is_stmt_lookahead(code)) {
     rd_parser_error_push_back(self, cling_unexpected_error(input, context));

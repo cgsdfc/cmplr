@@ -70,17 +70,23 @@ void cling_primary_toint(union cling_primary *self, size_t type);
  * Table insertion.
  */
 
-void cling_ast_insert_const(struct utillib_json_value *self,
+/*
+ * self should be const_decl or parsed by single_const_decl
+ */
+void cling_ast_insert_const(struct utillib_json_value const *self,
                             struct cling_symbol_table *symbols, int scope_kind);
 
-void cling_ast_insert_variable(struct utillib_json_value *self,
+/*
+ * self should be var_decl or parsed by single_var_decl
+ */
+void cling_ast_insert_variable(struct utillib_json_value const *self,
                                struct cling_symbol_table *symbols,
                                int scope_kind);
 
-void cling_ast_insert_arglist(struct utillib_json_value *self,
+void cling_ast_insert_arglist(struct utillib_json_value const *self,
                               struct cling_symbol_table *symbols);
 
-void cling_ast_insert_function(struct utillib_json_value *self,
+void cling_ast_insert_function(struct utillib_json_value const *self,
                                struct cling_symbol_table *symbol_table);
 
 #endif /* CLING_AST_H */
