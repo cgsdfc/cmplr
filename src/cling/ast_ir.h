@@ -54,7 +54,7 @@ void cling_ast_program_print(struct cling_ast_program const* self);
 
 void cling_ast_ir_emit_program(
     struct utillib_json_value const *self,
-    struct cling_symbol_table const *symbol_table,
+    struct cling_symbol_table *symbol_table,
     struct cling_ast_program *program);
 
 #endif /* CLING_AST_IR_H */

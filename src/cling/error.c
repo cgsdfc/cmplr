@@ -101,7 +101,7 @@ cling_incompatible_type_error(struct utillib_token_scanner *input,
                               int actual_type, int expected_type,
                               size_t context) {
   struct cling_error *self = cling_error_create(CL_EINCTYPE, input, context);
-  self->einfo[0].str = cling_pretty_typename(actual_type);
+  self->einfo[0].str = cling_symbol_entry_kind_tostring(actual_type);
   self->einfo[1].str = cling_symbol_entry_kind_tostring(expected_type);
   return self;
 }

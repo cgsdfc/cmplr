@@ -129,10 +129,8 @@ static size_t polish_ir_fetch_argc(struct cling_polish_ir *self,
     char const *name)
 {
   struct cling_symbol_entry *entry;
-  struct utillib_json_value *argc;
   entry=cling_symbol_table_find(self->global->symbol_table, name, CL_GLOBAL);
-  argc=utillib_json_object_at(entry->value, "argc");
-  return argc->as_size_t;
+  return entry->function.argc;
 }
 
 static int polish_ir_fetch_return_type(struct cling_polish_ir *self,

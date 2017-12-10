@@ -117,14 +117,13 @@ void emit_factor(
   switch(type->as_size_t) {
     case SYM_IDEN:
       entry=cling_symbol_table_find(symbol_table, value->as_ptr, CL_LEXICAL);
-      if (entry->kind & CL_CONST) {
+      if (entry->kind == CL_CONST) {
         /*
          * Here, we transfer named constant 
          * to imme.
          */
-        value=utillib_json_object_at(entry->value, "value");
         imme=value->as_ptr;
-        wide=emit_wide(entry->kind);
+        wide=emit_wide(entry->constant.type);
         goto handle_imme;
       }
       if (cling_symbol_table_find(symbol_table, value->as_ptr, CL_GLOBAL))

@@ -38,14 +38,35 @@
  */
 
 struct cling_symbol_table {
-  struct utillib_hashmap global_table;
-  struct utillib_slist scope_table;
-  size_t scope;
+  struct utillib_hashmap global;
+  struct utillib_hashmap local;
+  unsigned int scope;
 };
+
+/*
+ * We decided to make symbol_table
+ * independent of json value and
+ * isolate json value to ast.
+ */
 
 struct cling_symbol_entry {
   int kind;
-  struct utillib_json_value *value;
+  int scope;
+  union {
+    struct {
+      int base_type;
+      char *extend;
+    } array;
+    struct {
+      unsigned int argc;
+      int *argv_types;
+      int return_type;
+    } function;
+    struct {
+      int type;
+      char *value;
+    } constant;
+  };
 };
 
 /**
@@ -103,17 +124,6 @@ void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
 void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_update
- * updates an entry (name, kind, value) into the scope
- * \param scope_kind should be either CL_GLOBAL or CL_LOCAL.
- * Notes It updates the entry anyway.
- */
-void cling_symbol_table_update(struct cling_symbol_table *self,
-                               char const *name, int kind,
-                               struct utillib_json_value *value,
-                               int scope_kind);
-
-/**
  * \function cling_symbol_table_find
  * Finds the entry for symbol `name' in the scope
  * specified by `scope_kind'.
@@ -144,16 +154,16 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
                                    char const *name, int scope_kind);
 
-/*
- * Use it to format actual type.
- * Free string after use.
- */
-char const *cling_pretty_typename(int kind);
+void cling_symbol_table_insert_const(struct cling_symbol_table *self,
+    struct utillib_json_value const* const_decl);
 
-/*
- * JSON
- */
-struct utillib_json_value *
-cling_symbol_table_json_object_create(struct cling_symbol_table const *self);
+void cling_symbol_table_insert_arglist(struct cling_symbol_table *self,
+  struct utillib_json_value const *arglist);
+
+void cling_symbol_table_insert_function(struct cling_symbol_table *self,
+  struct utillib_json_value const *function);
+ 
+void cling_symbol_table_insert_variable(struct cling_symbol_table *self,
+  struct utillib_json_value const *variable);
 
 #endif /* CLING_SYMBOL_TABLE_H */

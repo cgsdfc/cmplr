@@ -60,8 +60,8 @@ static void emit_printf_stmt(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs)
 {
-  struct utillib_json_value *value, *str, *arglist;
-  struct utillib_json_value *type,*object;
+  struct utillib_json_value const*value, *str, *arglist;
+  struct utillib_json_value const*type,*object;
   struct cling_ast_ir *ir;
   struct cling_polish_ir polish_ir;
 
@@ -104,7 +104,7 @@ static void emit_for_stmt(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs)
 {
-  struct utillib_json_value *init, *cond, *step, *stmt;
+  struct utillib_json_value const*init, *cond, *step, *stmt;
   /*
    * Since the grammar asks for an abnormal interpretation
    * of the ordinary for-statement, we add one `tricky_jmp'
@@ -220,8 +220,8 @@ static void emit_switch_stmt(
     struct utillib_vector *instrs) 
 {
   struct cling_polish_ir polish_ir;
-  struct utillib_json_value *object, *case_clause, *expr;
-  struct utillib_json_value *value, *case_, *stmt, *type;
+  struct utillib_json_value const*object, *case_clause, *expr;
+  struct utillib_json_value const*value, *case_, *stmt, *type;
   struct cling_ast_ir *case_gaurd, * break_jump; 
   /*
    * break_jumps keeps all the break_jump of
@@ -276,7 +276,7 @@ static void emit_expr_stmt(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) 
 {
-  struct utillib_json_value *expr;
+  struct utillib_json_value const*expr;
   struct cling_polish_ir polish_ir;
 
   expr=utillib_json_object_at(self, "expr");
@@ -290,7 +290,7 @@ static void emit_return_stmt(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) 
 {
-  struct utillib_json_value *expr;
+  struct utillib_json_value const*expr;
   struct cling_polish_ir polish_ir;
   struct cling_ast_ir *ir;
 
@@ -314,7 +314,7 @@ static void emit_if_stmt(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) 
 {
-  struct utillib_json_value *expr, *then_clause, *else_clause;
+  struct utillib_json_value const*expr, *then_clause, *else_clause;
   struct cling_polish_ir polish_ir;
   struct cling_ast_ir *skip_branch, *jump;
 
@@ -347,7 +347,7 @@ static void emit_statement(
     struct utillib_vector *instrs) {
   if (self == &utillib_json_null)
     return;
-  struct utillib_json_value *type=utillib_json_object_at(self, "type");
+  struct utillib_json_value const*type=utillib_json_object_at(self, "type");
   switch(type->as_size_t) {
     case SYM_PRINTF_STMT:
       emit_printf_stmt(self, global, instrs);
@@ -422,7 +422,7 @@ static void emit_const_defs(
     struct cling_ast_ir_global *global,
     struct utillib_vector *instrs) {
   struct utillib_json_value const *defs, *decl;
-  struct utillib_json_value  *value, *name, *type;
+  struct utillib_json_value  const*value, *name, *type;
   int scope_bit;
 
   type=utillib_json_object_at(self, "type");
@@ -452,19 +452,19 @@ static void maybe_emit_decls(
     struct cling_ast_ir_global *global,
     int scope_kind,
     struct utillib_vector *instrs) {
-  struct utillib_json_value *object, *const_decls, *var_decls;
+  struct utillib_json_value const*object, *const_decls, *var_decls;
 
   const_decls=utillib_json_object_at(self, "const_decls");
   var_decls=utillib_json_object_at(self, "var_decls");
   if (const_decls) {
     UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) 
-      cling_ast_insert_const(object, global->symbol_table, scope_kind); 
+      cling_symbol_table_insert_const(global->symbol_table,object); 
       emit_const_defs(object , global, instrs);
   }
 
   if (var_decls) {
     UTILLIB_JSON_ARRAY_FOREACH(object,  var_decls) {
-      cling_ast_insert_variable(object, global->symbol_table, scope_kind);
+      cling_symbol_table_insert_variable(global->symbol_table,object);
       emit_var_defs(object,global,instrs );
     }
   }
@@ -522,20 +522,19 @@ static struct cling_ast_function *
 cling_ast_ir_emit_function(struct utillib_json_value const* func_node, 
     struct cling_ast_ir_global *global) {
   struct cling_ast_function *self=malloc(sizeof *self);
-  struct utillib_json_value *type=utillib_json_object_at(func_node, "type");
-  struct utillib_json_value *name=utillib_json_object_at(func_node, "name");
-  struct utillib_json_value *arglist=utillib_json_object_at(func_node, "arglist");
-  struct utillib_json_value *comp=utillib_json_object_at(func_node, "comp");
+  struct utillib_json_value const*type=utillib_json_object_at(func_node, "type");
+  struct utillib_json_value const*name=utillib_json_object_at(func_node, "name");
+  struct utillib_json_value const*arglist=utillib_json_object_at(func_node, "arglist");
+  struct utillib_json_value const*comp=utillib_json_object_at(func_node, "comp");
   struct utillib_json_value const *arg;
 
   cling_ast_function_init(self, name->as_ptr);
-  cling_symbol_table_enter_scope(global->symbol_table);
-  cling_ast_insert_arglist(arglist, global->symbol_table); 
+  cling_symbol_table_insert_arglist(global->symbol_table,arglist); 
   utillib_vector_push_back(&self->instrs,
       emit_defunc(type->as_size_t, name->as_ptr));
 
   UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
-    struct utillib_json_value * type, *name;
+    struct utillib_json_value const* type, *name;
     type=utillib_json_object_at(arg, "type");
     name=utillib_json_object_at(arg, "name");
     utillib_vector_push_back(&self->instrs,
@@ -543,7 +542,6 @@ cling_ast_ir_emit_function(struct utillib_json_value const* func_node,
   }
   emit_composite(comp, global, &self->instrs);
   utillib_vector_push_back(&self->instrs, emit_nop());
-  cling_symbol_table_leave_scope(global->symbol_table);
   return self;
 }
 
@@ -555,10 +553,10 @@ static void ast_ir_global_init(struct cling_ast_ir_global *self,
 
 void cling_ast_ir_emit_program(
     struct utillib_json_value const *self,
-    struct cling_symbol_table const *symbol_table,
+    struct cling_symbol_table *symbol_table,
     struct cling_ast_program *program)
 {
-  struct utillib_json_value *func_decls, *object;
+  struct utillib_json_value const*func_decls, *object;
   struct cling_ast_function *func;
   struct cling_ast_ir_global global;
   int temps;
@@ -576,7 +574,9 @@ void cling_ast_ir_emit_program(
    */
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
     temps=global.temps;
+    cling_symbol_table_enter_scope(symbol_table);
     func=cling_ast_ir_emit_function(object, &global);
+    cling_symbol_table_leave_scope(symbol_table);
     func->temps=global.temps-temps;
     utillib_vector_push_back(&program->funcs, func);
   }

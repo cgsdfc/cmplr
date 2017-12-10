@@ -62,7 +62,7 @@ static void ast_pretty_factor(struct utillib_json_value const *self,
 
 static void ast_pretty_call(struct utillib_json_value const *self,
                             struct utillib_string *string) {
-  struct utillib_json_value *lhs, *rhs, *arg;
+  struct utillib_json_value const *lhs, *rhs, *arg;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
   ast_pretty_factor(lhs, string);
@@ -81,7 +81,7 @@ static void ast_pretty_call(struct utillib_json_value const *self,
 
 static void ast_pretty_subscript(struct utillib_json_value const *self,
                                  struct utillib_string *string) {
-  struct utillib_json_value *lhs, *rhs;
+  struct utillib_json_value const *lhs, *rhs;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
   ast_pretty_factor(lhs, string);
@@ -92,7 +92,7 @@ static void ast_pretty_subscript(struct utillib_json_value const *self,
 
 static void ast_pretty_binary(struct utillib_json_value const *self,
                               struct utillib_string *string) {
-  struct utillib_json_value *lhs, *rhs, *op;
+  struct utillib_json_value const *lhs, *rhs, *op;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
   op = utillib_json_object_at(self, "op");
@@ -106,7 +106,7 @@ static void ast_pretty_binary(struct utillib_json_value const *self,
 
 static void ast_pretty_expr(struct utillib_json_value const *self,
                             struct utillib_string *string) {
-  struct utillib_json_value *op;
+  struct utillib_json_value const *op;
   op = utillib_json_object_at(self, "op");
   if (!op) {
     ast_pretty_factor(self, string);
@@ -136,7 +136,7 @@ static void ast_pretty_array(
     int indent_level,
     void (*array_tostring)(struct utillib_json_value const *array,
                            struct utillib_string *string, int indent_level)) {
-  struct utillib_json_value *object;
+  struct utillib_json_value const *object;
 
   UTILLIB_JSON_ARRAY_FOREACH(object, self) {
     array_tostring(object, string, indent_level);
@@ -165,7 +165,7 @@ static void ast_pretty_char(struct utillib_json_value const *self,
 static void ast_pretty_printf_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
-  struct utillib_json_value *value, *type, *arglist, *object;
+  struct utillib_json_value const *value, *type, *arglist, *object;
 
   arglist = utillib_json_object_at(self, "arglist");
   ast_pretty_indent(string, indent_level);
@@ -186,7 +186,7 @@ static void ast_pretty_printf_stmt(struct utillib_json_value const *self,
 static void ast_pretty_scanf_stmt(struct utillib_json_value const *self,
                                   struct utillib_string *string,
                                   int indent_level) {
-  struct utillib_json_value *arglist, *name, *object;
+  struct utillib_json_value const *arglist, *name, *object;
 
   arglist = utillib_json_object_at(self, "arglist");
   ast_pretty_indent(string, indent_level);
@@ -201,7 +201,7 @@ static void ast_pretty_scanf_stmt(struct utillib_json_value const *self,
 
 static void ast_pretty_clause(struct utillib_json_value const *self,
                               struct utillib_string *string, int indent_level) {
-  struct utillib_json_value *type;
+  struct utillib_json_value const *type;
   type = utillib_json_object_at(self, "type");
   if (type->as_size_t == SYM_COMP_STMT) {
     utillib_string_append(string, " ");
@@ -217,7 +217,7 @@ static void ast_pretty_clause(struct utillib_json_value const *self,
 static void ast_pretty_for_stmt(struct utillib_json_value const *self,
                                 struct utillib_string *string,
                                 int indent_level) {
-  struct utillib_json_value *init, *cond, *step, *stmt;
+  struct utillib_json_value const *init, *cond, *step, *stmt;
   init = utillib_json_object_at(self, "init");
   cond = utillib_json_object_at(self, "cond");
   step = utillib_json_object_at(self, "step");
@@ -236,7 +236,7 @@ static void ast_pretty_for_stmt(struct utillib_json_value const *self,
 
 static void ast_pretty_case_label(struct utillib_json_value const *self,
                                   struct utillib_string *string) {
-  struct utillib_json_value *case_, *value;
+  struct utillib_json_value const *case_, *value;
   case_ = utillib_json_object_at(self, "case");
   if (case_) {
     value = utillib_json_object_at(case_, "value");
@@ -251,7 +251,7 @@ static void ast_pretty_case_label(struct utillib_json_value const *self,
 static void ast_pretty_case_clause(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
-  struct utillib_json_value *stmt;
+  struct utillib_json_value const *stmt;
   stmt = utillib_json_object_at(self, "stmt");
   ast_pretty_indent(string, indent_level);
   ast_pretty_case_label(self, string);
@@ -261,7 +261,7 @@ static void ast_pretty_case_clause(struct utillib_json_value const *self,
 static void ast_pretty_switch_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
-  struct utillib_json_value *expr, *cases;
+  struct utillib_json_value const *expr, *cases;
   expr = utillib_json_object_at(self, "expr");
   cases = utillib_json_object_at(self, "cases");
 
@@ -277,7 +277,7 @@ static void ast_pretty_switch_stmt(struct utillib_json_value const *self,
 static void ast_pretty_if_stmt(struct utillib_json_value const *self,
                                struct utillib_string *string,
                                int indent_level) {
-  struct utillib_json_value *expr, *then_clause, *else_clause;
+  struct utillib_json_value const *expr, *then_clause, *else_clause;
   expr = utillib_json_object_at(self, "expr");
   then_clause = utillib_json_object_at(self, "then");
 
@@ -308,7 +308,7 @@ static void ast_pretty_expr_stmt(struct utillib_json_value const *self,
 static void ast_pretty_return_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
-  struct utillib_json_value *expr;
+  struct utillib_json_value const *expr;
 
   ast_pretty_indent(string, indent_level);
   utillib_string_append(string, "return");
@@ -323,7 +323,7 @@ static void ast_pretty_return_stmt(struct utillib_json_value const *self,
 static void ast_pretty_statement(struct utillib_json_value const *self,
                                  struct utillib_string *string,
                                  int indent_level) {
-  struct utillib_json_value *type;
+  struct utillib_json_value const *type;
   if (self == &utillib_json_null) {
     ast_pretty_indent(string, indent_level);
     goto append_semi;
@@ -362,7 +362,7 @@ append_semi:
 static void ast_pretty_single_var_decl(struct utillib_json_value const *self,
                                        struct utillib_string *string,
                                        int indent_level) {
-  struct utillib_json_value *type, *extend, *name, *var_defs, *object;
+  struct utillib_json_value const *type, *extend, *name, *var_defs, *object;
 
   type = utillib_json_object_at(self, "type");
   var_defs = utillib_json_object_at(self, "var_defs");
@@ -387,7 +387,7 @@ static void ast_pretty_single_var_decl(struct utillib_json_value const *self,
 static void ast_pretty_single_const_decl(struct utillib_json_value const *self,
                                          struct utillib_string *string,
                                          int indent_level) {
-  struct utillib_json_value *type, *const_defs, *name, *value, *object;
+  struct utillib_json_value const *type, *const_defs, *name, *value, *object;
 
   type = utillib_json_object_at(self, "type");
   const_defs = utillib_json_object_at(self, "const_defs");
@@ -414,7 +414,7 @@ static void ast_pretty_single_const_decl(struct utillib_json_value const *self,
 static void ast_pretty_maybe_decls(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
-  struct utillib_json_value *const_decls, *var_decls;
+  struct utillib_json_value const *const_decls, *var_decls;
   const_decls = utillib_json_object_at(self, "const_decls");
   var_decls = utillib_json_object_at(self, "var_decls");
   if (const_decls) {
@@ -432,7 +432,7 @@ static void ast_pretty_maybe_decls(struct utillib_json_value const *self,
 static void ast_pretty_composite_stmt(struct utillib_json_value const *self,
                                       struct utillib_string *string,
                                       int indent_level) {
-  struct utillib_json_value *stmts;
+  struct utillib_json_value const *stmts;
 
   stmts = utillib_json_object_at(self, "stmts");
   utillib_string_append(string, "{\n");
@@ -448,7 +448,7 @@ static void ast_pretty_composite_stmt(struct utillib_json_value const *self,
 
 static void ast_pretty_arglist(struct utillib_json_value const *self,
                                struct utillib_string *string) {
-  struct utillib_json_value *type, *name, *object;
+  struct utillib_json_value const *type, *name, *object;
 
   utillib_string_append(string, "(");
   if (utillib_json_array_size(self) == 0) {
@@ -469,7 +469,7 @@ static void ast_pretty_arglist(struct utillib_json_value const *self,
 static void ast_pretty_function(struct utillib_json_value const *self,
                                 struct utillib_string *string,
                                 int indent_level) {
-  struct utillib_json_value *arglist, *type, *name, *comp;
+  struct utillib_json_value const *arglist, *type, *name, *comp;
   type = utillib_json_object_at(self, "type");
   name = utillib_json_object_at(self, "name");
   arglist = utillib_json_object_at(self, "arglist");
@@ -485,7 +485,7 @@ static void ast_pretty_function(struct utillib_json_value const *self,
 
 static void ast_pretty_program(struct utillib_json_value const *self,
                                struct utillib_string *string) {
-  struct utillib_json_value *func_decls;
+  struct utillib_json_value const *func_decls;
   func_decls = utillib_json_object_at(self, "func_decls");
   ast_pretty_maybe_decls(self, string, 0);
   ast_pretty_array(func_decls, string, 0, ast_pretty_function);

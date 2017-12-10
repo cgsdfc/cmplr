@@ -38,7 +38,7 @@
  * Checks whether an iden is lvalue.
  * Return its type or CL_UNDEF.
  */
-int cling_ast_check_iden_assignable(struct utillib_json_value *self,
+int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
                                     struct cling_rd_parser *parser,
                                     struct utillib_token_scanner *input,
                                     size_t context);
@@ -46,7 +46,7 @@ int cling_ast_check_iden_assignable(struct utillib_json_value *self,
 /*
  * Excluding assign_expr and boolean_expr.
  */
-int cling_ast_check_expression(struct utillib_json_value *self,
+int cling_ast_check_expression(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context);
@@ -56,12 +56,12 @@ int cling_ast_check_expression(struct utillib_json_value *self,
  * of expr_stmt, namely, assign_stmt, call_stmt,
  * we provide special check for that.
  */
-int cling_ast_check_expr_stmt(struct utillib_json_value *self,
+int cling_ast_check_expr_stmt(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
                               struct utillib_token_scanner *input,
                               size_t context);
 
-int cling_ast_check_returnness(struct utillib_json_value *self,
+int cling_ast_check_returnness(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
                                struct utillib_token_scanner *input,
                                size_t context, bool void_flag);
@@ -70,14 +70,14 @@ int cling_ast_check_returnness(struct utillib_json_value *self,
  * iden = expr
  * That all we can do in `for' the initial part.
  */
-int cling_ast_check_for_init(struct utillib_json_value *self,
+int cling_ast_check_for_init(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
                              struct utillib_token_scanner *input,
                              size_t context);
 /*
  * condition ::= expr relop expr
  */
-int cling_ast_check_condition(struct utillib_json_value *self,
+int cling_ast_check_condition(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
                               struct utillib_token_scanner *input,
                               size_t context);
@@ -86,7 +86,7 @@ int cling_ast_check_condition(struct utillib_json_value *self,
  * iden = iden (+|-) non-zero integer
  * That is for `for' step part.
  */
-int cling_ast_check_for_step(struct utillib_json_value *self,
+int cling_ast_check_for_step(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
                              struct utillib_token_scanner *input,
                              size_t context);

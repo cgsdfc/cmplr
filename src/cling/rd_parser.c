@@ -404,7 +404,7 @@ multiple_const_decl(struct cling_rd_parser *self,
   while (true) {
     object = single_const_decl(self, input, scope_kind);
     if (object != NULL) {
-      cling_ast_insert_const(object, self->symbol_table, scope_kind);
+      cling_symbol_table_insert_const(self->symbol_table, object);
       utillib_json_array_push_back(array, object);
     }
     code = utillib_token_scanner_lookahead(input);
@@ -581,7 +581,7 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
       /*
        * These names were checked in var_defs.
        */
-      cling_ast_insert_variable(object, self->symbol_table, scope_kind);
+      cling_symbol_table_insert_variable(self->symbol_table, object);
       utillib_json_array_push_back(array, object);
       code = utillib_token_scanner_lookahead(input);
       if (code != SYM_KW_INT && code != SYM_KW_CHAR)
@@ -1640,14 +1640,14 @@ function_args_body(struct cling_rd_parser *self,
 
   cling_symbol_table_enter_scope(self->symbol_table);
   arglist = formal_arglist(self, input);
-  cling_ast_insert_arglist(arglist, self->symbol_table);
+  cling_symbol_table_insert_arglist(self->symbol_table, arglist);
   utillib_json_object_push_back(object, "arglist", arglist);
   if (utillib_json_object_at(object, "name")) {
     /*
      * A function may lose its name due to redefinition.
      * Check here.
      */
-    cling_ast_insert_function(object, self->symbol_table);
+    cling_symbol_table_insert_function(self->symbol_table, object);
   }
 
   /*
