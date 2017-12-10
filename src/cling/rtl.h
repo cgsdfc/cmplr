@@ -10,7 +10,7 @@
  * directly from ast without
  * too much consideration on
  * registers, memory and storage
- * schema, we need a RTL, or 
+ * schema, we need a RTL, or
  * Register-Trasferring-Langauge
  * to perform optimization and codegen
  * on it.
@@ -33,23 +33,15 @@ struct cling_rtl_emitter {
   struct utillib_vector string_pool;
   struct utillib_hashmap string_map;
   struct utillib_hashmap global_map;
-
-  
-
-
 };
 
 struct cling_rtl_function_emitter {
   struct utillib_hashmap named_const;
   unsigned int stack_ptr;
-
-
 };
 
 struct cling_rtl_program {
   struct utillib_vector instrs;
-
-
 };
 
 struct cling_rtl {

@@ -59,7 +59,7 @@ static void rd_parser_skip_target_init(struct cling_rd_parser *self, ...) {
        tar = va_arg(ap, int), ++i) {
     self->tars[i] = tar;
   }
-  self->tars[RD_PARSER_SKIP_MAX-1]=-1;
+  self->tars[RD_PARSER_SKIP_MAX - 1] = -1;
   va_end(ap);
 }
 
@@ -611,6 +611,7 @@ skip:
 /**
  * Lookahead SYM_KW_SCANF
  * Maybenull if **any** error happened.
+ * scanf(iden...)
  */
 static struct utillib_json_value *
 scanf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {

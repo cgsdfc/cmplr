@@ -24,9 +24,9 @@
 
 #include <utillib/json_foreach.h>
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 union cling_primary *cling_primary_copy(union cling_primary const *self) {
   union cling_primary *other = malloc(sizeof *other);
@@ -75,4 +75,3 @@ void cling_primary_init(union cling_primary *self, size_t type,
     assert(false);
   }
 }
-

@@ -21,9 +21,9 @@
 
 #include "symbol_table.h"
 #include "symbols.h"
+#include <utillib/json_foreach.h>
 #include <utillib/strhash.h>
 #include <utillib/string.h>
-#include <utillib/json_foreach.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -41,8 +41,11 @@ UTILLIB_ETAB_END(cling_symbol_entry_kind);
 
 static unsigned int gettype(size_t type) {
   switch (type) {
+  case SYM_INTEGER:
+  case SYM_UINT:
   case SYM_KW_INT:
     return CL_INT;
+  case SYM_CHAR:
   case SYM_KW_CHAR:
     return CL_CHAR;
   case SYM_KW_VOID:
@@ -119,11 +122,11 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
 struct cling_symbol_entry *
 cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
                         int scope_kind) {
+  if (self->scope==0 || scope_kind == CL_GLOBAL)
+    return utillib_hashmap_at(&self->global, name);
   switch (scope_kind) {
   case CL_LEXICAL:
     return symbol_table_lexical_find(self, name);
-  case CL_GLOBAL:
-    return utillib_hashmap_at(&self->global, name);
   case CL_LOCAL:
     return utillib_hashmap_at(&self->local, name);
   }
@@ -131,154 +134,157 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
 
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
                                    char const *name, int scope_kind) {
+  if (self->scope == 0 || scope_kind == CL_GLOBAL)
+    return utillib_hashmap_exist_key(&self->global, name);
   switch (scope_kind) {
   case CL_LEXICAL:
     return symbol_table_lexical_exist_name(self, name);
-  case CL_GLOBAL:
-    return utillib_hashmap_exist_key(&self->global, name);
   case CL_LOCAL:
     return utillib_hashmap_exist_key(&self->local, name);
   }
 }
 
-static void symbol_entry_init(struct cling_symbol_entry *self, 
-    int scope, int kind)
-{
-  self->kind=kind;
-  self->scope=scope;
+static void symbol_entry_init(struct cling_symbol_entry *self, int scope,
+                              int kind) {
+  self->kind = kind;
+  self->scope = scope;
 }
 
-static void symbol_entry_init_const(struct cling_symbol_entry *self, 
-    int scope, int type, char const* val)
-{
+static void symbol_entry_init_single_var(struct cling_symbol_entry *self,
+                                         int scope, int type) {
+  symbol_entry_init(self, scope, gettype(type));
+}
+
+static void symbol_entry_init_const(struct cling_symbol_entry *self, int scope,
+                                    int type, char const *val) {
   symbol_entry_init(self, scope, CL_CONST);
-  self->constant.type=gettype(type);
-  self->constant.value=strdup(val);
+  self->constant.type = gettype(type);
+  self->constant.value = strdup(val);
 }
 
-static void symbol_entry_init_array(struct cling_symbol_entry *self,
-    int scope, int base_type, char const* extend)
-{
+static void symbol_entry_init_array(struct cling_symbol_entry *self, int scope,
+                                    int base_type, char const *extend) {
   symbol_entry_init(self, scope, CL_ARRAY);
-  self->array.base_type=base_type;
-  self->array.extend=strdup(extend);
+  self->array.base_type = gettype(base_type);
+  self->array.extend = strdup(extend);
 }
 
-static void symbol_entry_init_function(struct cling_symbol_entry *self,
-    int return_type, struct utillib_json_value const* arglist)
-{
+static void
+symbol_entry_init_function(struct cling_symbol_entry *self, int return_type,
+                           struct utillib_json_value const *arglist) {
   int *argv_types;
-  struct utillib_json_value const* object, *type;
-  unsigned int argc=0;
+  struct utillib_json_value const *object, *type;
+  unsigned int argc = 0;
 
   symbol_entry_init(self, CL_GLOBAL, CL_FUNC);
-  self->function.return_type=gettype(return_type);
-  argv_types=malloc(argc * sizeof argv_types[0]);
+  self->function.return_type = gettype(return_type);
+  argv_types = malloc(argc * sizeof argv_types[0]);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
-    type=utillib_json_object_at(object, "type");
-    argv_types[argc++]=gettype(type->as_size_t);
+    type = utillib_json_object_at(object, "type");
+    argv_types[argc++] = gettype(type->as_size_t);
   }
-  self->function.argc=argc;
-  self->function.argv_types=argv_types;
+  self->function.argc = argc;
+  self->function.argv_types = argv_types;
 }
 
-static void symbol_entry_destroy(struct cling_symbol_entry *self)
-{
+static void symbol_entry_destroy(struct cling_symbol_entry *self) {
   if (!self)
     /*
      * Since cling_symbol_table_reserve open the window
      * for NULL entry, we must test it here.
      */
     return;
-  switch(self->kind) {
-    case CL_FUNC:
-      free(self->function.argv_types);
-      break;
-    case CL_CONST:
-      free(self->constant.value);
-      break;
-    case CL_ARRAY:
-      free(self->array.extend);
-      break;
+  switch (self->kind) {
+  case CL_FUNC:
+    free(self->function.argv_types);
+    break;
+  case CL_CONST:
+    free(self->constant.value);
+    break;
+  case CL_ARRAY:
+    free(self->array.extend);
+    break;
   }
   free(self);
 }
 
-static struct utillib_hashmap*
-current_scope(struct cling_symbol_table * self) {
-  return self->scope?&self->local:&self->global;
+static struct utillib_hashmap *current_scope(struct cling_symbol_table *self) {
+  return self->scope ? &self->local : &self->global;
 }
 
-static void symbol_table_insert(struct utillib_hashmap *scope,
-    char const* name, struct cling_symbol_entry const* entry)
-{
+static void symbol_table_insert(struct utillib_hashmap *scope, char const *name,
+                                struct cling_symbol_entry const *entry) {
   if (!utillib_hashmap_exist_key(scope, name))
-    name=strdup(name);
+    name = strdup(name);
   utillib_hashmap_update(scope, name, entry);
 }
 
-void cling_symbol_table_insert_const(struct cling_symbol_table *self,
-    struct utillib_json_value const* const_decl) 
-{
+/*
+ * Table insersion.
+ */
+
+void cling_symbol_table_insert_const(
+    struct cling_symbol_table *self,
+    struct utillib_json_value const *const_decl) {
   struct cling_symbol_entry *entry;
   struct utillib_json_value const *const_defs, *object, *type, *name, *value;
-  type=utillib_json_object_at(const_decl, "type");
-  const_defs=utillib_json_object_at(const_decl, "const_defs");
+  type = utillib_json_object_at(const_decl, "type");
+  const_defs = utillib_json_object_at(const_decl, "const_defs");
 
   UTILLIB_JSON_ARRAY_FOREACH(object, const_defs) {
-    name=utillib_json_object_at(object, "name");
-    value=utillib_json_object_at(object, "value");
-    entry=malloc(sizeof *entry);
-    symbol_entry_init_const(entry, self->scope, type->as_size_t, value->as_ptr); 
+    name = utillib_json_object_at(object, "name");
+    value = utillib_json_object_at(object, "value");
+    entry = malloc(sizeof *entry);
+    symbol_entry_init_const(entry, self->scope, type->as_size_t, value->as_ptr);
     symbol_table_insert(current_scope(self), name->as_ptr, entry);
   }
 }
 
-void cling_symbol_table_insert_arglist(struct cling_symbol_table *self,
-  struct utillib_json_value const *arglist) {
+void cling_symbol_table_insert_arglist(
+    struct cling_symbol_table *self, struct utillib_json_value const *arglist) {
   struct utillib_json_value const *object, *type, *name;
   struct cling_symbol_entry *entry;
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
-    type=utillib_json_object_at(object, "type");
-    name=utillib_json_object_at(object, "name");
-    entry=malloc(sizeof *entry);
-    symbol_entry_init(entry, self->scope, type->as_size_t);
+    type = utillib_json_object_at(object, "type");
+    name = utillib_json_object_at(object, "name");
+    entry = malloc(sizeof *entry);
+    symbol_entry_init_single_var(entry, self->scope, type->as_size_t);
     symbol_table_insert(&self->local, name->as_ptr, entry);
   }
 }
 
-void cling_symbol_table_insert_function(struct cling_symbol_table *self,
-  struct utillib_json_value const *function) {
+void cling_symbol_table_insert_function(
+    struct cling_symbol_table *self,
+    struct utillib_json_value const *function) {
   struct utillib_json_value const *type, *arglist, *name;
   struct cling_symbol_entry *entry;
-  name=utillib_json_object_at(function, "name");
-  type=utillib_json_object_at(function, "type");
-  arglist=utillib_json_object_at(function, "arglist");
-  entry=malloc(sizeof *entry);
+  name = utillib_json_object_at(function, "name");
+  type = utillib_json_object_at(function, "type");
+  arglist = utillib_json_object_at(function, "arglist");
+  entry = malloc(sizeof *entry);
   symbol_entry_init_function(entry, type->as_size_t, arglist);
   symbol_table_insert(&self->global, name->as_ptr, entry);
 }
 
-void cling_symbol_table_insert_variable(struct cling_symbol_table *self,
-  struct utillib_json_value const *variable) {
+void cling_symbol_table_insert_variable(
+    struct cling_symbol_table *self,
+    struct utillib_json_value const *variable) {
   struct utillib_json_value const *name, *type, *var_defs, *extend, *object;
   struct cling_symbol_entry *entry;
-  type=utillib_json_object_at(variable, "type");
-  var_defs=utillib_json_object_at(variable, "var_defs");
+  type = utillib_json_object_at(variable, "type");
+  var_defs = utillib_json_object_at(variable, "var_defs");
   UTILLIB_JSON_ARRAY_FOREACH(object, var_defs) {
-    entry=malloc(sizeof *entry);
-    name=utillib_json_object_at(object, "name");
-    extend=utillib_json_object_at(object, "extend");
+    entry = malloc(sizeof *entry);
+    name = utillib_json_object_at(object, "name");
+    extend = utillib_json_object_at(object, "extend");
     if (extend) {
-      symbol_entry_init_array(entry, self->scope, type->as_size_t, extend->as_ptr);
-    } else {
-      symbol_entry_init(entry, self->scope, type->as_size_t);
+      symbol_entry_init_array(entry, self->scope, type->as_size_t,
+                              extend->as_ptr);
+    } else { /* Single Variable */
+      symbol_entry_init_single_var(entry, self->scope, type->as_size_t);
     }
     symbol_table_insert(current_scope(self), name->as_ptr, entry);
   }
 }
-
-
-

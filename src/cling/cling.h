@@ -21,12 +21,12 @@
 #ifndef CLING_CLING_H
 #define CLING_CLING_H
 
+#include <cling/ast_ir.h>
 #include <cling/ast_pretty.h>
+#include <cling/ir.h>
 #include <cling/opg_parser.h>
 #include <cling/rd_parser.h>
 #include <cling/scanner.h>
 #include <cling/symbol_table.h>
-#include <cling/ast_ir.h>
-#include <cling/ir.h>
 
 #endif /* CLING_CLING_H */

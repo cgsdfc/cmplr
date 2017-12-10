@@ -155,7 +155,7 @@ static int ast_check_factor(struct utillib_json_value const *self,
       return CL_UNDEF;
     }
     if ((*entry)->kind == CL_CONST)
-      return (*entry )->constant.type;
+      return (*entry)->constant.type;
     return (*entry)->kind;
   case SYM_CHAR:
     return CL_CHAR;
@@ -257,14 +257,14 @@ static int ast_check_call(struct utillib_json_value const *self,
       continue;
     if (ast_integral_compatible(actual_arg_type))
       continue;
-    rd_parser_error_push_back(parser, cling_incompatible_arg_error(
-                                          input, i, formal_arg_type,
-                                          actual_arg_type, context));
+    rd_parser_error_push_back(
+        parser, cling_incompatible_arg_error(input, i, formal_arg_type,
+                                             actual_arg_type, context));
   }
   if (i != formal_argc) {
     rd_parser_error_push_back(
-        parser, cling_argc_unmatched_error(input, callee->as_ptr,
-                                           actual_argc, formal_argc, context));
+        parser, cling_argc_unmatched_error(input, callee->as_ptr, actual_argc,
+                                           formal_argc, context));
     return CL_UNDEF;
   }
   return entry->function.return_type;

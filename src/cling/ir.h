@@ -34,8 +34,8 @@ UTILLIB_ENUM_ELEM(OP_ADD)
 UTILLIB_ENUM_ELEM(OP_SUB)
 UTILLIB_ENUM_ELEM(OP_BNZ)
 UTILLIB_ENUM_ELEM(OP_BEZ)
-  UTILLIB_ENUM_ELEM(OP_BNE)
-  UTILLIB_ENUM_ELEM(OP_JMP)
+UTILLIB_ENUM_ELEM(OP_BNE)
+UTILLIB_ENUM_ELEM(OP_JMP)
 UTILLIB_ENUM_ELEM(OP_IDX)
 UTILLIB_ENUM_ELEM(OP_CAL)
 UTILLIB_ENUM_ELEM(OP_DIV)
@@ -63,7 +63,7 @@ UTILLIB_ENUM_END(cling_ast_opcode_kind);
  */
 
 UTILLIB_ENUM_BEGIN(cling_operand_info_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_NULL,0)
+UTILLIB_ENUM_ELEM_INIT(CL_NULL, 0)
 UTILLIB_ENUM_ELEM_INIT(CL_BYTE, 1)
 UTILLIB_ENUM_ELEM_INIT(CL_WORD, 2)
 UTILLIB_ENUM_ELEM_INIT(CL_GLBL, 4)
@@ -92,11 +92,12 @@ struct cling_ast_ir_global {
  * a temp. Their meanings are decided
  * by the corresponding info field.
  */
-union cling_ast_operand {
-  char const *text;
-  char char_val;
-  unsigned int uint_val;
-  int scalar;
+struct cling_ast_operand {
+  int info;
+  union {
+    char const *text;
+    int scalar;
+  };
 };
 
 /*
@@ -108,29 +109,25 @@ union cling_ast_operand {
 struct cling_ast_ir {
 #define CLING_AST_IR_MAX 3
   int opcode;
-  union cling_ast_operand 
-    operands[CLING_AST_IR_MAX];
-  int info[CLING_AST_IR_MAX];
+  struct cling_ast_operand operands[CLING_AST_IR_MAX];
 };
 
-
-void emit_factor(
-    struct cling_ast_ir *ir, int index,
-    struct utillib_json_value const* var,
-    struct cling_symbol_table const* symbol_table);
+void emit_factor(struct cling_ast_operand *self,
+    struct utillib_json_value const *var,
+    struct cling_symbol_table const *symbol_table);
 
 /*
  * IR emission functions used by ast_ir.
  * Their operands are doced as well.
  */
-struct cling_ast_ir * 
-emit_ir(int type);
+struct cling_ast_ir *emit_ir(int type);
 
 /*
  * read name
  */
-struct cling_ast_ir *
-emit_read(char const *name);
+struct cling_ast_ir *emit_read(char const *name, int type, int scope_bit);
+
+int emit_scope(int scope_kind);
 
 /*
  * write string | temp
@@ -139,36 +136,32 @@ emit_read(char const *name);
 /*
  * defcon name(wide|scope) value
  */
-struct cling_ast_ir *
-emit_defcon(int type, char const *name,
-   int scope_bit, char const *value);
+struct cling_ast_ir *emit_defcon(int type, char const *name, int scope_bit,
+                                 char const *value);
 
 /*
  * defvar name(wide|scope) [extend]
  */
-struct cling_ast_ir *
-emit_defvar(int type, char const* name, int scope_bit,
-    char const *extend);
+struct cling_ast_ir *emit_defvar(int type, char const *name, int scope_bit,
+                                 char const *extend);
 
 int emit_wide(int type);
 
 /*
  * defunc name(wide)
  */
-struct cling_ast_ir *
-emit_defunc(int type, char const *name);
+struct cling_ast_ir *emit_defunc(int type, char const *name);
 
 /*
  * para name(wide)
  */
-struct cling_ast_ir *
-emit_para(int type, char const *name);
+struct cling_ast_ir *emit_para(int type, char const *name);
 
 /*
- * call name [temp = RET] 
+ * call name [temp = RET]
  */
-struct cling_ast_ir *
-emit_call(int type, int value, char const *name);
+
+struct cling_ast_ir *emit_call(char const *name, int maybe_temp);
 
 /*
  * SYM_XXX => CL_WORD | CL_BYTE
@@ -178,8 +171,7 @@ int emit_type(size_t type);
 /*
  * nop
  */
-struct cling_ast_ir *
-emit_nop(void);
+struct cling_ast_ir *emit_nop(void);
 
 /*
  * push name | temp | imme(wide|scope)
@@ -195,6 +187,5 @@ emit_nop(void);
 void cling_ast_ir_destroy(struct cling_ast_ir *self);
 
 void cling_ast_ir_print(struct utillib_vector const *instrs);
-
 
 #endif /* CLING_IR_H */

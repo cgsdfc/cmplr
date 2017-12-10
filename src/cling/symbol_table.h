@@ -154,16 +154,17 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
 bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
                                    char const *name, int scope_kind);
 
-void cling_symbol_table_insert_const(struct cling_symbol_table *self,
-    struct utillib_json_value const* const_decl);
+void cling_symbol_table_insert_const(
+    struct cling_symbol_table *self,
+    struct utillib_json_value const *const_decl);
 
-void cling_symbol_table_insert_arglist(struct cling_symbol_table *self,
-  struct utillib_json_value const *arglist);
+void cling_symbol_table_insert_arglist(
+    struct cling_symbol_table *self, struct utillib_json_value const *arglist);
 
-void cling_symbol_table_insert_function(struct cling_symbol_table *self,
-  struct utillib_json_value const *function);
- 
-void cling_symbol_table_insert_variable(struct cling_symbol_table *self,
-  struct utillib_json_value const *variable);
+void cling_symbol_table_insert_function(
+    struct cling_symbol_table *self, struct utillib_json_value const *function);
+
+void cling_symbol_table_insert_variable(
+    struct cling_symbol_table *self, struct utillib_json_value const *variable);
 
 #endif /* CLING_SYMBOL_TABLE_H */
