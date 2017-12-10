@@ -322,5 +322,6 @@ void cling_polish_ir_init(struct cling_polish_ir *self,
 
 void cling_polish_ir_destroy(struct cling_polish_ir *self) {
   utillib_vector_destroy(&self->stack);
-  utillib_vector_destroy(&self->opstack);
+  utillib_vector_destroy_owning(&self->opstack,
+      polish_ir_maybe_release_temp);
 }

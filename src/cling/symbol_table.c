@@ -175,17 +175,17 @@ symbol_entry_init_function(struct cling_symbol_entry *self, int return_type,
                            struct utillib_json_value const *arglist) {
   int *argv_types;
   struct utillib_json_value const *object, *type;
-  unsigned int argc = 0;
+  self->function.argc =  utillib_json_array_size(arglist);
+  int i=0;
 
   symbol_entry_init(self, CL_GLOBAL, CL_FUNC);
   self->function.return_type = gettype(return_type);
-  argv_types = malloc(argc * sizeof argv_types[0]);
+  argv_types = malloc(self->function.argc * sizeof argv_types[0]);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     type = utillib_json_object_at(object, "type");
-    argv_types[argc++] = gettype(type->as_size_t);
+    argv_types[i++] = gettype(type->as_size_t);
   }
-  self->function.argc = argc;
   self->function.argv_types = argv_types;
 }
 

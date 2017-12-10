@@ -1341,6 +1341,7 @@ parse_step:
   utillib_token_scanner_shiftaway(input);
   cling_opg_parser_reinit(&opg_parser, SYM_RP);
   step = cling_opg_parser_parse(&opg_parser, input);
+  cling_opg_parser_destroy(&opg_parser);
   if (step == NULL) {
     rd_parser_error_push_back(self,
                               cling_expected_error(input, SYM_EXPR, context));
