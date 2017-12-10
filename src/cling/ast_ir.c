@@ -463,13 +463,6 @@ static void emit_composite(struct utillib_json_value const *self,
                            struct utillib_vector *instrs) {
   struct utillib_json_value const *object, *stmts;
   stmts = utillib_json_object_at(self, "stmts");
-  /*
-   * Attention! maybe_insert_decls must come
-   * before maybe_emit_decls for all those symbols
-   * to be reachable!
-   */
-  maybe_insert_decls(self, global->symbol_table);
-  maybe_emit_decls(self, global, instrs);
   if (stmts)
     /*
      * Watch out the empty case!
@@ -515,22 +508,44 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
   struct utillib_json_value const *type, *name, *arglist, *arg, *comp;
   struct cling_symbol_entry const *entry;
 
+  /*
+   * AST Retrieve
+   */
   name = utillib_json_object_at(func_node, "name");
   entry=cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_GLOBAL);
   arglist = utillib_json_object_at(func_node, "arglist");
   comp = utillib_json_object_at(func_node, "comp");
 
-  self=cling_ast_function_create(name->as_ptr);
+  /*
+   * symbol_table insersion.
+   * Attention! maybe_insert_decls must come
+   * before maybe_emit_decls for all those symbols
+   * to be reachable!
+   */
+  maybe_insert_decls(comp, global->symbol_table);
   cling_symbol_table_insert_arglist(global->symbol_table, arglist);
-  utillib_vector_push_back(&self->instrs,
-      emit_defunc(entry->function.return_type, name->as_ptr));
 
+  /*
+   * init_code emision
+   * defunc ...
+   * para ...
+   * const 
+   * var...
+   */
+  self=cling_ast_function_create(name->as_ptr);
+  utillib_vector_push_back(&self->init_code,
+      emit_defunc(entry->function.return_type, name->as_ptr));
   UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
     name = utillib_json_object_at(arg, "name");
     entry=cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_LOCAL);
-    utillib_vector_push_back(&self->instrs,
+    utillib_vector_push_back(&self->init_code,
                              emit_para(entry->kind, name->as_ptr));
   }
+  maybe_emit_decls(func_node, global, &self->init_code);
+
+  /*
+   * instrs emision
+   */
   emit_composite(comp, global, &self->instrs);
   utillib_vector_push_back(&self->instrs, emit_nop());
   return self;
@@ -573,8 +588,14 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
 void cling_ast_program_print(struct cling_ast_program const *self) {
   struct cling_ast_function const *func;
 
+  puts("global.init_code");
   cling_ast_ir_print(&self->init_code);
+  puts("global.instrs");
   UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
+    puts("init_code");
+    cling_ast_ir_print(&func->init_code);
+    puts("instrs");
     cling_ast_ir_print(&func->instrs);
+    puts("");
   }
 }
