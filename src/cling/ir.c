@@ -102,8 +102,11 @@ void init_string(struct cling_ast_operand *self, char const* string) {
   self->info = CL_STRG;
 }
 
-int emit_wide(int type) {
-  switch (type) {
+/*
+ * wide should be of cling_symbol_entry_kind.
+ */
+int emit_wide(int wide) {
+  switch (wide) {
   case CL_INT:
     return CL_WORD;
   case CL_CHAR:
@@ -113,6 +116,10 @@ int emit_wide(int type) {
   }
 }
 
+/*
+ *  0 stands for global,
+ *  1 stands for local.
+ */
 int emit_scope(int scope_kind) {
   return scope_kind?CL_LOCL:CL_GLBL;
 }
@@ -120,9 +127,7 @@ int emit_scope(int scope_kind) {
 /*
  * We distinguish between name, imme.
  * A literal and a named constant is imme
- * while name is the variable.
- * Notes the term imme does not mean it must
- * goes into instruction field.
+ * while name is a variable.
  */
 void emit_factor(struct cling_ast_operand *self,
     struct utillib_json_value const *var,
@@ -281,8 +286,6 @@ static void factor_tostring(struct cling_ast_ir const *self, int index,
     utillib_string_append(string, "\"");
     return;
   }
-
-  printf("@@@@@@@@@@@@@@@@@@@@@@@@@@ %d\n", self->operands[index].info);
   assert(false);
 }
 

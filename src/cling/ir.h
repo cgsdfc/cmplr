@@ -112,9 +112,17 @@ struct cling_ast_ir {
   struct cling_ast_operand operands[CLING_AST_IR_MAX];
 };
 
-void emit_factor(struct cling_ast_operand *self,
-    struct utillib_json_value const *var,
-    struct cling_symbol_table const *symbol_table);
+/*
+ * Init routines for various kinds of operands.
+ */
+
+void init_imme(struct cling_ast_operand *self, int wide, char const* value);
+
+void init_null(struct cling_ast_operand *self);
+
+void init_string(struct cling_ast_operand *self, char const* string);
+
+void init_temp(struct cling_ast_operand *self, int scalar);
 
 /*
  * IR emission functions used by ast_ir.
@@ -129,6 +137,9 @@ struct cling_ast_ir *emit_read(char const *name, int type, int scope_bit);
 
 int emit_scope(int scope_kind);
 
+void emit_factor(struct cling_ast_operand *self,
+    struct utillib_json_value const *var,
+    struct cling_symbol_table const *symbol_table);
 /*
  * write string | temp
  */
@@ -162,11 +173,6 @@ struct cling_ast_ir *emit_para(int type, char const *name);
  */
 
 struct cling_ast_ir *emit_call(char const *name, int maybe_temp);
-
-/*
- * SYM_XXX => CL_WORD | CL_BYTE
- */
-int emit_type(size_t type);
 
 /*
  * nop

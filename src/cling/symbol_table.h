@@ -23,31 +23,12 @@
 #define CLING_SYMBOL_TABLE_H
 #include <utillib/enum.h>
 #include <utillib/hashmap.h>
-#include <utillib/slist.h>
-
-/**
- * \struct cling_symbol_table
- * This structure represents symbols in scopes.
- * A scope is just a hashmap holding some entries of symbols.
- * An entry of symbol is a name in the hashmap of the scope
- * and its kind with its value.
- * A series of scopes linked in a list form the lexical scopes
- * for the language, which can be pushed as the parser enters
- * a new scope and popped as it leaves a scope.
- * These hashmaps own the cling_symbol_entry and the name as key.
- */
 
 struct cling_symbol_table {
   struct utillib_hashmap global;
   struct utillib_hashmap local;
   unsigned int scope;
 };
-
-/*
- * We decided to make symbol_table
- * independent of json value and
- * isolate json value to ast.
- */
 
 struct cling_symbol_entry {
   int kind;
@@ -84,26 +65,14 @@ UTILLIB_ENUM_ELEM(CL_LOCAL)
 UTILLIB_ENUM_ELEM(CL_LEXICAL)
 UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
 
-/**
- * \enum cling_symbol_entry_kind
- * This enum descripts the properties of an entry
- * in the symbol table. These fields can be OR together
- * to express complex type from basic ones. For example,
- * const int => CL_INT | CL_CONST
- * int foo() => CL_INT | CL_FUNC
- * int a[10] => CL_INT | CL_ARRAY
- * However, some combinations are illegal. For example,
- * CL_INT | CL_ARRAY | CL_FUNC
- *
- */
 UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_UNDEF, 0)
-UTILLIB_ENUM_ELEM_INIT(CL_INT, 1)
-UTILLIB_ENUM_ELEM_INIT(CL_CHAR, 2)
-UTILLIB_ENUM_ELEM_INIT(CL_VOID, 4)
-UTILLIB_ENUM_ELEM_INIT(CL_CONST, 8)
-UTILLIB_ENUM_ELEM_INIT(CL_ARRAY, 16)
-UTILLIB_ENUM_ELEM_INIT(CL_FUNC, 32)
+UTILLIB_ENUM_ELEM(CL_UNDEF)
+UTILLIB_ENUM_ELEM(CL_INT)
+UTILLIB_ENUM_ELEM(CL_CHAR)
+UTILLIB_ENUM_ELEM(CL_VOID)
+UTILLIB_ENUM_ELEM(CL_CONST)
+UTILLIB_ENUM_ELEM(CL_ARRAY)
+UTILLIB_ENUM_ELEM(CL_FUNC)
 UTILLIB_ENUM_END(cling_symbol_entry_kind);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
@@ -111,14 +80,14 @@ void cling_symbol_table_destroy(struct cling_symbol_table *self);
 
 /**
  * \function cling_symbol_table_enter_scope
- * Makes an new scope and increases the scope counter.
+ * Init the local scope and increases the scope counter.
  * This means the following insertions will be done in the new scope.
  */
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
 
 /**
  * \function cling_symbol_table_leave_scope
- * Disposes the current scope if it is not the global scope.
+ * Clear the local scope.
  * All the symbols of it are lost.
  */
 void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
@@ -139,7 +108,6 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
  * Reserves an entry in scope specified by `scope_kind'
  * with the `name' as key so that the following
  * lookup shows thats `name' exists.
- * Assumes `name' does not exist before.
  * Notes the `name' will be strdup.
  * Notes `scope_kind' cannot be CL_LEXICAL.
  */

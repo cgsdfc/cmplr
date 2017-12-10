@@ -80,7 +80,8 @@ void cling_symbol_table_enter_scope(struct cling_symbol_table *self) {
 }
 
 void cling_symbol_table_leave_scope(struct cling_symbol_table *self) {
-  assert(self->scope > 0);
+  if (self->scope == 0)
+    return;
   symbol_table_scope_destroy(&self->local);
   --self->scope;
 }
