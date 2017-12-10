@@ -162,7 +162,7 @@ handle_name:
   return;
 
 handle_imme:
-  init_imme(self, wide, value->as_ptr);
+  init_imme(self, wide, entry->constant.value);
   return;
 }
 
