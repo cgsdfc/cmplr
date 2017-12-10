@@ -30,6 +30,7 @@
 UTILLIB_ETAB_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ETAB_ELEM_INIT(OP_DEFVAR, "var")
 UTILLIB_ETAB_ELEM(OP_DEFUNC)
+UTILLIB_ETAB_ELEM(OP_DEFARR)
 UTILLIB_ETAB_ELEM_INIT(OP_DEFCON, "const")
 UTILLIB_ETAB_ELEM_INIT(OP_PARA, "para")
 UTILLIB_ETAB_ELEM_INIT(OP_RET, "ret")
@@ -83,18 +84,9 @@ void init_name(struct cling_ast_operand *self, int scope_bit, int wide, char con
   self->text=strdup(name);
 }
 
-void init_imme(struct cling_ast_operand *self, int wide, char const* value) {
+void init_imme(struct cling_ast_operand *self, int wide, char const *value) {
   self->info=CL_IMME | emit_wide(wide);
   self->text=strdup(value);
-}
-
-void init_array(struct cling_ast_operand *self, char const* extend) {
-  if (extend) {
-    self->info=1;
-    self->text=strdup(extend);
-  } else {
-    self->info=0;
-  }
 }
 
 void init_string(struct cling_ast_operand *self, char const* string) {
@@ -168,8 +160,16 @@ handle_imme:
 inline struct cling_ast_ir *emit_nop(void) { return emit_ir(OP_NOP); }
 
 struct cling_ast_ir *emit_ir(int opcode) {
-  struct cling_ast_ir *self = malloc(sizeof *self);
+  struct cling_ast_ir *self = calloc(sizeof *self, 1);
   self->opcode = opcode;
+  return self;
+}
+
+struct cling_ast_ir *emit_defarr(int wide, char const *name,
+    int scope_bit, char const* extend) {
+  struct cling_ast_ir *self=emit_ir(OP_DEFARR);
+  init_name(&self->operands[0], scope_bit, wide, name);
+  init_imme(&self->operands[1], CL_WORD, extend);
   return self;
 }
 
@@ -198,11 +198,9 @@ struct cling_ast_ir *emit_defcon(int wide, char const *name, int scope_bit,
   return self;
 }
 
-struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit,
-                                 char const *extend) {
+struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit) {
   struct cling_ast_ir *self = emit_ir(OP_DEFVAR);
   init_name(&self->operands[0], scope_bit, wide, name);
-  init_array(&self->operands[1], extend);
   return self;
 }
 
@@ -251,11 +249,14 @@ static void defvar_tostring(struct cling_ast_ir const *self,
   utillib_string_append(string, wide_tostring(self->operands[0].info));
   utillib_string_append(string, " ");
   utillib_string_append(string, self->operands[0].text);
-  if (self->operands[1].info) {
-    utillib_string_append(string, "[");
-    utillib_string_append(string, self->operands[1].text);
-    utillib_string_append(string, "]");
-  }
+}
+
+static void defarr_tostring(struct cling_ast_ir const *self,
+    struct utillib_string *string) {
+  defvar_tostring(self, string);
+  utillib_string_append(string, "[");
+  utillib_string_append(string, self->operands[1].text);
+  utillib_string_append(string, "]");
 }
 
 static void defunc_tostring(struct cling_ast_ir const *self,
@@ -425,6 +426,9 @@ void cling_ast_ir_tostring(struct cling_ast_ir const *self,
       return;
     case OP_DEFVAR:
       defvar_tostring(self, string);
+      return;
+    case OP_DEFARR:
+      defarr_tostring(self, string);
       return;
     case OP_ADD:
     case OP_SUB:

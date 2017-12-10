@@ -59,6 +59,26 @@ struct cling_rtl {
 
 UTILLIB_ENUM_BEGIN(cling_rtl_opcode_kind)
 UTILLIB_ENUM_ELEM(RTL_MOV)
+  UTILLIB_ENUM_ELEM(RTL_LOAD)
+  UTILLIB_ENUM_ELEM(RTL_STOR)
+  UTILLIB_ENUM_ELEM(RTL_SUB)
 UTILLIB_ENUM_ELEM(RTL_ADD)
-UTILLIB_ENUM_END(cling_rtl_opcode_kind)
+UTILLIB_ENUM_END(cling_rtl_opcode_kind);
+
+/*
+ * RTL format:
+ */
+/*
+ * mov src_reg dst_reg
+ */
+/*
+ * storw src_reg base_reg offset
+ */
+/*
+ * loadb src_reg base_reg offset
+ */
+/*
+ * add dst_reg src_reg1 src_reg2
+ */
+
 #endif /* CLING_RTL_H */

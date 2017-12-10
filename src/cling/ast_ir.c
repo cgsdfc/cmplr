@@ -381,9 +381,9 @@ static void emit_var_defs(struct utillib_json_value const *self,
     entry=cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_LEXICAL);
     scope_bit=emit_scope(entry->scope);
     if (entry->kind == CL_ARRAY) {
-      ir = emit_defvar(entry->array.base_type, name->as_ptr, scope_bit, entry->array.extend);
+      ir = emit_defarr(entry->array.base_type, name->as_ptr, scope_bit, entry->array.extend);
     } else {
-      ir = emit_defvar(entry->kind, name->as_ptr, scope_bit, NULL);
+      ir = emit_defvar(entry->kind, name->as_ptr, scope_bit);
     }
     utillib_vector_push_back(instrs, ir);
   }
@@ -420,7 +420,7 @@ static void emit_const_defs(struct utillib_json_value const *self,
  * var_decls into symbol_table.
  */
 static void maybe_emit_decls(struct utillib_json_value const *self,
-                             struct cling_ast_ir_global *global, int scope_kind,
+                             struct cling_ast_ir_global *global, 
                              struct utillib_vector *instrs) {
   struct utillib_json_value const *object, *const_decls, *var_decls;
 
@@ -428,15 +428,32 @@ static void maybe_emit_decls(struct utillib_json_value const *self,
   var_decls = utillib_json_object_at(self, "var_decls");
   if (const_decls) {
     UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) {
-      cling_symbol_table_insert_const(global->symbol_table, object);
       emit_const_defs(object, global, instrs);
     }
   }
 
   if (var_decls) {
     UTILLIB_JSON_ARRAY_FOREACH(object, var_decls) {
-      cling_symbol_table_insert_variable(global->symbol_table, object);
       emit_var_defs(object, global, instrs);
+    }
+  }
+}
+
+static void maybe_insert_decls(struct utillib_json_value const *self,
+    struct cling_symbol_table *symbol_table) {
+  struct utillib_json_value const *object, *const_decls, *var_decls;
+
+  const_decls = utillib_json_object_at(self, "const_decls");
+  var_decls = utillib_json_object_at(self, "var_decls");
+  if (const_decls) {
+    UTILLIB_JSON_ARRAY_FOREACH(object, const_decls) {
+      cling_symbol_table_insert_const(symbol_table, object);
+    }
+  }
+
+  if (var_decls) {
+    UTILLIB_JSON_ARRAY_FOREACH(object, var_decls) {
+      cling_symbol_table_insert_variable(symbol_table, object);
     }
   }
 }
@@ -446,7 +463,13 @@ static void emit_composite(struct utillib_json_value const *self,
                            struct utillib_vector *instrs) {
   struct utillib_json_value const *object, *stmts;
   stmts = utillib_json_object_at(self, "stmts");
-  maybe_emit_decls(self, global, CL_LOCAL, instrs);
+  /*
+   * Attention! maybe_insert_decls must come
+   * before maybe_emit_decls for all those symbols
+   * to be reachable!
+   */
+  maybe_insert_decls(self, global->symbol_table);
+  maybe_emit_decls(self, global, instrs);
   if (stmts)
     /*
      * Watch out the empty case!
@@ -462,12 +485,14 @@ cling_ast_function_create(char const *name) {
   self->name = strdup(name);
   self->temps = 0;
   utillib_vector_init(&self->instrs);
+  utillib_vector_init(&self->init_code);
   return self;
 }
 
 static void cling_ast_function_destroy(struct cling_ast_function *self) {
   free(self->name);
   utillib_vector_destroy_owning(&self->instrs, cling_ast_ir_destroy);
+  utillib_vector_destroy_owning(&self->init_code, cling_ast_ir_destroy);
   free(self);
 }
 
@@ -529,7 +554,7 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
   /*
    * Enters these names to global-scope.
    */
-  maybe_emit_decls(self, &global, CL_GLOBAL, &program->init_code);
+  maybe_emit_decls(self, &global, &program->init_code);
   func_decls = utillib_json_object_at(self, "func_decls");
 
   /*

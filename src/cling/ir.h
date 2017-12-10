@@ -25,6 +25,7 @@
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ENUM_ELEM(OP_DEFVAR)
+UTILLIB_ENUM_ELEM(OP_DEFARR)
 UTILLIB_ENUM_ELEM(OP_DEFUNC)
 UTILLIB_ENUM_ELEM(OP_DEFCON)
 UTILLIB_ENUM_ELEM(OP_PARA)
@@ -133,7 +134,7 @@ struct cling_ast_ir *emit_ir(int type);
 /*
  * read name
  */
-struct cling_ast_ir *emit_read(char const *name, int type, int scope_bit);
+struct cling_ast_ir *emit_read(char const *name, int wide, int scope_bit);
 
 int emit_scope(int scope_kind);
 
@@ -147,26 +148,27 @@ void emit_factor(struct cling_ast_operand *self,
 /*
  * defcon name(wide|scope) value
  */
-struct cling_ast_ir *emit_defcon(int type, char const *name, int scope_bit,
+struct cling_ast_ir *emit_defcon(int wide, char const *name, int scope_bit,
                                  char const *value);
 
 /*
  * defvar name(wide|scope) [extend]
  */
-struct cling_ast_ir *emit_defvar(int type, char const *name, int scope_bit,
-                                 char const *extend);
+struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit);
 
-int emit_wide(int type);
+struct cling_ast_ir *emit_defarr(int wide, char const *name, int scope_bit, char const* extend);
+
+int emit_wide(int wide);
 
 /*
  * defunc name(wide)
  */
-struct cling_ast_ir *emit_defunc(int type, char const *name);
+struct cling_ast_ir *emit_defunc(int wide, char const *name);
 
 /*
  * para name(wide)
  */
-struct cling_ast_ir *emit_para(int type, char const *name);
+struct cling_ast_ir *emit_para(int wide, char const *name);
 
 /*
  * call name [temp = RET]

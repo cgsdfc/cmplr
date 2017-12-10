@@ -35,6 +35,7 @@ struct cling_ast_function {
   char *name;
   unsigned int temps;
   struct utillib_vector instrs;
+  struct utillib_vector init_code;
 };
 
 /*
