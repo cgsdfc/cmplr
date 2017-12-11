@@ -120,8 +120,9 @@ void utillib_slist_clear(struct utillib_slist *self) {
 struct utillib_json_value *
 utillib_slist_json_array_create(struct utillib_slist const *self,
                                 utillib_json_value_create_func_t create_func) {
+  void const* elem;
   struct utillib_json_value *array = utillib_json_array_create_empty();
-  UTILLIB_SLIST_FOREACH(void const *, elem, self) {
+  UTILLIB_SLIST_FOREACH(elem, self) {
     utillib_json_array_push_back(array, create_func(elem));
   }
   return array;

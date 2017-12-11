@@ -26,8 +26,7 @@
 #include "json.h"
 #include <stddef.h> /* for size_t */
 
-#define UTILLIB_SLIST_FOREACH(T, X, L)                                         \
-  T X;                                                                         \
+#define UTILLIB_SLIST_FOREACH(X, L)                                         \
   for (struct utillib_slist_node *_p = (L)->head;                              \
        _p != NULL && (((X) = _p->value) || 1); _p = _p->next)
 

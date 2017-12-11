@@ -149,6 +149,7 @@ add_library(cling
   ./src/cling/polish_ir.c
   ./src/cling/error.c
   ./src/cling/opg_parser.c
+  ./src/cling/mips.c
   )	
 target_link_libraries(cling utillib)
 

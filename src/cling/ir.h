@@ -152,10 +152,13 @@ struct cling_ast_ir *emit_defcon(int wide, char const *name, int scope_bit,
                                  char const *value);
 
 /*
- * defvar name(wide|scope) [extend]
+ * defvar name(wide|scope)
  */
 struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit);
 
+/*
+ * defarr name(wide|scope) extend
+ */ 
 struct cling_ast_ir *emit_defarr(int wide, char const *name, int scope_bit, char const* extend);
 
 int emit_wide(int wide);
@@ -171,7 +174,7 @@ struct cling_ast_ir *emit_defunc(int wide, char const *name);
 struct cling_ast_ir *emit_para(int wide, char const *name);
 
 /*
- * call name [temp = RET]
+ * call name [temp|name = RET]
  */
 
 struct cling_ast_ir *emit_call(char const *name, int maybe_temp);

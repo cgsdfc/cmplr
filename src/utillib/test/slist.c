@@ -38,10 +38,10 @@ UTILLIB_TEST_AUX(slist_fill_strings) {
 }
 
 UTILLIB_TEST(slist_push_front) {
+  char const * str; 
   UTILLIB_TEST_AUX_INVOKE(slist_fill_strings);
   UTILLIB_TEST_ASSERT_EQ(utillib_slist_size(UT_FIXTURE), strings_size);
-  UTILLIB_SLIST_FOREACH(char const *, str,
-                        (struct utillib_slist const *)UT_FIXTURE) {
+  UTILLIB_SLIST_FOREACH(str, (struct utillib_slist const *)UT_FIXTURE) {
     puts(str);
   }
 }

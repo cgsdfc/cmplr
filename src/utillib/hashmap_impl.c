@@ -27,7 +27,8 @@ static void search_result_lookup(struct utillib_hashmap_search_result *self,
                                  void const *key,
                                  int (*compare_handler)(void const *lhs,
                                                         void const *rhs)) {
-  UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, self->bucket) {
+  struct utillib_pair *pair;
+  UTILLIB_SLIST_FOREACH(pair, self->bucket) {
     if (0 == compare_handler(pair->up_first, key)) {
       self->pair = pair;
       return;

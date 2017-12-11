@@ -48,10 +48,11 @@ void utillib_hashmap_destroy(struct utillib_hashmap *self) {
 void utillib_hashmap_destroy_owning(struct utillib_hashmap *self,
                                     void (*key_destroy)(void *key),
                                     void (*value_destroy)(void *value)) {
+  struct utillib_pair *pair;
   for (int i = 0; i < self->buckets_size; ++i) {
     struct utillib_slist *bucket = &self->buckets[i];
     /* Have to traversal the list */
-    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
+    UTILLIB_SLIST_FOREACH(pair, bucket) {
       if (key_destroy)
         key_destroy(pair->up_first);
       if (value_destroy)
@@ -105,6 +106,7 @@ void *utillib_hashmap_discard(struct utillib_hashmap *self, void const *key) {
 }
 
 void utillib_hashmap_rehash(struct utillib_hashmap *self) {
+  struct utillib_pair *pair;
   struct utillib_slist *new_buckets;
   size_t new_buckets_size = self->buckets_size << 1;
   struct utillib_hashmap_callback const *callback = self->callback;
@@ -112,7 +114,7 @@ void utillib_hashmap_rehash(struct utillib_hashmap *self) {
   new_buckets = calloc(sizeof new_buckets[0], new_buckets_size);
   for (int i = 0; i < self->buckets_size; ++i) {
     struct utillib_slist *old_bucket = &self->buckets[i];
-    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, old_bucket) {
+    UTILLIB_SLIST_FOREACH(pair, old_bucket) {
       size_t index = hashmap_indexof(pair->up_first, callback->hash_handler,
                                      new_buckets_size);
       hashmap_check_range(index, new_buckets_size);
@@ -159,10 +161,11 @@ struct utillib_json_value *utillib_hashmap_json_object_create(
     struct utillib_hashmap const *self,
     utillib_json_value_create_func_t create_func) {
   json_check_create_func(create_func);
+  struct utillib_pair *pair;
   struct utillib_json_value *object = utillib_json_object_create_empty();
   for (int i = 0; i < self->buckets_size; ++i) {
     struct utillib_slist *bucket = &self->buckets[i];
-    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
+    UTILLIB_SLIST_FOREACH(pair, bucket) {
       struct utillib_json_value *value = pair->up_second
                                              ? create_func(pair->up_second)
                                              : utillib_json_null_create();
@@ -179,10 +182,11 @@ struct utillib_json_value *utillib_hashmap_json_array_create(
   json_check_create_func(key_create);
   json_check_create_func(value_create);
 
+  struct utillib_pair *pair;
   struct utillib_json_value *array = utillib_json_array_create_empty();
   for (int i = 0; i < self->buckets_size; ++i) {
     struct utillib_slist *bucket = &self->buckets[i];
-    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
+    UTILLIB_SLIST_FOREACH(pair, bucket) {
       struct utillib_json_value *object = utillib_json_object_create_empty();
       utillib_json_object_push_back(
           object, "key", pair->up_first ? key_create(pair->up_first)
@@ -202,10 +206,12 @@ size_t utillib_hashmap_buckets_size(struct utillib_hashmap const *self) {
 
 #ifndef NDEBUG
 void utillib_hashmap_print_buckets(struct utillib_hashmap const *self) {
+  struct utillib_pair *pair;
+
   for (int i = 0; i < self->buckets_size; ++i) {
     printf("#%-4d ", i);
     struct utillib_slist *bucket = &self->buckets[i];
-    UTILLIB_SLIST_FOREACH(struct utillib_pair *, pair, bucket) {
+    UTILLIB_SLIST_FOREACH(pair, bucket) {
       fputs("# ", stdout);
     }
     puts("");
