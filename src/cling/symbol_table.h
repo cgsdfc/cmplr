@@ -135,4 +135,6 @@ void cling_symbol_table_insert_function(
 void cling_symbol_table_insert_variable(
     struct cling_symbol_table *self, struct utillib_json_value const *variable);
 
+unsigned int gettype(size_t type);
+
 #endif /* CLING_SYMBOL_TABLE_H */

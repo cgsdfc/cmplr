@@ -149,26 +149,27 @@ enum {
   MIPS_LEAF, MIPS_NON_LEAF,
 };
 
+struct cling_mips_temp {
+  int age;
+  uint8_t regid;
+  uint32_t offset;
+};
+
 struct cling_mips_function {
-  int para_size;
+  int temp_size;
+  struct cling_mips_temp *temps;
+  bool * reg_pool;
   /*
    * Local data includes temps and
    * local variables.
    */
   struct utillib_vector memmap;
-  struct utillib_hashmap memindex;
   struct utillib_vector saved_registers;
 
-  unsigned int stack_offset;
-  unsigned int max_stack;
   uint32_t frame_size;
-  /*
-   * It points to where arg more than 4
-   * are push onto the stack.
-   */
-  uint32_t args_blk;
   uint32_t * address_map;
   struct cling_mips_global *global;
+  struct utillib_vector *instrs;
 };
 
 struct cling_mips_ir {

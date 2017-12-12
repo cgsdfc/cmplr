@@ -43,14 +43,12 @@ static void emit_scanf_stmt(struct utillib_json_value const *self,
   struct utillib_json_value const *object;
   struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
-  int scope_bit;
 
   arglist = utillib_json_object_at(self, "arglist");
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     value = utillib_json_object_at(object, "value");
     entry=cling_symbol_table_find(global->symbol_table, value->as_ptr, CL_LEXICAL);
-    scope_bit=emit_scope(entry->scope);
-    ir = emit_read(value->as_ptr, entry->kind, scope_bit);
+    ir = emit_read(value->as_ptr, entry->kind, entry->scope);
     utillib_vector_push_back(instrs, ir);
   }
 }
@@ -200,10 +198,10 @@ static void emit_for_stmt(struct utillib_json_value const *self,
  * <endswitch>
  */
 static struct cling_ast_ir *
-emit_case_gaurd(size_t wide, char const *value,
+emit_case_gaurd(size_t type, char const *value,
                 struct cling_polish_ir const *polish_ir) {
   struct cling_ast_ir *case_gaurd = emit_ir(OP_BNE);
-  init_imme(&case_gaurd->operands[0], wide, value);
+  init_imme(&case_gaurd->operands[0], gettype(type), value);
   cling_polish_ir_result(polish_ir, case_gaurd, 1);
   return case_gaurd;
 }
@@ -372,18 +370,16 @@ static void emit_var_defs(struct utillib_json_value const *self,
   struct utillib_json_value const *defs, *decl;
   struct utillib_json_value *name;
   struct cling_ast_ir *ir;
-  int scope_bit;
   struct cling_symbol_entry const* entry;
 
   defs = utillib_json_object_at(self, "var_defs");
   UTILLIB_JSON_ARRAY_FOREACH(decl, defs) {
     name = utillib_json_object_at(decl, "name");
     entry=cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_LEXICAL);
-    scope_bit=emit_scope(entry->scope);
     if (entry->kind == CL_ARRAY) {
-      ir = emit_defarr(entry->array.base_type, name->as_ptr, scope_bit, entry->array.extend);
+      ir = emit_defarr(entry->array.base_type, name->as_ptr, entry->scope, entry->array.extend);
     } else {
-      ir = emit_defvar(entry->kind, name->as_ptr, scope_bit);
+      ir = emit_defvar(entry->kind, name->as_ptr, entry->scope);
     }
     utillib_vector_push_back(instrs, ir);
   }
@@ -399,17 +395,15 @@ static void emit_const_defs(struct utillib_json_value const *self,
   struct utillib_json_value const *defs, *decl;
   struct utillib_json_value const *name;
   struct cling_symbol_entry const* entry;
-  int scope_bit;
 
   defs = utillib_json_object_at(self, "const_defs");
 
   UTILLIB_JSON_ARRAY_FOREACH(decl, defs) {
     name = utillib_json_object_at(decl, "name");
     entry=cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_LEXICAL);
-    scope_bit = emit_scope(entry->scope);
     utillib_vector_push_back(instrs,
         emit_defcon(entry->constant.type, name->as_ptr,
-          scope_bit, entry->constant.value));
+          entry->scope, entry->constant.value));
   }
 }
 
@@ -541,7 +535,7 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
     utillib_vector_push_back(&self->init_code,
                              emit_para(entry->kind, name->as_ptr));
   }
-  maybe_emit_decls(func_node, global, &self->init_code);
+  maybe_emit_decls(comp, global, &self->init_code);
 
   /*
    * instrs emision
@@ -591,13 +585,9 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
 void cling_ast_program_print(struct cling_ast_program const *self) {
   struct cling_ast_function const *func;
 
-  puts("global.init_code");
   cling_ast_ir_print(&self->init_code);
-  puts("global.instrs");
   UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
-    puts("init_code");
     cling_ast_ir_print(&func->init_code);
-    puts("instrs");
     cling_ast_ir_print(&func->instrs);
     puts("");
   }

@@ -23,6 +23,8 @@
 #include <utillib/enum.h>
 #include <utillib/vector.h>
 
+#include <inttypes.h>
+
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ENUM_ELEM(OP_DEFVAR)
 UTILLIB_ENUM_ELEM(OP_DEFARR)
@@ -48,6 +50,9 @@ UTILLIB_ENUM_ELEM(OP_LE)
 UTILLIB_ENUM_ELEM(OP_GT)
 UTILLIB_ENUM_ELEM(OP_GE)
 UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_ELEM(OP_LDARR)
+UTILLIB_ENUM_ELEM(OP_LDIMM)
+UTILLIB_ENUM_ELEM(OP_LDVAR)
 UTILLIB_ENUM_ELEM(OP_WRITE)
 UTILLIB_ENUM_ELEM(OP_READ)
 UTILLIB_ENUM_ELEM(OP_NOP)
@@ -96,8 +101,10 @@ struct cling_ast_ir_global {
 struct cling_ast_operand {
   int info;
   union {
-    char const *text;
+    char *text;
     int scalar;
+    char imme_char;
+    int imme_int;
   };
 };
 
@@ -136,11 +143,6 @@ struct cling_ast_ir *emit_ir(int type);
  */
 struct cling_ast_ir *emit_read(char const *name, int wide, int scope_bit);
 
-int emit_scope(int scope_kind);
-
-void emit_factor(struct cling_ast_operand *self,
-    struct utillib_json_value const *var,
-    struct cling_symbol_table const *symbol_table);
 /*
  * write string | temp
  */
@@ -160,8 +162,6 @@ struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit);
  * defarr name(wide|scope) extend
  */ 
 struct cling_ast_ir *emit_defarr(int wide, char const *name, int scope_bit, char const* extend);
-
-int emit_wide(int wide);
 
 /*
  * defunc name(wide)
@@ -185,7 +185,7 @@ struct cling_ast_ir *emit_call(char const *name, int maybe_temp);
 struct cling_ast_ir *emit_nop(void);
 
 /*
- * push name | temp | imme(wide|scope)
+ * push temp
  */
 
 /*
@@ -193,8 +193,25 @@ struct cling_ast_ir *emit_nop(void);
  */
 
 /*
- * bez name | temp | imme address-in-function
+ * bez temp address-in-function
  */
+
+/*
+ * ldarr name scope
+ */
+struct cling_ast_ir *emit_ldarr(char const *name, int scope, int temp);
+
+/*
+ * ldimm value(wide) temp
+ */
+struct cling_ast_ir *emit_ldimm(char const *value, int wide, int temp);
+
+/*
+ * ldvar name(scope|wide) temp
+ */
+struct cling_ast_ir *emit_ldvar(char const* name, int scope, int wide, int temp);
+
+
 void cling_ast_ir_destroy(struct cling_ast_ir *self);
 
 void cling_ast_ir_print(struct utillib_vector const *instrs);

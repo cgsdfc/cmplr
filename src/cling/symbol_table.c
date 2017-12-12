@@ -39,7 +39,7 @@ UTILLIB_ETAB_ELEM_INIT(CL_ARRAY, "array")
 UTILLIB_ETAB_ELEM_INIT(CL_FUNC, "function")
 UTILLIB_ETAB_END(cling_symbol_entry_kind);
 
-static unsigned int gettype(size_t type) {
+unsigned int gettype(size_t type) {
   switch (type) {
   case SYM_INTEGER:
   case SYM_UINT:

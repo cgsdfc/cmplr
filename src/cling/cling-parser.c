@@ -48,8 +48,6 @@ int main(int argc, char *argv[]) {
   cling_ast_ir_emit_program(json_ast, &cling_symbol_table, &program);
   cling_ast_program_print(&program);
 
-/* utillib_json_pretty_print(json_ast); */
-
 cleanup:
   if (json_ast)
     utillib_json_value_destroy(json_ast);
