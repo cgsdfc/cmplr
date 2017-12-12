@@ -20,8 +20,7 @@
 */
 #include "ir.h"
 #include "symbol_table.h"
-#include "symbols.h"
-#include <utillib/json.h>
+#include "misc.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -72,19 +71,6 @@ UTILLIB_ETAB_ELEM(CL_BYTE)
 UTILLIB_ETAB_ELEM(CL_WORD)
 UTILLIB_ETAB_ELEM(CL_NULL)
 UTILLIB_ETAB_END(cling_operand_info_kind);
-/*
- * wide should be of cling_symbol_entry_kind.
- */
-static int emit_wide(int wide) {
-  switch (wide) {
-  case CL_INT:
-    return CL_WORD;
-  case CL_CHAR:
-    return CL_BYTE;
-  default:
-    return CL_NULL;
-  }
-}
 
 /*
  *  0 stands for global,
@@ -104,14 +90,14 @@ void init_temp(struct cling_ast_operand *self, int scalar) {
   self->scalar=scalar;
 }
 
-void init_name(struct cling_ast_operand *self, int scope, int wide, char const* name) {
-  self->info=CL_NAME | emit_wide(wide) | emit_scope(scope);
+void init_name(struct cling_ast_operand *self, int scope, int type, char const* name) {
+  self->info=CL_NAME | cling_type_to_wide(type) | emit_scope(scope);
   self->text=strdup(name);
 }
 
-void init_imme(struct cling_ast_operand *self, int wide, char const *value) {
-  self->info=CL_IMME | emit_wide(wide);
-  switch(wide) {
+void init_imme(struct cling_ast_operand *self, int type, char const *value) {
+  self->info=CL_IMME | cling_type_to_wide(type);
+  switch(type) {
     case CL_INT:
       sscanf(value, "%d" , &self->imme_int);
       return;
@@ -134,10 +120,10 @@ struct cling_ast_ir *emit_ir(int opcode) {
   return self;
 }
 
-struct cling_ast_ir *emit_defarr(int wide, char const *name,
+struct cling_ast_ir *emit_defarr(int type, char const *name,
     int scope, char const* extend) {
   struct cling_ast_ir *self=emit_ir(OP_DEFARR);
-  init_name(&self->operands[0], scope, wide, name);
+  init_name(&self->operands[0], scope, type, name);
   init_imme(&self->operands[1], CL_INT, extend);
   return self;
 }
@@ -153,35 +139,35 @@ struct cling_ast_ir *emit_call(char const *name, int maybe_temp) {
   return self;
 }
 
-struct cling_ast_ir *emit_read(char const *name, int wide, int scope) {
+struct cling_ast_ir *emit_read(char const *name, int type, int scope) {
   struct cling_ast_ir *self = emit_ir(OP_READ);
-  init_name(&self->operands[0], scope, wide, name);
+  init_name(&self->operands[0], scope, type, name);
   return self;
 }
 
-struct cling_ast_ir *emit_defcon(int wide, char const *name, int scope,
+struct cling_ast_ir *emit_defcon(int type, char const *name, int scope,
                                  char const *value) {
   struct cling_ast_ir *self = emit_ir(OP_DEFCON);
-  init_name(&self->operands[0], scope, wide, name);
-  init_imme(&self->operands[1], wide, value);
+  init_name(&self->operands[0], scope, type, name);
+  init_imme(&self->operands[1], type, value);
   return self;
 }
 
-struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope) {
+struct cling_ast_ir *emit_defvar(int type, char const *name, int scope) {
   struct cling_ast_ir *self = emit_ir(OP_DEFVAR);
-  init_name(&self->operands[0], scope, wide, name);
+  init_name(&self->operands[0], scope, type, name);
   return self;
 }
 
-struct cling_ast_ir *emit_defunc(int wide, char const *name) {
+struct cling_ast_ir *emit_defunc(int type, char const *name) {
   struct cling_ast_ir *self = emit_ir(OP_DEFUNC);
-  init_name(&self->operands[0], CL_GLBL, wide, name);
+  init_name(&self->operands[0], CL_GLBL, type, name);
   return self;
 }
 
-struct cling_ast_ir *emit_para(int wide, char const *name) {
+struct cling_ast_ir *emit_para(int type, char const *name) {
   struct cling_ast_ir *self = emit_ir(OP_PARA);
-  init_name(&self->operands[0], CL_LOCL, wide, name);
+  init_name(&self->operands[0], CL_LOCL, type, name);
   return self;
 }
 
@@ -192,16 +178,17 @@ struct cling_ast_ir *emit_ldarr(char const *name, int scope, int temp) {
   return self;
 }
 
-struct cling_ast_ir *emit_ldimm(char const *value, int wide, int temp) {
+struct cling_ast_ir *emit_ldimm(char const *value, int type, int temp) {
   struct cling_ast_ir *self=emit_ir(OP_LDIMM);
-  init_imme(&self->operands[0], wide, value);
+  init_imme(&self->operands[0], type, value);
   init_temp(&self->operands[1], temp);
   return self;
 }
 
-struct cling_ast_ir *emit_ldvar(char const* name, int scope, int wide, int temp) {
+struct cling_ast_ir *emit_ldvar(char const* name, int scope, int type, int temp) {
   struct cling_ast_ir *self=emit_ir(OP_LDVAR);
-  init_name(&self->operands[0], scope, wide, name);
+  init_name(&self->operands[0], scope, type, name);
+  init_temp(&self->operands[1], temp);
   return self;
 }
 
@@ -218,21 +205,18 @@ void cling_ast_ir_destroy(struct cling_ast_ir *self) {
  * XXX_tostring.
  */
 
-static void imme_tostring(struct cling_ast_operand const *self,struct utillib_string *string) {
+static char const * imme_tostring(struct cling_ast_operand const *self) {
   int info = self->info;
   static char buffer[128];
   if (info & CL_WORD) {
     snprintf(buffer, 128, "%d", self->imme_int);
-    utillib_string_append(string, buffer);
-    return;
+    return buffer;
   }
   if (info & CL_BYTE) {
-    utillib_string_append(string, "\'");
-    snprintf(buffer, 128, "%c", self->imme_char);
-    utillib_string_append(string, buffer);
-    utillib_string_append(string, "\'");
-    return;
+    snprintf(buffer, 128, "\'%c\'", self->imme_char);
+    return buffer;
   }
+  assert(false);
 }
 
 static char const *wide_tostring(int wide) {
@@ -243,212 +227,33 @@ static char const *wide_tostring(int wide) {
   return "void";
 }
 
-static void defcon_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "const ");
-  utillib_string_append(string, wide_tostring(self->operands[0].info));
-  utillib_string_append(string, " ");
-  utillib_string_append(string, self->operands[0].text);
-  utillib_string_append(string, " = ");
-  imme_tostring(&self->operands[1], string);
-}
+char const * 
+cling_ast_ir_tostring(struct cling_ast_ir const *self) {
+#define AST_IR_BUFSIZ 128
+  static char buffer[AST_IR_BUFSIZ];
+  char const *opstr=cling_ast_opcode_kind_tostring(self->opcode);
+  struct cling_ast_operand const* operand=self->operands;
 
-static void defvar_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "var ");
-  utillib_string_append(string, wide_tostring(self->operands[0].info));
-  utillib_string_append(string, " ");
-  utillib_string_append(string, self->operands[0].text);
-}
-
-static void defarr_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  defvar_tostring(self, string);
-  utillib_string_append(string, "[");
-  imme_tostring(&self->operands[1], string);
-  utillib_string_append(string, "]");
-}
-
-static void defunc_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  int type = self->operands[0].info;
-  utillib_string_append(string, wide_tostring(self->operands[0].info));
-  utillib_string_append(string, " ");
-  utillib_string_append(string, self->operands[0].text);
-  utillib_string_append(string, "()");
-}
-
-static void scalar_tostring(struct cling_ast_ir const *self, int index,
-    struct utillib_string *string) {
-  char buf[128];
-  snprintf(buf, sizeof buf, "%d", self->operands[index].scalar);
-  utillib_string_append(string, buf);
-}
-
-static void factor_tostring(struct cling_ast_ir const *self, int index,
-    struct utillib_string *string) {
-  int info = self->operands[index].info;
-
-  if (info & CL_TEMP) {
-    utillib_string_append(string, "t");
-    scalar_tostring(self, index, string);
-    return;
-  }
-  if (info & CL_NAME) {
-    utillib_string_append(string, self->operands[index].text);
-    return;
-  }
-  if (info == CL_STRG) {
-    utillib_string_append(string, "\"");
-    utillib_string_append(string, self->operands[index].text);
-    utillib_string_append(string, "\"");
-    return;
-  }
-  if (info & CL_IMME) {
-    imme_tostring(&self->operands[index], string);
-    return;
-  }
-  assert(false);
-}
-
-static void binary_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  int op = self->opcode;
-  char const *opstr = cling_ast_opcode_kind_tostring(op);
-  /*
-   * To suit the weird need of the ir,
-   * asking for different forms unreasonably,
-   * we have to judge the op a little bit.
-   */
-  switch (op) {
-    case OP_CAL:
-      utillib_string_append(string, "call ");
-      factor_tostring(self, 0, string);
-      if (self->operands[1].info == CL_NULL)
-        return;
-      /*
-       * If it has something to return,
-       * a `t1 = RET' will be printed'.
-       */
-      utillib_string_append(string, " RET = ");
-      factor_tostring(self, 1, string);
-      return;
-    case OP_IDX:
-      /*
-       * idx t2 A index => t2 = A[index].
-       */
-      factor_tostring(self, 0, string);
-      utillib_string_append(string, " = ");
-      utillib_string_append(string, self->operands[1].text);
-      utillib_string_append(string, "[");
-      factor_tostring(self, 2, string);
-      utillib_string_append(string, "]");
-      return;
-    default:
-      /*
-       * OP_DIV t2 X t1 => t2 = X / t1.
-       */
-      factor_tostring(self, 0, string);
-      utillib_string_append(string, " = ");
-      factor_tostring(self, 1, string);
-      utillib_string_append(string, opstr);
-      factor_tostring(self, 2, string);
-      return;
-  }
-}
-
-static void push_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "push ");
-  factor_tostring(self, 0, string);
-}
-
-static void para_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "para ");
-  utillib_string_append(string, wide_tostring(self->operands[0].info));
-  utillib_string_append(string, " ");
-  utillib_string_append(string, self->operands[0].text);
-}
-
-/*
- * If no expression, info[0]=CL_NULL,
- * else info[0] decripts the operand
- * and operands[0] contains real stuff.
- */
-static void ret_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "ret ");
-  if (self->operands[0].info != CL_NULL) {
-    factor_tostring(self, 0, string);
-  }
-}
-
-static void branch_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  char const *buf;
-  utillib_string_append(string, cling_ast_opcode_kind_tostring(self->opcode));
-  utillib_string_append(string, " ");
-  switch (self->opcode) {
-    case OP_BEZ:
-    case OP_BNZ:
-      factor_tostring(self, 0, string);
-      utillib_string_append(string, " ");
-      scalar_tostring(self, 1, string);
-      return;
-    case OP_BNE:
-      factor_tostring(self, 0, string);
-      utillib_string_append(string, " ");
-      factor_tostring(self, 1, string);
-      utillib_string_append(string, " ");
-      scalar_tostring(self, 2, string);
-      return;
-    case OP_JMP:
-      scalar_tostring(self, 0, string);
-      return;
-  }
-}
-
-static void read_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "read ");
-  utillib_string_append(string, self->operands[0].text);
-}
-
-static void write_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "write ");
-  factor_tostring(self, 0, string);
-}
-
-/*
- * store addr | name value
- * Stores the value to name or addr.
- */
-static void store_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
-  utillib_string_append(string, "store ");
-  factor_tostring(self, 0, string);
-  utillib_string_append(string, " ");
-  factor_tostring(self, 1, string);
-}
-
-void cling_ast_ir_tostring(struct cling_ast_ir const *self,
-    struct utillib_string *string) {
   switch (self->opcode) {
     case OP_DEFCON:
-      defcon_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "const %s %s = %s", wide_tostring(operand[0].info), operand[0].text, imme_tostring(&operand[1]));
+      break;
+    case OP_PARA:
     case OP_DEFVAR:
-      defvar_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "var %s %s", wide_tostring(operand[0].info), operand[0].text);
+      break;
     case OP_DEFARR:
-      defarr_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "var %s %s[%s]", wide_tostring(operand[0].info), operand[0].text, imme_tostring(&operand[1]));
+      break;
+    case OP_CAL:
+      if (operand[1].info == CL_NULL)
+        snprintf(buffer, AST_IR_BUFSIZ, "call %s", operand[0].text);
+      else
+        snprintf(buffer, AST_IR_BUFSIZ, "t%d = call %s", operand[1].scalar, operand[0].text);
+      break;
     case OP_ADD:
     case OP_SUB:
     case OP_IDX:
-    case OP_CAL:
     case OP_DIV:
     case OP_MUL:
     case OP_EQ:
@@ -457,60 +262,61 @@ void cling_ast_ir_tostring(struct cling_ast_ir const *self,
     case OP_LE:
     case OP_GT:
     case OP_GE:
-      binary_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "t%d = t%d %s t%d", operand[0].scalar, operand[1].scalar, opstr, operand[2].scalar);
+      break;
     case OP_BEZ:
-    case OP_BNZ:
+      snprintf(buffer, AST_IR_BUFSIZ, "bez t%d %d", operand[0].scalar, operand[1].scalar);
+      break;
     case OP_BNE:
+      snprintf(buffer, AST_IR_BUFSIZ, "bne t%d t%d %d", operand[0].scalar, operand[1].scalar, operand[2].scalar);
+      break;
     case OP_JMP:
-      branch_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "jmp %d", operand[0].scalar);
+      break;
     case OP_DEFUNC:
-      defunc_tostring(self, string);
-      return;
-    case OP_PARA:
-      para_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "%s %s()", wide_tostring(operand[0].info), operand[0].text);
+      break;
     case OP_RET:
-      ret_tostring(self, string);
-      return;
     case OP_NOP:
-      utillib_string_append(string, "nop");
-      return;
+      return opstr;
     case OP_READ:
-      read_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "read %s", operand[0].text);
+      break;
     case OP_WRITE:
-      write_tostring(self, string);
-      return;
+      if (operand[0].info == CL_STRG) {
+        snprintf(buffer, AST_IR_BUFSIZ, "write \"%s\"", operand[0].text);
+      } else if (operand[0].info & CL_TEMP) {
+        /*
+         * TODO: add ldstr to load this string.
+         */
+        snprintf(buffer, AST_IR_BUFSIZ, "write t%d", operand[0].scalar);
+      }
+      break;
     case OP_STORE:
-      store_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "store t%d t%d", operand[0].scalar, operand[1].scalar);
+      break;
     case OP_PUSH:
-      push_tostring(self, string);
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "push t%d", operand[0].scalar);
+      break;
     case OP_LDARR:
-      return;
     case OP_LDVAR:
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "%s %s t%d", opstr, operand[0].text, operand[1].scalar);
+      break;
     case OP_LDIMM:
-      return;
+      snprintf(buffer, AST_IR_BUFSIZ, "ldimm %s t%d", imme_tostring(&operand[0]), operand[1].scalar);
+      break;
     default:
       puts(cling_ast_opcode_kind_tostring(self->opcode));
       assert(false);
   }
+  return buffer;
 }
 
 void cling_ast_ir_print(struct utillib_vector const *instrs) {
   int i = 0;
   struct cling_ast_ir const *ir;
-  struct utillib_string buffer;
-  utillib_string_init(&buffer);
   UTILLIB_VECTOR_FOREACH(ir, instrs) {
-    cling_ast_ir_tostring(ir, &buffer);
-    printf("%d: %s\n", i, utillib_string_c_str(&buffer));
+    printf("%d: %s\n", i, cling_ast_ir_tostring(ir));
     ++i;
-    utillib_string_clear(&buffer);
   }
-  utillib_string_destroy(&buffer);
 }
