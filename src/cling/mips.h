@@ -43,7 +43,7 @@ UTILLIB_ENUM_BEGIN(cling_mips_opcode_kind)
   UTILLIB_ENUM_ELEM(MIPS_JAL)
   UTILLIB_ENUM_ELEM(MIPS_DIV)
   UTILLIB_ENUM_ELEM(MIPS_MULT)
-  UTILLIB_ENUM_ELEM(MIPS_SUB)
+  UTILLIB_ENUM_ELEM(MIPS_ADD)
   UTILLIB_ENUM_ELEM(MIPS_J)
   UTILLIB_ENUM_ELEM(MIPS_JR)
   UTILLIB_ENUM_ELEM(MIPS_BNE)
@@ -111,51 +111,64 @@ struct cling_mips_target {
 
 struct cling_mips_global {
   /*
-   * Record the mapping from jump address of ast_ir
-   * to corresponding mips_ir.
+   * Map from address of ast_ir to address 
+   * of mips_ir.
    */
-  struct cling_mips_target* target_head;
+  uint32_t instr_offset;
 
 };
 
 enum {
-  MIPS_NAME, MIPS_TEMP,
+  MIPS_NAME, MIPS_TEMP, MIPS_PARA, MIPS_ARRAY,
 };
 
 struct cling_mips_entity {
   int kind;
   union {
-    char const* name;
-    unsigned int temp;
+    char * name;
+    uint16_t temp;
   };
+  int state;
+  int regid;
+  int offset;
+};
+
+struct saved_register {
+  uint8_t regid;
+  uint32_t offset;
 };
 
 enum {
   MIPS_IN_REG, MIPS_IN_MEM,
 };
 
-struct cling_mips_state {
-  int state;
-  unsigned int regid;
-  unsigned int offset;
-};
-
 #define CLING_MIPS_TEMP_REGS 10
 #define CLING_MIPS_PARA_IN_REG 4
 
-struct cling_mips_memmap {
+enum {
+  MIPS_LEAF, MIPS_NON_LEAF,
+};
+
+struct cling_mips_function {
+  int para_size;
+  /*
+   * Local data includes temps and
+   * local variables.
+   */
+  struct utillib_vector memmap;
+  struct utillib_hashmap memindex;
+  struct utillib_vector saved_registers;
+
   unsigned int stack_offset;
   unsigned int max_stack;
+  uint32_t frame_size;
   /*
-   * Keeps a pair of cling_mips_entity
-   * and cling_mips_state.
+   * It points to where arg more than 4
+   * are push onto the stack.
    */
-  struct utillib_hashmap memmap;
-  /*
-   * RegPool. False for free,
-   * true for using.
-   */
-  bool * reg_pool;
+  uint32_t args_blk;
+  uint32_t * address_map;
+  struct cling_mips_global *global;
 };
 
 struct cling_mips_ir {

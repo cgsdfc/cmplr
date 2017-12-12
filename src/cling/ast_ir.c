@@ -576,11 +576,14 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
    * All functions.
    */
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
-    temps = global.temps;
+    /*
+     * Clear the temps counter.
+     */
+    global.temps=0;
     cling_symbol_table_enter_scope(symbol_table);
     func = cling_ast_ir_emit_function(object, &global);
     cling_symbol_table_leave_scope(symbol_table);
-    func->temps = global.temps - temps;
+    func->temps = global.temps;
     utillib_vector_push_back(&program->funcs, func);
   }
 }
