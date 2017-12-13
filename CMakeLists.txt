@@ -26,6 +26,10 @@ add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
 add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
 add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
 add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
+
+# For strdup
+add_definitions(-D_POSIX_C_SOURCE=200809L)
+
 set(CMAKE_CXX_FLAGS "-std=c++11 -g")
 enable_testing()
 
@@ -140,7 +144,6 @@ add_library(cling
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
   ./src/cling/rd_parser.c
-  ./src/cling/ast.c
   ./src/cling/ast_build.c
   ./src/cling/ast_pretty.c
   ./src/cling/ast_check.c

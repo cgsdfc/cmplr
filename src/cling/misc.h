@@ -20,8 +20,51 @@
 */
 #ifndef CLING_MISC_H
 #define CLING_MISC_H
+#include <utillib/hashmap.h>
 
+/*
+ * This union is **untyped**
+ * so all its usage is based
+ * on context and it cannot hold
+ * memory on heap.
+ */
+union cling_primary {
+  char signed_char;
+  char const *string;
+  int signed_int;
+  unsigned int unsigned_int;
+};
 
+/*
+ * Makes a bitwise copy of self and put
+ * it on the heap.
+ */
+union cling_primary *cling_primary_copy(union cling_primary const *self);
+
+/*
+ * Hashes the signed_int field.
+ */
+size_t cling_primary_inthash(union cling_primary const *lhs);
+
+/*
+ * Compares the signed_int field of 2 cling_primary.
+ */
+int cling_primary_intcmp(union cling_primary const *lhs,
+                         union cling_primary const *rhs);
+
+/*
+ * Converts from `rawstr' to appropriate cling_primary
+ * according to `type'.
+ */
+void cling_primary_init(union cling_primary *self, size_t type,
+                        char const *rawstr);
+/*
+ * As long as cling_primary holds integral
+ * value, converts it to int according to
+ * `type' and stores it back into `self'.
+ */
+void cling_primary_toint(union cling_primary *self, size_t type);
 int cling_symbol_to_type(int symbol);
 int cling_type_to_wide(int type);
+extern const struct utillib_hashmap_callback cling_string_hash;
 #endif /* CLING_MISC_H */

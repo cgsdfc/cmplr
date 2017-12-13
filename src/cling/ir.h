@@ -53,6 +53,8 @@ UTILLIB_ENUM_ELEM(OP_STORE)
 UTILLIB_ENUM_ELEM(OP_LDARR)
 UTILLIB_ENUM_ELEM(OP_LDIMM)
 UTILLIB_ENUM_ELEM(OP_LDVAR)
+UTILLIB_ENUM_ELEM(OP_LDADR)
+UTILLIB_ENUM_ELEM(OP_LDVAL)
 UTILLIB_ENUM_ELEM(OP_WRITE)
 UTILLIB_ENUM_ELEM(OP_READ)
 UTILLIB_ENUM_ELEM(OP_NOP)
@@ -124,11 +126,11 @@ struct cling_ast_ir {
  * Init routines for various kinds of operands.
  */
 
-void init_imme(struct cling_ast_operand *self, int wide, char const* value);
+void init_imme(struct cling_ast_operand *self, int wide, char const *value);
 
 void init_null(struct cling_ast_operand *self);
 
-void init_string(struct cling_ast_operand *self, char const* string);
+void init_string(struct cling_ast_operand *self, char const *string);
 
 void init_temp(struct cling_ast_operand *self, int scalar);
 
@@ -160,8 +162,9 @@ struct cling_ast_ir *emit_defvar(int wide, char const *name, int scope_bit);
 
 /*
  * defarr name(wide|scope) extend
- */ 
-struct cling_ast_ir *emit_defarr(int wide, char const *name, int scope_bit, char const* extend);
+ */
+struct cling_ast_ir *emit_defarr(int wide, char const *name, int scope_bit,
+                                 char const *extend);
 
 /*
  * defunc name(wide)
@@ -182,7 +185,7 @@ struct cling_ast_ir *emit_call(char const *name, int maybe_temp);
 /*
  * nop
  */
-struct cling_ast_ir *emit_nop(void);
+extern const struct cling_ast_ir cling_ast_ir_nop;
 
 /*
  * push temp
@@ -209,8 +212,19 @@ struct cling_ast_ir *emit_ldimm(char const *value, int wide, int temp);
 /*
  * ldvar name(scope|wide) temp
  */
-struct cling_ast_ir *emit_ldvar(char const* name, int scope, int wide, int temp);
+struct cling_ast_ir *emit_ldvar(char const *name, int scope, int wide,
+                                int temp);
+/*
+ * ldadr name temp
+ */
+struct cling_ast_ir *emit_ldadr(char const *name, int scope, int wide,
+                                int temp);
 
+/*
+ * ldval name temp
+ */
+struct cling_ast_ir *emit_ldval(char const *name, int scope, int wide,
+                                int temp);
 
 void cling_ast_ir_destroy(struct cling_ast_ir *self);
 

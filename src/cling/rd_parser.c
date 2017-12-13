@@ -20,13 +20,13 @@
 */
 
 #include "rd_parser.h"
-#include "ast.h"
 #include "ast_build.h"
 #include "ast_check.h"
 #include "error.h"
 #include "opg_parser.h"
 #include "symbol_table.h"
 #include "symbols.h"
+#include "misc.h"
 
 #include <utillib/hashmap.h>
 

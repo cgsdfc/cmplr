@@ -25,7 +25,6 @@
 
 #include <assert.h>
 #include <stdlib.h>
-#include <utillib/json.h>
 #include <utillib/json_foreach.h>
 
 static void polish_ir_emit_factor(struct utillib_json_value const *var,
@@ -159,7 +158,7 @@ static void polish_ir_emit_call(struct cling_polish_ir *self,
      * is simply CL_NULL.
      */
     temp = polish_ir_make_temp(self);
-    ir = emit_call( value->as_ptr,temp->as_int);
+    ir = emit_call(value->as_ptr, temp->as_int);
     utillib_vector_push_back(&self->opstack, temp);
   } else {
     ir = emit_call(value->as_ptr, -1);
@@ -260,52 +259,53 @@ static void polish_ir_emit_assign(struct cling_polish_ir *self,
  * which will greatly simplify the mips codegen.
  */
 static void polish_ir_emit_load(struct cling_polish_ir *self,
-    struct utillib_json_value const *object,
-    struct utillib_vector *instrs) {
+                                struct utillib_json_value const *object,
+                                struct utillib_vector *instrs) {
   struct utillib_json_value const *type, *temp, *value;
   struct cling_symbol_entry const *entry;
-  struct cling_ast_ir * ir;
+  struct cling_ast_ir *ir;
 
-  value=utillib_json_object_at(object, "value");
-  type=utillib_json_object_at(object, "type");
-  temp=polish_ir_make_temp(self);
-  switch(type->as_size_t) {
-    case SYM_IDEN:
-      entry=cling_symbol_table_find(self->global->symbol_table, value->as_ptr, CL_LEXICAL);
-      switch(entry->kind) {
-        case CL_ARRAY:
-          /*
-           * For ldarr we only care about its address, not the size of its element.
-           */
-          ir=emit_ldarr(value->as_ptr, entry->scope, temp->as_int);
-          break;
-        case CL_CONST:
-          ir=emit_ldimm(entry->constant.value, entry->constant.type, temp->as_int);
-          break;
-        case CL_FUNC:
-          /*
-           * For function we call it directly without loading.
-           */
-          utillib_vector_push_back(&self->opstack, object);
-          return;
-        default:
-          ir=emit_ldvar(value->as_ptr, entry->scope, entry->kind, temp->as_int);
-          break;
-      }
+  value = utillib_json_object_at(object, "value");
+  type = utillib_json_object_at(object, "type");
+  temp = polish_ir_make_temp(self);
+  switch (type->as_size_t) {
+  case SYM_IDEN:
+    entry = cling_symbol_table_find(self->global->symbol_table, value->as_ptr,
+                                    CL_LEXICAL);
+    switch (entry->kind) {
+    case CL_ARRAY:
+      /*
+       * For ldarr we only care about its address, not the size of its element.
+       */
+      ir = emit_ldarr(value->as_ptr, entry->scope, temp->as_int);
       break;
-    case SYM_CHAR:
-      ir=emit_ldimm(value->as_ptr, CL_CHAR, temp->as_int);
+    case CL_CONST:
+      ir =
+          emit_ldimm(entry->constant.value, entry->constant.type, temp->as_int);
       break;
-    case SYM_INTEGER:
-    case SYM_UINT:
-      ir=emit_ldimm(value->as_ptr, CL_INT, temp->as_int);
-      break;
+    case CL_FUNC:
+      /*
+       * For function we call it directly without loading.
+       */
+      utillib_vector_push_back(&self->opstack, object);
+      return;
     default:
-      assert(false);
+      ir = emit_ldvar(value->as_ptr, entry->scope, entry->kind, temp->as_int);
+      break;
+    }
+    break;
+  case SYM_CHAR:
+    ir = emit_ldimm(value->as_ptr, CL_CHAR, temp->as_int);
+    break;
+  case SYM_INTEGER:
+  case SYM_UINT:
+    ir = emit_ldimm(value->as_ptr, CL_INT, temp->as_int);
+    break;
+  default:
+    assert(false);
   }
   utillib_vector_push_back(instrs, ir);
   utillib_vector_push_back(&self->opstack, temp);
-
 }
 
 void cling_polish_ir_emit(struct cling_polish_ir *self,
@@ -344,7 +344,7 @@ void cling_polish_ir_emit(struct cling_polish_ir *self,
 }
 
 void cling_polish_ir_result(struct cling_polish_ir const *self,
-    struct cling_ast_ir *ir, int index) {
+                            struct cling_ast_ir *ir, int index) {
   struct utillib_json_value *result = utillib_vector_back(&self->opstack);
   polish_ir_emit_factor(result, ir, index);
 }
@@ -373,6 +373,5 @@ void cling_polish_ir_init(struct cling_polish_ir *self,
 
 void cling_polish_ir_destroy(struct cling_polish_ir *self) {
   utillib_vector_destroy(&self->stack);
-  utillib_vector_destroy_owning(&self->opstack,
-      polish_ir_maybe_release_temp);
+  utillib_vector_destroy_owning(&self->opstack, polish_ir_maybe_release_temp);
 }

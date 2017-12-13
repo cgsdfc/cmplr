@@ -19,8 +19,8 @@
 
 */
 #include "ir.h"
-#include "symbol_table.h"
 #include "misc.h"
+#include "symbol_table.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -72,47 +72,43 @@ UTILLIB_ETAB_ELEM(CL_WORD)
 UTILLIB_ETAB_ELEM(CL_NULL)
 UTILLIB_ETAB_END(cling_operand_info_kind);
 
+const struct cling_ast_ir cling_ast_ir_nop = {.opcode = OP_NOP};
+
 /*
  *  0 stands for global,
  *  1 stands for local.
  */
-static int emit_scope(int scope_kind) {
-  return scope_kind?CL_LOCL:CL_GLBL;
-}
+static int emit_scope(int scope_kind) { return scope_kind ? CL_LOCL : CL_GLBL; }
 
-
-void init_null(struct cling_ast_operand *self) {
-  self->info=CL_NULL;
-}
+void init_null(struct cling_ast_operand *self) { self->info = CL_NULL; }
 
 void init_temp(struct cling_ast_operand *self, int scalar) {
-  self->info=CL_TEMP | CL_WORD;
-  self->scalar=scalar;
+  self->info = CL_TEMP | CL_WORD;
+  self->scalar = scalar;
 }
 
-void init_name(struct cling_ast_operand *self, int scope, int type, char const* name) {
-  self->info=CL_NAME | cling_type_to_wide(type) | emit_scope(scope);
-  self->text=strdup(name);
+void init_name(struct cling_ast_operand *self, int scope, int type,
+               char const *name) {
+  self->info = CL_NAME | cling_type_to_wide(type) | emit_scope(scope);
+  self->text = strdup(name);
 }
 
 void init_imme(struct cling_ast_operand *self, int type, char const *value) {
-  self->info=CL_IMME | cling_type_to_wide(type);
-  switch(type) {
-    case CL_INT:
-      sscanf(value, "%d" , &self->imme_int);
-      return;
-    case CL_CHAR:
-      sscanf(value, "%c" , &self->imme_char);
-      return;
+  self->info = CL_IMME | cling_type_to_wide(type);
+  switch (type) {
+  case CL_INT:
+    sscanf(value, "%d", &self->imme_int);
+    return;
+  case CL_CHAR:
+    sscanf(value, "%c", &self->imme_char);
+    return;
   }
 }
 
-void init_string(struct cling_ast_operand *self, char const* string) {
+void init_string(struct cling_ast_operand *self, char const *string) {
   self->text = strdup(string);
   self->info = CL_STRG;
 }
-
-inline struct cling_ast_ir *emit_nop(void) { return emit_ir(OP_NOP); }
 
 struct cling_ast_ir *emit_ir(int opcode) {
   struct cling_ast_ir *self = calloc(sizeof *self, 1);
@@ -120,9 +116,9 @@ struct cling_ast_ir *emit_ir(int opcode) {
   return self;
 }
 
-struct cling_ast_ir *emit_defarr(int type, char const *name,
-    int scope, char const* extend) {
-  struct cling_ast_ir *self=emit_ir(OP_DEFARR);
+struct cling_ast_ir *emit_defarr(int type, char const *name, int scope,
+                                 char const *extend) {
+  struct cling_ast_ir *self = emit_ir(OP_DEFARR);
   init_name(&self->operands[0], scope, type, name);
   init_imme(&self->operands[1], CL_INT, extend);
   return self;
@@ -135,7 +131,7 @@ struct cling_ast_ir *emit_call(char const *name, int maybe_temp) {
     init_null(&self->operands[1]);
     return self;
   }
-  init_temp(&self->operands[1], maybe_temp); 
+  init_temp(&self->operands[1], maybe_temp);
   return self;
 }
 
@@ -172,40 +168,39 @@ struct cling_ast_ir *emit_para(int type, char const *name) {
 }
 
 struct cling_ast_ir *emit_ldarr(char const *name, int scope, int temp) {
-  struct cling_ast_ir *self=emit_ir(OP_LDARR);
+  struct cling_ast_ir *self = emit_ir(OP_LDARR);
   init_name(&self->operands[0], scope, CL_NULL, name);
   init_temp(&self->operands[1], temp);
   return self;
 }
 
 struct cling_ast_ir *emit_ldimm(char const *value, int type, int temp) {
-  struct cling_ast_ir *self=emit_ir(OP_LDIMM);
+  struct cling_ast_ir *self = emit_ir(OP_LDIMM);
   init_imme(&self->operands[0], type, value);
   init_temp(&self->operands[1], temp);
   return self;
 }
 
-struct cling_ast_ir *emit_ldvar(char const* name, int scope, int type, int temp) {
-  struct cling_ast_ir *self=emit_ir(OP_LDVAR);
+struct cling_ast_ir *emit_ldvar(char const *name, int scope, int type,
+                                int temp) {
+  struct cling_ast_ir *self = emit_ir(OP_LDVAR);
   init_name(&self->operands[0], scope, type, name);
   init_temp(&self->operands[1], temp);
   return self;
 }
 
 void cling_ast_ir_destroy(struct cling_ast_ir *self) {
-    for (int i=0; i<CLING_AST_IR_MAX; ++i) {
-      int info=self->operands[i].info;
-      if (info & CL_NAME || info & CL_STRG)
-        free(self->operands[i].text);
-    }
+  if (self == &cling_ast_ir_nop)
+    return;
+  for (int i = 0; i < CLING_AST_IR_MAX; ++i) {
+    int info = self->operands[i].info;
+    if (info & CL_NAME || info & CL_STRG)
+      free(self->operands[i].text);
+  }
   free(self);
 }
 
-/*
- * XXX_tostring.
- */
-
-static char const * imme_tostring(struct cling_ast_operand const *self) {
+static char const *imme_tostring(struct cling_ast_operand const *self) {
   int info = self->info;
   static char buffer[128];
   if (info & CL_WORD) {
@@ -227,87 +222,99 @@ static char const *wide_tostring(int wide) {
   return "void";
 }
 
-char const * 
-cling_ast_ir_tostring(struct cling_ast_ir const *self) {
+char const *cling_ast_ir_tostring(struct cling_ast_ir const *self) {
 #define AST_IR_BUFSIZ 128
   static char buffer[AST_IR_BUFSIZ];
-  char const *opstr=cling_ast_opcode_kind_tostring(self->opcode);
-  struct cling_ast_operand const* operand=self->operands;
+  char const *opstr = cling_ast_opcode_kind_tostring(self->opcode);
+  struct cling_ast_operand const *operand = self->operands;
 
   switch (self->opcode) {
-    case OP_DEFCON:
-      snprintf(buffer, AST_IR_BUFSIZ, "const %s %s = %s", wide_tostring(operand[0].info), operand[0].text, imme_tostring(&operand[1]));
-      break;
-    case OP_PARA:
-    case OP_DEFVAR:
-      snprintf(buffer, AST_IR_BUFSIZ, "var %s %s", wide_tostring(operand[0].info), operand[0].text);
-      break;
-    case OP_DEFARR:
-      snprintf(buffer, AST_IR_BUFSIZ, "var %s %s[%s]", wide_tostring(operand[0].info), operand[0].text, imme_tostring(&operand[1]));
-      break;
-    case OP_CAL:
-      if (operand[1].info == CL_NULL)
-        snprintf(buffer, AST_IR_BUFSIZ, "call %s", operand[0].text);
-      else
-        snprintf(buffer, AST_IR_BUFSIZ, "t%d = call %s", operand[1].scalar, operand[0].text);
-      break;
-    case OP_ADD:
-    case OP_SUB:
-    case OP_IDX:
-    case OP_DIV:
-    case OP_MUL:
-    case OP_EQ:
-    case OP_NE:
-    case OP_LT:
-    case OP_LE:
-    case OP_GT:
-    case OP_GE:
-      snprintf(buffer, AST_IR_BUFSIZ, "t%d = t%d %s t%d", operand[0].scalar, operand[1].scalar, opstr, operand[2].scalar);
-      break;
-    case OP_BEZ:
-      snprintf(buffer, AST_IR_BUFSIZ, "bez t%d %d", operand[0].scalar, operand[1].scalar);
-      break;
-    case OP_BNE:
-      snprintf(buffer, AST_IR_BUFSIZ, "bne t%d t%d %d", operand[0].scalar, operand[1].scalar, operand[2].scalar);
-      break;
-    case OP_JMP:
-      snprintf(buffer, AST_IR_BUFSIZ, "jmp %d", operand[0].scalar);
-      break;
-    case OP_DEFUNC:
-      snprintf(buffer, AST_IR_BUFSIZ, "%s %s()", wide_tostring(operand[0].info), operand[0].text);
-      break;
-    case OP_RET:
-    case OP_NOP:
-      return opstr;
-    case OP_READ:
-      snprintf(buffer, AST_IR_BUFSIZ, "read %s", operand[0].text);
-      break;
-    case OP_WRITE:
-      if (operand[0].info == CL_STRG) {
-        snprintf(buffer, AST_IR_BUFSIZ, "write \"%s\"", operand[0].text);
-      } else if (operand[0].info & CL_TEMP) {
-        /*
-         * TODO: add ldstr to load this string.
-         */
-        snprintf(buffer, AST_IR_BUFSIZ, "write t%d", operand[0].scalar);
-      }
-      break;
-    case OP_STORE:
-      snprintf(buffer, AST_IR_BUFSIZ, "store t%d t%d", operand[0].scalar, operand[1].scalar);
-      break;
-    case OP_PUSH:
-      snprintf(buffer, AST_IR_BUFSIZ, "push t%d", operand[0].scalar);
-      break;
-    case OP_LDARR:
-    case OP_LDVAR:
-      snprintf(buffer, AST_IR_BUFSIZ, "%s %s t%d", opstr, operand[0].text, operand[1].scalar);
-      break;
-    case OP_LDIMM:
-      snprintf(buffer, AST_IR_BUFSIZ, "ldimm %s t%d", imme_tostring(&operand[0]), operand[1].scalar);
-      break;
-    default:
-      puts(cling_ast_opcode_kind_tostring(self->opcode));
-      assert(false);
+  case OP_DEFCON:
+    snprintf(buffer, AST_IR_BUFSIZ, "const %s %s = %s",
+             wide_tostring(operand[0].info), operand[0].text,
+             imme_tostring(&operand[1]));
+    break;
+  case OP_PARA:
+  case OP_DEFVAR:
+    snprintf(buffer, AST_IR_BUFSIZ, "var %s %s", wide_tostring(operand[0].info),
+             operand[0].text);
+    break;
+  case OP_DEFARR:
+    snprintf(buffer, AST_IR_BUFSIZ, "var %s %s[%s]",
+             wide_tostring(operand[0].info), operand[0].text,
+             imme_tostring(&operand[1]));
+    break;
+  case OP_CAL:
+    if (operand[1].info == CL_NULL)
+      snprintf(buffer, AST_IR_BUFSIZ, "call %s", operand[0].text);
+    else
+      snprintf(buffer, AST_IR_BUFSIZ, "t%d = call %s", operand[1].scalar,
+               operand[0].text);
+    break;
+  case OP_ADD:
+  case OP_SUB:
+  case OP_IDX:
+  case OP_DIV:
+  case OP_MUL:
+  case OP_EQ:
+  case OP_NE:
+  case OP_LT:
+  case OP_LE:
+  case OP_GT:
+  case OP_GE:
+    snprintf(buffer, AST_IR_BUFSIZ, "t%d = t%d %s t%d", operand[0].scalar,
+             operand[1].scalar, opstr, operand[2].scalar);
+    break;
+  case OP_BEZ:
+    snprintf(buffer, AST_IR_BUFSIZ, "bez t%d %d", operand[0].scalar,
+             operand[1].scalar);
+    break;
+  case OP_BNE:
+    snprintf(buffer, AST_IR_BUFSIZ, "bne t%d t%d %d", operand[0].scalar,
+             operand[1].scalar, operand[2].scalar);
+    break;
+  case OP_JMP:
+    snprintf(buffer, AST_IR_BUFSIZ, "jmp %d", operand[0].scalar);
+    break;
+  case OP_DEFUNC:
+    snprintf(buffer, AST_IR_BUFSIZ, "%s %s()", wide_tostring(operand[0].info),
+             operand[0].text);
+    break;
+  case OP_RET:
+  case OP_NOP:
+    return opstr;
+  case OP_READ:
+    snprintf(buffer, AST_IR_BUFSIZ, "read %s", operand[0].text);
+    break;
+  case OP_WRITE:
+    if (operand[0].info == CL_STRG) {
+      snprintf(buffer, AST_IR_BUFSIZ, "write \"%s\"", operand[0].text);
+    } else if (operand[0].info & CL_TEMP) {
+      /*
+       * TODO: add ldstr to load this string.
+       */
+      snprintf(buffer, AST_IR_BUFSIZ, "write t%d", operand[0].scalar);
+    }
+    break;
+  case OP_STORE:
+    snprintf(buffer, AST_IR_BUFSIZ, "store t%d t%d", operand[0].scalar,
+             operand[1].scalar);
+    break;
+  case OP_PUSH:
+    snprintf(buffer, AST_IR_BUFSIZ, "push t%d", operand[0].scalar);
+    break;
+  case OP_LDARR:
+  case OP_LDVAR:
+    snprintf(buffer, AST_IR_BUFSIZ, "%s %s t%d", opstr, operand[0].text,
+             operand[1].scalar);
+    break;
+  case OP_LDIMM:
+    snprintf(buffer, AST_IR_BUFSIZ, "ldimm %s t%d", imme_tostring(&operand[0]),
+             operand[1].scalar);
+    break;
+  default:
+    puts(cling_ast_opcode_kind_tostring(self->opcode));
+    assert(false);
   }
   return buffer;
 }

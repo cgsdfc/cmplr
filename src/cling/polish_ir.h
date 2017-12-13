@@ -39,8 +39,8 @@ struct cling_polish_ir {
 };
 
 void cling_polish_ir_init(struct cling_polish_ir *self,
-    struct utillib_json_value const* root,
-    struct cling_ast_ir_global * global);
+                          struct utillib_json_value const *root,
+                          struct cling_ast_ir_global *global);
 
 void cling_polish_ir_destroy(struct cling_polish_ir *self);
 
@@ -48,14 +48,14 @@ void cling_polish_ir_destroy(struct cling_polish_ir *self);
  * Emits ast_ir to instrs.
  */
 void cling_polish_ir_emit(struct cling_polish_ir *self,
-    struct utillib_vector *instrs);
+                          struct utillib_vector *instrs);
 
 /*
  * Put the final result of polish_ir into
  * operands[index].
  */
 void cling_polish_ir_result(struct cling_polish_ir const *self,
-    struct cling_ast_ir *ir, int index);
+                            struct cling_ast_ir *ir, int index);
 
 struct utillib_json_value *
 cling_polish_ir_json_array_create(struct cling_polish_ir const *self);

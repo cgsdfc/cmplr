@@ -19,10 +19,13 @@
 
 */
 #include "misc.h"
-#include "symbols.h"
-#include "symbol_table.h"
 #include "ir.h"
+#include "symbol_table.h"
+#include "symbols.h"
 
+#include <utillib/strhash.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 int cling_symbol_to_type(int symbol) {
@@ -52,3 +55,54 @@ int cling_type_to_wide(int type) {
   }
 }
 
+const struct utillib_hashmap_callback cling_string_hash = {
+    .hash_handler = mysql_strhash, .compare_handler = strcmp,
+};
+
+union cling_primary *cling_primary_copy(union cling_primary const *self) {
+  union cling_primary *other = malloc(sizeof *other);
+  memcpy(other, self, sizeof *other);
+  return other;
+}
+
+inline size_t cling_primary_inthash(union cling_primary const *lhs) {
+  return lhs->signed_int;
+}
+
+inline int cling_primary_intcmp(union cling_primary const *lhs,
+                                union cling_primary const *rhs) {
+  return lhs->signed_int - rhs->signed_int;
+}
+
+void cling_primary_toint(union cling_primary *self, size_t type) {
+  switch (type) {
+  case SYM_UINT:
+    self->signed_int = (int)self->unsigned_int;
+    break;
+  case SYM_CHAR:
+    self->signed_int = (char)self->signed_char;
+    break;
+  case SYM_INTEGER:
+    break;
+  }
+}
+
+void cling_primary_init(union cling_primary *self, size_t type,
+                        char const *rawstr) {
+  switch (type) {
+  case SYM_UINT:
+    sscanf(rawstr, "%u", &self->unsigned_int);
+    return;
+  case SYM_INTEGER:
+    sscanf(rawstr, "%d", &self->signed_int);
+    return;
+  case SYM_STRING:
+    self->string = rawstr;
+    return;
+  case SYM_CHAR:
+    sscanf(rawstr, "%c", &self->signed_char);
+    return;
+  default:
+    assert(false);
+  }
+}

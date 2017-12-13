@@ -20,14 +20,11 @@
 */
 
 #include "symbol_table.h"
-#include "symbols.h"
+#include "misc.h"
 #include <utillib/json_foreach.h>
-#include <utillib/strhash.h>
-#include <utillib/string.h>
 
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
 
 UTILLIB_ETAB_BEGIN(cling_symbol_entry_kind)
 UTILLIB_ETAB_ELEM_INIT(CL_UNDEF, "undefined type")
@@ -39,27 +36,7 @@ UTILLIB_ETAB_ELEM_INIT(CL_ARRAY, "array")
 UTILLIB_ETAB_ELEM_INIT(CL_FUNC, "function")
 UTILLIB_ETAB_END(cling_symbol_entry_kind);
 
-unsigned int gettype(size_t type) {
-  switch (type) {
-  case SYM_INTEGER:
-  case SYM_UINT:
-  case SYM_KW_INT:
-    return CL_INT;
-  case SYM_CHAR:
-  case SYM_KW_CHAR:
-    return CL_CHAR;
-  case SYM_KW_VOID:
-    return CL_VOID;
-  default:
-    assert(false);
-  }
-}
-
 static void symbol_entry_destroy(struct cling_symbol_entry *self);
-
-static const struct utillib_hashmap_callback symbol_hash_callback = {
-    .hash_handler = mysql_strhash, .compare_handler = strcmp,
-};
 
 static void symbol_table_scope_destroy(struct utillib_hashmap *self) {
   utillib_hashmap_destroy_owning(self, free, symbol_entry_destroy);
@@ -67,7 +44,7 @@ static void symbol_table_scope_destroy(struct utillib_hashmap *self) {
 
 void cling_symbol_table_init(struct cling_symbol_table *self) {
   self->scope = 0;
-  utillib_hashmap_init(&self->global, &symbol_hash_callback);
+  utillib_hashmap_init(&self->global, &cling_string_hash);
 }
 
 void cling_symbol_table_destroy(struct cling_symbol_table *self) {
@@ -75,7 +52,7 @@ void cling_symbol_table_destroy(struct cling_symbol_table *self) {
 }
 
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self) {
-  utillib_hashmap_init(&self->local, &symbol_hash_callback);
+  utillib_hashmap_init(&self->local, &cling_string_hash);
   ++self->scope;
 }
 
@@ -123,7 +100,7 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
 struct cling_symbol_entry *
 cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
                         int scope_kind) {
-  if (self->scope==0 || scope_kind == CL_GLOBAL)
+  if (self->scope == 0 || scope_kind == CL_GLOBAL)
     return utillib_hashmap_at(&self->global, name);
   switch (scope_kind) {
   case CL_LEXICAL:
@@ -153,20 +130,20 @@ static void symbol_entry_init(struct cling_symbol_entry *self, int scope,
 
 static void symbol_entry_init_single_var(struct cling_symbol_entry *self,
                                          int scope, int type) {
-  symbol_entry_init(self, scope, gettype(type));
+  symbol_entry_init(self, scope, cling_symbol_to_type(type));
 }
 
 static void symbol_entry_init_const(struct cling_symbol_entry *self, int scope,
                                     int type, char const *val) {
   symbol_entry_init(self, scope, CL_CONST);
-  self->constant.type = gettype(type);
+  self->constant.type = cling_symbol_to_type(type);
   self->constant.value = strdup(val);
 }
 
 static void symbol_entry_init_array(struct cling_symbol_entry *self, int scope,
                                     int base_type, char const *extend) {
   symbol_entry_init(self, scope, CL_ARRAY);
-  self->array.base_type = gettype(base_type);
+  self->array.base_type = cling_symbol_to_type(base_type);
   self->array.extend = strdup(extend);
 }
 
@@ -175,16 +152,16 @@ symbol_entry_init_function(struct cling_symbol_entry *self, int return_type,
                            struct utillib_json_value const *arglist) {
   int *argv_types;
   struct utillib_json_value const *object, *type;
-  self->function.argc =  utillib_json_array_size(arglist);
-  int i=0;
+  self->function.argc = utillib_json_array_size(arglist);
+  int i = 0;
 
   symbol_entry_init(self, CL_GLOBAL, CL_FUNC);
-  self->function.return_type = gettype(return_type);
+  self->function.return_type = cling_symbol_to_type(return_type);
   argv_types = malloc(self->function.argc * sizeof argv_types[0]);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     type = utillib_json_object_at(object, "type");
-    argv_types[i++] = gettype(type->as_size_t);
+    argv_types[i++] = cling_symbol_to_type(type->as_size_t);
   }
   self->function.argv_types = argv_types;
 }
