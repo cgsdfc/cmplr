@@ -106,3 +106,9 @@ void cling_primary_init(union cling_primary *self, size_t type,
     assert(false);
   }
 }
+
+void cling_default_assert(int code, char const *(*tostring) (int code)) {
+  printf("Miss a case from a switch, code %d, string %s\n", code, tostring(code));
+  assert(false);
+}
+

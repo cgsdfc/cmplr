@@ -23,11 +23,11 @@
 #include "ir.h"
 #include "misc.h"
 
-#include <utillib/strhash.h>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+
+static void mips_mock(void);
 
 /*
  * Used as a place holder when the address or offset
@@ -35,6 +35,8 @@
  */
 #define MIPS_ADDR_NULL 0
 #define MIPS_IMME_NULL 0
+#define MIPS_REGR_NULL 0
+
 #define MIPS_WORD_SIZE sizeof(int)
 #define MIPS_BYTE_SIZE sizeof(char)
 
@@ -47,7 +49,7 @@
  * Four MIPS_WORD s
  */
 #define MIPS_MEM_ARG_BLK (MIPS_WORD_SIZE << 2)
-#define MIPS_REGR_NULL 0
+#define MIPS_REG_ARGS_N 4
 
 /*
  * We define them as static instance because
@@ -56,6 +58,9 @@
 static const struct cling_mips_ir cling_mips_nop = {.opcode = MIPS_NOP};
 static const struct cling_mips_ir cling_mips_syscall = {.opcode = MIPS_SYSCALL};
 
+/*
+ * opcode and register strings.
+ */
 UTILLIB_ETAB_BEGIN(cling_mips_opcode_kind)
 UTILLIB_ETAB_ELEM_INIT(MIPS_SYSCALL, "syscall")
 UTILLIB_ETAB_ELEM_INIT(MIPS_MOVE, "move")
@@ -68,7 +73,11 @@ UTILLIB_ETAB_ELEM_INIT(MIPS_JAL, "jal")
 UTILLIB_ETAB_ELEM_INIT(MIPS_J, "j")
 UTILLIB_ETAB_ELEM_INIT(MIPS_JR, "jr")
 UTILLIB_ETAB_ELEM_INIT(MIPS_BNE, "bne")
-UTILLIB_ETAB_ELEM_INIT(MIPS_BEZ, "bez")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BEQ, "beq")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BGEZ, "bgez")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BGTZ, "bgtz")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BLEZ, "blez")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BLTZ, "bltz")
 UTILLIB_ETAB_ELEM_INIT(MIPS_MFLO, "mflo")
 UTILLIB_ETAB_ELEM_INIT(MIPS_LW, "lw")
 UTILLIB_ETAB_ELEM_INIT(MIPS_DIV, "div")
@@ -127,9 +136,9 @@ UTILLIB_ETAB_END(cling_mips_data_kind);
  */
 static size_t getsize(int info) {
   if (info & CL_WORD)
-    return sizeof(int);
+    return MIPS_WORD_SIZE;
   if (info & CL_BYTE)
-    return sizeof(char);
+    return MIPS_BYTE_SIZE;
   assert(false);
 }
 
@@ -160,10 +169,10 @@ static bool mips_is_saved_register(uint8_t regid) {
  * to C routines.
  */
 static struct cling_mips_ir *mips_ir_create(uint8_t opcode) {
-  struct cling_mips_ir *self = calloc(sizeof self[0], 1);
+  struct cling_mips_ir *self = calloc(sizeof *self, 1);
   self->opcode = opcode;
   return self;
-};
+}
 
 /*
  * Jal/J/Jr family.
@@ -180,9 +189,9 @@ static struct cling_mips_ir *mips_jal(char const *label) {
 }
 
 /*
- * jr $ra.
- * Jump to address held at $ra. Usually used to return
- * from subroutine call.
+ * jr <register>
+ * Jump to address held at <register>. 
+ * Usually used to return from subroutine call.
  */
 static struct cling_mips_ir *mips_jr(uint8_t target_regid) {
   struct cling_mips_ir *self = mips_ir_create(MIPS_JR);
@@ -351,15 +360,25 @@ static struct cling_mips_ir *mips_mflo(uint8_t dest_regid) {
 /*
  * Conditional branch family
  */
+static struct cling_mips_ir *mips_branch(uint8_t opcode,
+    uint8_t src_regid1, uint8_t src_regid2, int16_t offset) {
+  struct cling_mips_ir *self = mips_ir_create(opcode);
+  self->operands[0].regid = src_regid1;
+  self->operands[1].regid = src_regid2;
+  self->operands[2].offset = offset;
+  return self;
+}
+
+static struct cling_mips_ir *mips_beq(uint8_t src_regid1, uint8_t src_regid2, int16_t offset) {
+  return mips_branch(MIPS_BEQ, src_regid1, src_regid2, offset);
+}
+
 /*
  * bez $s0, <offset>
  * branch to pc+offset if $s0 equals to zero.
  */
 static struct cling_mips_ir *mips_bez(uint8_t regid, int16_t offset) {
-  struct cling_mips_ir *self = mips_ir_create(MIPS_BNE);
-  self->operands[0].regid = regid;
-  self->operands[1].offset = offset;
-  return self;
+  return mips_beq(MIPS_ZERO, regid, offset);
 }
 
 /*
@@ -368,11 +387,7 @@ static struct cling_mips_ir *mips_bez(uint8_t regid, int16_t offset) {
  */
 static struct cling_mips_ir *mips_bne(uint8_t src_regid1, uint8_t src_regid2,
                                       int16_t offset) {
-  struct cling_mips_ir *self = mips_ir_create(MIPS_BNE);
-  self->operands[0].regid = src_regid1;
-  self->operands[1].regid = src_regid2;
-  self->operands[2].offset = offset;
-  return self;
+  return mips_branch(MIPS_BNE, src_regid1, src_regid2, offset);
 }
 
 /*
@@ -442,7 +457,7 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
  * Notes it does not check for the regid.
  */
 #define mips_operand_regstr(self, index)                                       \
-  cling_mips_regster_tostring(self->operands[0].regid)
+  cling_mips_regster_tostring(self->operands[index].regid)
 
   static char buffer[MIPS_BUFSIZ];
   char const *opstr = cling_mips_opcode_kind_tostring(self->opcode);
@@ -477,12 +492,14 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     mips_ir_snprintf("%s %s, %s", opstr, regstr[0], regstr[1]);
     return buffer;
   case MIPS_LA:
+    regstr[0]=mips_operand_regstr(self, 0);
+    mips_ir_snprintf("%s %s, %s", opstr, regstr[0], self->operands[1].label);
+    return buffer;
   case MIPS_JAL:
     mips_ir_snprintf("%s %s", opstr, self->operands[0].label);
     return buffer;
   case MIPS_MFLO:
   case MIPS_JR:
-  case MIPS_BEZ:
     regstr[0] = mips_operand_regstr(self, 0);
     mips_ir_snprintf("%s %s", opstr, regstr[0]);
     return buffer;
@@ -493,7 +510,7 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     regstr[0] = mips_operand_regstr(self, 0);
     regstr[1] = mips_operand_regstr(self, 1);
     mips_ir_snprintf(("%s %s, %s, %" PRId16), opstr, regstr[0], regstr[1],
-                     self->operands[2].imme32);
+                     self->operands[2].imme16);
     return buffer;
   case MIPS_BNE:
     regstr[0] = mips_operand_regstr(self, 0);
@@ -505,8 +522,7 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     mips_ir_snprintf(("%s %s, %" PRId32), opstr, regstr[0], self->operands[1].imme32);
     return buffer;
   default:
-    puts(opstr);
-    assert(false);
+    cling_default_assert(self->opcode, cling_mips_opcode_kind_tostring);
   }
 }
 
@@ -519,9 +535,6 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
  * **this** function and arguments this function passes to call others.
  */
 
-/*
- * Mark all the registers as free.
- */
 static struct cling_mips_name *mips_name_create(int state, uint8_t regid, uint32_t offset) {
   struct cling_mips_name *self=malloc(sizeof *self);
   self->state=state;
@@ -534,16 +547,16 @@ static void mips_function_init(struct cling_mips_function *self,
                                struct utillib_vector *instrs,
                                struct cling_mips_global *global,
                                struct cling_ast_function const *ast_func) {
-  utillib_hashmap_init(&self->names, &cling_string_hash);
-  utillib_vector_init(&self->saved_registers);
+  self->global=global;
   self->instrs = instrs;
-  self->temp_size = 0;
+  self->temp_size = ast_func->temps;
   self->frame_size = 0;
   self->reg_pool = calloc(sizeof self->reg_pool[0], CLING_MIPS_REG_MAX);
   self->address_map = malloc(sizeof self->address_map[0] *
                              utillib_vector_size(&ast_func->instrs));
   self->temps = malloc(sizeof self->temps[0] * ast_func->temps);
-  self->global=global;
+  utillib_hashmap_init(&self->names, &cling_string_hash);
+  utillib_vector_init(&self->saved_registers);
 }
 
 static void mips_function_destroy(struct cling_mips_function *self) {
@@ -557,8 +570,6 @@ static void mips_function_destroy(struct cling_mips_function *self) {
 /*
  * Try to allocate a register from one of those free
  * which `regkind' says yes.
- * Fail with -1.
- * Maybe some MEMOUT can be attempted.
  */
 static int mips_function_regalloc(struct cling_mips_function *self,
                                   bool (*regkind)(uint8_t regid)) {
@@ -577,6 +588,9 @@ static bool mips_function_is_leaf(struct cling_ast_function const *ast_func) {
   struct cling_ast_ir const *ast_ir;
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs)
   if (ast_ir->opcode == OP_CAL)
+    /*
+     * Call others.
+     */
     return false;
   return true;
 }
@@ -622,17 +636,6 @@ static void mips_function_regmap_name(struct cling_mips_function *self,
   utillib_hashmap_insert(&self->names, strdup(name), entry);
 }
 
-/*
- * Maps this temp to a register.
- */
-static void mips_function_regmap_temp(struct cling_mips_function *self,
-    uint16_t temp, int regid) {
-  struct cling_mips_temp *temp_one;
-  temp_one=&self->temps[temp];
-  temp_one->regid=regid;
-  temp_one->age=0;
-}
-
 static void mips_function_fix_address(struct cling_mips_function *self,
                                       struct utillib_vector const *ast_instrs,
                                       struct utillib_vector *mips_instrs) {
@@ -671,7 +674,6 @@ static void mips_function_fix_address(struct cling_mips_function *self,
        */
       mips_addr = self->address_map[i];
       mips_ir = utillib_vector_at(mips_instrs, mips_addr);
-      assert(mips_ir->opcode == MIPS_BEZ);
       ast_addr = ast_ir->operands[1].scalar;
       mips_ir->operands[1].offset = mips_addr - self->address_map[ast_addr] + 1;
       break;
@@ -705,6 +707,7 @@ static void mips_function_saved_push_back(struct cling_mips_function *self,
  * sw $ra, 20($sp)
  * sw $s0, 24($sp)
  * # save other saved registers.
+ * `saved_registers' holds all the global registers.
  */
 static void mips_function_prologue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
@@ -719,6 +722,16 @@ static void mips_function_prologue(struct cling_mips_function *self) {
   }
 }
 
+/*
+ * A typical epilogue is,
+ * lw $s0, 20($sp)
+ * lw $ra, 24($sp)
+ * addi $sp, $sp, 128
+ * Notes that the final jr is emitted by this
+ * function, not the mips_emit_ret which may be
+ * omitted because the original ast_func deos not
+ * have a ret.
+ */
 static void mips_function_epilogue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
   struct saved_register const *saved;
@@ -729,29 +742,60 @@ static void mips_function_epilogue(struct cling_mips_function *self) {
   }
   addi_sp = mips_addi(MIPS_SP, MIPS_SP, self->frame_size);
   mips_function_push_back(self, addi_sp);
+  mips_function_push_back(self, mips_jr(MIPS_RA));
+}
+
+/*
+ * Similar to prologue
+ * and epilogue but it is for a subroutine call.
+ * They save/load the temp registers in use and a0s.
+ * The para_size controls the total number of registers 
+ * we saved.
+ */
+static void mips_load_temps_paras(struct cling_mips_function *self, bool is_load)
+{
+  struct cling_mips_temp *temp_one;
+  for (int i=0; i<self->temp_size; ++i) {
+    temp_one=&self->temps[i];
+    if (temp_one->regid != MIPS_REGR_NULL) {
+      mips_function_push_back(self, is_load? 
+          mips_lw(temp_one->regid, temp_one->offset, MIPS_SP):
+          mips_sw(temp_one->regid, temp_one->offset, MIPS_SP));
+    }
+  }
+  for (int i=0; i<MIPS_REG_ARGS_N && i<self->para_size; ++i) {
+    mips_function_push_back(self, is_load?
+        mips_lw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP):
+        mips_sw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP));
+  }
 }
 
 /*
  * Allocate a block of size on top of *blk
- * and increament *blk.
+ * and increament *blk. Memory address is aligned
+ * to `align'.
  */
-static uint32_t mips_align_alloc(uint32_t *blk, size_t size) {
+static uint32_t mips_align_alloc(uint32_t *blk, size_t size, size_t align) {
+  /*
+   * Align to size.
+   * if self->frame_size % size == 0, it is aligned.
+   * We use fast-modulo so it becomes frame_size & (size-1) == 0.
+   */
   uint32_t now = *blk;
-  while (now & (MIPS_ALIGN - 1))
+  while (now & (align- 1))
     ++now;
   *blk = now + size;
   return now;
 }
 
 static uint32_t mips_function_memalloc(struct cling_mips_function *self,
-                                       size_t size) {
-  /*
-   * Align to size.
-   * if self->frame_size % size == 0, it is aligned.
-   * We use fast-modulo so it becomes frame_size & (size-1) == 0.
-   */
-  return mips_align_alloc(&self->frame_size, size);
+                                       size_t size, size_t align) {
+  return mips_align_alloc(&self->frame_size, size, align);
 }
+
+/*
+ * Stack Layout code.
+ */
 
 /*
  * Figures out the maximum stack space required for
@@ -759,34 +803,40 @@ static uint32_t mips_function_memalloc(struct cling_mips_function *self,
  */
 static uint32_t
 mips_function_max_args(struct cling_ast_function const *ast_func) {
-  uint32_t args_blk = 0;
-  uint32_t max_args = 0;
   struct cling_ast_ir const *ast_ir;
+  size_t arg_size;
+  uint32_t max_args = 0;
+
+  /*
+   * Stateful 
+   */
+  uint32_t args_blk = 0;
   int state = 0;
   int arg_cnt = 0;
-  size_t arg_size;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs) {
     if (ast_ir->opcode == OP_PUSH) {
       if (state == 0)
         state = 1;
-      if (arg_cnt++ < 4)
+      if (arg_cnt++ < MIPS_REG_ARGS_N)
         arg_size = MIPS_WORD_SIZE;
       /*
        * First Four are always words.
        */
       else
         arg_size = getsize(ast_ir->operands[0].info);
-      mips_align_alloc(&args_blk, arg_size);
+      mips_align_alloc(&args_blk, arg_size, arg_size);
     } else if (state == 1) {
       /*
-       * Non push in state 1 mean the end of a push seq.
-       * Now we reduce it to max_args.
+       * The end of a push seq.
+       * Now we reduce it to max_args
+       * and clear stateful stuffs.
        */
-      state = 0;
       if (args_blk > max_args)
         max_args = args_blk;
       args_blk = 0;
+      state = 0;
+      arg_cnt = 0;
     }
     /*
      * Skip off the non-push instructions.
@@ -810,7 +860,7 @@ mips_function_local_layout(struct cling_mips_function *self,
    * Maps all temps as words.
    */
   for (int i = 0; i < ast_func->temps; ++i) {
-    local_offset = mips_function_memalloc(self, MIPS_WORD_SIZE);
+    local_offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
     mips_function_memmap_temp(self, i, local_offset);
   }
 
@@ -819,14 +869,17 @@ mips_function_local_layout(struct cling_mips_function *self,
     case OP_DEFVAR:
       name = ast_ir->operands[0].text;
       size = getsize(ast_ir->operands[0].info);
-      local_offset = mips_function_memalloc(self, size);
+      local_offset = mips_function_memalloc(self, size, size);
       mips_function_memmap_name(self, name, local_offset);
       break;
     case OP_DEFARR:
       name = ast_ir->operands[0].text;
       base_size = getsize(ast_ir->operands[0].info);
       size = ast_ir->operands[0].imme_int;
-      local_offset = mips_function_memalloc(self, size * base_size);
+      /*
+       * Align to the base_size.
+       */
+      local_offset = mips_function_memalloc(self, size * base_size, base_size);
       mips_function_memmap_name(self, name, local_offset);
       break;
     }
@@ -853,31 +906,24 @@ mips_function_save_registers(struct cling_mips_function *self,
    * TODO: memmap the allocated regid to the name.
    */
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
-  loop:
-    switch (ast_ir->opcode) {
-    case OP_PARA:
-      if (para_cnt++ < 4)
-        continue;
-      goto alloc_reg;
-    case OP_DEFVAR:
-      goto alloc_reg;
-    }
+    if (ast_ir->opcode != OP_PARA && ast_ir->opcode != OP_DEFVAR)
+      continue;
+    if (ast_ir->opcode == OP_PARA && para_cnt++ < MIPS_REG_ARGS_N)
+      continue;
+    regid = mips_function_regalloc(self, mips_is_saved_register);
+    if (regid == MIPS_REGR_NULL)
+      return;
+    name = ast_ir->operands[0].text;
+    saved_offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
+    mips_function_saved_push_back(self, regid, saved_offset);
+    mips_function_regmap_name(self, name, regid);
   }
-alloc_reg:
-  regid = mips_function_regalloc(self, mips_is_saved_register);
-  if (regid == MIPS_REGR_NULL)
-    return;
-  name = ast_ir->operands[0].text;
-  saved_offset = mips_function_memalloc(self, MIPS_WORD_SIZE);
-  mips_function_saved_push_back(self, regid, saved_offset);
-  mips_function_regmap_name(self, name, regid);
-  goto loop;
 }
 
 /*
  * If this function is non leaf, layouts
  * its Argument Region, which must be the
- * first region from top of stack.
+ * first region on the top of stack.
  * The space is reserved for future use of call.
  */
 static void
@@ -887,7 +933,7 @@ mips_function_args_layout(struct cling_mips_function *self,
   uint32_t args_offset;
 
   max_args = mips_function_max_args(ast_func);
-  args_offset = mips_function_memalloc(self, max_args);
+  args_offset = mips_function_memalloc(self, max_args, MIPS_WORD_SIZE);
   assert(args_offset == 0);
 }
 
@@ -898,24 +944,31 @@ mips_function_args_layout(struct cling_mips_function *self,
 static void
 mips_function_para_layout(struct cling_mips_function *self,
                           struct cling_ast_function const *ast_func) {
-  int para_cnt = 0;
   char const *name;
-  size_t para_size;
   struct cling_ast_ir const *ast_ir;
-  uint32_t para_offset, para_blk = 0;
+  size_t para_size;
+  uint32_t para_offset;
+  int para_cnt = 0;
+  uint32_t para_blk = 0;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     if (ast_ir->opcode != OP_PARA)
       continue;
     name = ast_ir->operands[0].text;
-    if (para_cnt++ < 4) {
+    if (para_cnt < MIPS_REG_ARGS_N) {
       para_size = MIPS_WORD_SIZE;
     } else {
       para_size = getsize(ast_ir->operands[0].info);
     }
-    para_offset = mips_align_alloc(&para_blk, para_size) + self->frame_size;
+    para_offset = mips_align_alloc(&para_blk, para_size, para_size) + self->frame_size;
     mips_function_memmap_name(self, name, para_offset);
+    ++para_cnt;
   }
+  /*
+   * Control how much parameters we will save
+   * before subroutine call.
+   */
+  self->para_size = para_cnt;
 }
 
 /*
@@ -930,15 +983,21 @@ mips_function_stack_layout(struct cling_mips_function *self,
 
   is_leaf = mips_function_is_leaf(ast_func);
   if (!is_leaf) {
+    /*
+     * Reserve maximum space for call in the future.
+     */
     mips_function_args_layout(self, ast_func);
   }
+  /*
+   * Allocate global registers and put them in saved_registers.
+   */
   mips_function_save_registers(self, ast_func);
   if (!is_leaf) {
     /*
      * Save $ra.
      * Allocate a word for it and add it to the saved_registers.
      */
-    offset = mips_function_memalloc(self, MIPS_WORD_SIZE);
+    offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
     mips_function_saved_push_back(self, MIPS_RA, offset);
   }
   mips_function_local_layout(self, ast_func);
@@ -946,7 +1005,9 @@ mips_function_stack_layout(struct cling_mips_function *self,
 }
 
 /*
- * We use LRU thought to allocate temps.
+ * Temp Register Management
+ *
+ * We use LRU algorithm to allocate temps.
  * all the temps has one cling_mips_temp entry which records
  * its name, its age and the register it owns. Each time a register
  * is in need to hold a temp, the reg_pool will be searched for an vacant
@@ -961,6 +1022,23 @@ mips_function_stack_layout(struct cling_mips_function *self,
  * temp will be spilled out to memory (its regid now equals to MIPS_REGR_NULL).
  * Everytime
  * a temp is referred to, it gets younger (not younger than zero).
+ *
+ * Virtual Register
+ *
+ * We use a mapping from virtual register (also called temps) to actual register
+ * to bridge the differences between Saved-Register and Temp-Register. In one word,
+ * Saved-Register is just Temp-Register that cannot be stripped from a virtual register.
+ * The virtual register simplifies all the operands of the ast_ir to temps while all the
+ * burden of mapping them to real register or memory laid on the load-store ast_ir, the 
+ * stack-layout function and the register-allocator. 
+ * In the first place the allocator tries to allocate saved-registers statically to local 
+ * variable and their virtual registers. Those who failed to own a sr will have to compete
+ * for tr with temporaries. The stack-layout knows how to distinguish the real temporaries
+ * (that hold result for expressions) from those represent local variable having sr or not.
+ * Then, when a virtual register is looked up, those for local variables having sr always
+ * load into their sr while those haven't are in similar situation with temporaries, the story
+ * for which is all about LRU.
+ *
  */
 
 static void mips_function_regfree(struct cling_mips_function *self,
@@ -971,10 +1049,10 @@ static void mips_function_regfree(struct cling_mips_function *self,
 /*
  * Allocate a temp register by possibly spilling out temp variable.
  */
-static uint8_t mips_function_regalloc_temp(struct cling_mips_function *self) {
+static uint8_t mips_function_temp_alloc(struct cling_mips_function *self) {
   uint8_t regid;
   int oldest_age = 0;
-  struct cling_mips_temp *oldest_one;
+  struct cling_mips_temp *oldest_var;
 
   regid = mips_function_regalloc(self, mips_is_temp_register);
   if (regid != MIPS_REGR_NULL)
@@ -983,23 +1061,37 @@ static uint8_t mips_function_regalloc_temp(struct cling_mips_function *self) {
     if (self->temps[i].regid != MIPS_REGR_NULL &&
         self->temps[i].age > oldest_age) {
       oldest_age = self->temps[i].age;
-      oldest_one = &self->temps[i];
+      oldest_var = &self->temps[i];
     }
   }
 
-  regid = oldest_one->regid;
-  oldest_one->regid = MIPS_REGR_NULL;
+  regid = oldest_var->regid;
   /*
    * Spill it out.
    */
-  mips_function_push_back(self, mips_sw(regid, oldest_one->offset, MIPS_SP));
+  mips_function_push_back(self, mips_sw(regid, oldest_var->offset, MIPS_SP));
+  oldest_var->regid = MIPS_REGR_NULL;
   return regid;
+}
+
+/*
+ * Unmap a temp. Strip its register, which is free now.
+ * Some short-lived temp can free up register once it was finished.
+ * However, their value will be discarded.
+ */
+static void mips_function_temp_unmap(struct cling_mips_function *self, uint8_t temp) {
+  struct cling_mips_temp *temp_var;
+  temp_var=&self->temps[temp];
+  if (temp_var->regid == MIPS_REGR_NULL)
+    return;
+  mips_function_regfree(self, temp_var->regid);
+  temp_var->regid=MIPS_REGR_NULL;
 }
 
 /*
  * Ages all the temp that is alive.
  */
-static void mips_function_age_temps(struct cling_mips_function *self) {
+static void mips_function_temp_ages(struct cling_mips_function *self) {
   for (int i = 0; i < self->temp_size; ++i) {
     if (self->temps[i].regid != MIPS_REGR_NULL)
       ++self->temps[i].age;
@@ -1009,7 +1101,7 @@ static void mips_function_age_temps(struct cling_mips_function *self) {
 /*
  * Refers to a living temp to make it younger.
  */
-static void mips_function_refer_temp(struct cling_mips_function *self,
+static void mips_function_temp_refer(struct cling_mips_function *self,
                                      uint16_t temp) {
   assert(temp < self->temp_size);
   struct cling_mips_temp *temp_one;
@@ -1022,79 +1114,74 @@ static void mips_function_refer_temp(struct cling_mips_function *self,
     --temp_one->age;
 }
 
-/*
- * This function handle the misc of reading
- * an cling_ast_operand, which maybe an immediate,
- * a global or local name or a temp. However, it
- * always returns the regid of a temp register
- * with proper value read into it and so as the code.
- */
-static uint8_t
-mips_function_read_operand(struct cling_mips_function *self,
-                           struct cling_ast_operand const *operand) {
-  int info = operand->info;
-  /* struct cling_mips_entity *entity; */
-  struct cling_mips_ir *mips_ir;
+static uint8_t mips_function_temp_map(struct cling_mips_function *self, 
+    uint16_t temp, bool is_read)
+{
+  struct cling_mips_temp *temp_var;
   uint8_t regid;
 
-  /* if (info & CL_NAME) { */
-  /*   if (info & CL_GLBL) { */
-  /*     regid=mips_function_regalloc_temp(self); */
-  /*     mips_function_push_back(self, mips_la(regid, operand->text)); */
-  /*     if (info & CL_WORD) */
-  /*       mips_ir=mips_lw(regid, 0, regid); */
-  /*     else */
-  /*       mips_ir=mips_lb(regid, 0, regid); */
-  /*     mips_function_push_back(self, mips_ir); */
-  /*     return regid; */
-  /*   } */
-  /*   assert(info & CL_LOCL); */
-  /*   /1* entity=mips_function_find_name(self, operand->text); *1/ */
-  /*   switch(entity->state) { */
-  /*     case MIPS_IN_MEM: */
-  /*       regid=mips_function_regalloc_temp(self); */
-  /*       if (info & CL_WORD) */
-  /*         mips_ir=mips_lw(regid, entity->offset, MIPS_SP); */
-  /*       else */
-  /*         mips_ir=mips_lb(regid, entity->offset, MIPS_SP); */
-  /*       mips_function_push_back(self, mips_ir); */
-  /*       return regid; */
-  /*     case MIPS_IN_REG: */
-  /*       return entity->regid; */
-  /*   } */
-  /* } */
-
-  if (info & CL_IMME) {
+  temp_var=&self->temps[temp];
+  if (temp_var->regid != MIPS_REGR_NULL) {
+    mips_function_temp_refer(self, temp);
+    return temp_var->regid;
   }
-}
 
-/*
- * We are going to write to a temp variable so
- * a temp register needed to be allocated to
- * back it up (poor English)
- */
-static uint8_t mips_function_write_temp(struct cling_mips_function *self,
-                                        uint8_t temp) {
-  struct cling_mips_temp *temp_one = &self->temps[temp];
-  uint8_t regid;
-
-  if (temp_one->regid != MIPS_REGR_NULL) {
-    /*
-     * Write is also a kind of referrence.
-     */
-    mips_function_refer_temp(self, temp);
-    return temp_one->regid;
+  regid=mips_function_temp_alloc(self);
+  temp_var->regid=regid;
+  temp_var->age=0;
+  if (!is_read) {
+    return regid;
   }
-  regid = mips_function_regalloc_temp(self);
-  /*
-   * Hello World, temp!
-   */
-  temp_one->age = 0;
-  temp_one->regid = regid;
+  mips_function_push_back(self, mips_lw(regid, temp_var->offset, MIPS_SP));
   return regid;
 }
 
-static void mips_emit_regcalc(struct cling_mips_function *self,
+/*
+ * The following 2 functions make sure that the read and write
+ * to temp variables are translated to their temp registers correctly.
+ * They take a cling_ast_operand and return regid.
+ */
+
+/*
+ * For reading, if the tempv is in_reg, then its value must be the newest.
+ * However, if it is in_mem, its last content is in the stack so we allocate
+ * a register and load back its content.
+ */
+#define mips_check_temp(ast_ir, index) do {\
+  int info=ast_ir->operands[index].info; \
+  assert(info & CL_TEMP); \
+} while (0)
+
+static uint8_t mips_function_read(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir, int index)
+{
+  mips_check_temp(ast_ir, index);
+  return mips_function_temp_map(self, ast_ir->operands[index].scalar, true);
+}
+
+/*
+ * For writing, the content will be overwritten anyway, so we just return its
+ * register or allocate a register for it. 
+ */
+static uint8_t mips_function_write(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir, int index)
+{
+  mips_check_temp(ast_ir, index);
+  return mips_function_temp_map(self, ast_ir->operands[index].scalar, false);
+}
+
+/*
+ * End of temp management.
+ */
+
+/*
+ * Translation of different ast_ir.
+ */
+
+/*
+ * Three operands calculation.
+ */
+static void mips_emit_ternary_calc(struct cling_mips_function *self,
                           struct cling_ast_ir const *ast_ir) {
   /*
    * We use register to hold operands in any cases.
@@ -1104,10 +1191,9 @@ static void mips_emit_regcalc(struct cling_mips_function *self,
   uint8_t src_regid1, src_regid2;
   struct cling_mips_ir *ir;
 
-  assert(ast_ir->operands[0].info & CL_TEMP);
-  src_regid1 = mips_function_read_operand(self, &ast_ir->operands[1]);
-  src_regid2 = mips_function_read_operand(self, &ast_ir->operands[2]);
-  dest_regid = mips_function_write_temp(self, ast_ir->operands[0].scalar);
+  src_regid1 = mips_function_read(self, ast_ir, 1);
+  src_regid2 = mips_function_read(self, ast_ir, 2);
+  dest_regid = mips_function_write(self, ast_ir, 0);
   switch(ast_ir->opcode) {
     case OP_ADD:
       ir = mips_add(dest_regid, src_regid1, src_regid2);
@@ -1115,27 +1201,36 @@ static void mips_emit_regcalc(struct cling_mips_function *self,
     case OP_SUB:
       ir = mips_sub(dest_regid, src_regid1, src_regid2);
       break;
+    default:
+      cling_default_assert(ast_ir->opcode, cling_ast_opcode_kind_tostring);
   }
   mips_function_push_back(self, ir);
 }
 
+/*
+ * Optionally move temp to $v0.
+ */
 static void mips_emit_ret(struct cling_mips_function *self,
-                          struct cling_ast_ir const *ast_ir) {
+    struct cling_ast_ir const *ast_ir) {
   uint8_t regid;
-  mips_function_epilogue(self);
-  if (ast_ir->operands[0].info == CL_NULL)
-    return;
-  regid = mips_function_read_operand(self, &ast_ir->operands[0]);
-  mips_function_push_back(self, mips_move(MIPS_V0, regid));
+  if (ast_ir->operands[0].info != CL_NULL) {
+    regid = mips_function_read(self, ast_ir, 0);
+    mips_function_push_back(self, mips_move(MIPS_V0, regid));
+  }
 }
 
-static void mips_emit_mul_or_div(struct cling_mips_function *self,
+/*
+ * Calculation that takes 2 operands in mips but 3 operands
+ * in ast_ir.
+ * like, div $t1, $t2, mflo $t3
+ */
+static void mips_emit_binary_calc(struct cling_mips_function *self,
                                  struct cling_ast_ir const *ast_ir) {
   uint8_t src_regid1, src_regid2, dest_regid;
   struct cling_mips_ir *ir;
-  src_regid1 = mips_function_read_operand(self, &ast_ir->operands[1]);
-  src_regid2 = mips_function_read_operand(self, &ast_ir->operands[2]);
 
+  src_regid1 = mips_function_read(self, ast_ir,1);
+  src_regid2 = mips_function_read(self, ast_ir,2);
   switch (ast_ir->opcode) {
   case OP_DIV:
     ir = mips_div(src_regid1, src_regid2);
@@ -1144,47 +1239,325 @@ static void mips_emit_mul_or_div(struct cling_mips_function *self,
     ir = mips_mult(src_regid1, src_regid2);
     break;
   default:
-    assert(false);
+    cling_default_assert(ast_ir->opcode, cling_ast_opcode_kind_tostring);
   }
   mips_function_push_back(self, ir);
-  dest_regid = mips_function_write_temp(self, ast_ir->operands[0].scalar);
+  dest_regid = mips_function_write(self, ast_ir, 0);
   mips_function_push_back(self, mips_mflo(dest_regid));
 }
 
-static void mips_load_temps_paras(struct cling_mips_function *self)
-{
-  struct cling_mips_temp *temp_one;
-  for (int i=0; i<self->temp_size; ++i) {
-    temp_one=&self->temps[i];
-    if (temp_one->regid != MIPS_REGR_NULL) {
-      mips_function_push_back(self, 
-          mips_lw(temp_one->regid, temp_one->offset, MIPS_SP));
-    }
+static void mips_emit_call(struct cling_mips_function *self, 
+    struct cling_ast_ir const *ast_ir) {
+  char const *callee;
+  int regid;
+
+  callee=ast_ir->operands[0].text;
+  mips_function_push_back(self, mips_jal(callee));
+  if (ast_ir->operands[1].info != CL_NULL) {
+    regid=mips_function_write(self, ast_ir, 1);
+    mips_function_push_back(self, mips_move(regid, MIPS_V0));
   }
-  for (int i=0; i<4; ++i) {
-    mips_function_push_back(self, 
-        mips_lw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP));
+  mips_load_temps_paras(self, true);
+}
+
+/*
+ * index temp(base_wide) index(is_load).
+ * where temp is the address of the array,
+ * base_wide is the elemsz,
+ * index is the result of the expr,
+ * is_load tells us final result is the address or content.
+ */
+static void mips_emit_index(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t index_regid;
+  uint8_t array_regid;
+  uint8_t dest_regid;
+  size_t base_size;
+
+  array_regid=mips_function_read(self, ast_ir, 1);
+  index_regid=mips_function_read(self, ast_ir, 2);
+  dest_regid=mips_function_write(self, ast_ir, 0);
+  base_size=getsize(ast_ir->operands[0].info);
+  /*
+   * We borrow dest_regid to hold the elemsz.
+   */
+  mips_function_push_back(self, mips_li(dest_regid, base_size));
+  mips_function_push_back(self, mips_mult(index_regid, dest_regid));
+  mips_function_push_back(self, mips_mflo(dest_regid));
+  mips_function_push_back(self, mips_add(dest_regid, dest_regid, array_regid));
+  mips_function_temp_unmap(self, array_regid);
+
+  /*
+   * Now we have A+index in dest_regid.
+   */
+  /*
+   * If this is a rhs index, we need to load the content.
+   */
+  if (ast_ir->operands[1].info) {
+    mips_function_push_back(self, base_size == MIPS_WORD_SIZE?
+        mips_lw(dest_regid, 0, dest_regid):
+        mips_lb(dest_regid, 0, dest_regid));
   }
 }
 
-static void mips_save_temps_paras(struct cling_mips_function *self)
-{
-  struct cling_mips_temp *temp_one;
-  struct cling_mips_name *argreg;
+/*
+ * ldstr string temp.
+ * load the label of the string into temp.
+ */
+static void mips_emit_ldstr(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t regid;
+  char const *label;
+
+  regid=mips_function_read(self, ast_ir, 1);
+  label=mips_function_label(self, ast_ir, 0);
+  mips_function_push_back(self, mips_la(regid, label));
+}
+
+/*
+ * ldimm value(wide) temp
+ * No matter what is the wide, we load it using li.
+ */
+static void mips_emit_ldimm(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t dest_regid;
+  size_t size;
+
+  dest_regid=mips_function_write(self, ast_ir, 1);
+  size=getsize(ast_ir->operands[0].info);
+  mips_function_push_back(self, 
+      mips_li(dest_regid, size == MIPS_WORD_SIZE?
+      ast_ir->operands[0].imme_int:
+      ast_ir->operands[0].imme_char));
+}
+
+/*
+ * store temp1(wide) temp2
+ * Where temp1 holds address of variable.
+ */
+static void mips_emit_store(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t addr_regid;
+  uint8_t src_regid;
+  size_t size;
+
+  addr_regid=mips_function_read(self, ast_ir, 0);
+  src_regid=mips_function_read(self, ast_ir, 1);
+  size=getsize(ast_ir->operands[0].info);
+  mips_function_push_back(self, size == MIPS_WORD_SIZE?
+      mips_sw(src_regid, 0, addr_regid):
+      mips_sb(src_regid, 0, addr_regid));
+  mips_function_temp_unmap(self, addr_regid);
+}
+
+/*
+ * We utilize the fact that the grammar restrict the use of condition
+ * expression right above a branch instruction to translate condition
+ * ir directly to conditional branch.
+ * Also notes that, expression (without relop) is allowed in condition,
+ * so we use a state to deduct that.
+ */
+
+/*
+ * Translate relop like OP_NE to mips dialect, blt, ble...
+ * Note the implicit ast_ir following relop is OP_BEZ.
+ */
+static struct cling_mips_ir *
+mips_branch_zero(int relop, uint8_t regid, uint16_t offset) {
   struct cling_mips_ir *ir;
-  for (int i=0; i<self->temp_size; ++i) {
-    temp_one=&self->temps[i];
-    if (temp_one->regid != MIPS_REGR_NULL) {
-      mips_function_push_back(self, 
-          mips_sw(temp_one->regid, temp_one->offset, MIPS_SP));
-    }
+
+  switch(relop) {
+      case OP_GT:
+        ir=mips_ir_create(MIPS_BLEZ);
+        break;
+      case OP_GE:
+        ir=mips_ir_create(MIPS_BLTZ);
+        break;
+      case OP_LE:
+        ir=mips_ir_create(MIPS_BGTZ);
+        break;
+      case OP_LT:
+        ir=mips_ir_create(MIPS_BGEZ);
+        break;
   }
-  for (int i=0; i<4; ++i) {
-    mips_function_push_back(self, 
-        ir=mips_sw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP));
+  ir->operands[0].regid=regid;
+  ir->operands[1].offset=offset;
+  return ir;
+}
+
+static void mips_emit_branch_relop(struct cling_mips_function *self, 
+    struct cling_ast_ir const *relop) {
+  assert(relop);
+  uint8_t src_regid1, src_regid2, dest_regid;
+  struct cling_mips_ir *ir;
+
+  src_regid1=mips_function_read(self, relop, 1);
+  src_regid2=mips_function_read(self, relop, 2);
+
+  switch(relop->opcode) {
+    /*
+     * Black is white.
+     * White is black.
+     */
+      case OP_NE:
+        ir=mips_beq(src_regid1, src_regid2, MIPS_ADDR_NULL);
+        break;
+      case OP_EQ:
+        ir=mips_bne(src_regid1, src_regid2, MIPS_ADDR_NULL);
+        break;
+      case OP_GT:
+      case OP_GE:
+      case OP_LE:
+      case OP_LT:
+        dest_regid=mips_function_write(self, relop, 0);
+        mips_function_push_back(self, mips_sub(dest_regid, src_regid1, src_regid2));
+        ir=mips_branch_zero(relop->opcode, dest_regid, MIPS_ADDR_NULL);
+        break;
+  }
+  mips_function_push_back(self, ir);
+}
+
+/*
+ * Handle simple branch that does not involve relop.
+ */
+static void mips_emit_branch(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t src_regid1, src_regid2;
+
+  switch(ast_ir->opcode) {
+    case OP_BEZ:
+      /*
+       * branch if equals to zero.
+       */
+      src_regid1=mips_function_read(self, ast_ir, 0);
+      mips_function_push_back(self,
+          mips_beq(src_regid1, MIPS_ZERO, MIPS_ADDR_NULL));
+      break;
+    case OP_BNE:
+      /*
+       * branch if not equals.
+       */
+      src_regid1=mips_function_read(self, ast_ir, 0);
+      src_regid2=mips_function_read(self, ast_ir, 1);
+      mips_function_push_back(self,
+          mips_bne(src_regid1, src_regid2, MIPS_ADDR_NULL));
+      break;
+    case OP_BNZ:
+      /*
+       * branch if not equals to zero.
+       */
+      src_regid1=mips_function_read(self, ast_ir, 0);
+      mips_function_push_back(self,
+          mips_bne(src_regid1, MIPS_ZERO, MIPS_ADDR_NULL));
+      break;
   }
 }
 
+/*
+ * load name(scope|wide) temp(is_load)
+ * load the address or content of name into temp.
+ */
+static void mips_emit_load(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t dest_regid;
+  struct cling_mips_name *var;
+
+  bool is_global=ast_ir->operands[0].info & CL_GLBL;
+  char const *name=ast_ir->operands[0].text;
+  bool is_load=ast_ir->operands[1].info;
+  size_t size=getsize(ast_ir->operands[0].info);
+
+  dest_regid=mips_function_write(self, ast_ir, 1);
+  if (is_global) {
+    /*
+     * TODO: Currently the name is the label of the global
+     * variable.
+     */
+    mips_function_push_back(self, mips_la(dest_regid, name));
+  } else {
+    var=utillib_hashmap_at(&self->names, name);
+    mips_function_push_back(self, mips_addi(dest_regid, MIPS_SP, var->offset));
+  }
+  /*
+   * now dest_regid holds the address of this variable.
+   */
+  if (is_load) {
+    mips_function_push_back(self, size == MIPS_WORD_SIZE ?
+        mips_lw(dest_regid, 0, dest_regid):
+        mips_lb(dest_regid, 0, dest_regid));
+  }
+}
+
+static void mips_emit_jmp(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  mips_function_push_back(self, mips_j(MIPS_ADDR_NULL));
+}
+
+/*
+ * read temp(wide)
+ * temp is the address to store the value in.
+ */
+static void mips_emit_read(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  size_t size;
+  uint8_t regid;
+
+  mips_function_push_back(self, mips_li(MIPS_V0, MIPS_READ_INT));
+  mips_function_push_back(self, &cling_mips_syscall);
+  size=getsize(ast_ir->operands[0].info);
+  regid=mips_function_read(self, ast_ir, 0);
+  mips_function_push_back(self, size == MIPS_WORD_SIZE?
+      mips_sw(MIPS_V0, 0, regid):
+      mips_sb(MIPS_V0, 0, regid));
+}
+
+/*
+ * write temp
+ * temp is the address of a string or word.
+ */
+static void mips_emit_write(struct cling_mips_function *self,
+    struct cling_ast_ir const *ast_ir) {
+  uint8_t regid;
+  if (self->para_size) {
+    /*
+     * Save $a0 to sp+frame_size.
+     */
+    mips_function_push_back(self, mips_sw(MIPS_A0, self->frame_size, MIPS_SP));
+  }
+  regid=mips_function_read(self, ast_ir, 0);
+  /*
+   * syscall number.
+   */
+  mips_function_push_back(self, 
+      mips_li(MIPS_V0, ast_ir->opcode == OP_WRSTR ?
+        MIPS_PRINT_STRING:MIPS_PRINT_INT));
+  /*
+   * syscall argument.
+   */
+  mips_function_push_back(self, mips_move(MIPS_A0, regid));
+  mips_function_push_back(self, &cling_mips_syscall);
+  if (self->para_size) {
+    /*
+     * Restore $a0.
+     */
+    mips_function_push_back(self, mips_lw(MIPS_A0, self->frame_size, MIPS_SP));
+  }
+}
+
+/*
+ * End of translation of different ast_ir.
+ */
+
+/*
+ * Allocate space for arguments greater than four from MIPS_MEM_ARG_BLK.
+ */
+static uint32_t mips_function_argalloc(uint32_t *args_blk, size_t size) { 
+  return MIPS_MEM_ARG_BLK + mips_align_alloc(args_blk, size, size);
+}
+
+/*
+ * Loop over all the ast_ir and emit mips_ir.
+ */
 static void mips_function_instrs(struct cling_mips_function *self,
     struct cling_ast_function const *ast_func) {
   size_t ast_instrs_size;
@@ -1196,8 +1569,9 @@ static void mips_function_instrs(struct cling_mips_function *self,
   uint8_t regid;
   size_t size;
   struct cling_mips_ir *ir;
-  uint32_t args_blk=MIPS_MEM_ARG_BLK;
+  uint32_t args_blk;
   uint32_t offset;
+  struct cling_ast_ir const* relop=NULL;
 
   ast_instrs_size = utillib_vector_size(&ast_func->instrs);
   for (int ast_pc = 0; ast_pc < ast_instrs_size; ++ast_pc) {
@@ -1205,26 +1579,26 @@ static void mips_function_instrs(struct cling_mips_function *self,
     switch (ast_ir->opcode) {
       case OP_SUB:
       case OP_ADD:
-        mips_emit_regcalc(self, ast_ir);
+        mips_emit_ternary_calc(self, ast_ir);
         break;
       case OP_RET:
         mips_emit_ret(self, ast_ir);
         break;
       case OP_DIV:
       case OP_MUL:
-        mips_emit_mul_or_div(self, ast_ir);
+        mips_emit_binary_calc(self, ast_ir);
         break;
       case OP_PUSH:
         if (push_state == 0) {
-          mips_save_temps_paras(self);
-          args_blk=MIPS_MEM_ARG_BLK;
+          mips_load_temps_paras(self, false);
+          args_blk=0;
         } 
-        regid=mips_function_read_operand(self, &ast_ir->operands[0]);
-        if (push_state < 4) {
+        regid=mips_function_read(self, ast_ir, 0);
+        if (push_state < MIPS_REG_ARGS_N) {
           ir=mips_move(MIPS_A0+push_state, regid);
         } else {
           size=getsize(ast_ir->operands[0].info);
-          offset=mips_align_alloc(&args_blk, size);
+          offset=mips_function_argalloc(&args_blk, size);
           if (size == MIPS_WORD_SIZE)
             ir=mips_sw(regid, offset, MIPS_SP);
           else
@@ -1234,21 +1608,63 @@ static void mips_function_instrs(struct cling_mips_function *self,
         ++push_state;
         break;
       case OP_CAL:
-        mips_function_push_back(self,
-            mips_jal(ast_ir->operands[0].text));
-        if (ast_ir->operands[1].info != CL_NULL) {
-          mips_function_regmap_temp(self, ast_ir->operands[1].scalar, MIPS_V0);
-        }
-        mips_load_temps_paras(self);
+        mips_emit_call(self, ast_ir);
         push_state=0;
         break;
-
-
+      case OP_NE:
+      case OP_EQ:
+      case OP_GT:
+      case OP_GE:
+      case OP_LE:
+      case OP_LT:
+        relop=ast_ir;
+        break;
+      case OP_BNZ:
+      case OP_BEZ:
+      case OP_BNE:
+        if (relop) {
+          /*
+           * bez is used to impl if.
+           */
+          assert(ast_ir->opcode == OP_BEZ);
+          mips_emit_branch_relop(self, relop);
+          relop = NULL;
+        } else {
+          mips_emit_branch(self, ast_ir);
+        }
+        break;
+      case OP_LDIMM:
+        mips_emit_ldimm(self, ast_ir);
+        break;
+      case OP_LOAD:
+        mips_emit_load(self, ast_ir);
+        break;
+      case OP_STORE:
+        mips_emit_store(self, ast_ir);
+        break;
+      case OP_IDX:
+        mips_emit_index(self, ast_ir);
+        break;
+      case OP_JMP:
+        mips_emit_jmp(self, ast_ir);
+        break;
+      case OP_READ:
+        mips_emit_read(self, ast_ir);
+        break;
+      case OP_WRITE:
+        mips_emit_write(self, ast_ir);
+        break;
+      default:
+        cling_default_assert(ast_ir->opcode,
+            cling_ast_opcode_kind_tostring);
     }
-    mips_function_age_temps(self);
+    mips_function_temp_ages(self);
   }
 }
 
+/*
+ * Driver to translate all the ast_ir to mips_ir.
+ */
 static void mips_function_emit(struct cling_mips_function *self,
     struct cling_ast_function const *ast_func) {
   mips_function_stack_layout(self, ast_func);
@@ -1374,16 +1790,25 @@ void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_p
   mips_program_setup(self);
   mips_program_emit_data(self, program);
 
-  for (int i=0; i<cling_mips_opcode_kind_N; ++i) {
-    struct cling_mips_ir *ir=mips_ir_create(i);
-    mips_ir_tostring(ir);
-  }
-
-  /* UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) { */
-  /*   mips_function_init(&function, &self->text, &global, ast_func); */
-  /*   mips_function_emit(&function, ast_func); */
-  /*   mips_function_destroy(&function); */
+  /* const int sizes[]={ 1, 1, 4, 4, 1, -1 }; */
+  /* int blk=0; */
+  /* uint32_t offset; */
+  /* for (const int *p=sizes; *p!=-1; ++p) { */
+  /*   offset=mips_align_alloc(&blk, *p); */
+  /*   printf("Address %lu, blk %lu", offset, blk); */
   /* } */
+
+
+  /* for (int i=0; i<cling_mips_opcode_kind_N; ++i) { */
+  /*   struct cling_mips_ir *ir=mips_ir_create(i); */
+  /*   mips_ir_tostring(ir); */
+  /* } */
+
+  UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
+    mips_function_init(&function, &self->text, &global, ast_func);
+    mips_function_emit(&function, ast_func);
+    mips_function_destroy(&function);
+  }
 
 }
 
@@ -1399,5 +1824,29 @@ void cling_mips_program_print(struct cling_mips_program const *self, FILE *file)
   fputs(".globl main\n", file);
   UTILLIB_VECTOR_FOREACH(ir, &self->text) {
     fprintf(file, "%s\n", mips_ir_tostring(ir));
+  }
+}
+
+/*
+ * Test
+ */
+static void mips_mock(void) {
+  struct cling_mips_ir * ir[20];
+  ir[0]=&cling_mips_syscall;
+  ir[1]=mips_move(MIPS_V0, MIPS_T0);
+  ir[2]=mips_addi(MIPS_SP, MIPS_SP, 100);
+  ir[3]=mips_addu(MIPS_S1, MIPS_ZERO, MIPS_S3);
+  ir[4]=mips_jal("function");
+  ir[5]=mips_j(0x14);
+  ir[6]=mips_jr(MIPS_S0);
+  ir[7]=mips_bne(MIPS_S0, MIPS_T2, -1);
+  ir[9]=mips_mflo(MIPS_T1);
+  ir[10]=mips_lw(MIPS_S1, 10, MIPS_SP);
+  ir[11]=mips_div(MIPS_S2, MIPS_T1);
+  ir[12]=mips_la(MIPS_S0, "Address");
+  ir[13]=mips_li(MIPS_T0, 0x11111);
+  ir[14]=mips_sw(MIPS_S0, 2, MIPS_A0);
+  for (int i=0; i< 15; ++i) {
+    puts(mips_ir_tostring(ir[i]));
   }
 }

@@ -25,7 +25,7 @@
 #include "misc.h"
 
 #include <utillib/json_foreach.h>
-
+#include <string.h>
 #include <assert.h>
 #include <stdlib.h>
 

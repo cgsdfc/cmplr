@@ -67,4 +67,6 @@ void cling_primary_toint(union cling_primary *self, size_t type);
 int cling_symbol_to_type(int symbol);
 int cling_type_to_wide(int type);
 extern const struct utillib_hashmap_callback cling_string_hash;
+void cling_default_assert(int code, char const *(*tostring) (int code));
+
 #endif /* CLING_MISC_H */
