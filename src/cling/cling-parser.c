@@ -28,6 +28,7 @@ static struct cling_rd_parser cling_parser;
 static struct cling_symbol_table cling_symbol_table;
 static struct utillib_json_value *json_ast;
 static struct cling_ast_program program;
+static struct cling_mips_program cling_mips;
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -46,7 +47,9 @@ int main(int argc, char *argv[]) {
 
   cling_ast_program_init(&program);
   cling_ast_ir_emit_program(json_ast, &cling_symbol_table, &program);
-  cling_ast_program_print(&program);
+  cling_mips_program_init(&cling_mips);
+  cling_mips_program_emit(&cling_mips, &program);
+  cling_mips_program_print(&cling_mips, stdout); 
 
 cleanup:
   if (json_ast)
@@ -55,4 +58,5 @@ cleanup:
   cling_rd_parser_destroy(&cling_parser);
   cling_symbol_table_destroy(&cling_symbol_table);
   cling_scanner_destroy(&cling_scanner);
+  cling_mips_program_destroy(&cling_mips);
 }

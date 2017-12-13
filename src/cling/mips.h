@@ -20,10 +20,13 @@
 */
 #ifndef CLING_MIPS_H
 #define CLING_MIPS_H
+#include "ast_ir.h"
 
 #include <utillib/enum.h>
 #include <utillib/hashmap.h>
 #include <utillib/vector.h>
+
+#include <stdio.h>
 
 /*
  * We want to be explicit about
@@ -96,10 +99,26 @@ UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_INT, 1)
 UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_STRING, 4)
 UTILLIB_ENUM_ELEM_INIT(MIPS_SCANF_INT, 5)
 UTILLIB_ENUM_ELEM_INIT(MIPS_SCANF_STRING, 8)
+UTILLIB_ENUM_ELEM_INIT(MIPS_EXIT, 10)
 UTILLIB_ENUM_END(cling_mips_syscall_kind);
+
+/*
+ * These are in fact assembler directives.
+ * But all we concern about is the part used
+ * to define global data such as .asciiz, .byte
+ * and .word, so as the name of it.
+ */
+UTILLIB_ENUM_BEGIN(cling_mips_data_kind)
+UTILLIB_ENUM_ELEM(MIPS_ASCIIZ)
+UTILLIB_ENUM_ELEM(MIPS_SPACE)
+UTILLIB_ENUM_ELEM(MIPS_WORD)
+UTILLIB_ENUM_ELEM(MIPS_BYTE)
+UTILLIB_ENUM_END(cling_mips_data_kind);
 
 struct cling_mips_program {
   struct utillib_vector text;
+  struct utillib_hashmap string;
+  struct utillib_vector data;
 };
 
 struct cling_mips_global {
@@ -108,13 +127,7 @@ struct cling_mips_global {
    * of mips_ir.
    */
   uint32_t instr_offset;
-};
-
-enum {
-  MIPS_NAME,
-  MIPS_TEMP,
-  MIPS_PARA,
-  MIPS_ARRAY,
+  struct utillib_hashmap *string;
 };
 
 struct saved_register {
@@ -133,11 +146,6 @@ struct cling_mips_name {
   int offset;
 };
 
-enum {
-  MIPS_LEAF,
-  MIPS_NON_LEAF,
-};
-
 struct cling_mips_temp {
   int age;
   uint8_t regid;
@@ -147,6 +155,7 @@ struct cling_mips_temp {
 struct cling_mips_function {
   int temp_size;
   struct cling_mips_temp *temps;
+
   bool *reg_pool;
   struct utillib_hashmap names;
   struct utillib_vector saved_registers;
@@ -155,6 +164,15 @@ struct cling_mips_function {
   uint32_t *address_map;
   struct cling_mips_global *global;
   struct utillib_vector *instrs;
+};
+
+struct cling_mips_data {
+  uint8_t type;
+  char *label;
+  union {
+    char *string;
+    size_t extend;
+  };
 };
 
 struct cling_mips_ir {
@@ -170,5 +188,10 @@ struct cling_mips_ir {
     char *label;
   } operands[CLING_MIPS_OPERAND_MAX];
 };
+
+void cling_mips_program_init(struct cling_mips_program *self);
+void cling_mips_program_destroy(struct cling_mips_program *self);
+void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_program *program);
+void cling_mips_program_print(struct cling_mips_program const *self, FILE *file);
 
 #endif /* CLING_MIPS_H */

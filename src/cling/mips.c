@@ -115,6 +115,13 @@ UTILLIB_ETAB_ELEM_INIT(MIPS_SP, "$sp")
 UTILLIB_ETAB_ELEM_INIT(MIPS_RA, "$ra")
 UTILLIB_ETAB_END(cling_mips_regster);
 
+UTILLIB_ETAB_BEGIN(cling_mips_data_kind)
+UTILLIB_ETAB_ELEM_INIT(MIPS_ASCIIZ, ".asciiz")
+UTILLIB_ETAB_ELEM_INIT(MIPS_SPACE, ".space")
+UTILLIB_ETAB_ELEM_INIT(MIPS_WORD, ".word")
+UTILLIB_ETAB_ELEM_INIT(MIPS_BYTE, ".byte")
+UTILLIB_ETAB_END(cling_mips_data_kind);
+
 /*
  * Get the size of object.
  */
@@ -331,18 +338,14 @@ static struct cling_mips_ir *mips_move(uint8_t dest_regid, uint8_t src_regid) {
   return self;
 }
 
-static struct cling_mips_ir *mips_onereg(uint8_t opcode, uint8_t regid) {
-  struct cling_mips_ir *self = mips_ir_create(opcode);
-  self->operands[0].regid = regid;
-  return self;
-}
-
 /*
  * mflo $s0
  * Moves $lo to $s0.
  */
 static struct cling_mips_ir *mips_mflo(uint8_t dest_regid) {
-  return mips_onereg(MIPS_MFLO, dest_regid);
+  struct cling_mips_ir *self = mips_ir_create(MIPS_MFLO);
+  self->operands[0].regid = dest_regid;
+  return self;
 }
 
 /*
@@ -414,12 +417,6 @@ static void mips_ir_destroy(struct cling_mips_ir *self) {
     break;
   }
   free(self);
-}
-
-static struct cling_mips_ir *mips_ir_copy(struct cling_mips_ir const *self) {
-  struct cling_mips_ir *other = malloc(sizeof *other);
-  memcpy(other, self, sizeof *other);
-  return other;
 }
 
 /*
@@ -503,6 +500,10 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     mips_ir_snprintf(("%s %s %" PRId16), opstr, regstr[0],
                      self->operands[1].offset);
     return buffer;
+  case MIPS_LI:
+    regstr[0]=mips_operand_regstr(self, 0);
+    mips_ir_snprintf(("%s %s, %" PRId32), opstr, regstr[0], self->operands[1].imme32);
+    return buffer;
   default:
     puts(opstr);
     assert(false);
@@ -531,6 +532,7 @@ static struct cling_mips_name *mips_name_create(int state, uint8_t regid, uint32
 
 static void mips_function_init(struct cling_mips_function *self,
                                struct utillib_vector *instrs,
+                               struct cling_mips_global *global,
                                struct cling_ast_function const *ast_func) {
   utillib_hashmap_init(&self->names, &cling_string_hash);
   utillib_vector_init(&self->saved_registers);
@@ -541,6 +543,7 @@ static void mips_function_init(struct cling_mips_function *self,
   self->address_map = malloc(sizeof self->address_map[0] *
                              utillib_vector_size(&ast_func->instrs));
   self->temps = malloc(sizeof self->temps[0] * ast_func->temps);
+  self->global=global;
 }
 
 static void mips_function_destroy(struct cling_mips_function *self) {
@@ -619,6 +622,17 @@ static void mips_function_regmap_name(struct cling_mips_function *self,
   utillib_hashmap_insert(&self->names, strdup(name), entry);
 }
 
+/*
+ * Maps this temp to a register.
+ */
+static void mips_function_regmap_temp(struct cling_mips_function *self,
+    uint16_t temp, int regid) {
+  struct cling_mips_temp *temp_one;
+  temp_one=&self->temps[temp];
+  temp_one->regid=regid;
+  temp_one->age=0;
+}
+
 static void mips_function_fix_address(struct cling_mips_function *self,
                                       struct utillib_vector const *ast_instrs,
                                       struct utillib_vector *mips_instrs) {
@@ -692,8 +706,7 @@ static void mips_function_saved_push_back(struct cling_mips_function *self,
  * sw $s0, 24($sp)
  * # save other saved registers.
  */
-static void mips_function_prologue(struct cling_mips_function *self,
-                                   struct utillib_vector *mips_instrs) {
+static void mips_function_prologue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
   struct saved_register const *saved;
 
@@ -1081,7 +1094,7 @@ static uint8_t mips_function_write_temp(struct cling_mips_function *self,
   return regid;
 }
 
-static void mips_emit_add(struct cling_mips_function *self,
+static void mips_emit_regcalc(struct cling_mips_function *self,
                           struct cling_ast_ir const *ast_ir) {
   /*
    * We use register to hold operands in any cases.
@@ -1095,7 +1108,14 @@ static void mips_emit_add(struct cling_mips_function *self,
   src_regid1 = mips_function_read_operand(self, &ast_ir->operands[1]);
   src_regid2 = mips_function_read_operand(self, &ast_ir->operands[2]);
   dest_regid = mips_function_write_temp(self, ast_ir->operands[0].scalar);
-  ir = mips_add(dest_regid, src_regid1, src_regid2);
+  switch(ast_ir->opcode) {
+    case OP_ADD:
+      ir = mips_add(dest_regid, src_regid1, src_regid2);
+      break;
+    case OP_SUB:
+      ir = mips_sub(dest_regid, src_regid1, src_regid2);
+      break;
+  }
   mips_function_push_back(self, ir);
 }
 
@@ -1131,29 +1151,253 @@ static void mips_emit_mul_or_div(struct cling_mips_function *self,
   mips_function_push_back(self, mips_mflo(dest_regid));
 }
 
+static void mips_load_temps_paras(struct cling_mips_function *self)
+{
+  struct cling_mips_temp *temp_one;
+  for (int i=0; i<self->temp_size; ++i) {
+    temp_one=&self->temps[i];
+    if (temp_one->regid != MIPS_REGR_NULL) {
+      mips_function_push_back(self, 
+          mips_lw(temp_one->regid, temp_one->offset, MIPS_SP));
+    }
+  }
+  for (int i=0; i<4; ++i) {
+    mips_function_push_back(self, 
+        mips_lw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP));
+  }
+}
+
+static void mips_save_temps_paras(struct cling_mips_function *self)
+{
+  struct cling_mips_temp *temp_one;
+  struct cling_mips_name *argreg;
+  struct cling_mips_ir *ir;
+  for (int i=0; i<self->temp_size; ++i) {
+    temp_one=&self->temps[i];
+    if (temp_one->regid != MIPS_REGR_NULL) {
+      mips_function_push_back(self, 
+          mips_sw(temp_one->regid, temp_one->offset, MIPS_SP));
+    }
+  }
+  for (int i=0; i<4; ++i) {
+    mips_function_push_back(self, 
+        ir=mips_sw(MIPS_A0+i, self->frame_size+(i<<2), MIPS_SP));
+  }
+}
+
 static void mips_function_instrs(struct cling_mips_function *self,
-                                 struct cling_ast_function const *ast_func) {
+    struct cling_ast_function const *ast_func) {
   size_t ast_instrs_size;
   /*
    * We use the same way to handle push seq.
    */
   int push_state = 0;
   struct cling_ast_ir const *ast_ir;
+  uint8_t regid;
+  size_t size;
+  struct cling_mips_ir *ir;
+  uint32_t args_blk=MIPS_MEM_ARG_BLK;
+  uint32_t offset;
 
   ast_instrs_size = utillib_vector_size(&ast_func->instrs);
   for (int ast_pc = 0; ast_pc < ast_instrs_size; ++ast_pc) {
     ast_ir = utillib_vector_at(&ast_func->instrs, ast_pc);
     switch (ast_ir->opcode) {
-    case OP_ADD:
-      mips_emit_add(self, ast_ir);
-      break;
-    case OP_RET:
-      mips_emit_ret(self, ast_ir);
-      break;
-    case OP_DIV:
-    case OP_MUL:
-      mips_emit_mul_or_div(self, ast_ir);
-      break;
+      case OP_SUB:
+      case OP_ADD:
+        mips_emit_regcalc(self, ast_ir);
+        break;
+      case OP_RET:
+        mips_emit_ret(self, ast_ir);
+        break;
+      case OP_DIV:
+      case OP_MUL:
+        mips_emit_mul_or_div(self, ast_ir);
+        break;
+      case OP_PUSH:
+        if (push_state == 0) {
+          mips_save_temps_paras(self);
+          args_blk=MIPS_MEM_ARG_BLK;
+        } 
+        regid=mips_function_read_operand(self, &ast_ir->operands[0]);
+        if (push_state < 4) {
+          ir=mips_move(MIPS_A0+push_state, regid);
+        } else {
+          size=getsize(ast_ir->operands[0].info);
+          offset=mips_align_alloc(&args_blk, size);
+          if (size == MIPS_WORD_SIZE)
+            ir=mips_sw(regid, offset, MIPS_SP);
+          else
+            ir=mips_sb(regid, offset, MIPS_SP);
+        }
+        mips_function_push_back(self, ir);
+        ++push_state;
+        break;
+      case OP_CAL:
+        mips_function_push_back(self,
+            mips_jal(ast_ir->operands[0].text));
+        if (ast_ir->operands[1].info != CL_NULL) {
+          mips_function_regmap_temp(self, ast_ir->operands[1].scalar, MIPS_V0);
+        }
+        mips_load_temps_paras(self);
+        push_state=0;
+        break;
+
+
     }
+    mips_function_age_temps(self);
+  }
+}
+
+static void mips_function_emit(struct cling_mips_function *self,
+    struct cling_ast_function const *ast_func) {
+  mips_function_stack_layout(self, ast_func);
+  mips_function_prologue(self);
+  mips_function_instrs(self, ast_func);
+  mips_function_epilogue(self);
+}
+
+/*
+ * Data Directive
+ */
+
+static struct cling_mips_data*
+mips_data_create(uint8_t type, char const *label) {
+  struct cling_mips_data *self=malloc(sizeof *self);
+  self->type=type;
+  self->label=strdup(label);
+  return self;
+}
+
+static struct cling_mips_data *
+mips_array_create(char const *label, size_t extend) {
+  struct cling_mips_data *self=mips_data_create(MIPS_SPACE, label);
+  self->extend=extend;
+  return self;
+}
+
+static struct cling_mips_data *
+mips_string_create(char const *label, char const *string) {
+  struct cling_mips_data *self=mips_data_create(MIPS_SPACE, label);
+  self->string=strdup(string);
+  return self;
+}
+
+static void mips_data_destroy(struct cling_mips_data *self) {
+  free(self->label);
+  if (self->type == MIPS_ASCIIZ)
+    free(self->string);
+  free(self);
+}
+
+static void mips_data_print(struct cling_mips_data const *self, FILE *file) {
+  fprintf(file, "%s: %s ", self->label, cling_mips_data_kind_tostring(self->type));
+  switch(self->type) {
+    case MIPS_ASCIIZ:
+      fprintf(file, "\"%s\"\n", self->string);
+      break;
+    case MIPS_BYTE:
+    case MIPS_WORD:
+      fputs("0\n", file);
+      break;
+    case MIPS_SPACE:
+      fprintf(file, "%lu\n", self->extend);
+      break;
+  }
+}
+
+/*
+ * cling_mips_program
+ */
+
+static void mips_program_emit_data(struct cling_mips_program *self, struct cling_ast_program const *program) {
+  struct cling_ast_ir const *ast_ir;
+  int info;
+  struct cling_mips_data *data;
+  char const *name;
+  size_t base_size;
+
+  UTILLIB_VECTOR_FOREACH(ast_ir, &program->init_code) {
+    switch(ast_ir->opcode) {
+      case OP_DEFVAR:
+        info=ast_ir->operands[0].info;
+        name=ast_ir->operands[0].text;
+        if (info & CL_WORD)
+          data=mips_data_create(MIPS_WORD, name);
+        else
+          data=mips_data_create(MIPS_BYTE, name);
+        utillib_vector_push_back(&self->data, data);
+        break;
+      case OP_DEFARR:
+        name=ast_ir->operands[0].text;
+        base_size=getsize(ast_ir->operands[0].info);
+        data=mips_array_create(name, base_size * ast_ir->operands[1].scalar);
+        utillib_vector_push_back(&self->data, data);
+        break;
+    }
+  }
+}
+
+/*
+ * Write a few lines at the most front to jump to main
+ * and then exit.
+ */
+static void mips_program_setup(struct cling_mips_program *self) {
+  struct utillib_vector *text=&self->text;
+  utillib_vector_push_back(text, mips_jal("main"));
+  utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_EXIT));
+  utillib_vector_push_back(text, &cling_mips_syscall);
+}
+
+static void mips_global_init(struct cling_mips_global *self, struct utillib_hashmap *string) {
+  self->instr_offset=0;
+  self->string=string;
+}
+
+void cling_mips_program_init(struct cling_mips_program *self) {
+  utillib_vector_init(&self->text);
+  utillib_vector_init(&self->data);
+  utillib_hashmap_init(&self->string, &cling_string_hash);
+}
+
+void cling_mips_program_destroy(struct cling_mips_program *self) {
+  utillib_vector_destroy_owning(&self->text, mips_ir_destroy);
+  utillib_vector_destroy_owning(&self->data, mips_data_destroy);
+}
+
+void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_program *program) {
+  struct cling_mips_global global;
+  struct cling_mips_function function;
+  struct cling_ast_function const *ast_func;
+
+  mips_global_init(&global, &self->string);
+  mips_program_setup(self);
+  mips_program_emit_data(self, program);
+
+  for (int i=0; i<cling_mips_opcode_kind_N; ++i) {
+    struct cling_mips_ir *ir=mips_ir_create(i);
+    mips_ir_tostring(ir);
+  }
+
+  /* UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) { */
+  /*   mips_function_init(&function, &self->text, &global, ast_func); */
+  /*   mips_function_emit(&function, ast_func); */
+  /*   mips_function_destroy(&function); */
+  /* } */
+
+}
+
+void cling_mips_program_print(struct cling_mips_program const *self, FILE *file) {
+  struct cling_mips_data const *data;
+  struct cling_mips_ir const *ir;
+
+  fputs(".data\n", file);
+  UTILLIB_VECTOR_FOREACH(data, &self->data) {
+    mips_data_print(data, file);
+  }
+  fputs(".text\n", file);
+  fputs(".globl main\n", file);
+  UTILLIB_VECTOR_FOREACH(ir, &self->text) {
+    fprintf(file, "%s\n", mips_ir_tostring(ir));
   }
 }

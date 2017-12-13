@@ -28,5 +28,6 @@
 #include <cling/rd_parser.h>
 #include <cling/scanner.h>
 #include <cling/symbol_table.h>
+#include <cling/mips.h>
 
 #endif /* CLING_CLING_H */
