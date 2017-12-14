@@ -120,35 +120,35 @@ UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
 
+/*
+ * Represent a segment of code
+ * with a label.
+ */
+struct cling_address_range {
+  union {
+    char const *label;
+    size_t scalar;
+  };
+  uint32_t begin;
+  uint32_t end;
+};
+
 struct cling_mips_program {
   struct utillib_vector text;
-  struct utillib_hashmap string;
   struct utillib_vector data;
+  struct cling_address_range *func_range;
+  size_t func_size;
 };
 
 struct cling_mips_global {
-  /*
-   * Map from address of ast_ir to address
-   * of mips_ir.
-   */
-  uint32_t instr_offset;
-  struct utillib_hashmap *string;
-};
-
-struct saved_register {
-  uint8_t regid;
-  uint32_t offset;
-};
-
-enum {
-  MIPS_IN_REG,
-  MIPS_IN_MEM,
+  struct utillib_vector * data;
+  int label_count;
+  struct cling_address_range *range;
 };
 
 struct cling_mips_name {
-  int state;
-  int regid;
-  int offset;
+  uint8_t regid;
+  uint32_t offset;
 };
 
 struct cling_mips_temp {
@@ -170,6 +170,7 @@ struct cling_mips_function {
   uint32_t *address_map;
   struct cling_mips_global *global;
   struct utillib_vector *instrs;
+  size_t instr_begin;
 };
 
 struct cling_mips_data {
@@ -195,9 +196,9 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-void cling_mips_program_init(struct cling_mips_program *self);
+void cling_mips_program_init(struct cling_mips_program *self, struct cling_ast_program const *program);
 void cling_mips_program_destroy(struct cling_mips_program *self);
-void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_program *program);
+void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self, FILE *file);
 
 #endif /* CLING_MIPS_H */
