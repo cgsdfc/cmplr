@@ -1241,11 +1241,11 @@ static void mips_emit_call(struct cling_mips_function *self,
 }
 
 /*
- * index temp(result) temp(base_wide) index(is_load).
+ * index temp(result) temp(base_wide) index(is_rvalue).
  * where temp is the address of the array,
  * base_wide is the elemsz,
  * index is the result of the expr,
- * is_load tells us final result is the address or content.
+ * is_rvalue tells us final result is the address or content.
  */
 static void mips_emit_index(struct cling_mips_function *self,
                             struct cling_ast_ir const *ast_ir) {
@@ -1253,11 +1253,13 @@ static void mips_emit_index(struct cling_mips_function *self,
   uint8_t array_regid;
   uint8_t dest_regid;
   size_t base_size;
+  bool is_rvalue;
 
+  is_rvalue=array_is_rvalue(ast_ir);
+  base_size = getsize(array_base_wide(ast_ir));
   array_regid = mips_function_read(self, ast_ir, 1);
   index_regid = mips_function_read(self, ast_ir, 2);
   dest_regid = mips_function_write(self, ast_ir, 0);
-  base_size = getsize(ast_ir->operands[1].info);
   /*
    * We borrow dest_regid to hold the elemsz.
    */
@@ -1271,7 +1273,7 @@ static void mips_emit_index(struct cling_mips_function *self,
   /*
    * If this is a rhs index, we need to load the content.
    */
-  if (ast_ir->operands[1].info) {
+  if (is_rvalue) {
     mips_function_push_back(self, base_size == MIPS_WORD_SIZE
                                       ? mips_lw(dest_regid, 0, dest_regid)
                                       : mips_lb(dest_regid, 0, dest_regid));
@@ -1464,7 +1466,7 @@ static void mips_emit_branch(struct cling_mips_function *self,
 }
 
 /*
- * load name(scope|wide) temp(is_load)
+ * load name(scope|wide) temp(is_rvalue)
  * load the address or content of name into temp.
  */
 static void mips_emit_load(struct cling_mips_function *self,
@@ -1474,7 +1476,7 @@ static void mips_emit_load(struct cling_mips_function *self,
 
   bool is_global = ast_ir->operands[0].info & CL_GLBL;
   char const *name = ast_ir->operands[0].text;
-  bool is_load = ast_ir->operands[1].info;
+  bool is_rvalue = ast_ir->operands[1].info;
   size_t size = getsize(ast_ir->operands[0].info);
 
   dest_regid = mips_function_write(self, ast_ir, 1);
@@ -1491,7 +1493,7 @@ static void mips_emit_load(struct cling_mips_function *self,
   /*
    * now dest_regid holds the address of this variable.
    */
-  if (is_load) {
+  if (is_rvalue) {
     mips_function_push_back(self, size == MIPS_WORD_SIZE
                                       ? mips_lw(dest_regid, 0, dest_regid)
                                       : mips_lb(dest_regid, 0, dest_regid));

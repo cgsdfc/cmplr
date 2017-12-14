@@ -24,7 +24,7 @@
 
 #define cling_default_assert(code, tostring)                                   \
   do {                                                                         \
-    printf("Cling ICE: Miss a case from a switch, code %d, string %s\n", code, \
+    printf("Cling ICE: Miss a case from a switch, code %u, string %s\n", code, \
            tostring(code));                                                    \
     assert(false);                                                             \
   } while (0)
