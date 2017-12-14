@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   cling_ast_ir_emit_program(json_ast, &cling_symbol_table, &program);
   cling_mips_program_init(&cling_mips, &program);
   cling_mips_program_emit(&cling_mips, &program);
-  cling_mips_program_print(&cling_mips, stdout); 
+  cling_mips_program_print(&cling_mips, stdout);
 
 cleanup:
   if (json_ast)

@@ -23,10 +23,10 @@
 #include "ast_build.h"
 #include "ast_check.h"
 #include "error.h"
+#include "misc.h"
 #include "opg_parser.h"
 #include "symbol_table.h"
 #include "symbols.h"
-#include "misc.h"
 
 #include <utillib/hashmap.h>
 

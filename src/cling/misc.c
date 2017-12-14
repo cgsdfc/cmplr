@@ -19,14 +19,14 @@
 
 */
 #include "misc.h"
-#include "ir.h"
+#include "ast_ir.h"
 #include "symbol_table.h"
 #include "symbols.h"
 
-#include <utillib/strhash.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include <utillib/strhash.h>
 
 int cling_symbol_to_type(int symbol) {
   switch (symbol) {
@@ -106,9 +106,3 @@ void cling_primary_init(union cling_primary *self, size_t type,
     assert(false);
   }
 }
-
-void cling_default_assert(int code, char const *(*tostring) (int code)) {
-  printf("Miss a case from a switch, code %d, string %s\n", code, tostring(code));
-  assert(false);
-}
-

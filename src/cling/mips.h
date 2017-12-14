@@ -141,7 +141,7 @@ struct cling_mips_program {
 };
 
 struct cling_mips_global {
-  struct utillib_vector * data;
+  struct utillib_vector *data;
   int label_count;
   struct cling_address_range *range;
 };
@@ -196,9 +196,12 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-void cling_mips_program_init(struct cling_mips_program *self, struct cling_ast_program const *program);
+void cling_mips_program_init(struct cling_mips_program *self,
+                             struct cling_ast_program const *program);
 void cling_mips_program_destroy(struct cling_mips_program *self);
-void cling_mips_program_emit(struct cling_mips_program *self, struct cling_ast_program const *program);
-void cling_mips_program_print(struct cling_mips_program const *self, FILE *file);
+void cling_mips_program_emit(struct cling_mips_program *self,
+                             struct cling_ast_program const *program);
+void cling_mips_program_print(struct cling_mips_program const *self,
+                              FILE *file);
 
 #endif /* CLING_MIPS_H */

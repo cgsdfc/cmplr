@@ -148,8 +148,6 @@ add_library(cling
   ./src/cling/ast_pretty.c
   ./src/cling/ast_check.c
   ./src/cling/ast_ir.c
-  ./src/cling/ir.c
-  ./src/cling/polish_ir.c
   ./src/cling/error.c
   ./src/cling/opg_parser.c
   ./src/cling/mips.c

@@ -25,6 +25,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 
 UTILLIB_ETAB_BEGIN(cling_symbol_entry_kind)
 UTILLIB_ETAB_ELEM_INIT(CL_UNDEF, "undefined type")
