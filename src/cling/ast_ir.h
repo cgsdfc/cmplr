@@ -23,6 +23,7 @@
 #include <utillib/enum.h>
 #include <utillib/vector.h>
 
+#include <assert.h>
 #include <inttypes.h>
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
@@ -70,7 +71,6 @@ UTILLIB_ENUM_ELEM_INIT(CL_IMME, 64)
 UTILLIB_ENUM_ELEM_INIT(CL_LABL, 128)
 UTILLIB_ENUM_ELEM_INIT(CL_STRG, 256)
 UTILLIB_ENUM_END(cling_operand_info_kind);
-
 
 /*
  * Holds global information
@@ -139,6 +139,60 @@ struct cling_ast_program {
   struct utillib_vector init_code;
   struct utillib_vector funcs;
 };
+
+#define cling_ast_operand_check(self, index, INFO)                             \
+  do {                                                                         \
+    assert((self)->operands[index].info &(INFO));                              \
+  } while (0)
+
+inline int cling_ast_ir_temp(struct cling_ast_ir const *self, int index) {
+  cling_ast_operand_check(self, index, CL_TEMP);
+  return self->operands[index].scalar;
+}
+
+inline int cling_ast_ir_info(struct cling_ast_ir const *self, int index) {
+  return self->operands[index].info;
+}
+
+inline char const *cling_ast_ir_name(struct cling_ast_ir const *self,
+                                     int index) {
+  cling_ast_operand_check(self, index, CL_NAME);
+  return self->operands[index].text;
+}
+
+inline int cling_ast_ir_address(struct cling_ast_ir const *self, int index) {
+  return self->operands[index].scalar;
+}
+
+#define cling_ast_opcode_check(self, OPCODE)                                   \
+  do {                                                                         \
+    assert((self)->opcode == (OPCODE));                                        \
+  } while (0)
+
+inline bool cling_ast_index_is_rvalue(struct cling_ast_ir const *self) {
+  cling_ast_opcode_check(self, OP_IDX);
+  return self->operands[1].info;
+}
+
+inline bool cling_ast_load_is_rvalue(struct cling_ast_ir const *self) {
+  cling_ast_opcode_check(self, OP_LOAD);
+  return self->operands[0].info;
+}
+
+inline int cling_ast_index_base_wide(struct cling_ast_ir const *self) {
+  cling_ast_opcode_check(self, OP_IDX);
+  return self->operands[0].info;
+}
+
+inline int cling_ast_defarr_extend(struct cling_ast_ir const *self) {
+  cling_ast_opcode_check(self, OP_DEFARR);
+  return self->operands[1].imme_int;
+}
+
+inline char const *cling_ast_ir_string(struct cling_ast_ir const *self) {
+  cling_ast_opcode_check(self, OP_LDSTR);
+  return self->operands[1].text;
+}
 
 void cling_ast_program_init(struct cling_ast_program *self);
 

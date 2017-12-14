@@ -20,7 +20,6 @@
 */
 #ifndef CLING_MIPS_H
 #define CLING_MIPS_H
-#include "ast_ir.h"
 
 #include <utillib/enum.h>
 #include <utillib/hashmap.h>
@@ -119,6 +118,11 @@ UTILLIB_ENUM_ELEM(MIPS_SPACE)
 UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
+
+struct cling_ast_ir;
+struct cling_ast_operand;
+struct cling_ast_function;
+struct cling_ast_program;
 
 /*
  * Represent a segment of code
