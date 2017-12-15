@@ -46,7 +46,6 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
-  ./src/utillib/lr_builder.c
   ./src/utillib/hashmap.c
   ./src/utillib/graph.c
   ./src/utillib/strhash.c
@@ -57,7 +56,6 @@ add_library(utillib
   ./src/utillib/json_parser_impl.c
   ./src/utillib/ll1_builder_impl.c
   ./src/utillib/ll1_generator.c
-  ./src/utillib/opg_builder.c
   ./src/utillib/scanner.c
   ./src/utillib/ll1_parser.c
   ./src/utillib/vector2.c
@@ -72,71 +70,6 @@ add_library(utillib
   ./src/utillib/slist.c
   ./src/utillib/vector.c
   ./src/utillib/string.c)
-
-add_executable(utillib_test 
-  ./src/utillib/test/graph.c
-  ./src/utillib/test/hashmap.c
-  ./src/utillib/test/json_scanner.c
-  ./src/utillib/test/ll1_generator.c
-  ./src/utillib/test/non_ll1_sample_1.c
-  ./src/utillib/test/non_ll1_sample_2.c
-  ./src/utillib/test/ll1_sample_1.c
-  ./src/utillib/test/ll1_sample_2.c
-  ./src/utillib/test/scanner.c
-  ./src/utillib/test/ll1_parser.c
-  ./src/utillib/test/print.c
-  ./src/utillib/test/vector2.c
-  ./src/utillib/test/bitset.c
-  ./src/utillib/test/ll1_builder.c
-  ./src/utillib/test/symbol.c
-  ./src/utillib/test/rule.c
-  ./src/utillib/test/json.c
-  ./src/utillib/test/string.c
-  ./src/utillib/test/test.c
-  ./src/utillib/test/slist.c
-  ./src/utillib/test/vector.c
-  ./src/utillib/test/json_parser.c
-  ./src/utillib/test/driver.c)
-
-target_link_libraries(utillib_test utillib)
-add_test(Utillib_Test utillib_test)
-
-add_library(utillib++
-  ./src/utillib/utillib.cpp
-)
-target_link_libraries(utillib++ utillib)
-add_executable(cppmain ./src/utillib/cppmain.cpp)
-target_link_libraries(cppmain utillib++)
-add_executable(example-json ./src/utillib/example/json.c)
-target_link_libraries(example-json utillib)
-add_executable(example-vector ./src/utillib/example/vector.c)
-target_link_libraries(example-vector utillib)
-add_executable(example-string ./src/utillib/example/string.c)
-target_link_libraries(example-string utillib)
-add_executable(json_parser_table_gen ./src/utillib/json_parser_table_gen.c)
-target_link_libraries(json_parser_table_gen utillib)
-
-## Pascal 
-add_library(pascal
-  ./src/pascal/parser.c
-  ./src/pascal/scanner.c
-  ./src/pascal/symbols.c
-  ./src/pascal/rules.c
-)
-target_link_libraries(pascal utillib)
-
-add_executable(pascal_test
-  ./src/pascal/test/scanner.c
-  ./src/pascal/test/parser.c
-  ./src/pascal/test/driver.c
-  ./src/pascal/test/rules.c
-  ./src/pascal/test/symbols.c
-)
-
-target_link_libraries(pascal_test pascal)
-add_test(Pascal_Test pascal_test)
-add_executable(pascal_ll1_table_gen ./src/pascal/ll1_table_gen.c)
-target_link_libraries(pascal_ll1_table_gen pascal)
 
 ## Cling
 add_library(cling
@@ -164,7 +97,7 @@ target_link_libraries(cling utillib)
 # add_test(Cling_Test cling_test)
 # add_executable(cling-scanner ./src/cling/smain.c)
 # target_link_libraries(cling-scanner cling)
-set(cling-app cling-parser cling-pretty)
+set(cling-app cling-parser)
 foreach(app ${cling-app})
   add_executable(${app} ./src/cling/${app}.c)
   target_link_libraries(${app} cling)

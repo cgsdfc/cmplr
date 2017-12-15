@@ -1,7 +1,0 @@
-*.o
-*.lo
-.deps
-.dirstamp
-*.la
-*.json
-config.h
