@@ -208,7 +208,7 @@ check_index_only:
 static int ast_check_call(struct utillib_json_value const *self,
                           struct cling_rd_parser *parser,
                           struct utillib_token_scanner *input, size_t context) {
-  struct utillib_json_value const *callee, *array, *actual_arg;
+  struct utillib_json_value const *callee, *array, *actual_arg, *func_name;
   int lhs_type, formal_arg_type;
   struct cling_symbol_entry *entry;
   unsigned int formal_argc, actual_argc;
@@ -255,8 +255,9 @@ static int ast_check_call(struct utillib_json_value const *self,
                                              actual_arg_type, context));
   }
   if (i != formal_argc) {
+    func_name=utillib_json_object_at(callee, "value");
     rd_parser_error_push_back(
-        parser, cling_argc_unmatched_error(input, callee->as_ptr, actual_argc,
+        parser, cling_argc_unmatched_error(input, func_name->as_ptr, actual_argc,
                                            formal_argc, context));
     return CL_UNDEF;
   }

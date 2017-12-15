@@ -1,17 +1,16 @@
-const char ch='1';
-int B[10];
+const int const_int_1=1;
+int int_array_1[11], int_array_2[11];
+int int_1;
 
-void demo() {
-int a;
-char chch[10];
+void bar() { }
 
-ch=ch;
-
+void foo(int a, int b, int c) {
+  bar();
 }
 
 void main()
 {
-  return;
+  foo(1, 2, 3);
 }
 
 

@@ -74,7 +74,7 @@ cling_undefined_name_error(struct utillib_token_scanner *input,
                            char const *name, size_t context);
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner *input,
-                                           struct utillib_json_value *value,
+                                           struct utillib_json_value const *value,
                                            size_t context);
 
 struct cling_error *
@@ -83,7 +83,7 @@ cling_incompatible_type_error(struct utillib_token_scanner *input,
                               size_t context);
 struct cling_error *
 cling_invalid_expr_error(struct utillib_token_scanner *input,
-                         struct utillib_json_value *value, size_t context);
+                         struct utillib_json_value const *value, size_t context);
 
 struct cling_error *
 cling_incompatible_arg_error(struct utillib_token_scanner *input, size_t argpos,

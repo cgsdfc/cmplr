@@ -129,9 +129,11 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     else
       fprintf(file,  "call %s", self->call.name);
     break;
+  case OP_IDX:
+    fprintf(file, "t%d = t%d [ t%d ]", self->index.result, self->index.array_addr, self->index.index_result);
+    break;
   case OP_ADD:
   case OP_SUB:
-  case OP_IDX:
   case OP_DIV:
   case OP_MUL:
   case OP_EQ:
@@ -160,7 +162,7 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     break;
   case OP_RDCHR:
   case OP_RDINT:
-    fprintf(file,  "read t%d", self->read.temp);
+    fprintf(file,  "%s t%d", opstr, self->read.temp);
     break;
   case OP_WRINT:
   case OP_WRSTR:
@@ -187,7 +189,7 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     fprintf(file,  "load t%d %s", self->load.temp, self->load.name);
     break;
   default:
-    cling_default_assert(self->opcode, cling_ast_opcode_kind_tostring);
+    assert(false);
   }
 }
 
@@ -289,8 +291,7 @@ static void polish_ir_emit_index(struct cling_polish_ir *self,
   int base_size;
 
   /*
-   * lhs is the address of the array.
-   * rhs is the temp holding index expr.
+   * Hack: the array iden must be a lvalue.
    */
   ir = utillib_vector_back(instrs);
   assert(ir->opcode == OP_LOAD);
@@ -412,6 +413,7 @@ static void polish_ir_emit_assign(struct cling_polish_ir *self,
 
   /*
    * Perform the Hack.
+   * load/index becomes lvalue.
    */
   ir = utillib_vector_back(instrs);
   switch (ir->opcode) {
@@ -430,7 +432,7 @@ static void polish_ir_emit_assign(struct cling_polish_ir *self,
      * We must have something to assign and the polish_ir_post_order
      * ensures the loading of assignee is right in front of us.
      */
-    cling_default_assert(ir->opcode, cling_ast_opcode_kind_tostring);
+    assert(false);
   }
   ir=emit_ir(OP_STORE);
   ir->store.addr=assignee->as_int;
@@ -487,7 +489,7 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
       is_global=entry->scope == 0;
       goto make_load;
     default:
-      cling_default_assert(type->as_size_t, cling_symbol_kind_tostring);
+      assert(false);
     }
   case SYM_STRING:
     goto make_ldstr;
@@ -498,7 +500,7 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
     value=cling_symbol_to_immediate(type->as_size_t, json_value->as_ptr);
     goto make_ldimm;
   default:
-    cling_default_assert(type->as_size_t, cling_symbol_kind_tostring);
+    assert(false);
   }
 make_ldimm:
   temp = polish_ir_make_temp(self);
@@ -974,7 +976,7 @@ static void emit_statement(struct utillib_json_value const *self,
     emit_composite(self, global, instrs);
     return;
   default:
-    cling_default_assert(type->as_size_t, cling_symbol_kind_tostring);
+    assert(false);
   }
 }
 
