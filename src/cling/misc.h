@@ -22,6 +22,9 @@
 #define CLING_MISC_H
 #include <utillib/hashmap.h>
 
+#define MIPS_WORD_SIZE sizeof(int)
+#define MIPS_BYTE_SIZE sizeof(char)
+
 #define cling_default_assert(code, tostring)                                   \
   do {                                                                         \
     printf("Cling ICE: Miss a case from a switch, code %u, string %s\n", code, \
@@ -73,6 +76,11 @@ void cling_primary_init(union cling_primary *self, size_t type,
 void cling_primary_toint(union cling_primary *self, size_t type);
 int cling_symbol_to_type(int symbol);
 int cling_type_to_wide(int type);
+int symbol_to_ast_opcode(size_t symbol);
+int cling_type_to_size(int type);
+int cling_symbol_to_size(int symbol);
+char const *size_tostring(int size);
+
 extern const struct utillib_hashmap_callback cling_string_hash;
 
 #endif /* CLING_MISC_H */

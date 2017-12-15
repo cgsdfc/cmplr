@@ -24,6 +24,7 @@
 #include <utillib/vector.h>
 
 #include <assert.h>
+#include <stdio.h>
 #include <inttypes.h>
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
@@ -56,7 +57,6 @@ UTILLIB_ENUM_ELEM(OP_LOAD)
 UTILLIB_ENUM_ELEM(OP_WRSTR)
 UTILLIB_ENUM_ELEM(OP_WRINT)
 UTILLIB_ENUM_ELEM(OP_READ)
-UTILLIB_ENUM_ELEM(OP_NOP)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
 
 UTILLIB_ENUM_BEGIN(cling_operand_info_kind)
@@ -105,14 +105,18 @@ struct cling_ast_ir {
       char *name;
     } load;
     struct {
+      int temp;
+      int value;
+      int size;
+    } ldimm;
+    struct {
       char *name;
       size_t extend;
       int base_size;
-      bool is_global;
     } defarr;
     struct {
-      char *name;
-      int temp;
+      char const *name;
+      int result;
       bool has_result;
     } call;
     struct {
@@ -125,7 +129,7 @@ struct cling_ast_ir {
       int size;
     } store;
     struct {
-      char *name;
+      char const *name;
       int size;
       int value;
     } defcon;
@@ -146,23 +150,17 @@ struct cling_ast_ir {
       int index_result;
     } index;
     struct {
-      char *name;
+      char const *name;
       int size;
-      bool is_global;
     } defvar;
     struct {
-      char *name;
+      char const *name;
       int return_size;
     } defunc;
     struct {
-      char *name;
+      char const *name;
       int size;
     } para;
-    struct {
-      int temp;
-      int value;
-      int size;
-    } ldimm;
     struct {
       int addr;
     } jmp;
@@ -218,10 +216,9 @@ void cling_ast_program_init(struct cling_ast_program *self);
 
 void cling_ast_program_destroy(struct cling_ast_program *self);
 
-void cling_ast_program_print(struct cling_ast_program const *self);
-
 void cling_ast_ir_emit_program(struct utillib_json_value const *self,
                                struct cling_symbol_table *symbol_table,
                                struct cling_ast_program *program);
+void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);
 
 #endif /* CLING_AST_IR_H */

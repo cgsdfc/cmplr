@@ -36,8 +36,6 @@ static void mips_mock(void);
 #define MIPS_IMME_NULL 0
 #define MIPS_REGR_NULL 0
 
-#define MIPS_WORD_SIZE sizeof(int)
-#define MIPS_BYTE_SIZE sizeof(char)
 
 /*
  * Double words align.
@@ -812,7 +810,7 @@ mips_function_max_args(struct cling_ast_function const *ast_func) {
        * First Four are always words.
        */
       else
-        arg_size = getsize(cling_ast_ir_info(ast_ir, 0));
+        arg_size = ast_ir->push.size;
       mips_align_alloc(&args_blk, arg_size, arg_size);
     } else if (state == 1) {
       /*
@@ -857,15 +855,15 @@ mips_function_local_layout(struct cling_mips_function *self,
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     switch (ast_ir->opcode) {
     case OP_DEFVAR:
-      name = cling_ast_ir_name(ast_ir, 0);
-      size = getsize(cling_ast_ir_info(ast_ir, 0));
+      name = ast_ir->defvar.name;
+      size=ast_ir->defvar.size;
       local_offset = mips_function_memalloc(self, size, size);
       mips_function_memmap_name(self, name, local_offset);
       break;
     case OP_DEFARR:
-      name = cling_ast_ir_name(ast_ir, 0);
-      base_size = getsize(cling_ast_ir_info(ast_ir, 0));
-      size = cling_ast_defarr_extend(ast_ir);
+      name = ast_ir->defarr.name;
+      base_size = ast_ir->defarr.base_size;
+      size = ast_ir->defarr.extend;
       /*
        * Align to the base_size.
        */
@@ -896,16 +894,16 @@ mips_function_save_registers(struct cling_mips_function *self,
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     switch (ast_ir->opcode) {
     case OP_LOAD:
-      if (cling_ast_ir_info(ast_ir, 0) & CL_GLBL)
+      if (ast_ir->load.is_global)
         continue;
-      name = cling_ast_ir_name(ast_ir, 0);
+      name = ast_ir->load.name;
       named_var = utillib_hashmap_at(&self->names, name);
       if (!named_var)
         /*
          * If not in names, it failed to own saved_register.
          */
         continue;
-      self->temps[cling_ast_ir_temp(ast_ir, 1)].regid = named_var->regid;
+      self->temps[ast_ir->load.temp].regid = named_var->regid;
       break;
     case OP_PARA:
       if (para_cnt++ < MIPS_REG_ARGS_N)
@@ -915,7 +913,7 @@ mips_function_save_registers(struct cling_mips_function *self,
       regid = mips_function_regalloc(self, mips_is_saved_register);
       if (regid == MIPS_REGR_NULL)
         continue;
-      name = cling_ast_ir_name(ast_ir, 0);
+      name = ast_ir->defvar.name;
       saved_offset =
           mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
       mips_function_saved_push_back(self, regid, saved_offset);
@@ -959,11 +957,11 @@ mips_function_para_layout(struct cling_mips_function *self,
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     if (ast_ir->opcode != OP_PARA)
       continue;
-    name = cling_ast_ir_name(ast_ir, 0);
+    name = ast_ir->para.name;
     if (para_cnt < MIPS_REG_ARGS_N) {
       para_size = MIPS_WORD_SIZE;
     } else {
-      para_size = getsize(cling_ast_ir_info(ast_ir, 0));
+      para_size = ast_ir->para.size;
     }
     para_offset =
         mips_align_alloc(&para_blk, para_size, para_size) + self->frame_size;
@@ -1120,7 +1118,7 @@ static uint8_t mips_function_temp_map(struct cling_mips_function *self,
  * However, if it is in_mem, its last content is in the stack so we allocate
  * a register and load back its content.
  */
-static inline uint8_t mips_function_read(struct cling_mips_function *self, int temp)
+static inline uint8_t mips_function_read(struct cling_mips_function *self, int temp) {
   return mips_function_temp_map(self, temp, true);
 }
 
@@ -1358,7 +1356,6 @@ static struct cling_mips_ir *mips_branch_relop(int relop, uint8_t regid,
 
 /*
  * Handle each specific relop.
- * bez temp address/scalar
  */
 static void mips_emit_branch_relop(struct cling_mips_function *self,
                                    struct cling_ast_ir const *relop,
@@ -1367,10 +1364,8 @@ static void mips_emit_branch_relop(struct cling_mips_function *self,
   assert(ast_ir->opcode == OP_BEZ);
   assert(ast_ir->bez.temp == relop->binop.result);
   uint8_t src_regid1, src_regid2, dest_regid;
-  int addr;
   struct cling_mips_ir *ir;
 
-  addr=ast_ir->bez.addr;
   src_regid1 = mips_function_read(self, relop->binop.temp1);
   src_regid2 = mips_function_read(self, relop->binop.temp2);
 
@@ -1380,10 +1375,10 @@ static void mips_emit_branch_relop(struct cling_mips_function *self,
    * White is black.
    */
   case OP_NE:
-    ir = mips_beq(src_regid1, src_regid2, scalar);
+    ir = mips_beq(src_regid1, src_regid2, ast_ir->bez.addr);
     break;
   case OP_EQ:
-    ir = mips_bne(src_regid1, src_regid2, scalar);
+    ir = mips_bne(src_regid1, src_regid2, ast_ir->bez.addr);
     break;
   case OP_GT:
   case OP_GE:
@@ -1391,7 +1386,7 @@ static void mips_emit_branch_relop(struct cling_mips_function *self,
   case OP_LT:
     dest_regid = mips_function_write(self, relop->binop.result);
     mips_function_push_back(self, mips_sub(dest_regid, src_regid1, src_regid2));
-    ir = mips_branch_relop(relop->opcode, dest_regid, addr);
+    ir = mips_branch_relop(relop->opcode, dest_regid, ast_ir->bez.addr);
     break;
   default:
     cling_default_assert(relop->opcode, cling_ast_opcode_kind_tostring);
@@ -1420,8 +1415,8 @@ static void mips_emit_branch(struct cling_mips_function *self,
     /*
      * branch if not equals.
      */
-    src_regid1 = mips_function_read(self, ast_ir->bne.temp1)
-    src_regid2 = mips_function_read(self, ast_ir->bne.temp2)
+    src_regid1 = mips_function_read(self, ast_ir->bne.temp1);
+    src_regid2 = mips_function_read(self, ast_ir->bne.temp2);
     mips_function_push_back(self, mips_bne(src_regid1, src_regid2, ast_ir->bne.addr));
     break;
   default:
@@ -1445,8 +1440,8 @@ static void mips_emit_load(struct cling_mips_function *self,
      */
     mips_function_push_back(self, mips_la(dest_regid, ast_ir->load.name));
   } else {
-    var = utillib_hashmap_at(&self->names, name);
-    mips_function_push_back(self, mips_addi(regid, MIPS_SP, var->offset));
+    var = utillib_hashmap_at(&self->names, ast_ir->load.name);
+    mips_function_push_back(self, mips_addi(dest_regid, MIPS_SP, var->offset));
   }
   /*
    * now dest_regid holds the address of this variable.
@@ -1463,7 +1458,6 @@ static void mips_emit_load(struct cling_mips_function *self,
  */
 static void mips_emit_jmp(struct cling_mips_function *self,
                           struct cling_ast_ir const *ast_ir) {
-  cling_ast_ir_opcode_check(ast_ir, OP_JMP);
   mips_function_push_back(self, mips_j(ast_ir->jmp.addr));
 }
 
@@ -1473,7 +1467,6 @@ static void mips_emit_jmp(struct cling_mips_function *self,
  */
 static void mips_emit_read(struct cling_mips_function *self,
                            struct cling_ast_ir const *ast_ir) {
-  cling_ast_ir_opcode_check(ast_ir, OP_READ);
   uint8_t regid;
 
   mips_function_push_back(self, mips_li(MIPS_V0, MIPS_READ_INT));
@@ -1500,7 +1493,7 @@ static void mips_emit_write(struct cling_mips_function *self,
   /*
    * syscall argument.
    */
-  regid = mips_function_read(self, ast_ir.write.temp);
+  regid = mips_function_read(self, ast_ir->write.temp);
   mips_function_push_back(self, mips_move(MIPS_A0, regid));
   /*
    * syscall number.
@@ -1715,19 +1708,16 @@ static void mips_program_emit_data(struct cling_mips_program *self,
   UTILLIB_VECTOR_FOREACH(ast_ir, &program->init_code) {
     switch (ast_ir->opcode) {
     case OP_DEFVAR:
-      info = cling_ast_ir_info(ast_ir, 0);
-      name = cling_ast_ir_name(ast_ir, 0);
-      if (info & CL_WORD)
-        data = mips_data_create(MIPS_WORD, name);
+      if (ast_ir->defvar.size == MIPS_WORD_SIZE)
+        data = mips_data_create(MIPS_WORD, ast_ir->defvar.name);
       else
-        data = mips_data_create(MIPS_BYTE, name);
+        data = mips_data_create(MIPS_BYTE, ast_ir->defvar.name);
       utillib_vector_push_back(&self->data, data);
       break;
     case OP_DEFARR:
-      name = cling_ast_ir_name(ast_ir, 0);
-      base_size = getsize(cling_ast_ir_info(ast_ir, 0));
       data =
-          mips_array_create(name, base_size * cling_ast_defarr_extend(ast_ir));
+          mips_array_create(ast_ir->defarr.name, 
+              ast_ir->defarr.base_size * ast_ir->defarr.extend);
       utillib_vector_push_back(&self->data, data);
       break;
     }

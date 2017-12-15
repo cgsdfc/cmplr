@@ -19,6 +19,7 @@
 
 */
 #include "misc.h"
+#include "mips.h"
 #include "ast_ir.h"
 #include "symbol_table.h"
 #include "symbols.h"
@@ -41,17 +42,6 @@ int cling_symbol_to_type(int symbol) {
     return CL_VOID;
   default:
     assert(false);
-  }
-}
-
-int cling_type_to_wide(int type) {
-  switch (type) {
-  case CL_INT:
-    return CL_WORD;
-  case CL_CHAR:
-    return CL_BYTE;
-  default:
-    return CL_NULL;
   }
 }
 
@@ -106,3 +96,86 @@ void cling_primary_init(union cling_primary *self, size_t type,
     assert(false);
   }
 }
+
+/*
+ * I know these converter is ugly, but what else?
+ */
+int symbol_to_ast_opcode(size_t symbol) {
+  int opcode;
+  switch (symbol) {
+  case SYM_ADD:
+    opcode=OP_ADD;
+    break;
+  case SYM_MINUS:
+    opcode = OP_SUB;
+    break;
+  case SYM_MUL:
+    opcode = OP_MUL;
+    break;
+  case SYM_DIV:
+    opcode = OP_DIV;
+    break;
+  case SYM_DEQ:
+    opcode = OP_EQ;
+    break;
+  case SYM_NE:
+    opcode = OP_NE;
+    break;
+  case SYM_LT:
+    opcode = OP_LT;
+    break;
+  case SYM_LE:
+    opcode = OP_LE;
+    break;
+  case SYM_GT:
+    opcode = OP_GT;
+    break;
+  case SYM_GE:
+    opcode = OP_GE;
+    break;
+  default:
+    cling_default_assert(symbol, cling_symbol_kind_tostring);
+  }
+  return opcode;
+}
+
+char const *size_tostring(int size) {
+  switch(size) {
+    case MIPS_WORD_SIZE:
+      return "int";
+    case MIPS_BYTE_SIZE:
+      return "char";
+    default:
+      return "void";
+  }
+}
+
+
+int cling_symbol_to_size(int symbol) {
+  switch(symbol) {
+    case SYM_INTEGER:
+    case SYM_UINT:
+      return MIPS_WORD_SIZE;
+    case SYM_CHAR:
+      return MIPS_BYTE_SIZE;
+    default:
+      cling_default_assert(symbol, cling_symbol_entry_kind_tostring);
+  }
+}
+int cling_type_to_size(int type) {
+  switch(type) {
+    case CL_INT:
+      return MIPS_WORD_SIZE;
+    case CL_CHAR:
+      return MIPS_BYTE_SIZE;
+    default:
+      cling_default_assert(type, cling_symbol_entry_kind_tostring);
+  }
+}
+
+int string_to_immediate(char const* value, int type) {
+
+
+
+}
+
