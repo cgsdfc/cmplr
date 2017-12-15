@@ -139,17 +139,23 @@ struct cling_address_range {
   uint32_t end;
 };
 
+struct cling_mips_label {
+  char *label;
+  uint32_t address;
+};
+
 struct cling_mips_program {
   struct utillib_vector text;
   struct utillib_vector data;
+  struct utillib_hashmap labels;
   struct cling_address_range *func_range;
   size_t func_size;
 };
 
 struct cling_mips_global {
   struct utillib_vector *data;
+  struct utillib_hashmap *labels;
   int label_count;
-  struct cling_address_range *range;
 };
 
 struct cling_mips_name {
