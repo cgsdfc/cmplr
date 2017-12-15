@@ -45,6 +45,11 @@ int main(int argc, char *argv[]) {
   }
 
   file = fopen(argv[1], "r");
+  if (!file) {
+    puts("Bad file QAQ");
+    exit(1);
+
+  }
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
   cling_rd_parser_init(&cling_parser, &cling_symbol_table);
