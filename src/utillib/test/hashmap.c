@@ -115,6 +115,19 @@ UTILLIB_TEST(hashmap_json_array) {
   utillib_json_value_destroy(val);
 }
 
+UTILLIB_TEST(hashmap_foreach) {
+  struct utillib_pair const *pair;
+  utillib_hashmap_init(UT_FIXTURE, &string_callback);
+  utillib_hashmap_insert(UT_FIXTURE, "hello", "world");
+  utillib_hashmap_insert(UT_FIXTURE, "China", "Beijing");
+  utillib_hashmap_insert(UT_FIXTURE, "German", "Berlin");
+  utillib_hashmap_insert(UT_FIXTURE, "Washington", "DC");
+
+  UTILLIB_HASHMAP_FOREACH(pair, (struct utillib_hashmap*) UT_FIXTURE) {
+    printf("key %s, value %s\n", pair->up_first, pair->up_second);
+  }
+}
+
 UTILLIB_TEST(hashmap_size) {
   UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_size(UT_FIXTURE), 0);
   char const *input[] = {"@1", "@2", "@3", "@4", NULL};
@@ -160,6 +173,7 @@ UTILLIB_TEST_DEFINE(Utillib_HashMap) {
   UTILLIB_TEST_RUN(hashmap_json_object)
   UTILLIB_TEST_RUN(hashmap_json_array)
   UTILLIB_TEST_RUN(hashmap_rehash)
+  UTILLIB_TEST_RUN(hashmap_foreach)
   UTILLIB_TEST_END(Utillib_HashMap)
   UTILLIB_TEST_FIXTURE(struct utillib_hashmap)
   UTILLIB_TEST_RETURN(Utillib_HashMap)

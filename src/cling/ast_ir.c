@@ -182,8 +182,12 @@ static struct cling_ast_ir *emit_load(char const *name, int scope, int type,
   struct cling_ast_ir *self = emit_ir(OP_LOAD);
   init_temp(&self->operands[0], temp, CL_INT);
   init_name(&self->operands[1], scope, type, name);
-  self->operands[0].info = is_rvalue;
+  self->operands[2].info = is_rvalue;
   return self;
+}
+
+static inline struct cling_ast_ir *ast_ir_emit_load(char const *name, struct cling_symbol_entry const *entry, int temp) {
+  return emit_load(name, entry->scope, entry->kind, temp, true);
 }
 
 /*
@@ -730,7 +734,7 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
                                 struct utillib_vector *instrs) {
   struct utillib_json_value const *type, *temp, *value;
   struct cling_symbol_entry const *entry;
-  struct cling_ast_ir *ir;
+  struct cling_ast_ir const *ir;
 
   value = utillib_json_object_at(object, "value");
   type = utillib_json_object_at(object, "type");

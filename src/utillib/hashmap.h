@@ -58,7 +58,13 @@
 
 #include "config.h"
 #include "json.h"
+#include "slist.h"
+#include "pair.h"
 #include <stddef.h>
+
+#define UTILLIB_HASHMAP_FOREACH(X, M) \
+  for (int _i = 0; _i < (M)->buckets_size; ++_i) \
+    UTILLIB_SLIST_FOREACH((X), &(M)->buckets[_i])
 
 /**
  * \struct utillib_hashmap_callback

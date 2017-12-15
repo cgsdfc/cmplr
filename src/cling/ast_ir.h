@@ -176,7 +176,7 @@ inline bool cling_ast_index_is_rvalue(struct cling_ast_ir const *self) {
 
 inline bool cling_ast_load_is_rvalue(struct cling_ast_ir const *self) {
   cling_ast_opcode_check(self, OP_LOAD);
-  return self->operands[0].info;
+  return self->operands[2].info;
 }
 
 inline int cling_ast_index_base_wide(struct cling_ast_ir const *self) {
