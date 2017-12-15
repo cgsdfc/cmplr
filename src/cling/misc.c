@@ -134,7 +134,7 @@ int symbol_to_ast_opcode(size_t symbol) {
     opcode = OP_GE;
     break;
   default:
-    cling_default_assert(symbol, cling_symbol_kind_tostring);
+    assert(false);
   }
   return opcode;
 }
@@ -159,7 +159,7 @@ int cling_symbol_to_size(int symbol) {
     case SYM_CHAR:
       return MIPS_BYTE_SIZE;
     default:
-      cling_default_assert(symbol, cling_symbol_entry_kind_tostring);
+    assert(false);
   }
 }
 int cling_type_to_size(int type) {
@@ -171,7 +171,7 @@ int cling_type_to_size(int type) {
     case CL_VOID:
       return 0;
     default:
-      cling_default_assert(type, cling_symbol_entry_kind_tostring);
+    assert(false);
   }
 }
 
