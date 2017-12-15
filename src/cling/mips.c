@@ -1775,10 +1775,10 @@ static void mips_program_emit_data(struct cling_mips_program *self,
  * and then exit.
  */
 static void mips_program_setup(struct cling_mips_program *self) {
-  struct utillib_vector *text = &self->text;
-  utillib_vector_push_back(text, mips_jal("main"));
-  utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_EXIT));
-  utillib_vector_push_back(text, &cling_mips_syscall);
+   struct utillib_vector *text = &self->text;
+   utillib_vector_push_back(text, mips_jal("main"));
+   utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_EXIT));
+   utillib_vector_push_back(text, &cling_mips_syscall);
 }
 
 static void mips_global_init(struct cling_mips_global *self,
@@ -1809,6 +1809,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   int index = 0;
 
   mips_global_init(&global, &self->data);
+  mips_program_setup(self);
   mips_program_emit_data(self, program);
 
   UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
@@ -1825,8 +1826,39 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   }
 }
 
+/*
+ * This is used for real run.
+ */
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file) {
+  struct cling_mips_data const *data;
+  struct cling_mips_ir const *ir;
+
+  if (!utillib_vector_empty(&self->data)) {
+    fputs(".data\n", file);
+    UTILLIB_VECTOR_FOREACH(data, &self->data) { mips_data_print(data, file); }
+  }
+  fputs(".text\n", file);
+  fputs(".globl main\n", file);
+  fputs("\n", file);
+  for (int i=0; i<self->func_range[0].begin; ++i) {
+    ir = utillib_vector_at(&self->text, i);
+    fprintf(file, "%s\n", mips_ir_tostring(ir));
+  }
+  fputs("\n", file);
+  for (int i = 0; i < self->func_size; ++i) {
+    fprintf(file, "%s:\n", self->func_range[i].label);
+    for (int begin = self->func_range[i].begin, end = self->func_range[i].end;
+         begin < end; ++begin) {
+      ir = utillib_vector_at(&self->text, begin);
+      fprintf(file, "%s\n", mips_ir_tostring(ir));
+    }
+    fputs("\n", file);
+  }
+}
+
+void cling_mips_program_pretty(
+    struct cling_mips_program const *self, FILE *file) {
   struct cling_mips_data const *data;
   struct cling_mips_ir const *ir;
 

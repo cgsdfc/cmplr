@@ -30,11 +30,21 @@ static struct utillib_json_value *json_ast;
 static struct cling_ast_program program;
 static struct cling_mips_program cling_mips;
 
+static char const * append_ext(char const *fn, char const *ext) {
+    static char buffer[64];
+    snprintf(buffer, 64, "%s.%s", fn, ext);
+    return buffer;
+}
+
 int main(int argc, char *argv[]) {
+  FILE *file, *ir_file, *mips_file;
+
   if (argc != 2) {
-    abort();
+    printf("Please supply a filename QAQ\n");
+    exit(1);
   }
-  FILE *file = fopen(argv[1], "r");
+
+  file = fopen(argv[1], "r");
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
   cling_rd_parser_init(&cling_parser, &cling_symbol_table);
@@ -50,8 +60,20 @@ int main(int argc, char *argv[]) {
   cling_mips_program_init(&cling_mips, &program);
   cling_mips_program_emit(&cling_mips, &program);
 
-  cling_ast_program_print(&program, stdout);
-  cling_mips_program_print(&cling_mips, stdout);
+  ir_file=fopen(append_ext(argv[1], "ir.txt"), "w");
+  if (!ir_file)
+    goto cleanup;
+
+  cling_ast_program_print(&program, ir_file);
+  fclose(ir_file);
+
+  mips_file=fopen(append_ext(argv[1], "mips.s"), "w");
+  if (!mips_file)
+  goto cleanup;
+
+  cling_mips_program_print(&cling_mips, mips_file);
+  fclose(mips_file);
+  puts("done");
 
 cleanup:
   if (json_ast)
