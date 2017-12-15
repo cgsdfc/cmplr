@@ -537,12 +537,8 @@ done:
 
 static void cling_polish_ir_emit(struct cling_polish_ir *self,
                                  struct utillib_vector *instrs) {
-  struct utillib_json_value const *object, *op, *lhs, *rhs;
-  struct cling_ast_ir *ir;
-  struct utillib_json_value *temp;
-  struct utillib_vector *stack = &self->stack;
-  struct utillib_vector *opstack = &self->opstack;
 
+  struct utillib_json_value const *object, *op;
   UTILLIB_VECTOR_FOREACH(object, &self->stack) {
     op = utillib_json_object_at(object, "op");
     if (!op) {
@@ -638,9 +634,9 @@ static void emit_scanf_stmt(struct utillib_json_value const *self,
 static void emit_printf_stmt(struct utillib_json_value const *self,
                              struct cling_ast_ir_global *global,
                              struct utillib_vector *instrs) {
-  struct utillib_json_value const *value, *arglist;
-  struct utillib_json_value const *type, *object;
-  int temp, opcode;
+  struct utillib_json_value const  *arglist;
+  struct utillib_json_value const  *object;
+  int opcode;
   struct cling_ast_ir *ir;
   struct cling_polish_ir polish_ir;
   arglist = utillib_json_object_at(self, "arglist");
@@ -714,7 +710,7 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    */
   struct cling_ast_ir *tricky_jump, *cond_test, *loop_jump;
   struct cling_polish_ir polish_ir;
-  int loop_jump_jta, tricky_jump_jta;
+  int loop_jump_jta;
 
   init = utillib_json_object_at(self, "init");
   cond = utillib_json_object_at(self, "cond");

@@ -980,7 +980,6 @@ mips_function_para_layout(struct cling_mips_function *self,
 static void
 mips_function_stack_layout(struct cling_mips_function *self,
                            struct cling_ast_function const *ast_func) {
-  struct cling_ast_ir const *ast_ir;
   uint32_t offset;
   bool is_leaf;
 
@@ -1740,10 +1739,7 @@ static void mips_data_print(struct cling_mips_data const *self, FILE *file) {
 static void mips_program_emit_data(struct cling_mips_program *self,
                                    struct cling_ast_program const *program) {
   struct cling_ast_ir const *ast_ir;
-  int info;
   struct cling_mips_data *data;
-  char const *name;
-  size_t base_size;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &program->init_code) {
     switch (ast_ir->opcode) {

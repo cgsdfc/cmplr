@@ -40,7 +40,7 @@ else(MSVC OR WIN32)
 endif(MSVC OR WIN32)
 
 if (CMPLR_PLATFORM STREQUAL "LINUX")
-  set(CMAKE_C_FLAGS "-g3 -std=c99")
+  set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable")
 endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
 ## Utillib

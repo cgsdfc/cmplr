@@ -167,7 +167,6 @@ static int ast_check_subscript(struct utillib_json_value const *self,
   struct utillib_json_value const *lhs, *rhs;
   int lhs_type, rhs_type;
   struct cling_symbol_entry *entry;
-  char const *name;
 
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
@@ -288,8 +287,6 @@ static int ast_check_operand(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
                              struct utillib_token_scanner *input,
                              size_t context) {
-  struct cling_symbol_entry *entry;
-  char const *name;
   int type;
   struct utillib_json_value const *object;
 
@@ -384,10 +381,8 @@ static int ast_check_expression(struct utillib_json_value const *self,
                                 struct cling_rd_parser *parser,
                                 struct utillib_token_scanner *input,
                                 size_t context) {
-  struct utillib_json_value const *lhs, *rhs, *op;
-  char const *name;
-  int lhs_type, rhs_type, type;
-  struct cling_symbol_entry *entry;
+  struct utillib_json_value const  *op;
+  struct cling_symbol_entry const *entry;
 
   op = utillib_json_object_at(self, "op");
   if (!op) {
@@ -577,7 +572,7 @@ int cling_ast_check_condition(struct utillib_json_value const *self,
                               struct utillib_token_scanner *input,
                               size_t context) {
 
-  struct utillib_json_value const *lhs, *op, *type;
+  struct utillib_json_value const *op;
   int bool_type;
   struct cling_error *error;
 
