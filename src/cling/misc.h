@@ -81,6 +81,9 @@ int cling_type_to_size(int type);
 int cling_symbol_to_size(int symbol);
 char const *size_tostring(int size);
 
+int cling_symbol_to_immediate(int symbol, char const *string);
+int cling_type_to_immediate(int type, char const *string);
+
 extern const struct utillib_hashmap_callback cling_string_hash;
 
 #endif /* CLING_MISC_H */

@@ -28,6 +28,7 @@
 #include <inttypes.h>
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
+UTILLIB_ENUM_ELEM(OP_NOP)
 UTILLIB_ENUM_ELEM(OP_DEFVAR)
 UTILLIB_ENUM_ELEM(OP_DEFARR)
 UTILLIB_ENUM_ELEM(OP_DEFUNC)
@@ -141,6 +142,7 @@ struct cling_ast_ir {
     struct {
       int result;
       bool has_result;
+      int addr;
     } ret;
     struct {
       int result;

@@ -168,14 +168,43 @@ int cling_type_to_size(int type) {
       return MIPS_WORD_SIZE;
     case CL_CHAR:
       return MIPS_BYTE_SIZE;
+    case CL_VOID:
+      return 0;
     default:
       cling_default_assert(type, cling_symbol_entry_kind_tostring);
   }
 }
 
-int string_to_immediate(char const* value, int type) {
+int cling_symbol_to_immediate(int symbol, char const *string) {
+  int int_val;
+  char char_val;
+  switch(symbol) {
+    case SYM_CHAR:
+    case SYM_KW_CHAR:
+      sscanf(string, "%c", &char_val);
+      return char_val;
+    case SYM_INTEGER:
+    case SYM_KW_INT:
+    case SYM_UINT:
+      sscanf(string, "%d", &int_val);
+      return int_val;
+    default:
+      assert(false);
+  }
+}
 
-
-
+int cling_type_to_immediate(int type, char const *string){
+  int int_val;
+  char char_val;
+  switch(type) {
+    case CL_CHAR:
+      sscanf(string, "%c", &char_val);
+      return char_val;
+    case CL_INT:
+      sscanf(string, "%d", &int_val);
+      return int_val;
+    default:
+      assert(false);
+  }
 }
 

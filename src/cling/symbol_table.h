@@ -36,7 +36,7 @@ struct cling_symbol_entry {
   union {
     struct {
       int base_type;
-      char *extend;
+      size_t extend;
     } array;
     struct {
       unsigned int argc;
@@ -45,7 +45,7 @@ struct cling_symbol_entry {
     } function;
     struct {
       int type;
-      char *value;
+      int value;
     } constant;
   };
 };

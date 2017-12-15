@@ -73,6 +73,9 @@ UTILLIB_ETAB_ELEM(CL_WORD)
 UTILLIB_ETAB_ELEM(CL_NULL)
 UTILLIB_ETAB_END(cling_operand_info_kind);
 
+static const struct cling_ast_ir 
+cling_ast_ir_nop={.opcode=OP_NOP};
+
 static struct cling_ast_ir *emit_ir(int opcode) {
   struct cling_ast_ir *self = calloc(sizeof *self, 1);
   self->opcode = opcode;
@@ -80,6 +83,8 @@ static struct cling_ast_ir *emit_ir(int opcode) {
 }
 
 static void cling_ast_ir_destroy(struct cling_ast_ir *self) {
+  if (self->opcode == OP_NOP)
+    return;
   free(self);
 }
 
@@ -88,6 +93,9 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   char const *size_name;
 
   switch (self->opcode) {
+  case OP_NOP:
+    fputs("nop", file);
+    break;
   case OP_DEFCON:
     size_name=size_tostring(self->defcon.size);
     if (self->defcon.size == MIPS_WORD_SIZE) {
@@ -103,6 +111,10 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_DEFVAR:
     size_name=size_tostring(self->defvar.size);
     fprintf(file,  "var %s %s", size_name, self->defvar.name);
+    break;
+  case OP_DEFUNC:
+    size_name=size_tostring(self->defunc.return_size);
+    fprintf(file,  "%s %s()", size_name, self->defunc.name);
     break;
   case OP_DEFARR:
     size_name=size_tostring(self->defarr.base_size);
@@ -137,15 +149,11 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_JMP:
     fprintf(file,  "jmp %d", self->jmp.addr);
     break;
-  case OP_DEFUNC:
-    size_name=size_tostring(self->defunc.return_size);
-    fprintf(file,  "%s %s()", size_name, self->defunc.name);
-    break;
   case OP_RET:
     if (self->ret.has_result)
-      fprintf(file,  "ret t%d", self->ret.result);
+      fprintf(file,  "ret t%d %d", self->ret.result, self->ret.addr);
     else
-      fprintf(file,  "ret");
+      fprintf(file,  "ret %d", self->ret.addr);
     break;
   case OP_READ:
     fprintf(file,  "read t%d", self->read.temp);
@@ -184,7 +192,7 @@ static void ast_ir_vector_print(struct utillib_vector const *instrs, FILE *file)
   UTILLIB_VECTOR_FOREACH(ir, instrs) {
     fprintf(file, "%d: ", i);
     ast_ir_print(ir, file);
-    fputs("", file);
+    fputs("\n", file);
     ++i;
   }
 }
@@ -296,6 +304,7 @@ static void polish_ir_emit_index(struct cling_polish_ir *self,
   ir->index.array_addr=array_temp->as_int;
   ir->index.index_result=index_temp->as_int;
   ir->index.base_size=base_size;
+  ir->index.is_rvalue=true;
   utillib_vector_push_back(instrs,ir);
   /*
    * The result represents content or address depending on is_rvalue.
@@ -457,7 +466,7 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
     switch (entry->kind) {
     case CL_CONST:
       size=cling_type_to_size(entry->constant.type);
-      value=string_to_immediate(entry->constant.value, size);
+      value=entry->constant.value;
       goto make_ldimm;
     case CL_ARRAY:
       name=json_value->as_ptr;
@@ -477,7 +486,7 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
   case SYM_INTEGER:
   case SYM_UINT:
     size=cling_symbol_to_size(type->as_size_t);
-    value=string_to_immediate(json_value->as_ptr, size);
+    value=cling_symbol_to_immediate(type->as_size_t, json_value->as_ptr);
     goto make_ldimm;
   default:
     cling_default_assert(type->as_size_t, cling_symbol_kind_tostring);
@@ -791,8 +800,9 @@ static void emit_switch_stmt(struct utillib_json_value const *self,
       load_label = emit_ir(OP_LDIMM);
       loaded_const=make_temp(global);
       load_label->ldimm.temp=loaded_const;
-      load_label->ldimm.value=string_to_immediate(value->as_ptr, type->as_size_t);
-      load_label->ldimm.size=cling_type_to_size(type->as_size_t);
+      load_label->ldimm.value=cling_symbol_to_immediate(type->as_size_t, value->as_ptr);
+      load_label->ldimm.size=cling_symbol_to_size(type->as_size_t);
+      utillib_vector_push_back(instrs, load_label);
 
       /*
        * Case gaurd.
@@ -843,6 +853,10 @@ static void emit_expr_stmt(struct utillib_json_value const *self,
   cling_polish_ir_destroy(&polish_ir);
 }
 
+/*
+ * ret just transfter control flow to the clean up
+ * code of the current function.
+ */
 static void emit_return_stmt(struct utillib_json_value const *self,
                              struct cling_ast_ir_global *global,
                              struct utillib_vector *instrs) {
@@ -950,7 +964,7 @@ static void emit_var_defs(struct utillib_json_value const *self,
     if (entry->kind == CL_ARRAY) {
       ir = emit_ir(OP_DEFARR);
       ir->defarr.name=name->as_ptr;
-      ir->defarr.extend=string_to_immediate(entry->array.extend, CL_INT);
+      ir->defarr.extend=entry->array.extend;
       ir->defarr.base_size=cling_type_to_size(entry->array.base_type);
     } else {
       ir = emit_ir(OP_DEFVAR);
@@ -982,7 +996,7 @@ static void emit_const_defs(struct utillib_json_value const *self,
     ir=emit_ir(OP_DEFCON);
     ir->defcon.name=name->as_ptr;
     ir->defcon.size=cling_type_to_size(entry->constant.type);
-    ir->defcon.value=string_to_immediate(entry->constant.value, entry->constant.type);
+    ir->defcon.value=entry->constant.value;
     utillib_vector_push_back(instrs,ir);
   }
 }
@@ -1070,6 +1084,18 @@ void cling_ast_program_destroy(struct cling_ast_program *self) {
   utillib_vector_destroy_owning(&self->funcs, cling_ast_function_destroy);
   utillib_vector_destroy_owning(&self->init_code, cling_ast_ir_destroy);
 }
+
+static void emit_return_address(struct utillib_vector *instrs) {
+  int addr;
+  struct cling_ast_ir *ir;
+
+  addr=utillib_vector_size(instrs);
+  UTILLIB_VECTOR_FOREACH(ir, instrs)
+    if (ir->opcode == OP_RET)
+      ir->ret.addr=addr;
+  utillib_vector_push_back(instrs, &cling_ast_ir_nop);
+}
+
 /*
  * Create an cling_ast_function from the func_node.
  */
@@ -1126,6 +1152,7 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
    * instrs emision
    */
   emit_composite(comp, global, &self->instrs);
+  emit_return_address(&self->instrs);
   return self;
 }
 
@@ -1172,6 +1199,6 @@ void cling_ast_program_print(struct cling_ast_program const *self, FILE *file) {
   UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
     ast_ir_vector_print(&func->init_code, file);
     ast_ir_vector_print(&func->instrs, file);
-    fputs("", file);
+    fputs("\n", file);
   }
 }

@@ -428,8 +428,10 @@ static void mips_ir_destroy(struct cling_mips_ir *self) {
      */
     return;
   case MIPS_JAL:
-  case MIPS_LA:
     free(self->operands[0].label);
+    break;
+  case MIPS_LA:
+    free(self->operands[1].label);
     break;
   }
   free(self);
@@ -513,15 +515,23 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     mips_ir_snprintf(("%s %s, %s, %" PRId16), opstr, regstr[0], regstr[1],
                      self->operands[2].imme16);
     return buffer;
-  case MIPS_BNE:
-    regstr[0] = mips_operand_regstr(self, 0);
-    mips_ir_snprintf(("%s %s %" PRId16), opstr, regstr[0],
-                     self->operands[1].offset);
-    return buffer;
   case MIPS_LI:
     regstr[0] = mips_operand_regstr(self, 0);
     mips_ir_snprintf(("%s %s, %" PRId32), opstr, regstr[0],
                      self->operands[1].imme32);
+    return buffer;
+  case MIPS_BNE:
+  case MIPS_BEQ:
+    regstr[0] = mips_operand_regstr(self, 0);
+    regstr[1] = mips_operand_regstr(self, 1);
+    mips_ir_snprintf(("%s %s %s %" PRId16), opstr, regstr[0], regstr[1], self->operands[2].offset);
+    return buffer;
+  case MIPS_BGEZ:
+  case MIPS_BGTZ:
+  case MIPS_BLEZ:
+  case MIPS_BLTZ:
+    regstr[0]=mips_operand_regstr(self, 0);
+    mips_ir_snprintf(("%s %s %" PRId16), opstr, regstr[0], self->operands[1].offset);
     return buffer;
   default:
     cling_default_assert(self->opcode, cling_mips_opcode_kind_tostring);
@@ -569,7 +579,7 @@ static void mips_function_destroy(struct cling_mips_function *self) {
   free(self->reg_pool);
   free(self->address_map);
   free(self->temps);
-  utillib_vector_destroy(&self->saved_registers);
+  utillib_vector_destroy_owning(&self->saved_registers, free);
   utillib_hashmap_destroy_owning(&self->names, free, free);
 }
 
@@ -649,7 +659,8 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
   struct cling_mips_ir *mips_ir;
   int instr_end = utillib_vector_size(self->instrs);
   int ast_ir_addr;
-
+#define mips_branch_offset(self, ast_ir_addr, mips_pc)\
+  ((self)->address_map[(ast_ir_addr)]-(mips_pc)-1)
   for (int mips_pc = self->instr_begin; mips_pc < instr_end; ++mips_pc) {
     mips_ir = utillib_vector_at(self->instrs, mips_pc);
     switch (mips_ir->opcode) {
@@ -661,7 +672,7 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
     case MIPS_BNE:
       ast_ir_addr = mips_ir->operands[2].offset;
       mips_ir->operands[2].offset =
-          mips_pc - self->address_map[ast_ir_addr] + 1;
+        mips_branch_offset(self, ast_ir_addr, mips_pc);
       break;
     case MIPS_BGEZ:
     case MIPS_BGTZ:
@@ -669,7 +680,7 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
     case MIPS_BLTZ:
       ast_ir_addr = mips_ir->operands[1].offset;
       mips_ir->operands[1].offset =
-          mips_pc - self->address_map[ast_ir_addr] + 1;
+        mips_branch_offset(self, ast_ir_addr, mips_pc);
       break;
     }
   }
@@ -727,7 +738,6 @@ static void mips_function_epilogue(struct cling_mips_function *self) {
   }
   addi_sp = mips_addi(MIPS_SP, MIPS_SP, self->frame_size);
   mips_function_push_back(self, addi_sp);
-  mips_function_push_back(self, mips_jr(MIPS_RA));
 }
 
 /*
@@ -1169,6 +1179,7 @@ static void mips_emit_ternary_calc(struct cling_mips_function *self,
 
 /*
  * Optionally move temp to $v0.
+ * Jump to epilogue.
  */
 static void mips_emit_ret(struct cling_mips_function *self,
                           struct cling_ast_ir const *ast_ir) {
@@ -1177,6 +1188,7 @@ static void mips_emit_ret(struct cling_mips_function *self,
     regid = mips_function_read(self, ast_ir->ret.result);
     mips_function_push_back(self, mips_move(MIPS_V0, regid));
   }
+  mips_function_push_back(self, mips_j(ast_ir->ret.addr));
 }
 
 /*
@@ -1275,7 +1287,7 @@ static char const *mips_global_asciiz(struct cling_mips_global *self,
                                       char const *string) {
 #define MIPS_LABEL_BUFSIZ 64
   static char buffer[MIPS_LABEL_BUFSIZ];
-  snprintf(buffer, MIPS_LABEL_BUFSIZ, "__cling_mips_asciiz_%d",
+  snprintf(buffer, MIPS_LABEL_BUFSIZ, "__asciiz_%d",
            self->label_count);
   ++self->label_count;
   utillib_vector_push_back(self->data, mips_string_create(buffer, string));
@@ -1542,7 +1554,10 @@ static void mips_function_instrs(struct cling_mips_function *self,
   ast_instrs_size = utillib_vector_size(&ast_func->instrs);
   for (int ast_pc = 0; ast_pc < ast_instrs_size; ++ast_pc) {
     ast_ir = utillib_vector_at(&ast_func->instrs, ast_pc);
+    self->address_map[ast_pc] = utillib_vector_size(self->instrs);
     switch (ast_ir->opcode) {
+    case OP_NOP:
+      break;
     case OP_SUB:
     case OP_ADD:
       mips_emit_ternary_calc(self, ast_ir);
@@ -1595,6 +1610,7 @@ static void mips_function_instrs(struct cling_mips_function *self,
       } else {
         mips_emit_branch(self, ast_ir);
       }
+      break;
     case OP_BNE:
       /*
        * bne is used in `switch'.
@@ -1623,11 +1639,13 @@ static void mips_function_instrs(struct cling_mips_function *self,
     case OP_WRINT:
       mips_emit_write(self, ast_ir);
       break;
+    case OP_LDSTR:
+      mips_emit_ldstr(self, ast_ir);
+      break;
     default:
       cling_default_assert(ast_ir->opcode, cling_ast_opcode_kind_tostring);
     }
     mips_function_temp_ages(self);
-    self->address_map[ast_pc] = utillib_vector_size(self->instrs);
   }
 }
 
@@ -1637,10 +1655,13 @@ static void mips_function_instrs(struct cling_mips_function *self,
 static void mips_function_emit(struct cling_mips_function *self,
                                struct cling_ast_function const *ast_func) {
   mips_function_stack_layout(self, ast_func);
-  mips_function_prologue(self);
+  if (self->frame_size)
+    mips_function_prologue(self);
   mips_function_instrs(self, ast_func);
-  mips_function_epilogue(self);
+  if (self->frame_size)
+    mips_function_epilogue(self);
   mips_function_fix_address(self);
+  mips_function_push_back(self, mips_jr(MIPS_RA));
 }
 
 /*
@@ -1763,7 +1784,6 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   int index = 0;
 
   mips_global_init(&global, &self->data);
-  mips_program_setup(self);
   mips_program_emit_data(self, program);
 
   UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
@@ -1785,8 +1805,10 @@ void cling_mips_program_print(struct cling_mips_program const *self,
   struct cling_mips_data const *data;
   struct cling_mips_ir const *ir;
 
-  fputs(".data\n", file);
-  UTILLIB_VECTOR_FOREACH(data, &self->data) { mips_data_print(data, file); }
+  if (!utillib_vector_empty(&self->data)) {
+    fputs(".data\n", file);
+    UTILLIB_VECTOR_FOREACH(data, &self->data) { mips_data_print(data, file); }
+  }
   fputs(".text\n", file);
   fputs(".globl main\n", file);
   for (int i = 0; i < self->func_size; ++i) {
@@ -1794,8 +1816,8 @@ void cling_mips_program_print(struct cling_mips_program const *self,
     for (int begin = self->func_range[i].begin, end = self->func_range[i].end;
          begin < end; ++begin) {
       ir = utillib_vector_at(&self->text, begin);
-      fprintf(file, "\t%s\n", mips_ir_tostring(ir));
+      fprintf(file, "%4" PRIu32 "\t%s\n", begin, mips_ir_tostring(ir));
     }
-    fputs("", file);
+    fputs("\n", file);
   }
 }

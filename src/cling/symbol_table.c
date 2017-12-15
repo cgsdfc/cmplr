@@ -130,26 +130,26 @@ static void symbol_entry_init(struct cling_symbol_entry *self, int scope,
 }
 
 static void symbol_entry_init_single_var(struct cling_symbol_entry *self,
-                                         int scope, int type) {
-  symbol_entry_init(self, scope, cling_symbol_to_type(type));
+                                         int scope, int symbol) {
+  symbol_entry_init(self, scope, cling_symbol_to_type(symbol));
 }
 
 static void symbol_entry_init_const(struct cling_symbol_entry *self, int scope,
-                                    int type, char const *val) {
+                                    int symbol, char const *val) {
   symbol_entry_init(self, scope, CL_CONST);
-  self->constant.type = cling_symbol_to_type(type);
-  self->constant.value = strdup(val);
+  self->constant.type = cling_symbol_to_type(symbol);
+  self->constant.value = cling_symbol_to_immediate(symbol, val);
 }
 
 static void symbol_entry_init_array(struct cling_symbol_entry *self, int scope,
-                                    int base_type, char const *extend) {
+                                    int base_symbol, char const *extend) {
   symbol_entry_init(self, scope, CL_ARRAY);
-  self->array.base_type = cling_symbol_to_type(base_type);
-  self->array.extend = strdup(extend);
+  self->array.base_type = cling_symbol_to_type(base_symbol);
+  sscanf(extend, "%lu", &self->array.extend);
 }
 
 static void
-symbol_entry_init_function(struct cling_symbol_entry *self, int return_type,
+symbol_entry_init_function(struct cling_symbol_entry *self, int return_symbol,
                            struct utillib_json_value const *arglist) {
   int *argv_types;
   struct utillib_json_value const *object, *type;
@@ -157,7 +157,7 @@ symbol_entry_init_function(struct cling_symbol_entry *self, int return_type,
   int i = 0;
 
   symbol_entry_init(self, CL_GLOBAL, CL_FUNC);
-  self->function.return_type = cling_symbol_to_type(return_type);
+  self->function.return_type = cling_symbol_to_type(return_symbol);
   argv_types = malloc(self->function.argc * sizeof argv_types[0]);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
@@ -177,12 +177,6 @@ static void symbol_entry_destroy(struct cling_symbol_entry *self) {
   switch (self->kind) {
   case CL_FUNC:
     free(self->function.argv_types);
-    break;
-  case CL_CONST:
-    free(self->constant.value);
-    break;
-  case CL_ARRAY:
-    free(self->array.extend);
     break;
   }
   free(self);
