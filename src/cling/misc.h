@@ -25,13 +25,6 @@
 #define MIPS_WORD_SIZE sizeof(int)
 #define MIPS_BYTE_SIZE sizeof(char)
 
-#define cling_default_assert(code, tostring)                                   \
-  do {                                                                         \
-    printf("Cling ICE: Miss a case from a switch, code %u, string %s\n", code, \
-           tostring(code));                                                    \
-    assert(false);                                                             \
-  } while (0)
-
 /*
  * This union is **untyped**
  * so all its usage is based

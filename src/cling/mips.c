@@ -324,6 +324,7 @@ static struct cling_mips_ir *mips_la(uint8_t dest_regid, char const *label) {
   struct cling_mips_ir *self = mips_ir_create(MIPS_LA);
   self->operands[0].regid = dest_regid;
   self->operands[1].label = strdup(label);
+  return self;
 }
 
 /*
@@ -334,6 +335,7 @@ static struct cling_mips_ir *mips_li(uint8_t dest_regid, int32_t imme32) {
   struct cling_mips_ir *self = mips_ir_create(MIPS_LI);
   self->operands[0].regid = dest_regid;
   self->operands[1].imme32 = imme32;
+  return self;
 }
 
 /*
@@ -372,14 +374,6 @@ static struct cling_mips_ir *mips_branch(uint8_t opcode, uint8_t src_regid1,
 static struct cling_mips_ir *mips_beq(uint8_t src_regid1, uint8_t src_regid2,
                                       int16_t offset) {
   return mips_branch(MIPS_BEQ, src_regid1, src_regid2, offset);
-}
-
-/*
- * bez $s0, <offset>
- * branch to pc+offset if $s0 equals to zero.
- */
-static struct cling_mips_ir *mips_bez(uint8_t regid, int16_t offset) {
-  return mips_beq(MIPS_ZERO, regid, offset);
 }
 
 /*
