@@ -1204,7 +1204,7 @@ static void emit_var_defs(struct utillib_json_value const *self,
     entry =
         cling_symbol_table_find(global->symbol_table, name->as_ptr, CL_LEXICAL);
     if (entry->kind == CL_ARRAY) {
-      ir = emit_defarr(name->as_ptr, entry->array.base_type, entry->scope,
+      ir = emit_defarr(name->as_ptr,  entry->scope,entry->array.base_type,
                        entry->array.extend);
     } else {
       ir = emit_defvar(name->as_ptr, entry->kind, entry->scope);

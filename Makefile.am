@@ -19,7 +19,7 @@
 
 
 ACLOCAL_AMFLAGS = -I m4
-AUTOMAKE_OPTIONS = subdir-objects foreign
+AUTOMAKE_OPTIONS = foreign subdir-objects
 
 
 PASCAL_TEST_DIR=-DPASCAL_TEST_DIR=\"$(abs_srcdir)/src/pascal/test/\"
@@ -32,7 +32,8 @@ AM_CFLAGS += -g3
 AM_CFLAGS += -Wall -Wwrite-strings \
 						 -Wno-sign-compare \
 						 -std=c11
-AM_CXXFLAGS = -std=c++11
+AM_CXXFLAGS = -std=c++11 -I$(top_srcdir)/src
+
 ## Utillib
 utillibincludedir = $(includedir)/utillib
 
@@ -184,33 +185,40 @@ pascal_test_CPPFLAGS = $(PASCAL_TEST_DIR) -DPASCAL_TEST_DATA_DIR=\"$(abs_srcdir)
 noinst_clingincludedir = $(includedir)/cling
 
 lib_LTLIBRARIES += libcling.la
-noinst_clinginclude_HEADERS = src/cling/symbols.h \
-															src/cling/rd_parser.h \
-															src/cling/entity.h \
-															src/cling/symbol_table.h \
-															src/cling/ast.h \
-															src/cling/ir.h \
-															src/cling/opg_parser.h \
-															src/cling/error.h \
-															src/cling/scanner.h
+noinst_clinginclude_HEADERS = ./src/cling/symbols.h \
+															./src/cling/rd_parser.h \
+															./src/cling/symbol_table.h \
+															./src/cling/opg_parser.h \
+															./src/cling/error.h \
+															./src/cling/scanner.h \
+															./src/cling/ast_ir.h \
+															./src/cling/ast_build.h \
+															./src/cling/ast_check.h \
+															./src/cling/ast_pretty.h \
+															./src/cling/mips.h \
+															./src/cling/misc.h
 
-libcling_la_SOURCES = src/cling/symbols.c \
-											src/cling/rd_parser.c \
-											src/cling/ast.c \
-											src/cling/ir.c \
-											src/cling/entity.c \
-											src/cling/symbol_table.c \
-											src/cling/scanner.c \
-											src/cling/opg_parser.c \
-											src/cling/error.c \
-											$(noinst_clinginclude_HEADERS)
+libcling_la_SOURCES = 	$(noinst_clinginclude_HEADERS) \
+												./src/cling/symbol_table.c \
+												./src/cling/symbols.c  \
+												./src/cling/scanner.c \
+												./src/cling/rd_parser.c \
+												./src/cling/ast_build.c \
+												./src/cling/ast_pretty.c \
+												./src/cling/ast_check.c \
+												./src/cling/ast_ir.c \
+												./src/cling/error.c \
+												./src/cling/opg_parser.c \
+												./src/cling/mips.c \
+												./src/cling/misc.c
+
 libcling_la_LIBADD = libutillib.la
 
 bin_PROGRAMS += cling-scanner
-cling_scanner_SOURCES = src/cling/smain.c
+cling_scanner_SOURCES = ./src/cling/cling-scanner.c
 cling_scanner_LDADD = libcling.la libutillib.la
 
 bin_PROGRAMS += cling-parser
-cling_parser_SOURCES = src/cling/pmain.c
+cling_parser_SOURCES = ./src/cling/cling-parser.c
 cling_parser_LDADD = libcling.la libutillib.la
 
