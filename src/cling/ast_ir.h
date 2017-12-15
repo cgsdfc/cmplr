@@ -92,7 +92,7 @@ struct cling_ast_ir {
   union {
     struct {
       int temp;
-      char *string;
+      char const *string;
     } ldstr ;
     struct  {
       int temp;
@@ -109,7 +109,7 @@ struct cling_ast_ir {
       bool is_rvalue;
       int size;
       bool is_global;
-      char *name;
+      char const *name;
     } load;
     struct {
       int temp;
@@ -117,7 +117,7 @@ struct cling_ast_ir {
       int size;
     } ldimm;
     struct {
-      char *name;
+      char const *name;
       size_t extend;
       int base_size;
     } defarr;
