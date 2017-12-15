@@ -70,11 +70,6 @@ static int ast_check_assign_lhs(struct utillib_json_value const *self,
                                 struct utillib_token_scanner *input,
                                 size_t context);
 
-static void cling_ast_unreachable(size_t code) {
-  puts(cling_symbol_kind_tostring(code));
-  assert(false);
-}
-
 int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
                                     struct cling_rd_parser *parser,
                                     struct utillib_token_scanner *input,
@@ -154,8 +149,6 @@ static int ast_check_factor(struct utillib_json_value const *self,
           parser, cling_undefined_name_error(input, name, context));
       return CL_UNDEF;
     }
-    if ((*entry)->kind == CL_CONST)
-      return (*entry)->constant.type;
     return (*entry)->kind;
   case SYM_CHAR:
     return CL_CHAR;
@@ -163,7 +156,7 @@ static int ast_check_factor(struct utillib_json_value const *self,
   case SYM_INTEGER:
     return CL_INT;
   default:
-    cling_ast_unreachable(type->as_size_t);
+    assert(false);
   }
 }
 
@@ -441,7 +434,7 @@ static int ast_check_expression(struct utillib_json_value const *self,
      */
     return cling_ast_check_assign(self, parser, input, context);
   default:
-    cling_ast_unreachable(op->as_size_t);
+    assert(false);
   }
 }
 

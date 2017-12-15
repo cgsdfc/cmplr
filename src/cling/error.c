@@ -143,12 +143,13 @@ struct cling_error *cling_dupcase_error(struct utillib_token_scanner *input,
 }
 
 void cling_error_print(struct cling_error const *self) {
-  utillib_error_printf("ERROR at line %lu, column %lu:\n", self->row + 1,
-                       self->col + 1);
+#define positive_number(X) ((X)?(X):1)
 
   char const *context = self->context;
   union cling_einfo const *einfo = self->einfo;
 
+  utillib_error_printf("ERROR at line %lu, column %lu:\n", positive_number(self->row),
+      positive_number(self->col));
   switch (self->kind) {
   case CL_EEXPECT:
     utillib_error_printf("expected `%s', got `%s' in `%s'", einfo[0].str,

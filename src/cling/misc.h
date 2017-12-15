@@ -83,6 +83,9 @@ char const *size_tostring(int size);
 
 int cling_symbol_to_immediate(int symbol, char const *string);
 int cling_type_to_immediate(int type, char const *string);
+int cling_ast_opcode_to_syscall(int opcode);
+int cling_type_to_write(int type);
+int cling_type_to_read(int type);
 
 extern const struct utillib_hashmap_callback cling_string_hash;
 

@@ -208,3 +208,42 @@ int cling_type_to_immediate(int type, char const *string){
   }
 }
 
+int cling_ast_opcode_to_syscall(int opcode) {
+  switch(opcode) {
+    case OP_RDCHR:
+      return MIPS_READ_CHAR;
+    case OP_RDINT:
+      return MIPS_READ_INT;
+    case OP_WRCHR:
+      return MIPS_PRINT_CHAR;
+    case OP_WRSTR:
+      return MIPS_PRINT_STRING;
+    case OP_WRINT:
+      return MIPS_PRINT_INT;
+    default:
+      assert(false);
+  }
+}
+
+int cling_type_to_read(int type) {
+  switch(type) {
+  case CL_CHAR:
+    return OP_RDCHR;
+  case CL_INT:
+    return OP_RDINT;
+  default:
+    assert(false);
+  }
+}
+
+int cling_size_to_write(int size) {
+  switch(size) {
+    case MIPS_WORD_SIZE:
+      return OP_WRINT;
+    case MIPS_BYTE_SIZE:
+      return OP_WRCHR;
+    default:
+      assert(false);
+  }
+}
+

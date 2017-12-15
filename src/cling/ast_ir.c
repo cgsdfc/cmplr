@@ -57,7 +57,10 @@ UTILLIB_ETAB_ELEM_INIT(OP_LDIMM, "ldimm")
 UTILLIB_ETAB_ELEM_INIT(OP_LDSTR, "ldstr")
 UTILLIB_ETAB_ELEM_INIT(OP_WRINT, "write-int")
 UTILLIB_ETAB_ELEM_INIT(OP_WRSTR, "write-str")
+UTILLIB_ETAB_ELEM_INIT(OP_WRCHR, "write-chr")
 UTILLIB_ETAB_ELEM_INIT(OP_READ, "read")
+UTILLIB_ETAB_ELEM_INIT(OP_RDINT, "read-int")
+UTILLIB_ETAB_ELEM_INIT(OP_RDCHR, "read-chr")
 UTILLIB_ETAB_END(cling_ast_opcode_kind);
 
 UTILLIB_ETAB_BEGIN(cling_operand_info_kind)
@@ -151,15 +154,17 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     break;
   case OP_RET:
     if (self->ret.has_result)
-      fprintf(file,  "ret t%d %d", self->ret.result, self->ret.addr);
+      fprintf(file,  "ret %d t%d", self->ret.result, self->ret.addr);
     else
       fprintf(file,  "ret %d", self->ret.addr);
     break;
-  case OP_READ:
+  case OP_RDCHR:
+  case OP_RDINT:
     fprintf(file,  "read t%d", self->read.temp);
     break;
   case OP_WRINT:
   case OP_WRSTR:
+  case OP_WRCHR:
     fprintf(file,  "%s t%d", opstr, self->write.temp);
     break;
   case OP_STORE:
@@ -182,7 +187,7 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     fprintf(file,  "load t%d %s", self->load.temp, self->load.name);
     break;
   default:
-    cling_default_assert(self->opcode, cling_symbol_kind_tostring);
+    cling_default_assert(self->opcode, cling_ast_opcode_kind_tostring);
   }
 }
 
@@ -190,7 +195,7 @@ static void ast_ir_vector_print(struct utillib_vector const *instrs, FILE *file)
   int i = 0;
   struct cling_ast_ir const *ir;
   UTILLIB_VECTOR_FOREACH(ir, instrs) {
-    fprintf(file, "%d: ", i);
+    fprintf(file, "%4d: ", i);
     ast_ir_print(ir, file);
     fputs("\n", file);
     ++i;
@@ -239,7 +244,7 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
       polish_ir_post_order(self, arg);
     }
     polish_ir_post_order(self, lhs);
-  } else if (op->as_size_t == SYM_EQ || op->as_size_t == SYM_LK) {
+  } else if (op->as_size_t == SYM_EQ || op->as_size_t == SYM_RK) {
     /*
      * Assignment is right associative.
      * We want the array iden to be loaded _after_ the index expr
@@ -275,6 +280,7 @@ static void polish_ir_maybe_release_temp(struct utillib_json_value *val) {
 
 /*
  * Hack: steal the elemsz from the precedent load of array_addr.
+ * And hack the precedent load to be lvalue.
  */
 static void polish_ir_emit_index(struct cling_polish_ir *self,
                                  struct utillib_vector *instrs) {
@@ -288,6 +294,7 @@ static void polish_ir_emit_index(struct cling_polish_ir *self,
    */
   ir = utillib_vector_back(instrs);
   assert(ir->opcode == OP_LOAD);
+  ir->load.is_rvalue=false;
   base_size=ir->load.size;
 
   /*
@@ -482,6 +489,8 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
     default:
       cling_default_assert(type->as_size_t, cling_symbol_kind_tostring);
     }
+  case SYM_STRING:
+    goto make_ldstr;
   case SYM_CHAR:
   case SYM_INTEGER:
   case SYM_UINT:
@@ -507,6 +516,17 @@ make_load:
   ir->load.is_global=is_global;
   ir->load.size=size;
   ir->load.temp=temp->as_int;
+  goto done;
+
+make_ldstr:
+  temp=polish_ir_make_temp(self);
+  ir=emit_ir(OP_LDSTR);
+  ir->ldstr.temp=temp->as_int;
+  ir->ldstr.string=json_value->as_ptr;
+  /*
+   * You never know when to add a label here.
+   */
+  goto done;
 
 done:
   utillib_vector_push_back(instrs, ir);
@@ -607,9 +627,8 @@ static void emit_scanf_stmt(struct utillib_json_value const *self,
     ir->load.is_global=entry->scope == 0;
     ir->load.temp=temp;
     utillib_vector_push_back(instrs, ir);
-    ir=emit_ir(OP_READ);
+    ir=emit_ir(cling_type_to_read(entry->kind));
     ir->read.temp=temp;
-    ir->read.size=size;
     utillib_vector_push_back(instrs, ir);
   }
 }
@@ -619,32 +638,47 @@ static void emit_printf_stmt(struct utillib_json_value const *self,
                              struct utillib_vector *instrs) {
   struct utillib_json_value const *value, *arglist;
   struct utillib_json_value const *type, *object;
-  int temp;
+  int temp, opcode;
   struct cling_ast_ir *ir;
   struct cling_polish_ir polish_ir;
   arglist = utillib_json_object_at(self, "arglist");
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
-    type = utillib_json_object_at(object, "type");
-    if (type && type->as_size_t == SYM_STRING) {
-      value = utillib_json_object_at(object, "value");
-      ir=emit_ir(OP_LDSTR);
-      temp=make_temp(global);
-      ir->ldstr.temp=temp;
-      ir->ldstr.string=value->as_ptr;
-      utillib_vector_push_back(instrs, ir);
-      ir=emit_ir(OP_WRSTR);
-      ir->write.temp=temp; 
-      utillib_vector_push_back(instrs, ir);
-    } else {
-      cling_polish_ir_init(&polish_ir, object, global);
-      cling_polish_ir_emit(&polish_ir, instrs);
-      ir=emit_ir(OP_WRINT);
+    cling_polish_ir_init(&polish_ir, object, global);
+    cling_polish_ir_emit(&polish_ir, instrs);
+      /*
+       * Hack: look at the precedent instruction to 
+       * steal possible type so that we can have
+       * const char a='a'; printf(a);
+       * int b; b=1; printf(b);
+       * char c[10]; c[0]='a'; printf(c[0]);
+       * shows, 'a' 1 'a'.
+       */
+      ir=utillib_vector_back(instrs);
+      switch(ir->opcode) {
+        case OP_LDSTR:
+          opcode=OP_WRSTR;
+          break;
+        case OP_LDIMM:
+          opcode=cling_size_to_write(ir->ldimm.size);
+          break;
+        case OP_LOAD:
+          opcode=cling_size_to_write(ir->load.size);
+          break;
+        case OP_IDX:
+          opcode=cling_size_to_write(ir->index.base_size);
+          break;
+        default:
+          /*
+           * Result of expression is int.
+           */
+          opcode=OP_WRINT;
+      }
+      ir=emit_ir(opcode);
       ir->write.temp=polish_ir_result(&polish_ir);
       utillib_vector_push_back(instrs, ir);
       cling_polish_ir_destroy(&polish_ir);
     }
-  }
 }
 
 /*
@@ -713,7 +747,7 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    * cond_test, which is also the beginning of
    * body.
    */
-  tricky_jump->jmp.addr== utillib_vector_size(instrs);
+  tricky_jump->jmp.addr=utillib_vector_size(instrs);
   cling_polish_ir_destroy(&polish_ir);
 
   /*

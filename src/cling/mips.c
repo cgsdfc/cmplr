@@ -703,7 +703,6 @@ static void mips_function_saved_push_back(struct cling_mips_function *self,
  * sw $ra, 20($sp)
  * sw $s0, 24($sp)
  * # save other saved registers.
- * `saved_registers' holds all the global registers.
  */
 static void mips_function_prologue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
@@ -723,10 +722,6 @@ static void mips_function_prologue(struct cling_mips_function *self) {
  * lw $s0, 20($sp)
  * lw $ra, 24($sp)
  * addi $sp, $sp, 128
- * Notes that the final jr is emitted by this
- * function, not the mips_emit_ret which may be
- * omitted because the original ast_func deos not
- * have a ret.
  */
 static void mips_function_epilogue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
@@ -1480,11 +1475,13 @@ static void mips_emit_jmp(struct cling_mips_function *self,
 static void mips_emit_read(struct cling_mips_function *self,
                            struct cling_ast_ir const *ast_ir) {
   uint8_t regid;
+  int syscall;
 
-  mips_function_push_back(self, mips_li(MIPS_V0, MIPS_READ_INT));
+  syscall=cling_ast_opcode_to_syscall(ast_ir->opcode);
+  mips_function_push_back(self, mips_li(MIPS_V0, syscall));
   mips_function_push_back(self, &cling_mips_syscall);
   regid = mips_function_write(self, ast_ir->read.temp);
-  mips_function_push_back(self, ast_ir->read.size == MIPS_WORD_SIZE
+  mips_function_push_back(self, ast_ir->opcode == OP_RDINT
                                     ? mips_sw(MIPS_V0, 0, regid)
                                     : mips_sb(MIPS_V0, 0, regid));
 }
@@ -1496,6 +1493,7 @@ static void mips_emit_read(struct cling_mips_function *self,
 static void mips_emit_write(struct cling_mips_function *self,
                             struct cling_ast_ir const *ast_ir) {
   uint8_t regid;
+  int syscall;
   if (self->para_size) {
     /*
      * Save $a0 to sp+frame_size.
@@ -1510,9 +1508,8 @@ static void mips_emit_write(struct cling_mips_function *self,
   /*
    * syscall number.
    */
-  mips_function_push_back(self, mips_li(MIPS_V0, ast_ir->opcode == OP_WRSTR
-                                                     ? MIPS_PRINT_STRING
-                                                     : MIPS_PRINT_INT));
+  syscall=cling_ast_opcode_to_syscall(ast_ir->opcode);
+  mips_function_push_back(self, mips_li(MIPS_V0, syscall));
   mips_function_push_back(self, &cling_mips_syscall);
   if (self->para_size) {
     /*
@@ -1632,11 +1629,13 @@ static void mips_function_instrs(struct cling_mips_function *self,
     case OP_JMP:
       mips_emit_jmp(self, ast_ir);
       break;
-    case OP_READ:
+    case OP_RDCHR:
+    case OP_RDINT:
       mips_emit_read(self, ast_ir);
       break;
     case OP_WRSTR:
     case OP_WRINT:
+    case OP_WRCHR:
       mips_emit_write(self, ast_ir);
       break;
     case OP_LDSTR:

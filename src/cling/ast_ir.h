@@ -57,7 +57,10 @@ UTILLIB_ENUM_ELEM(OP_LDSTR)
 UTILLIB_ENUM_ELEM(OP_LOAD)
 UTILLIB_ENUM_ELEM(OP_WRSTR)
 UTILLIB_ENUM_ELEM(OP_WRINT)
+UTILLIB_ENUM_ELEM(OP_WRCHR)
 UTILLIB_ENUM_ELEM(OP_READ)
+UTILLIB_ENUM_ELEM(OP_RDCHR)
+UTILLIB_ENUM_ELEM(OP_RDINT)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
 
 UTILLIB_ENUM_BEGIN(cling_operand_info_kind)
@@ -96,6 +99,9 @@ struct cling_ast_ir {
     } write;
     struct {
       int temp;
+    } read;
+    struct {
+      int temp;
       int size;
     } push;
     struct {
@@ -120,10 +126,6 @@ struct cling_ast_ir {
       int result;
       bool has_result;
     } call;
-    struct {
-      int temp;
-      int size;
-    } read;
     struct {
       int addr;
       int value;
