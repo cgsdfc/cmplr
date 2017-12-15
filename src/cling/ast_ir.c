@@ -93,19 +93,19 @@ static inline void init_null(struct cling_ast_operand *self) {
 }
 
 static void init_temp(struct cling_ast_operand *self, int temp, int type) {
-  self->info = CL_TEMP | cling_type_to_wide(type);
+  self->info = CL_TEMP | cling_type_to_size(type);
   self->scalar = temp;
 }
 
 static void init_name(struct cling_ast_operand *self, int scope, int type,
                       char const *name) {
-  self->info = CL_NAME | cling_type_to_wide(type) | emit_scope(scope);
+  self->info = CL_NAME | cling_type_to_size(type) | emit_scope(scope);
   self->text = strdup(name);
 }
 
 static void init_imme(struct cling_ast_operand *self, int type,
                       char const *value) {
-  self->info = CL_IMME | cling_type_to_wide(type);
+  self->info = CL_IMME | cling_type_to_size(type);
   switch (type) {
   case CL_INT:
     sscanf(value, "%d", &self->imme_int);
@@ -163,7 +163,7 @@ static struct cling_ast_ir *emit_wrint(int temp) {
 }
 
 /*
- * push temp(wide)
+ * push temp(size)
  * push the value held in `temp' into Argument Region.
  */
 static struct cling_ast_ir *emit_push(int temp, int type) {
@@ -173,7 +173,7 @@ static struct cling_ast_ir *emit_push(int temp, int type) {
 }
 
 /*
- * load temp(is_rvalue) name(scope|wide)
+ * load temp(is_rvalue) name(scope|size)
  * If is_rvalue, load the value of `name' into `temp'
  * else load the address of name into temp.
  */
@@ -186,13 +186,9 @@ static struct cling_ast_ir *emit_load(char const *name, int scope, int type,
   return self;
 }
 
-static inline struct cling_ast_ir *ast_ir_emit_load(char const *name, struct cling_symbol_entry const *entry, int temp) {
-  return emit_load(name, entry->scope, entry->kind, temp, true);
-}
-
 /*
- * defarr name(scope|base_wide) extend
- * define an array at scope with element of wide `base_wide'
+ * defarr name(scope|base_size) extend
+ * define an array at scope with element of size `base_size'
  * and extend.
  */
 static struct cling_ast_ir *emit_defarr(char const *name, int scope, int type,
@@ -220,7 +216,7 @@ static struct cling_ast_ir *emit_call(char const *name, int maybe_temp) {
 }
 
 /*
- * read temp(wide)
+ * read temp(size)
  * Read an integer and store it in the address held
  * by temp.
  */
@@ -231,7 +227,7 @@ static struct cling_ast_ir *emit_read(int temp, int type) {
 }
 
 /*
- * store temp1(wide) temp2
+ * store temp1(size) temp2
  * store the value in temp2 in the address held by temp1.
  */
 static struct cling_ast_ir *emit_store(int temp1, int temp2, int type) {
@@ -242,8 +238,8 @@ static struct cling_ast_ir *emit_store(int temp1, int temp2, int type) {
 }
 
 /*
- * defcon name(scope|wide) value
- * define a constant of wide at scope with value.
+ * defcon name(scope|size) value
+ * define a constant of size at scope with value.
  */
 static struct cling_ast_ir *emit_defcon(char const *name, int scope, int type,
                                         char const *value) {
@@ -266,7 +262,7 @@ static struct cling_ast_ir *emit_binop(int opcode, int temp0, int temp1, int tem
 }
 
 /*
- * index result(base_wide) temp1(is_rvalue) temp2
+ * index result(base_size) temp1(is_rvalue) temp2
  * If is_rvalue, store the value of array temp1 at index temp2
  * into result (a temp).
  * else store the address of array at index into result.
@@ -282,8 +278,8 @@ static struct cling_ast_ir *emit_index(int result, int type, int temp1,
 }
 
 /*
- * defvar name(wide|scope)
- * define a single variable called name of wide at scope.
+ * defvar name(size|scope)
+ * define a single variable called name of size at scope.
  */
 static struct cling_ast_ir *emit_defvar(char const *name, int type, int scope) {
   struct cling_ast_ir *self = emit_ir(OP_DEFVAR);
@@ -292,7 +288,7 @@ static struct cling_ast_ir *emit_defvar(char const *name, int type, int scope) {
 }
 
 /*
- * defunc name(wide)
+ * defunc name(size)
  * define a function called name returning value of type.
  */
 static struct cling_ast_ir *emit_defunc(char const *name, int type) {
@@ -302,7 +298,7 @@ static struct cling_ast_ir *emit_defunc(char const *name, int type) {
 }
 
 /*
- * para name(wide)
+ * para name(size)
  * define a parameter for a function.
  */
 static struct cling_ast_ir *emit_para(char const *name, int type) {
@@ -312,7 +308,7 @@ static struct cling_ast_ir *emit_para(char const *name, int type) {
 }
 
 /*
- * ldimm temp(wide) value
+ * ldimm temp(size) value
  * load an immediate having `value' into temp.
  */
 static struct cling_ast_ir *emit_ldimm(int temp, int type, char const *value) {
@@ -323,66 +319,50 @@ static struct cling_ast_ir *emit_ldimm(int temp, int type, char const *value) {
 }
 
 static void cling_ast_ir_destroy(struct cling_ast_ir *self) {
-  if (self == &cling_ast_ir_nop)
-    return;
-  for (int i = 0; i < CLING_AST_IR_MAX; ++i) {
-    int info = self->operands[i].info;
-    if (info & CL_NAME || info & CL_STRG)
-      free(self->operands[i].text);
-  }
   free(self);
 }
 
-static char const *imme_tostring(struct cling_ast_operand const *self) {
-  int info = self->info;
-  static char buffer[128];
-  if (info & CL_WORD) {
-    snprintf(buffer, 128, "%d", self->imme_int);
-    return buffer;
+static char const *size_tostring(int size) {
+  switch(size) {
+    case MIPS_WORD_SIZE:
+      return "int";
+    case MIPS_BYTE_SIZE:
+      return "char";
+    default:
+      return "void";
   }
-  if (info & CL_BYTE) {
-    snprintf(buffer, 128, "\'%c\'", self->imme_char);
-    return buffer;
-  }
-  assert(false);
 }
 
-static char const *wide_tostring(int wide) {
-  if (wide & CL_WORD)
-    return "int";
-  if (wide & CL_BYTE)
-    return "char";
-  return "void";
-}
-
-static char const *cling_ast_ir_tostring(struct cling_ast_ir const *self) {
-#define AST_IR_BUFSIZ 128
-  static char buffer[AST_IR_BUFSIZ];
+static char const *ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   char const *opstr = cling_ast_opcode_kind_tostring(self->opcode);
-  struct cling_ast_operand const *operand = self->operands;
+  char const *size_name;
 
   switch (self->opcode) {
   case OP_DEFCON:
-    snprintf(buffer, AST_IR_BUFSIZ, "const %s %s = %s",
-             wide_tostring(operand[0].info), operand[0].text,
-             imme_tostring(&operand[1]));
+    size_name=size_tostring(self->defcon.size);
+    if (self->defcon.size == MIPS_WORD_SIZE) {
+      fprintf(file,  "const %s %s = %d", self->defcon.name, size_name, self->defcon.value);
+    } else {
+      fprintf(file,  "const %s %s = '%c'", self->defcon.name, size_name, (char) self->defcon.value);
+    }
     break;
   case OP_PARA:
+    size_name=size_tostring(self->para.size);
+    fprintf(file,  "para %s %s", size_name, self->para.name);
+    break;
   case OP_DEFVAR:
-    snprintf(buffer, AST_IR_BUFSIZ, "var %s %s", wide_tostring(operand[0].info),
-             operand[0].text);
+    size_name=size_tostring(self->defvar.size);
+    fprintf(file,  "var %s %s", size_name, self->defvar.name);
     break;
   case OP_DEFARR:
-    snprintf(buffer, AST_IR_BUFSIZ, "var %s %s[%s]",
-             wide_tostring(operand[0].info), operand[0].text,
-             imme_tostring(&operand[1]));
+    size_name=size_tostring(self->defarr.base_size);
+    fprintf(file,  "var %s %s[%s]", size_name, self->defarr.name, self->defarr.extend);
     break;
   case OP_CAL:
-    if (operand[1].info == CL_NULL)
-      snprintf(buffer, AST_IR_BUFSIZ, "call %s", operand[0].text);
+    if (self->call.has_result)
+      fprintf(file,  "t%d = call %s", self->call.result, self->call.name);
     else
-      snprintf(buffer, AST_IR_BUFSIZ, "t%d = call %s", operand[1].scalar,
-               operand[0].text);
+      fprintf(file,  "call %s", self->call.name);
     break;
   case OP_ADD:
   case OP_SUB:
@@ -395,56 +375,55 @@ static char const *cling_ast_ir_tostring(struct cling_ast_ir const *self) {
   case OP_LE:
   case OP_GT:
   case OP_GE:
-    snprintf(buffer, AST_IR_BUFSIZ, "t%d = t%d %s t%d", operand[0].scalar,
-             operand[1].scalar, opstr, operand[2].scalar);
+    snprintf(buffer, AST_IR_BUFSIZ, "t%d = t%d %s t%d", self->binop.result, self->binop.temp1, 
+        opstr, self->binop.temp2);
     break;
   case OP_BEZ:
-    snprintf(buffer, AST_IR_BUFSIZ, "bez t%d %d", operand[0].scalar,
-             operand[1].scalar);
+    fprintf(file,  "bez t%d %d", self->bez.temp, self->bez.addr);
     break;
   case OP_BNE:
-    snprintf(buffer, AST_IR_BUFSIZ, "bne t%d t%d %d", operand[0].scalar,
-             operand[1].scalar, operand[2].scalar);
+    fprintf(file,  "bne t%d t%d %d", self->bne.temp1, self->bne.temp2, self->bne.addr);
     break;
   case OP_JMP:
-    snprintf(buffer, AST_IR_BUFSIZ, "jmp %d", operand[0].scalar);
+    fprintf(file,  "jmp %d", self->jmp.addr);
     break;
   case OP_DEFUNC:
-    snprintf(buffer, AST_IR_BUFSIZ, "%s %s()", wide_tostring(operand[0].info),
-             operand[0].text);
+    size_name=size_tostring(self->defunc.return_size);
+    fprintf(file,  "%s %s()", size_name, self->defunc.name);
     break;
   case OP_RET:
-    if (operand[0].info != CL_NULL)
-      snprintf(buffer, AST_IR_BUFSIZ, "ret t%d", operand[0].scalar);
+    if (self->ret.has_result)
+      fprintf(file,  "ret t%d", self->ret.result);
     else
-      snprintf(buffer, AST_IR_BUFSIZ, "ret");
+      fprintf(file,  "ret");
     break;
   case OP_NOP:
     return opstr;
   case OP_READ:
-    snprintf(buffer, AST_IR_BUFSIZ, "read t%d", operand[0].scalar);
+    fprintf(file,  "read t%d", self->read.temp);
     break;
   case OP_WRINT:
   case OP_WRSTR:
-    snprintf(buffer, AST_IR_BUFSIZ, "%s t%d", opstr, operand[0].scalar);
+    fprintf(file,  "%s t%d", opstr, self->write.temp);
     break;
   case OP_STORE:
-    snprintf(buffer, AST_IR_BUFSIZ, "store t%d t%d", operand[0].scalar,
-             operand[1].scalar);
+    fprintf(file,  "store t%d t%d", self->store.addr, self->store.value);
     break;
   case OP_PUSH:
-    snprintf(buffer, AST_IR_BUFSIZ, "push t%d", operand[0].scalar);
+    size_name=size_tostring(self->push.size);
+    fprintf(file,  "push %s t%d", size_name, self->push.temp);
     break;
   case OP_LDSTR:
-    snprintf(buffer, AST_IR_BUFSIZ, "ldstr t%d \"%s\"", 
-             operand[0].scalar, operand[1].text);
+    fprintf(file,  "ldstr t%d \"%s\"", self->ldstr.temp, self->ldstr.string);
     break;
   case OP_LDIMM:
-    snprintf(buffer, AST_IR_BUFSIZ, "ldimm t%d %s", 
-             operand[0].scalar, imme_tostring(&operand[1]));
+    if (self->ldimm.size == MIPS_WORD_SIZE)
+      fprintf(file,  "ldimm t%d %d", self->ldimm.temp, self->ldimm.value);
+    else
+      fprintf(file, "ldimm t%d '%c'", self->ldimm.temp, (char) self->ldimm.value);
     break;
   case OP_LOAD:
-    snprintf(buffer, AST_IR_BUFSIZ, "load t%d %s", operand[0].scalar, operand[1].text);
+    fprintf(file,  "load t%d %s", self->load.addr, self->load.name);
     break;
   default:
     cling_default_assert(self->opcode, cling_symbol_kind_tostring);
@@ -452,11 +431,13 @@ static char const *cling_ast_ir_tostring(struct cling_ast_ir const *self) {
   return buffer;
 }
 
-static void cling_ast_ir_print(struct utillib_vector const *instrs) {
+static void ast_ir_vector_print(struct utillib_vector const *instrs) {
   int i = 0;
   struct cling_ast_ir const *ir;
   UTILLIB_VECTOR_FOREACH(ir, instrs) {
-    printf("%d: %s\n", i, cling_ast_ir_tostring(ir));
+    printf("%d: ", i);
+    ast_ir_print(ir);
+    puts("");
     ++i;
   }
 }
@@ -513,7 +494,7 @@ static void polish_ir_post_order(struct cling_polish_ir *self,
     /*
      * Assignment is right associative.
      * We want the array iden to be loaded _after_ the index expr
-     * is evaluated so that we can peek its type/wide by looking
+     * is evaluated so that we can peek its type/size by looking
      * at the latest instruction.
      */
     polish_ir_post_order(self, rhs);
@@ -1188,7 +1169,7 @@ static void emit_statement(struct utillib_json_value const *self,
 
 /*
  * Emits defvar ir.
- * defvar name(wide|scope) extend(is_array)
+ * defvar name(size|scope) extend(is_array)
  */
 static void emit_var_defs(struct utillib_json_value const *self,
                           struct cling_ast_ir_global *global,
@@ -1215,7 +1196,7 @@ static void emit_var_defs(struct utillib_json_value const *self,
 
 /*
  * Emits defcon ir.
- * defcon name(wide|scope) value
+ * defcon name(size|scope) value
  */
 static void emit_const_defs(struct utillib_json_value const *self,
                             struct cling_ast_ir_global *global,
@@ -1414,6 +1395,7 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
 
 void cling_ast_program_print(struct cling_ast_program const *self) {
   struct cling_ast_function const *func;
+  struct _cling_ast_ir ir;
 
   cling_ast_ir_print(&self->init_code);
   UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
@@ -1432,6 +1414,6 @@ char const *cling_ast_ir_name(struct cling_ast_ir const *self, int index);
 int cling_ast_ir_address(struct cling_ast_ir const *self, int index);
 bool cling_ast_index_is_rvalue(struct cling_ast_ir const *self);
 bool cling_ast_load_is_rvalue(struct cling_ast_ir const *self);
-int cling_ast_index_base_wide(struct cling_ast_ir const *self);
+int cling_ast_index_base_size(struct cling_ast_ir const *self);
 int cling_ast_defarr_extend(struct cling_ast_ir const *self);
 char const *cling_ast_ir_string(struct cling_ast_ir const *self);

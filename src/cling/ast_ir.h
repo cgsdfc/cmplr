@@ -83,26 +83,100 @@ struct cling_ast_ir_global {
   unsigned int temps;
 };
 
-/*
- * text maybe a name, a imme
- * while scalar maybe an address,
- * a temp. Their meanings are decided
- * by the corresponding info field.
- */
-struct cling_ast_operand {
-  int info;
-  union {
-    char *text;
-    int scalar;
-    char imme_char;
-    int imme_int;
-  };
-};
-
 struct cling_ast_ir {
   int opcode;
-#define CLING_AST_IR_MAX 3
-  struct cling_ast_operand operands[CLING_AST_IR_MAX];
+  union {
+    struct {
+      int temp;
+      char *string;
+    } ldstr ;
+    struct  {
+      int temp;
+    } write;
+    struct {
+      int temp;
+      int size;
+    } push;
+    struct {
+      int temp;
+      bool is_rvalue;
+      int size;
+      bool is_global;
+      char *name;
+    } load;
+    struct {
+      char *name;
+      size_t extend;
+      int base_size;
+      bool is_global;
+    } defarr;
+    struct {
+      char *name;
+      int temp;
+      bool has_result;
+    } call;
+    struct {
+      int temp;
+      int size;
+    } read;
+    struct {
+      int addr;
+      int value;
+      int size;
+    } store;
+    struct {
+      char *name;
+      int size;
+      int value;
+    } defcon;
+    struct {
+      int result;
+      int temp1;
+      int temp2;
+    } binop;
+    struct {
+      int result;
+      bool has_result;
+    } ret;
+    struct {
+      int result;
+      int base_size;
+      bool is_rvalue;
+      int array_addr;
+      int index_result;
+    } index;
+    struct {
+      char *name;
+      int size;
+      bool is_global;
+    } defvar;
+    struct {
+      char *name;
+      int return_size;
+    } defunc;
+    struct {
+      char *name;
+      int size;
+    } para;
+    struct {
+      int temp;
+      int value;
+      int size;
+    } ldimm;
+    struct {
+      int addr;
+    } jmp;
+    struct {
+      int temp1;
+      int temp2;
+      int addr;
+    } bne;
+    struct {
+      int temp;
+      int addr;
+    } bez;
+  };
+
 };
 
 struct cling_polish_ir {
@@ -139,60 +213,6 @@ struct cling_ast_program {
   struct utillib_vector init_code;
   struct utillib_vector funcs;
 };
-
-#define cling_ast_operand_check(self, index, INFO)                             \
-  do {                                                                         \
-    assert((self)->operands[index].info &(INFO));                              \
-  } while (0)
-
-inline int cling_ast_ir_temp(struct cling_ast_ir const *self, int index) {
-  cling_ast_operand_check(self, index, CL_TEMP);
-  return self->operands[index].scalar;
-}
-
-inline int cling_ast_ir_info(struct cling_ast_ir const *self, int index) {
-  return self->operands[index].info;
-}
-
-inline char const *cling_ast_ir_name(struct cling_ast_ir const *self,
-                                     int index) {
-  cling_ast_operand_check(self, index, CL_NAME);
-  return self->operands[index].text;
-}
-
-inline int cling_ast_ir_address(struct cling_ast_ir const *self, int index) {
-  return self->operands[index].scalar;
-}
-
-#define cling_ast_opcode_check(self, OPCODE)                                   \
-  do {                                                                         \
-    assert((self)->opcode == (OPCODE));                                        \
-  } while (0)
-
-inline bool cling_ast_index_is_rvalue(struct cling_ast_ir const *self) {
-  cling_ast_opcode_check(self, OP_IDX);
-  return self->operands[1].info;
-}
-
-inline bool cling_ast_load_is_rvalue(struct cling_ast_ir const *self) {
-  cling_ast_opcode_check(self, OP_LOAD);
-  return self->operands[2].info;
-}
-
-inline int cling_ast_index_base_wide(struct cling_ast_ir const *self) {
-  cling_ast_opcode_check(self, OP_IDX);
-  return self->operands[0].info;
-}
-
-inline int cling_ast_defarr_extend(struct cling_ast_ir const *self) {
-  cling_ast_opcode_check(self, OP_DEFARR);
-  return self->operands[1].imme_int;
-}
-
-inline char const *cling_ast_ir_string(struct cling_ast_ir const *self) {
-  cling_ast_opcode_check(self, OP_LDSTR);
-  return self->operands[1].text;
-}
 
 void cling_ast_program_init(struct cling_ast_program *self);
 
