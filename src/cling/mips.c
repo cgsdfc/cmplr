@@ -49,6 +49,21 @@ static void mips_mock(void);
 #define MIPS_REG_ARGS_N 4
 
 /*
+ * Size of the static buffer.
+ */
+#define MIPS_BUFSIZ 128
+static char buffer[MIPS_BUFSIZ];
+
+/*
+ * Short cut for snprintf.
+ * Notes it uses buffer implicitly.
+ */
+#define mips_ir_snprintf(FORMAT, ...)                                          \
+  do {                                                                         \
+    snprintf(buffer, MIPS_BUFSIZ, FORMAT, __VA_ARGS__);                        \
+  } while (0)
+
+/*
  * We define them as static instance because
  * they take no arguments.
  */
@@ -57,6 +72,7 @@ static const struct cling_mips_ir cling_mips_syscall = {.opcode = MIPS_SYSCALL};
 
 static struct cling_mips_data *mips_string_create(char const *label,
                                                   char const *string);
+static char const * mips_global_label(struct cling_mips_global *self, uint32_t address);
 
 /*
  * opcode and register strings.
@@ -200,7 +216,7 @@ static struct cling_mips_ir *mips_jr(uint8_t target_regid) {
 }
 
 /*
- * j <address>
+ * j <address> <label>
  * Jump to an absolute address unconditionally.
  */
 static struct cling_mips_ir *mips_j(uint32_t address) {
@@ -435,19 +451,7 @@ static void mips_ir_destroy(struct cling_mips_ir *self) {
  * Print a mips ir to a static buffer.
  * The instructions are grouped by similar format.
  */
-static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
-/*
- * Size of the static buffer.
- */
-#define MIPS_BUFSIZ 128
-/*
- * Short cut for snprintf.
- * Notes it uses buffer implicitly.
- */
-#define mips_ir_snprintf(FORMAT, ...)                                          \
-  do {                                                                         \
-    snprintf(buffer, MIPS_BUFSIZ, FORMAT, __VA_ARGS__);                        \
-  } while (0)
+static char const *mips_ir_tostring(struct cling_mips_ir const *self, bool print_label) {
 
 /*
  * Turns a regid field of self into a regstr.
@@ -501,7 +505,13 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
     mips_ir_snprintf("%s %s", opstr, regstr[0]);
     return buffer;
   case MIPS_J:
-    mips_ir_snprintf(("%s %" PRIu32), opstr, self->operands[0].address);
+    /*
+     * Sometimes we prefer address.
+     */
+    if (print_label)
+      mips_ir_snprintf("%s %s", opstr, self->operands[1].label);
+    else
+      mips_ir_snprintf("%s %" PRIu32, opstr, self->operands[0].address);
     return buffer;
   case MIPS_ADDI:
     regstr[0] = mips_operand_regstr(self, 0);
@@ -518,14 +528,14 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
   case MIPS_BEQ:
     regstr[0] = mips_operand_regstr(self, 0);
     regstr[1] = mips_operand_regstr(self, 1);
-    mips_ir_snprintf(("%s %s %s %" PRId16), opstr, regstr[0], regstr[1], self->operands[2].offset);
+    mips_ir_snprintf(("%s %s, %s, %" PRId16), opstr, regstr[0], regstr[1], self->operands[2].offset);
     return buffer;
   case MIPS_BGEZ:
   case MIPS_BGTZ:
   case MIPS_BLEZ:
   case MIPS_BLTZ:
     regstr[0]=mips_operand_regstr(self, 0);
-    mips_ir_snprintf(("%s %s %" PRId16), opstr, regstr[0], self->operands[1].offset);
+    mips_ir_snprintf(("%s %s, %" PRId16), opstr, regstr[0], self->operands[1].offset);
     return buffer;
   default:
     assert(false);
@@ -653,14 +663,21 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
   struct cling_mips_ir *mips_ir;
   int instr_end = utillib_vector_size(self->instrs);
   int ast_ir_addr;
+  uint32_t mips_ir_addr;
+
 #define mips_branch_offset(self, ast_ir_addr, mips_pc)\
   ((self)->address_map[(ast_ir_addr)]-(mips_pc)-1)
   for (int mips_pc = self->instr_begin; mips_pc < instr_end; ++mips_pc) {
     mips_ir = utillib_vector_at(self->instrs, mips_pc);
     switch (mips_ir->opcode) {
     case MIPS_J:
+      /*
+       * Lonely J needs a label to jump to!
+       */
       ast_ir_addr = mips_ir->operands[0].address;
-      mips_ir->operands[0].address = self->address_map[ast_ir_addr];
+      mips_ir_addr = self->address_map[ast_ir_addr];
+      mips_ir->operands[0].address = mips_ir_addr;
+      mips_ir->operands[1].label=mips_global_label(self->global, mips_ir_addr);
       break;
     case MIPS_BEQ:
     case MIPS_BNE:
@@ -1133,6 +1150,62 @@ static inline uint8_t mips_function_write(struct cling_mips_function *self, int 
  */
 
 /*
+ * Label Management.
+ */
+
+static struct cling_mips_label * mips_label_create(char const *label, uint32_t address) {
+  struct cling_mips_label *self=malloc(sizeof *self);
+  self->label=strdup(label);
+  self->address=address;
+  return self;
+}
+
+static void mips_label_destroy(struct cling_mips_label *self) {
+  free(self->label);
+  free(self);
+}
+
+/*
+ * The key of a label is the address of it, not the string.
+ */
+static int mips_label_compare(struct cling_mips_label const *lhs, struct cling_mips_label const* rhs) {
+  return lhs->address - rhs->address;
+}
+
+static size_t mips_label_hash(struct cling_mips_label const *self) {
+  return self->address;
+}
+
+static const struct utillib_hashmap_callback mips_label_callback={
+  .compare_handler=mips_label_compare, .hash_handler=mips_label_hash,
+};
+
+static struct cling_mips_label * 
+mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
+  struct cling_mips_label key;
+  key.address=address;
+  return utillib_hashmap_at(self, &key);
+}
+
+/*
+ * Simple find and insert.
+ */
+static char const * mips_global_label(struct cling_mips_global *self, uint32_t address) {
+  struct cling_mips_label *value;
+  value=mips_label_find(self->labels, address);
+  if (value) {
+    return value->label;
+  }
+
+  mips_ir_snprintf("__label_%d", self->label_count);
+  ++self->label_count;
+  value=mips_label_create(buffer, address);
+  utillib_hashmap_insert(self->labels, value, value);
+  return value->label;
+}
+
+
+/*
  * Translation of different ast_ir.
  */
 
@@ -1272,10 +1345,7 @@ static void mips_emit_index(struct cling_mips_function *self,
  */
 static char const *mips_global_asciiz(struct cling_mips_global *self,
                                       char const *string) {
-#define MIPS_LABEL_BUFSIZ 64
-  static char buffer[MIPS_LABEL_BUFSIZ];
-  snprintf(buffer, MIPS_LABEL_BUFSIZ, "__asciiz_%d",
-           self->label_count);
+  mips_ir_snprintf("__asciiz_%d", self->label_count);
   ++self->label_count;
   utillib_vector_push_back(self->data, mips_string_create(buffer, string));
   return buffer;
@@ -1454,6 +1524,8 @@ static void mips_emit_load(struct cling_mips_function *self,
 
 /*
  * Notes the function-absolute address.
+ * Since Mars accepts label as jta rather than number,
+ * we change the format of `j' to `j label, address'.
  */
 static void mips_emit_jmp(struct cling_mips_function *self,
                           struct cling_ast_ir const *ast_ir) {
@@ -1570,8 +1642,6 @@ static int mips_emit_push_call(struct cling_mips_function *self,
         --push_state;
         mips_function_load_paras(self, push_state, true);
       }
-      break;
-    default:
       return ast_pc;
     }
   }
@@ -1772,15 +1842,17 @@ static void mips_program_setup(struct cling_mips_program *self) {
 }
 
 static void mips_global_init(struct cling_mips_global *self,
-                             struct utillib_vector *data) {
+                             struct cling_mips_program *program) {
   self->label_count = 0;
-  self->data = data;
+  self->data = &program->data;
+  self->labels=&program->labels;
 }
 
 void cling_mips_program_init(struct cling_mips_program *self,
                              struct cling_ast_program const *program) {
   utillib_vector_init(&self->text);
   utillib_vector_init(&self->data);
+  utillib_hashmap_init(&self->labels, &mips_label_callback);
   self->func_size = utillib_vector_size(&program->funcs);
   self->func_range = malloc(sizeof self->func_range[0] * self->func_size);
 }
@@ -1788,6 +1860,7 @@ void cling_mips_program_init(struct cling_mips_program *self,
 void cling_mips_program_destroy(struct cling_mips_program *self) {
   utillib_vector_destroy_owning(&self->text, mips_ir_destroy);
   utillib_vector_destroy_owning(&self->data, mips_data_destroy);
+  utillib_hashmap_destroy_owning(&self->labels, NULL, mips_label_destroy);
   free(self->func_range);
 }
 
@@ -1798,8 +1871,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   struct cling_ast_function const *ast_func;
   int index = 0;
 
-  mips_global_init(&global, &self->data);
-  mips_program_setup(self);
+  mips_global_init(&global, self);
   mips_program_emit_data(self, program);
 
   UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
@@ -1823,6 +1895,7 @@ void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file) {
   struct cling_mips_data const *data;
   struct cling_mips_ir const *ir;
+  struct cling_mips_label const *label;
 
   if (!utillib_vector_empty(&self->data)) {
     fputs(".data\n", file);
@@ -1833,15 +1906,19 @@ void cling_mips_program_print(struct cling_mips_program const *self,
   fputs("\n", file);
   for (int i=0; i<self->func_range[0].begin; ++i) {
     ir = utillib_vector_at(&self->text, i);
-    fprintf(file, "%s\n", mips_ir_tostring(ir));
+    fprintf(file, "\t%s\n", mips_ir_tostring(ir, false));
   }
   fputs("\n", file);
   for (int i = 0; i < self->func_size; ++i) {
     fprintf(file, "%s:\n", self->func_range[i].label);
     for (int begin = self->func_range[i].begin, end = self->func_range[i].end;
          begin < end; ++begin) {
+      label=mips_label_find(&self->labels, begin);
+      if (label) {
+        fprintf(file, "%s:\n", label->label);
+      }
       ir = utillib_vector_at(&self->text, begin);
-      fprintf(file, "%s\n", mips_ir_tostring(ir));
+      fprintf(file, "\t%s\n", mips_ir_tostring(ir, true));
     }
     fputs("\n", file);
   }
@@ -1863,7 +1940,7 @@ void cling_mips_program_pretty(
     for (int begin = self->func_range[i].begin, end = self->func_range[i].end;
          begin < end; ++begin) {
       ir = utillib_vector_at(&self->text, begin);
-      fprintf(file, "%4" PRIu32 "\t%s\n", begin, mips_ir_tostring(ir));
+      fprintf(file, "%4" PRIu32 "\t%s\n", begin, mips_ir_tostring(ir, false));
     }
     fputs("\n", file);
   }

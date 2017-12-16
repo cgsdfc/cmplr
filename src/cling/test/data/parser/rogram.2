@@ -5,7 +5,12 @@ int int_1;
 void bar() { }
 
 void foo(int a, int b, int c) {
-  bar();
+  if (a>b) 
+    bar();
+  else if (a > b)
+    return;
+  else
+    printf("aaa");
 }
 
 void main()
