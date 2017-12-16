@@ -72,7 +72,7 @@ static const struct cling_mips_ir cling_mips_syscall = {.opcode = MIPS_SYSCALL};
 
 static struct cling_mips_data *mips_string_create(char const *label,
                                                   char const *string);
-static char const * mips_global_label(struct cling_mips_global *self, uint32_t address);
+static char * mips_global_label(struct cling_mips_global *self, uint32_t address);
 
 /*
  * opcode and register strings.
@@ -1190,7 +1190,7 @@ mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
 /*
  * Simple find and insert.
  */
-static char const * mips_global_label(struct cling_mips_global *self, uint32_t address) {
+static char * mips_global_label(struct cling_mips_global *self, uint32_t address) {
   struct cling_mips_label *value;
   value=mips_label_find(self->labels, address);
   if (value) {
@@ -1642,8 +1642,6 @@ static int mips_emit_push_call(struct cling_mips_function *self,
         --push_state;
         mips_function_load_paras(self, push_state, true);
       }
-      break;
-    default:
       return ast_pc;
     }
   }
@@ -1906,13 +1904,10 @@ void cling_mips_program_print(struct cling_mips_program const *self,
     fprintf(file, "%s:\n", self->func_range[i].label);
     for (int begin = self->func_range[i].begin, end = self->func_range[i].end;
          begin < end; ++begin) {
-      label=mips_label_find(&self->labels, begin);
-      if (label) {
-        fprintf(file, "%s:", label->label);
-      }
       ir = utillib_vector_at(&self->text, begin);
-      fprintf(file, "%4" PRIu32 "\t%s\n", begin, mips_ir_tostring(ir, true));
+      fprintf(file, "%4" PRIu32 "\t%s\n", begin, mips_ir_tostring(ir, false));
     }
     fputs("\n", file);
   }
+
 }

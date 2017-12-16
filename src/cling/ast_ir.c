@@ -1228,6 +1228,7 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
 void cling_ast_program_print(struct cling_ast_program const *self, FILE *file) {
   struct cling_ast_function const *func;
   ast_ir_vector_print(&self->init_code, file);
+  fputs("\n", file);
   UTILLIB_VECTOR_FOREACH(func, &self->funcs) {
     ast_ir_vector_print(&func->init_code, file);
     ast_ir_vector_print(&func->instrs, file);
