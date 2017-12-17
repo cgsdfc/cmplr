@@ -214,17 +214,6 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-struct cling_mips_interp {
-  struct utillib_hashmap labels;
-  uint32_t regs[CLING_MIPS_REG_MAX];
-  uint32_t lo;
-  uint32_t pc;
-  uint8_t *memory;
-  unsigned int mem_size;
-  unsigned int mem_capacity;
-  struct cling_mips_program const *program;
-};
-
 void cling_mips_program_init(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_destroy(struct cling_mips_program *self);
@@ -234,9 +223,5 @@ void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
 void cling_mips_program_pretty(
     struct cling_mips_program const *self, FILE *file);
-void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_mips_program const *program);
-
-int cling_mips_interp_exec(struct cling_mips_interp *self);
-void cling_mips_interp_destroy(struct cling_mips_interp *self);
 
 #endif /* CLING_MIPS_H */
