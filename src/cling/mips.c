@@ -74,6 +74,7 @@ static struct cling_mips_data *mips_string_create(char const *label,
                                                   char const *string);
 static char * mips_global_label(struct cling_mips_global *self, uint32_t address);
 
+static void mips_function_load_paras(struct cling_mips_function *self, int index, bool is_load);
 /*
  * opcode and register strings.
  */
@@ -528,14 +529,14 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self, bool print
   case MIPS_BEQ:
     regstr[0] = mips_operand_regstr(self, 0);
     regstr[1] = mips_operand_regstr(self, 1);
-    mips_ir_snprintf(("%s %s, %s, %" PRId16), opstr, regstr[0], regstr[1], self->operands[2].offset);
+    mips_ir_snprintf("%s %s, %s, %s", opstr, regstr[0], regstr[1], self->operands[2].label);
     return buffer;
   case MIPS_BGEZ:
   case MIPS_BGTZ:
   case MIPS_BLEZ:
   case MIPS_BLTZ:
     regstr[0]=mips_operand_regstr(self, 0);
-    mips_ir_snprintf(("%s %s, %" PRId16), opstr, regstr[0], self->operands[1].offset);
+    mips_ir_snprintf("%s %s, %s", opstr, regstr[0], self->operands[1].label);
     return buffer;
   default:
     assert(false);
@@ -681,17 +682,23 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
       break;
     case MIPS_BEQ:
     case MIPS_BNE:
+      /*
+       * Mars requires everything that can jump to is a label,
+       * so we hack the offset of branch family to be _all_absolute_address_
+       * just like J. And it no longer use offset but now use label
+       * since only 3 fields are available.
+       */
       ast_ir_addr = mips_ir->operands[2].offset;
-      mips_ir->operands[2].offset =
-        mips_branch_offset(self, ast_ir_addr, mips_pc);
+      mips_ir_addr=self->address_map[ast_ir_addr];
+      mips_ir->operands[2].label=mips_global_label(self->global, mips_ir_addr);
       break;
     case MIPS_BGEZ:
     case MIPS_BGTZ:
     case MIPS_BLEZ:
     case MIPS_BLTZ:
       ast_ir_addr = mips_ir->operands[1].offset;
-      mips_ir->operands[1].offset =
-        mips_branch_offset(self, ast_ir_addr, mips_pc);
+      mips_ir_addr=self->address_map[ast_ir_addr];
+      mips_ir->operands[1].label=mips_global_label(self->global, mips_ir_addr);
       break;
     }
   }
@@ -716,15 +723,21 @@ static void mips_function_saved_push_back(struct cling_mips_function *self,
  * # save other saved registers.
  */
 static void mips_function_prologue(struct cling_mips_function *self) {
-  struct cling_mips_ir *ir, *addi_sp;
+  struct cling_mips_ir *addi_sp;
   struct cling_mips_name const *saved;
 
   addi_sp = mips_addi(MIPS_SP, MIPS_SP, -self->frame_size);
   mips_function_push_back(self, addi_sp);
 
   UTILLIB_VECTOR_FOREACH(saved, &self->saved_registers) {
-    ir = mips_sw(saved->regid, saved->offset, MIPS_SP);
-    mips_function_push_back(self, ir);
+    mips_function_push_back(self,
+     mips_sw(saved->regid, saved->offset, MIPS_SP));
+  }
+  /*
+   * For convenience, store all the a0 argument to memory.
+   */
+  for (int i=0; i<self->para_size && i<MIPS_MEM_ARG_BLK; ++i) {
+    mips_function_load_paras(self, i, false);
   }
 }
 
@@ -1295,24 +1308,6 @@ static void mips_emit_binary_calc(struct cling_mips_function *self,
 }
 
 /*
- * call name [temp]
- * The call prologue has finished in pushes.
- * This function handles epilogue.
- */
-static void mips_emit_call(struct cling_mips_function *self,
-                           struct cling_ast_ir const *ast_ir) {
-  char const *callee;
-  int regid;
-
-  callee = ast_ir->call.name;
-  mips_function_push_back(self, mips_jal(callee));
-  if (ast_ir->call.has_result) {
-    regid = mips_function_write(self, ast_ir->call.result);
-    mips_function_push_back(self, mips_move(regid, MIPS_V0));
-  }
-}
-
-/*
  * index temp(result) temp(base_wide) index(is_rvalue).
  * where temp is the address of the array,
  * base_wide is the elemsz,
@@ -1649,8 +1644,12 @@ static int mips_emit_push_call(struct cling_mips_function *self,
       if (push_state == 0) {
         mips_load_temps(self, false);
       }
-      mips_emit_call(self, ast_ir);
+      mips_function_push_back(self, mips_jal(ast_ir->call.name));
       mips_load_temps(self, true);
+      if (ast_ir->call.has_result) {
+        regid = mips_function_write(self, ast_ir->call.result);
+        mips_function_push_back(self, mips_move(regid, MIPS_V0));
+      }
       while (push_state) {
         --push_state;
         mips_function_load_paras(self, push_state, true);
@@ -1885,6 +1884,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   int index = 0;
 
   mips_global_init(&global, self);
+  mips_program_setup(self);
   mips_program_emit_data(self, program);
 
   UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
