@@ -22,7 +22,6 @@
 #ifndef CLING_AST_CHECK_H
 #define CLING_AST_CHECK_H
 
-#include "rd_parser.h"
 #include <utillib/json.h>
 #include <utillib/scanner.h>
 
@@ -30,25 +29,31 @@
 
 /*
  * AST Semantic Checks
+ * All these functions return CL_UNDEF as
+ * a signal of failure which caller should note.
  */
+struct cling_rd_parser;
 
 /*
  * Specially for scanf_stmt where
  * only idens are allows as arguments.
  * Checks whether an iden is lvalue.
- * Return its type or CL_UNDEF.
+ * That is not const, array and function
  */
 int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
                                     struct cling_rd_parser *parser,
-                                    struct utillib_token_scanner *input,
+                                    struct utillib_token_scanner const *input,
                                     size_t context);
 
 /*
  * Excluding assign_expr and boolean_expr.
+ * Since the grammar singles out assign_expr to be assign_stmt and boolean_expr
+ * to be condition, the door for these two guys to be expr
+ * is closed here although in parsing, it was opened.
  */
 int cling_ast_check_expression(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
-                               struct utillib_token_scanner *input,
+                               struct utillib_token_scanner const *input,
                                size_t context);
 
 /*
@@ -58,28 +63,36 @@ int cling_ast_check_expression(struct utillib_json_value const *self,
  */
 int cling_ast_check_expr_stmt(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
-                              struct utillib_token_scanner *input,
+                              struct utillib_token_scanner const *input,
                               size_t context);
 
+/*
+ * Check whether the type of the return expr match the one declared
+ * in the function prototype.
+ */
 int cling_ast_check_returnness(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
-                               struct utillib_token_scanner *input,
+                               struct utillib_token_scanner const *input,
                                size_t context, bool void_flag);
-
+/*
+ * The following functions are due to grammar limitness.
+ * That is the grammar forbits certain kinds of contructs
+ * which we should check about.
+ */
 /*
  * iden = expr
  * That all we can do in `for' the initial part.
  */
 int cling_ast_check_for_init(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
-                             struct utillib_token_scanner *input,
+                             struct utillib_token_scanner const *input,
                              size_t context);
 /*
  * condition ::= expr relop expr
  */
 int cling_ast_check_condition(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
-                              struct utillib_token_scanner *input,
+                              struct utillib_token_scanner const *input,
                               size_t context);
 
 /*
@@ -88,7 +101,7 @@ int cling_ast_check_condition(struct utillib_json_value const *self,
  */
 int cling_ast_check_for_step(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
-                             struct utillib_token_scanner *input,
+                             struct utillib_token_scanner const *input,
                              size_t context);
 
 #endif /* CLING_AST_CHECK_H */

@@ -149,17 +149,6 @@ UTILLIB_ETAB_ELEM_INIT(MIPS_BYTE, ".byte")
 UTILLIB_ETAB_END(cling_mips_data_kind);
 
 /*
- * Get the size of object.
- */
-static size_t getsize(int info) {
-  if (info & CL_WORD)
-    return MIPS_WORD_SIZE;
-  if (info & CL_BYTE)
-    return MIPS_BYTE_SIZE;
-  assert(false);
-}
-
-/*
  * Temp register, caller saved.
  */
 static bool mips_is_temp_register(uint8_t regid) {

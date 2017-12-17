@@ -20,7 +20,7 @@
 */
 #ifndef CLING_SCANNER_H
 #define CLING_SCANNER_H
-#include <stdio.h> // FILE*
+#include <stdio.h>
 #include <utillib/enum.h>
 #include <utillib/scanner.h>
 

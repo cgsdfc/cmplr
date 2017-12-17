@@ -303,7 +303,7 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self) {
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-                       struct utillib_token_scanner *input) {
+                       struct utillib_token_scanner const *input) {
 
   size_t lookahead;
   size_t stacktop;
