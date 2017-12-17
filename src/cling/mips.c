@@ -1833,20 +1833,18 @@ void cling_mips_program_init(struct cling_mips_program *self,
   utillib_vector_init(&self->text);
   utillib_vector_init(&self->data);
   utillib_hashmap_init(&self->labels, &mips_label_callback);
-  self->func_size = utillib_vector_size(&program->funcs);
-  self->func_range = malloc(sizeof self->func_range[0] * self->func_size);
 }
 
 void cling_mips_program_destroy(struct cling_mips_program *self) {
   utillib_vector_destroy_owning(&self->text, mips_ir_destroy);
   utillib_vector_destroy_owning(&self->data, mips_data_destroy);
   utillib_hashmap_destroy_owning(&self->labels, NULL, mips_label_destroy);
-  free(self->func_range);
 }
 
 void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program) {
   struct cling_mips_global global;
+  struct cling_mips_label *label;
   struct cling_mips_function function;
   struct cling_ast_function const *ast_func;
   uint32_t address;
@@ -1858,7 +1856,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
   UTILLIB_VECTOR_FOREACH(ast_func, &program->funcs) {
     address=utillib_vector_size(&self->text);
     label=mips_label_create(ast_func->name, address);
-    utillib_hashmap_insert(&self->label, label);
+    utillib_hashmap_insert(&self->labels, label, label);
     mips_function_init(&function, &self->text, &global, ast_func);
     mips_function_emit(&function, ast_func);
     mips_function_destroy(&function);
@@ -1870,7 +1868,7 @@ void cling_mips_program_print(struct cling_mips_program const *self,
   struct cling_mips_data const *data;
   struct cling_mips_ir const *ir;
   struct cling_mips_label const *label;
-  int index=0;
+  uint32_t address=0;
 
   if (!utillib_vector_empty(&self->data)) {
     fputs(".data\n", file);
@@ -1879,11 +1877,11 @@ void cling_mips_program_print(struct cling_mips_program const *self,
   fputs(".text\n", file);
   fputs(".globl main\n", file);
   UTILLIB_VECTOR_FOREACH(ir, &self->text) {
-    label=utillib_hashmap_at(&self->labels, index);
+    label=mips_label_find(&self->labels, address);
     if (label) {
       fprintf(file, "\n%s:\n", label->label);
     }
-    fprintf(file, "\t%s\n", mips_ir_tostring(ir, false));
-    ++index;
+    fprintf(file, "\t%s\n", mips_ir_tostring(ir));
+    ++address;
   }
 }

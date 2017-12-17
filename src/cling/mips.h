@@ -154,8 +154,6 @@ struct cling_mips_program {
   struct utillib_vector text;
   struct utillib_vector data;
   struct utillib_hashmap labels;
-  struct cling_address_range *func_range;
-  size_t func_size;
 };
 
 struct cling_mips_global {
@@ -226,5 +224,4 @@ void cling_mips_program_print(struct cling_mips_program const *self,
  */
 void mips_label_destroy(struct cling_mips_label *self);
 struct cling_mips_label * mips_label_create(char const *label, uint32_t address);
->>>>>>> mips-interp
 #endif /* CLING_MIPS_H */
