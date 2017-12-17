@@ -21,17 +21,14 @@
 #ifndef CLING_AST_PRETTY_H
 #define CLING_AST_PRETTY_H
 #include <utillib/json.h>
-#include <utillib/string.h>
 
 /*
  * This file dumps the AST into source code
  * again with certain pretifying.
  */
 
-void cling_ast_pretty_expr(struct utillib_json_value const *self,
-                           struct utillib_string *string);
+char *cling_ast_pretty_expr(struct utillib_json_value const *self);
 
-void cling_ast_pretty_program(struct utillib_json_value const *self,
-                              struct utillib_string *string);
+char *cling_ast_pretty_program(struct utillib_json_value const *self);
 
 #endif /* CLING_AST_PRETTY_H */

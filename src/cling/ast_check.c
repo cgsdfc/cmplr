@@ -251,8 +251,8 @@ static int ast_check_call(struct utillib_json_value const *self,
     if (ast_integral_compatible(actual_arg_type))
       continue;
     rd_parser_error_push_back(
-        parser, cling_incompatible_arg_error(input, i, formal_arg_type,
-                                             actual_arg_type, context));
+        parser, cling_incompatible_type_error(input, actual_arg_type,
+          formal_arg_type, context));
   }
   if (i != formal_argc) {
     func_name=utillib_json_object_at(callee, "value");

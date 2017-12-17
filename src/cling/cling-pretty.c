@@ -25,29 +25,30 @@ static struct utillib_token_scanner cling_scanner;
 static struct cling_rd_parser cling_parser;
 static struct cling_symbol_table cling_symbol_table;
 static struct utillib_json_value *json_ast;
-static struct utillib_string pretty_program;
+static char *pretty;
 
-static void init(FILE *file) {
+static void do_init(FILE *file) {
   cling_scanner_init(&cling_scanner, file);
   cling_symbol_table_init(&cling_symbol_table);
   cling_rd_parser_init(&cling_parser, &cling_symbol_table);
 }
 
-static void destroy(void) {
+static void do_destroy(void) {
   if (json_ast)
     utillib_json_value_destroy(json_ast);
   cling_rd_parser_destroy(&cling_parser);
   cling_symbol_table_destroy(&cling_symbol_table);
   cling_scanner_destroy(&cling_scanner);
+  free(pretty);
 }
 
-static void pretty(void) {
+static void do_pretty(void) {
   json_ast = cling_rd_parser_parse(&cling_parser, &cling_scanner);
   if (cling_rd_parser_has_errors(&cling_parser)) {
     cling_rd_parser_report_errors(&cling_parser);
   } else {
-    cling_ast_pretty_program(json_ast, &pretty_program);
-    puts(utillib_string_c_str(&pretty_program));
+    pretty=cling_ast_pretty_program(json_ast); 
+    puts(pretty);
   }
 }
 
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
   if (!file)
     abort();
 
-  init(file);
-  pretty();
-  destroy();
+  do_init(file);
+  do_pretty();
+  do_destroy();
 }

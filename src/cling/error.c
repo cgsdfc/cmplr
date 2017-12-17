@@ -20,17 +20,17 @@
 */
 #include "error.h"
 #include "ast_pretty.h"
-#include "symbol_table.h"
 #include "symbols.h"
 
-#include <utillib/print.h>
 #include <string.h>
-
 #include <assert.h>
 #include <stdlib.h>
 
+#define cling_symbol_cast(code)                                                \
+  ((code) == UT_SYM_EOF ? "end-of-input" : cling_symbol_kind_tostring((code)))
+
 static struct cling_error *
-cling_error_create(int kind, struct utillib_token_scanner const *input,
+error_create(int kind, struct utillib_token_scanner const *input,
                    size_t context) {
   struct cling_error *self = malloc(sizeof *self);
   self->kind = kind;
@@ -40,171 +40,144 @@ cling_error_create(int kind, struct utillib_token_scanner const *input,
   return self;
 }
 
-static struct cling_error *name_error(int kind,
-                                      struct utillib_token_scanner const *input,
-                                      char const *name, size_t context) {
-  struct cling_error *self = cling_error_create(kind, input, context);
-  /* Free needed */
-  self->einfo[0].str = strdup(name);
-  return self;
-}
-
-static struct cling_error *ast_error(int kind,
-                                     struct utillib_token_scanner const *input,
-                                     struct utillib_json_value const *value,
-                                     size_t context) {
-  struct utillib_string string;
-  struct cling_error *self;
-
-  self = cling_error_create(kind, input, context);
-  cling_ast_pretty_expr(value, &string);
-  /* Free needed */
-  self->einfo[0].str = utillib_string_c_str(&string);
-  return self;
-}
-
 struct cling_error *cling_expected_error(struct utillib_token_scanner const *input,
                                          size_t expected, size_t context) {
-  struct cling_error *self = cling_error_create(CL_EEXPECT, input, context);
-  self->einfo[0].str = cling_symbol_cast(expected);
-  self->einfo[1].str =
+  struct cling_error *self = error_create(CL_EEXPECT, input, context);
+  self->expected.expected=cling_symbol_cast(expected);
+  self->expected.actual=
       cling_symbol_cast(utillib_token_scanner_lookahead(input));
   return self;
 }
 
 struct cling_error *cling_unexpected_error(struct utillib_token_scanner const *input,
                                            size_t context) {
-  struct cling_error *self = cling_error_create(CL_EUNEXPECTED, input, context);
-  self->einfo[0].str =
+  struct cling_error *self = error_create(CL_EUNEXPECTED, input, context);
+  self->unexpected.unexpected=
       cling_symbol_cast(utillib_token_scanner_lookahead(input));
   return self;
 }
 
 struct cling_error *cling_redefined_error(struct utillib_token_scanner const *input,
                                           char const *name, size_t context) {
-  return name_error(CL_EREDEFINED, input, name, context);
+  struct cling_error *self = error_create(CL_EREDEFINED, input, context);
+  self->redefined.name=strdup(name);
+  return self;
 }
 
 struct cling_error *
 cling_undefined_name_error(struct utillib_token_scanner const *input,
                            char const *name, size_t context) {
-  return name_error(CL_EUNDEFINED, input, name, context);
+  struct cling_error *self = error_create(CL_EUNDEFINED, input, context);
+  self->undefined.name=strdup(name);
+  return self;
 }
 
 struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner const *input,
                                            struct utillib_json_value const *value,
                                            size_t context) {
-  return ast_error(CL_ENOTLVALUE, input, value, context);
+  struct cling_error *self = error_create(CL_ENOTLVALUE, input, context);
+  self->not_lvalue.value=cling_ast_pretty_expr(value);
+  return self;
 }
 
 struct cling_error *
 cling_incompatible_type_error(struct utillib_token_scanner const *input,
                               int actual_type, int expected_type,
                               size_t context) {
-  struct cling_error *self = cling_error_create(CL_EINCTYPE, input, context);
-  self->einfo[0].str = cling_symbol_entry_kind_tostring(actual_type);
-  self->einfo[1].str = cling_symbol_entry_kind_tostring(expected_type);
-  return self;
-}
-
-struct cling_error *
-cling_incompatible_arg_error(struct utillib_token_scanner const *input, size_t argpos,
-                             int actual_type, int expected_type,
-                             size_t context) {
-  struct cling_error *self = cling_error_create(CL_EINCARG, input, context);
-  self->einfo[0].uint = argpos;
-  self->einfo[1].str = cling_symbol_kind_tostring(actual_type);
-  self->einfo[2].str = cling_symbol_kind_tostring(expected_type);
+  struct cling_error *self = error_create(CL_EINCTYPE, input, context);
+  self->inctype.expected=cling_symbol_entry_kind_tostring(expected_type);
+  self->inctype.actual=cling_symbol_entry_kind_tostring(actual_type);
   return self;
 }
 
 struct cling_error *
 cling_argc_unmatched_error(struct utillib_token_scanner const *input,
-                           char const *func_name, int actual_argc,
-                           int expected_argc, size_t context) {
-  struct cling_error *self = cling_error_create(CL_EARGCUNMAT, input, context);
-  self->einfo[0].str = strdup(func_name);
-  self->einfo[1].uint = actual_argc;
-  self->einfo[2].uint = expected_argc;
+                           char const *func_name, unsigned int actual_argc,
+                           unsigned int expected_argc, size_t context) {
+  struct cling_error *self = error_create(CL_EARGCUNMAT, input, context);
+  self->argc_unmat.expected=expected_argc;
+  self->argc_unmat.actual=actual_argc;
+  self->argc_unmat.func_name=strdup(func_name);
   return self;
 }
 
 struct cling_error *
 cling_invalid_expr_error(struct utillib_token_scanner const *input,
                          struct utillib_json_value const *value, size_t context) {
-  return ast_error(CL_EINVEXPR, input, value, context);
+  struct cling_error *self = error_create(CL_EINVEXPR, input, context);
+  self->invexpr.expr=cling_ast_pretty_expr(value);
+  return self;
 }
 
 struct cling_error *cling_dupcase_error(struct utillib_token_scanner const *input,
                                         int label, size_t context) {
-  struct cling_error *self = cling_error_create(CL_EDUPCASE, input, context);
-  self->einfo[0].int_ = label;
+  struct cling_error *self = error_create(CL_EDUPCASE, input, context);
+  self->dupcase.label=label;
   return self;
 }
 
 void cling_error_print(struct cling_error const *self) {
 #define positive_number(X) ((X)?(X):1)
+#define quoted_string(X) "'%s'"
 
-  char const *context = self->context;
-  union cling_einfo const *einfo = self->einfo;
+  fprintf(stderr, "ERROR at line %lu, column %lu, context %s: ",
+      positive_number(self->row),
+      positive_number(self->col),
+      self->context);
 
-  utillib_error_printf("ERROR at line %lu, column %lu:\n", positive_number(self->row),
-      positive_number(self->col));
   switch (self->kind) {
   case CL_EEXPECT:
-    utillib_error_printf("expected `%s', got `%s' in `%s'", einfo[0].str,
-                         einfo[1].str, context);
+    fprintf(stderr, "expects %s, but actually gets %s\n", self->expected.expected, self->expected.actual);
     break;
   case CL_EUNEXPECTED:
-    utillib_error_printf("unexpected token `%s' in `%s'", einfo[0].str,
-                         context);
+    fprintf(stderr, "unexpected toke %s\n", self->unexpected.unexpected);
     break;
   case CL_EREDEFINED:
-    utillib_error_printf("identifier `%s' was redefined in `%s'", einfo[0].str,
-                         context);
+    /*
+     * TODO: print previous definition.
+     */
+    fprintf(stderr, "name '%s' was redefined\n", self->redefined.name);
     break;
   case CL_EUNDEFINED:
-    utillib_error_printf("undefined reference to `%s' in `%s'", einfo[0].str,
-                         context);
+    fprintf(stderr, "undefined reference to '%s'\n", self->undefined.name);
     break;
   case CL_ENOTLVALUE:
-    utillib_error_printf("`%s' is not lvalue in `%s'", einfo[0].str, context);
-    break;
-  case CL_EINCARG:
-    utillib_error_printf(
-        "incompatible type of argument %lu in `%s': expected `%s', got `%s'",
-        einfo[0].uint, context, einfo[2].str, einfo[3].str);
+    fprintf(stderr, "'%s' is not lvalue\n", self->not_lvalue.value);
     break;
   case CL_EARGCUNMAT:
-    utillib_error_printf(
-        "in `%s', function `%s' expects %lu arguments, got %lu", context,
-        einfo[0].str, einfo[2].uint, einfo[1].uint);
+    fprintf(stderr, "function '%s' expects %u arguments but %u were given\n",
+        self->argc_unmat.func_name, self->argc_unmat.expected, self->argc_unmat.actual);
     break;
   case CL_EINCTYPE:
-    utillib_error_printf("in `%s', incompatible type: expected `%s', got `%s'",
-                         context, einfo[1].str, einfo[0].str);
+    fprintf(stderr, "incompatible type: expected %s but saw %s\n", self->inctype.expected, self->inctype.actual);
     break;
   case CL_EINVEXPR:
-    utillib_error_printf("in `%s', expression `%s' is not allowed", context,
-                         einfo[0].str);
+    fprintf(stderr, "'%s' is not allowed here\n", self->invexpr.expr);
     break;
   case CL_EDUPCASE:
-    utillib_error_printf("in `%s', duplicated case label %d", context,
-                         einfo[0].int_);
+    fprintf(stderr, "duplicated case label '%d'\n", self->dupcase.label);
     break;
   default:
     assert(false && "unimplemented");
   }
-  utillib_error_printf(".\n");
 }
 
 void cling_error_destroy(struct cling_error *self) {
   switch (self->kind) {
   case CL_EREDEFINED:
+    free(self->redefined.name);
+    break;
   case CL_EUNDEFINED:
+    free(self->undefined.name);
+    break;
   case CL_ENOTLVALUE:
+    free(self->not_lvalue.value);
+    break;
   case CL_EARGCUNMAT:
-    free(self->einfo[0].str);
+    free(self->argc_unmat.func_name);
+    break;
+  case CL_EINVEXPR:
+    free(self->invexpr.expr);
     break;
   }
   free(self);

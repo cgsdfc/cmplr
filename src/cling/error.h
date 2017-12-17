@@ -26,8 +26,7 @@
 #define CLING_ERROR_EMAX 4
 
 UTILLIB_ENUM_BEGIN(cling_error_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_EAFMAIN, 1)
-UTILLIB_ENUM_ELEM(CL_EEXPECT)
+UTILLIB_ENUM_ELEM_INIT(CL_EEXPECT, 1)
 UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
 UTILLIB_ENUM_ELEM(CL_EREDEFINED)
 UTILLIB_ENUM_ELEM(CL_EINCTYPE)
@@ -39,25 +38,46 @@ UTILLIB_ENUM_ELEM(CL_EDUPCASE)
 UTILLIB_ENUM_ELEM(CL_EINVEXPR)
 UTILLIB_ENUM_END(cling_error_kind);
 
-union cling_einfo {
-  char const *str;
-  size_t uint;
-  int int_;
-};
-
 struct cling_error {
   int kind;
   char const *context;
   size_t row;
   size_t col;
-  union cling_einfo einfo[CLING_ERROR_EMAX];
-  ;
+  union {
+    struct {
+      char *name;
+    } redefined;
+    struct {
+      char *name;
+    } undefined;
+    struct {
+      char *value;
+    } not_lvalue;
+    struct {
+      char const *func_name;
+      unsigned int expected;
+      unsigned int actual;
+    } argc_unmat;
+    struct {
+      char *expr;
+    } invexpr;
+    struct {
+      char const *expected;
+      char const *actual;
+    } expected;
+    struct {
+      char const *unexpected;
+    } unexpected;
+    struct {
+      char const * expected;
+      char const *actual;
+    } inctype;
+    struct {
+      int label;
+    } dupcase;
+  };
 };
 
-/**
- * \function cling_error_destroy
- * Destroy this error.
- */
 void cling_error_destroy(struct cling_error *self);
 
 struct cling_error *cling_expected_error(struct utillib_token_scanner const *input,
@@ -86,14 +106,9 @@ cling_invalid_expr_error(struct utillib_token_scanner const *input,
                          struct utillib_json_value const *value, size_t context);
 
 struct cling_error *
-cling_incompatible_arg_error(struct utillib_token_scanner const *input, size_t argpos,
-                             int actual_type, int expected_type,
-                             size_t context);
-
-struct cling_error *
 cling_argc_unmatched_error(struct utillib_token_scanner const *input,
-                           char const *func_name, int actual_argc,
-                           int expected_argc, size_t context);
+                           char const *func_name, unsigned int actual_argc,
+                           unsigned int expected_argc, size_t context);
 
 struct cling_error *cling_dupcase_error(struct utillib_token_scanner const *input,
                                         int label, size_t context);
