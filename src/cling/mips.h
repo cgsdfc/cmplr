@@ -221,4 +221,10 @@ void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
+/*
+ * for mips_interp.
+ */
+void mips_label_destroy(struct cling_mips_label *self);
+struct cling_mips_label * mips_label_create(char const *label, uint32_t address);
+>>>>>>> mips-interp
 #endif /* CLING_MIPS_H */
