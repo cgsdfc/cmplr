@@ -35,6 +35,7 @@
 #define CLING_MIPS_REG_MAX 32
 
 UTILLIB_ENUM_BEGIN(cling_mips_opcode_kind)
+UTILLIB_ENUM_ELEM(MIPS_NOP)
 UTILLIB_ENUM_ELEM(MIPS_SYSCALL)
 UTILLIB_ENUM_ELEM(MIPS_MOVE)
 UTILLIB_ENUM_ELEM(MIPS_ADDI)
@@ -56,7 +57,6 @@ UTILLIB_ENUM_ELEM(MIPS_BLEZ)
 UTILLIB_ENUM_ELEM(MIPS_BLTZ)
 UTILLIB_ENUM_ELEM(MIPS_LW)
 UTILLIB_ENUM_ELEM(MIPS_SW)
-UTILLIB_ENUM_ELEM(MIPS_NOP)
 UTILLIB_ENUM_ELEM(MIPS_LB)
 UTILLIB_ENUM_ELEM(MIPS_SB)
 UTILLIB_ENUM_ELEM(MIPS_LA)
@@ -121,8 +121,14 @@ UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
 
+UTILLIB_ENUM_BEGIN(cling_mips_ecode)
+UTILLIB_ENUM_ELEM(MIPS_EC_OK)
+UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
+UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
+UTILLIB_ENUM_ELEM(MIPS_EC_BTAKEN)
+UTILLIB_ENUM_END(cling_mips_ecode);
+
 struct cling_ast_ir;
-struct cling_ast_operand;
 struct cling_ast_function;
 struct cling_ast_program;
 
@@ -208,6 +214,17 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
+struct cling_mips_interp {
+  struct utillib_hashmap labels;
+  uint32_t regs[CLING_MIPS_REG_MAX];
+  uint32_t lo;
+  uint32_t pc;
+  uint8_t *memory;
+  unsigned int mem_size;
+  unsigned int mem_capacity;
+  struct cling_mips_program const *program;
+};
+
 void cling_mips_program_init(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_destroy(struct cling_mips_program *self);
@@ -215,5 +232,9 @@ void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
+void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_mips_program const *program);
+
+int cling_mips_interp_exec(struct cling_mips_interp *self);
+void cling_mips_interp_destroy(struct cling_mips_interp *self);
 
 #endif /* CLING_MIPS_H */
