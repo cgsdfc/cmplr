@@ -1191,7 +1191,7 @@ static size_t mips_label_strhash(struct cling_mips_label const *self) {
   return php_strhash(self->label);
 }
 
-static const struct utillib_hashmap_callback mips_label_strhash={
+static const struct utillib_hashmap_callback mips_label_strcallback={
   .compare_handler=mips_label_strcmp, .hash_handler=mips_label_strhash,
 };
 
@@ -1958,7 +1958,7 @@ static void mips_interp_memdump(struct cling_mips_interp const *self, FILE *file
 
 static uint32_t mips_interp_alloc(struct cling_mips_interp *self, size_t size, bool clear) {
   uint32_t new_capacity;
-  uint32_t memblk=self->size;
+  uint32_t memblk=self->mem_size;
   uint32_t alloc=mips_align_alloc(&memblk, size, size);
   if (memblk > self->mem_capacity) {
     new_capacity=self->mem_capacity<<1;
@@ -2020,6 +2020,10 @@ static void mips_interp_load(struct cling_mips_interp *self,
 static void mips_interp_write_word(struct cling_mips_interp *self, uint32_t address, uint32_t word) {
   if (address > self->mem_size) {
 
+
+  }
+}
+
 void cling_mips_interp_init(struct cling_mips_interp *self, 
     struct cling_mips_program const *program, bool clear)
 {
@@ -2028,7 +2032,7 @@ void cling_mips_interp_init(struct cling_mips_interp *self,
   self->mem_size=0;
   self->mem_capacity=0;
   self->memory=NULL;
-  utillib_hashmap_init(&self->labels, &mips_label_strhash);
+  utillib_hashmap_init(&self->labels, &mips_label_strcallback);
   mips_interp_load(self, program);
   if (clear) {
     memset(self->regs, 0, sizeof self->regs);
@@ -2094,7 +2098,6 @@ static void mips_do_mflo(struct cling_mips_interp *self, struct cling_mips_ir co
 
 static void mips_do_jal(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
   struct cling_mips_label const *label;
-  label=mips_program_label(self->program, ir->operands[0].label);
   assert(label);
   self->regs[MIPS_RA]=self->pc+1;
   self->pc=label->address;
@@ -2110,7 +2113,7 @@ static int mips_do_beq(struct cling_mips_interp *self, struct cling_mips_ir cons
   uint8_t src_regid1=ir->operands[0].regid;
   uint8_t src_regid2=ir->operands[1].regid;
   if (self->regs[src_regid1] == self->regs[src_regid2]) {
-    self->pc=self->pc+ir->offset+1;
+    self->pc=self->pc+ir->operands[2].offset+1;
     return MIPS_EC_BTAKEN;
   }
   return MIPS_EC_OK;
@@ -2146,14 +2149,12 @@ static int mips_do_sw(struct cling_mips_interp *self, struct cling_mips_ir const
   uint8_t dest_regid=ir->operands[0].regid;
   if (address & (MIPS_WORD_SIZE-1))
     return MIPS_EC_ALIGN;
-  mips_interp_write(self, 
 }
 
 static void mips_do_la(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
   struct cling_mips_label const *label;
   uint8_t dest_regid;
   dest_regid=ir->operands[0].regid;
-  label=mips_program_label(self->program, ir->operands[1].label);
   assert(label);
   self->regs[dest_regid]=label->address;
 }
@@ -2161,6 +2162,17 @@ static void mips_do_la(struct cling_mips_interp *self, struct cling_mips_ir cons
 void cling_mips_interp_destroy(struct cling_mips_interp *self)
 {
   free(self->memory);
+}
+
+int mips_do_branch(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
+
+
+}
+
+void mips_do_j(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
+
+
+
 }
 
 int cling_mips_interp_exec(struct cling_mips_interp *self)

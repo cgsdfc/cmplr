@@ -232,7 +232,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
-void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_mips_program const *program);
+void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_mips_program const *program, bool clear);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);
 void cling_mips_interp_destroy(struct cling_mips_interp *self);
