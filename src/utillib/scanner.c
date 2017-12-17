@@ -173,12 +173,12 @@ void utillib_token_scanner_destroy(struct utillib_token_scanner *self) {
 }
 
 inline size_t
-utillib_token_scanner_lookahead(struct utillib_token_scanner *self) {
+utillib_token_scanner_lookahead(struct utillib_token_scanner const *self) {
   return self->code;
 }
 
 inline char const *
-utillib_token_scanner_semantic(struct utillib_token_scanner *self) {
+utillib_token_scanner_semantic(struct utillib_token_scanner const *self) {
   return utillib_string_c_str(&self->buffer);
 }
 
@@ -187,7 +187,7 @@ void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self) {
   token_scanner_read_input(self);
 }
 
-inline bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self) {
+inline bool utillib_token_scanner_reacheof(struct utillib_token_scanner const *self) {
   return self->code == UT_SYM_EOF;
 }
 

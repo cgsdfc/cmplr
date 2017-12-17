@@ -20,8 +20,8 @@
 */
 #include "scanner.h"
 #include "symbols.h"
+#include "misc.h"
 #include <ctype.h>
-#include <utillib/print.h> /* utillib_error_printf */
 #define CLING_KW_SIZE 14
 
 bool cling_scanner_signed_number;
@@ -203,20 +203,22 @@ static int
 cling_scanner_error_handler(struct utillib_char_scanner *chars,
                             struct utillib_token_scanner_error const *error) {
   char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
-  utillib_error_printf("ERROR in line %lu, column %lu: %s\n", chars->row,
-                       chars->col, errmsg);
   char victim = error->victim;
+
+  fprintf(stderr, "ERROR at %lu:%lu %s ",
+      positive_number(chars->row),
+      positive_number(chars->col), errmsg);
 
   switch (error->kind) {
   case CL_EUNKNOWN:
-    utillib_error_printf("character `%c' does not make sense\n", victim);
+    fprintf(stderr, "character '%c' does not make sense\n", victim);
     break;
   case CL_EBADNEQ:
-    utillib_error_printf("but got `%c'\n", victim);
+    fprintf(stderr, "but got '%c'\n", victim);
     break;
   case CL_ECHRCHAR:
   case CL_ESTRCHAR:
-    utillib_error_printf("character `%c' is not allowed\n", victim);
+    fprintf(stderr, "character '%c' is not allowed\n", victim);
     break;
   }
   return 1;

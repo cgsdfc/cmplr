@@ -23,7 +23,6 @@
 #include <utillib/enum.h>
 #include <utillib/json.h>
 #include <utillib/scanner.h>
-#define CLING_ERROR_EMAX 4
 
 UTILLIB_ENUM_BEGIN(cling_error_kind)
 UTILLIB_ENUM_ELEM_INIT(CL_EEXPECT, 1)
@@ -37,6 +36,7 @@ UTILLIB_ENUM_ELEM(CL_EARGCUNMAT)
 UTILLIB_ENUM_ELEM(CL_EDUPCASE)
 UTILLIB_ENUM_ELEM(CL_EINVEXPR)
 UTILLIB_ENUM_END(cling_error_kind);
+
 
 struct cling_error {
   int kind;
@@ -54,7 +54,7 @@ struct cling_error {
       char *value;
     } not_lvalue;
     struct {
-      char const *func_name;
+      char *func_name;
       unsigned int expected;
       unsigned int actual;
     } argc_unmat;

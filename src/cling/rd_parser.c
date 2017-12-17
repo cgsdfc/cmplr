@@ -244,9 +244,7 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
  */
 void cling_rd_parser_report_errors(struct cling_rd_parser const *self) {
   struct cling_error const *error;
-
   UTILLIB_VECTOR_FOREACH(error, &self->elist) { cling_error_print(error); }
-  fprintf(stderr, "%lu errors detected.\n", utillib_vector_size(&self->elist));
 }
 
 /*

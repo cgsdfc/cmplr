@@ -21,6 +21,7 @@
 #include "error.h"
 #include "ast_pretty.h"
 #include "symbols.h"
+#include "misc.h"
 
 #include <string.h>
 #include <assert.h>
@@ -117,20 +118,18 @@ struct cling_error *cling_dupcase_error(struct utillib_token_scanner const *inpu
 }
 
 void cling_error_print(struct cling_error const *self) {
-#define positive_number(X) ((X)?(X):1)
-#define quoted_string(X) "'%s'"
 
-  fprintf(stderr, "ERROR at line %lu, column %lu, context %s: ",
+  fprintf(stderr, "ERROR at %lu:%lu in %s: ",
       positive_number(self->row),
       positive_number(self->col),
       self->context);
 
   switch (self->kind) {
   case CL_EEXPECT:
-    fprintf(stderr, "expects %s, but actually gets %s\n", self->expected.expected, self->expected.actual);
+    fprintf(stderr, "expects '%s', but actually gets '%s'\n", self->expected.expected, self->expected.actual);
     break;
   case CL_EUNEXPECTED:
-    fprintf(stderr, "unexpected toke %s\n", self->unexpected.unexpected);
+    fprintf(stderr, "unexpected toke '%s'\n", self->unexpected.unexpected);
     break;
   case CL_EREDEFINED:
     /*
@@ -149,7 +148,7 @@ void cling_error_print(struct cling_error const *self) {
         self->argc_unmat.func_name, self->argc_unmat.expected, self->argc_unmat.actual);
     break;
   case CL_EINCTYPE:
-    fprintf(stderr, "incompatible type: expected %s but saw %s\n", self->inctype.expected, self->inctype.actual);
+    fprintf(stderr, "incompatible type: expected '%s' but saw '%s'\n", self->inctype.expected, self->inctype.actual);
     break;
   case CL_EINVEXPR:
     fprintf(stderr, "'%s' is not allowed here\n", self->invexpr.expr);
