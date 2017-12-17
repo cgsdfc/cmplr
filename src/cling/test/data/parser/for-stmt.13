@@ -1,3 +1,0 @@
-int bug(int bug1, int bug2) {
-  for (bug1=bug2; bug1 <= 2; bug1=bug1 * 10);
-}
