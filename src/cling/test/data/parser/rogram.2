@@ -1,19 +1,22 @@
-const int const_int_1=1;
-int int_array_1[11], int_array_2[11];
-int int_1;
-
-void bar() { }
-
-void foo(int a, int b, int c) {
-  if (a>b) 
-    return;
-  else if (a > b)
-    return;
-}
-
-void main()
+int mod(int x, int y)
 {
-  foo(1, 2, 3);
+    int z;
+    z = x - x/y*y;
+	printf(" z = ",z);
+    return(z);
 }
-
+int gcd(int a, int b)
+{
+    if (b==0) return(0);
+    else if (mod(a,b)==0)
+        return(b);
+    else return(gcd(b, mod(a,b)));
+}
+void main(){
+	int a ,b,r;
+	a = 15;
+	b = 24;
+	r = gcd(a,b);
+	printf(" ",r);
+}
 

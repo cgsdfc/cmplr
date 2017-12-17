@@ -156,7 +156,7 @@ static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     break;
   case OP_RET:
     if (self->ret.has_result)
-      fprintf(file,  "ret %d t%d", self->ret.result, self->ret.addr);
+      fprintf(file,  "ret %d t%d", self->ret.addr, self->ret.result);
     else
       fprintf(file,  "ret %d", self->ret.addr);
     break;
