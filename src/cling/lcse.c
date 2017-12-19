@@ -86,7 +86,7 @@ static int interchangable_compare(struct cling_lcse_ir const *lhs,
  */
 static int load_lvalue_compare(struct cling_lcse_ir const *lhs,
                                struct cling_lcse_ir const *rhs) {
-  if (lhs->opcode != rhs->opcode)
+  if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
     return 1;
   if (0 == strcmp(lhs->load_lvalue.name, rhs->load_lvalue.name) &&
       lhs->load_lvalue.scope == rhs->load_lvalue.scope)
@@ -99,7 +99,7 @@ static int load_lvalue_compare(struct cling_lcse_ir const *lhs,
  */
 static int load_rvalue_compare(struct cling_lcse_ir const *lhs,
                                struct cling_lcse_ir const *rhs) {
-  if (lhs->opcode != rhs->opcode)
+  if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
     return 1;
   if (lhs->load_rvalue.value == rhs->load_rvalue.value)
     return 0;
@@ -496,10 +496,14 @@ static void optimize(struct cling_lcse_optimizer *self,
       puts(cling_ast_opcode_kind_tostring(ast_ir->opcode));
       assert(false);
     }
-    if (add_instr)
+    if (add_instr) {
+      /* ast_ir_print(ast_ir, stdout); */
+      /* puts(""); */
       utillib_vector_push_back(instrs, ast_ir);
-    else
+    }
+    else {
       cling_ast_ir_destroy(ast_ir);
+    }
   }
 }
 

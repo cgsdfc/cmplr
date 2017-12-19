@@ -34,14 +34,16 @@ void cling_lcse_optimize(struct cling_ast_function *ast_func) {
   utillib_vector_init(&instrs);
   utillib_vector_init(&basic_blocks);
   cling_basic_block_construct(&basic_blocks, &ast_func->instrs);
-  basic_block_display(&basic_blocks);
 
+  ast_ir_vector_print(&ast_func->instrs, stderr);
   cling_lcse_optimizer_init(&optimizer, ast_func);
   UTILLIB_VECTOR_FOREACH(block, &basic_blocks) {
     cling_lcse_optimizer_emit(&optimizer, block, &instrs);
   }
   ast_ir_fix_address(&instrs, optimizer.address_map);
+  puts("");
   ast_ir_vector_print(&instrs, stderr);
+  puts("");
 
   utillib_vector_clear(&ast_func->instrs);
   utillib_vector_append(&ast_func->instrs, &instrs);
