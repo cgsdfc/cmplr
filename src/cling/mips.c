@@ -1885,3 +1885,22 @@ void cling_mips_program_print(struct cling_mips_program const *self,
     ++address;
   }
 }
+
+struct cling_mips_label * mips_label_name_find(struct utillib_hashmap const *self, char const *name) {
+  struct cling_mips_label key;
+  key.label=name;
+  return utillib_hashmap_at(self, &key);
+}
+
+static int mips_label_strcmp(struct cling_mips_label const *lhs, struct cling_mips_label const *rhs) {
+  return strcmp(lhs->label, rhs->label);
+}
+
+static size_t mips_label_strhash(struct cling_mips_label const *self) {
+  return mysql_strhash(self->label);
+}
+
+const struct utillib_hashmap_callback mips_label_strcallback={
+  .hash_handler=mips_label_strhash, .compare_handler=mips_label_strcmp,
+};
+
