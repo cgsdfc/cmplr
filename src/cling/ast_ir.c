@@ -39,7 +39,7 @@ UTILLIB_ETAB_ELEM_INIT(OP_RET, "ret")
 UTILLIB_ETAB_ELEM_INIT(OP_PUSH, "push")
 UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
 UTILLIB_ETAB_ELEM_INIT(OP_SUB, "-")
-UTILLIB_ETAB_ELEM_INIT(OP_IDX, "index")
+UTILLIB_ETAB_ELEM_INIT(OP_INDEX, "index")
 UTILLIB_ETAB_ELEM_INIT(OP_CAL, "call")
 UTILLIB_ETAB_ELEM_INIT(OP_DIV, "/")
 UTILLIB_ETAB_ELEM_INIT(OP_MUL, "*")
@@ -117,7 +117,7 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     else
       fprintf(file, "call %s", self->call.name);
     break;
-  case OP_IDX:
+  case OP_INDEX:
     fprintf(file, "t%d = t%d [ t%d ]", self->index.result,
             self->index.array_addr, self->index.index_result);
     break;
@@ -299,7 +299,7 @@ static void polish_ir_emit_index(struct cling_polish_ir *self,
   utillib_vector_pop_back(&self->opstack);
 
   result = polish_ir_make_temp(self);
-  ir = emit_ir(OP_IDX);
+  ir = emit_ir(OP_INDEX);
   ir->index.result = result->as_int;
   ir->index.array_addr = array_temp->as_int;
   ir->index.index_result = index_temp->as_int;
@@ -409,7 +409,7 @@ static void polish_ir_emit_assign(struct cling_polish_ir *self,
    */
   ir = utillib_vector_back(instrs);
   switch (ir->opcode) {
-  case OP_IDX:
+  case OP_INDEX:
     assert(ir->index.is_rvalue);
     ir->index.is_rvalue = false;
     size = ir->index.base_size;
@@ -655,7 +655,7 @@ static void emit_printf_stmt(struct utillib_json_value const *self,
     case OP_LOAD:
       opcode = cling_size_to_write(ir->load.size);
       break;
-    case OP_IDX:
+    case OP_INDEX:
       opcode = cling_size_to_write(ir->index.base_size);
       break;
     default:

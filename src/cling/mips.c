@@ -1705,7 +1705,7 @@ static void mips_function_instrs(struct cling_mips_function *self,
     case OP_STORE:
       mips_emit_store(self, ast_ir);
       break;
-    case OP_IDX:
+    case OP_INDEX:
       mips_emit_index(self, ast_ir);
       break;
     case OP_JMP:

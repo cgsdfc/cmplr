@@ -259,11 +259,6 @@ static unsigned int lookup_variable(struct cling_lcse_optimizer *self,
   return var;
 }
 
-/* static void update_named_address(struct cling_lcse_optimizer *self, char const *name, unsigned int adddress) { */
-/*   struct cling_mips_label *label; */
-/*   label=mips_label_create(name, address); */
-/*   utillib_hashmap_update(&self->names, */ 
-
 /*
  * Prepare operands for a lcse_ir by looking the operands of ast_ir
  * for various maps.
@@ -439,7 +434,7 @@ static void optimize(struct cling_lcse_optimizer *self,
         ast_ir->call.result = value;
       }
       break;
-    case OP_IDX:
+    case OP_INDEX:
       /*
        * We always do it no matter lvalue or rvalue.
        */
