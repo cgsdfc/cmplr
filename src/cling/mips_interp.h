@@ -33,15 +33,15 @@ struct cling_mips_interp {
   uint32_t regs[CLING_MIPS_REG_MAX];
   uint32_t lo;
   uint32_t pc;
-  struct cling_mips_page 
-    *page_array[MIPS_PAGE_ARRAY_MAX];
+  struct cling_mips_page *page_array[MIPS_PAGE_ARRAY_MAX];
   struct cling_mips_program const *program;
 };
 
-void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_mips_program const *program, bool clear);
+void cling_mips_interp_init(struct cling_mips_interp *self,
+                            struct cling_mips_program const *program,
+                            bool clear);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);
 void cling_mips_interp_destroy(struct cling_mips_interp *self);
-
 
 #endif /* CLING_MIPS_INTERP */

@@ -21,8 +21,8 @@
 #ifndef CL_AST_BUILD_H
 #define CL_AST_BUILD_H
 
-#include <utillib/json.h>
 #include <stddef.h>
+#include <utillib/json.h>
 
 /*
  * AST construction helpers.

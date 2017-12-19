@@ -19,8 +19,8 @@
 
 */
 #include "misc.h"
-#include "mips.h"
 #include "ast_ir.h"
+#include "mips.h"
 #include "symbol_table.h"
 #include "symbols.h"
 
@@ -104,7 +104,7 @@ int symbol_to_ast_opcode(size_t symbol) {
   int opcode;
   switch (symbol) {
   case SYM_ADD:
-    opcode=OP_ADD;
+    opcode = OP_ADD;
     break;
   case SYM_MINUS:
     opcode = OP_SUB;
@@ -140,37 +140,36 @@ int symbol_to_ast_opcode(size_t symbol) {
 }
 
 char const *size_tostring(int size) {
-  switch(size) {
-    case MIPS_WORD_SIZE:
-      return "int";
-    case MIPS_BYTE_SIZE:
-      return "char";
-    default:
-      return "void";
+  switch (size) {
+  case MIPS_WORD_SIZE:
+    return "int";
+  case MIPS_BYTE_SIZE:
+    return "char";
+  default:
+    return "void";
   }
 }
 
-
 int cling_symbol_to_size(int symbol) {
-  switch(symbol) {
-    case SYM_INTEGER:
-    case SYM_UINT:
-      return MIPS_WORD_SIZE;
-    case SYM_CHAR:
-      return MIPS_BYTE_SIZE;
-    default:
+  switch (symbol) {
+  case SYM_INTEGER:
+  case SYM_UINT:
+    return MIPS_WORD_SIZE;
+  case SYM_CHAR:
+    return MIPS_BYTE_SIZE;
+  default:
     assert(false);
   }
 }
 int cling_type_to_size(int type) {
-  switch(type) {
-    case CL_INT:
-      return MIPS_WORD_SIZE;
-    case CL_CHAR:
-      return MIPS_BYTE_SIZE;
-    case CL_VOID:
-      return 0;
-    default:
+  switch (type) {
+  case CL_INT:
+    return MIPS_WORD_SIZE;
+  case CL_CHAR:
+    return MIPS_BYTE_SIZE;
+  case CL_VOID:
+    return 0;
+  default:
     assert(false);
   }
 }
@@ -178,55 +177,55 @@ int cling_type_to_size(int type) {
 int cling_symbol_to_immediate(int symbol, char const *string) {
   int int_val;
   char char_val;
-  switch(symbol) {
-    case SYM_CHAR:
-    case SYM_KW_CHAR:
-      sscanf(string, "%c", &char_val);
-      return char_val;
-    case SYM_INTEGER:
-    case SYM_KW_INT:
-    case SYM_UINT:
-      sscanf(string, "%d", &int_val);
-      return int_val;
-    default:
-      assert(false);
+  switch (symbol) {
+  case SYM_CHAR:
+  case SYM_KW_CHAR:
+    sscanf(string, "%c", &char_val);
+    return char_val;
+  case SYM_INTEGER:
+  case SYM_KW_INT:
+  case SYM_UINT:
+    sscanf(string, "%d", &int_val);
+    return int_val;
+  default:
+    assert(false);
   }
 }
 
-int cling_type_to_immediate(int type, char const *string){
+int cling_type_to_immediate(int type, char const *string) {
   int int_val;
   char char_val;
-  switch(type) {
-    case CL_CHAR:
-      sscanf(string, "%c", &char_val);
-      return char_val;
-    case CL_INT:
-      sscanf(string, "%d", &int_val);
-      return int_val;
-    default:
-      assert(false);
+  switch (type) {
+  case CL_CHAR:
+    sscanf(string, "%c", &char_val);
+    return char_val;
+  case CL_INT:
+    sscanf(string, "%d", &int_val);
+    return int_val;
+  default:
+    assert(false);
   }
 }
 
 int cling_ast_opcode_to_syscall(int opcode) {
-  switch(opcode) {
-    case OP_RDCHR:
-      return MIPS_READ_CHAR;
-    case OP_RDINT:
-      return MIPS_READ_INT;
-    case OP_WRCHR:
-      return MIPS_PRINT_CHAR;
-    case OP_WRSTR:
-      return MIPS_PRINT_STRING;
-    case OP_WRINT:
-      return MIPS_PRINT_INT;
-    default:
-      assert(false);
+  switch (opcode) {
+  case OP_RDCHR:
+    return MIPS_READ_CHAR;
+  case OP_RDINT:
+    return MIPS_READ_INT;
+  case OP_WRCHR:
+    return MIPS_PRINT_CHAR;
+  case OP_WRSTR:
+    return MIPS_PRINT_STRING;
+  case OP_WRINT:
+    return MIPS_PRINT_INT;
+  default:
+    assert(false);
   }
 }
 
 int cling_type_to_read(int type) {
-  switch(type) {
+  switch (type) {
   case CL_CHAR:
     return OP_RDCHR;
   case CL_INT:
@@ -237,13 +236,12 @@ int cling_type_to_read(int type) {
 }
 
 int cling_size_to_write(int size) {
-  switch(size) {
-    case MIPS_WORD_SIZE:
-      return OP_WRINT;
-    case MIPS_BYTE_SIZE:
-      return OP_WRCHR;
-    default:
-      assert(false);
+  switch (size) {
+  case MIPS_WORD_SIZE:
+    return OP_WRINT;
+  case MIPS_BYTE_SIZE:
+    return OP_WRCHR;
+  default:
+    assert(false);
   }
 }
-

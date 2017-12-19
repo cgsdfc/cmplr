@@ -24,8 +24,8 @@
 #include <utillib/vector.h>
 
 #include <assert.h>
-#include <stdio.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ENUM_ELEM(OP_NOP)
@@ -79,8 +79,8 @@ struct cling_ast_ir {
     struct {
       int temp;
       char const *string;
-    } ldstr ;
-    struct  {
+    } ldstr;
+    struct {
       int temp;
     } write;
     struct {
@@ -164,7 +164,6 @@ struct cling_ast_ir {
       int addr;
     } bez;
   };
-
 };
 
 struct cling_polish_ir {
@@ -212,7 +211,10 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
 void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);
 
 void cling_ast_ir_destroy(struct cling_ast_ir *self);
-void ast_ir_fix_address(struct utillib_vector *instrs, unsigned int const *address_map) ;
+void ast_ir_fix_address(struct utillib_vector *instrs,
+                        unsigned int const *address_map);
 void ast_ir_print(struct cling_ast_ir const *self, FILE *file);
+void ast_ir_vector_print(struct utillib_vector const *instrs,
+                                FILE *file);
 
 #endif /* CLING_AST_IR_H */

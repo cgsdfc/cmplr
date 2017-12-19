@@ -35,7 +35,8 @@ struct cling_basic_block {
   struct utillib_vector *instrs;
 };
 
-void cling_basic_block_construct(struct utillib_vector * blocks, struct utillib_vector *instrs);
+void cling_basic_block_construct(struct utillib_vector *blocks,
+                                 struct utillib_vector *instrs);
 void basic_block_display(struct utillib_vector const *basic_blocks);
 
 #endif /* CLING_BASIC_BLOCK */

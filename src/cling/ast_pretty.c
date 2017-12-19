@@ -485,7 +485,7 @@ static void ast_pretty_program(struct utillib_json_value const *self,
   ast_pretty_array(func_decls, string, 0, ast_pretty_function);
 }
 
-char * cling_ast_pretty_expr(struct utillib_json_value const *self) {
+char *cling_ast_pretty_expr(struct utillib_json_value const *self) {
   struct utillib_string string;
   utillib_string_init(&string);
   ast_pretty_expr(self, &string);

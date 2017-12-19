@@ -19,8 +19,8 @@
 
 */
 #include "scanner.h"
-#include "symbols.h"
 #include "misc.h"
+#include "symbols.h"
 #include <ctype.h>
 #define CLING_KW_SIZE 14
 
@@ -205,9 +205,8 @@ cling_scanner_error_handler(struct utillib_char_scanner *chars,
   char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
   char victim = error->victim;
 
-  fprintf(stderr, "ERROR at %lu:%lu %s ",
-      positive_number(chars->row),
-      positive_number(chars->col), errmsg);
+  fprintf(stderr, "ERROR at %lu:%lu %s ", positive_number(chars->row),
+          positive_number(chars->col), errmsg);
 
   switch (error->kind) {
   case CL_EUNKNOWN:

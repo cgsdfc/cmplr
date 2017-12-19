@@ -37,7 +37,6 @@ UTILLIB_ENUM_ELEM(CL_EDUPCASE)
 UTILLIB_ENUM_ELEM(CL_EINVEXPR)
 UTILLIB_ENUM_END(cling_error_kind);
 
-
 struct cling_error {
   int kind;
   char const *context;
@@ -69,7 +68,7 @@ struct cling_error {
       char const *unexpected;
     } unexpected;
     struct {
-      char const * expected;
+      char const *expected;
       char const *actual;
     } inctype;
     struct {
@@ -80,22 +79,25 @@ struct cling_error {
 
 void cling_error_destroy(struct cling_error *self);
 
-struct cling_error *cling_expected_error(struct utillib_token_scanner const *input,
-                                         size_t expected, size_t context);
+struct cling_error *
+cling_expected_error(struct utillib_token_scanner const *input, size_t expected,
+                     size_t context);
 
-struct cling_error *cling_unexpected_error(struct utillib_token_scanner const *input,
-                                           size_t context);
+struct cling_error *
+cling_unexpected_error(struct utillib_token_scanner const *input,
+                       size_t context);
 
-struct cling_error *cling_redefined_error(struct utillib_token_scanner const *input,
-                                          char const *name, size_t context);
+struct cling_error *
+cling_redefined_error(struct utillib_token_scanner const *input,
+                      char const *name, size_t context);
 
 struct cling_error *
 cling_undefined_name_error(struct utillib_token_scanner const *input,
                            char const *name, size_t context);
 
-struct cling_error *cling_not_lvalue_error(struct utillib_token_scanner const *input,
-                                           struct utillib_json_value const *value,
-                                           size_t context);
+struct cling_error *
+cling_not_lvalue_error(struct utillib_token_scanner const *input,
+                       struct utillib_json_value const *value, size_t context);
 
 struct cling_error *
 cling_incompatible_type_error(struct utillib_token_scanner const *input,
@@ -103,15 +105,17 @@ cling_incompatible_type_error(struct utillib_token_scanner const *input,
                               size_t context);
 struct cling_error *
 cling_invalid_expr_error(struct utillib_token_scanner const *input,
-                         struct utillib_json_value const *value, size_t context);
+                         struct utillib_json_value const *value,
+                         size_t context);
 
 struct cling_error *
 cling_argc_unmatched_error(struct utillib_token_scanner const *input,
                            char const *func_name, unsigned int actual_argc,
                            unsigned int expected_argc, size_t context);
 
-struct cling_error *cling_dupcase_error(struct utillib_token_scanner const *input,
-                                        int label, size_t context);
+struct cling_error *
+cling_dupcase_error(struct utillib_token_scanner const *input, int label,
+                    size_t context);
 
 void cling_error_print(struct cling_error const *self);
 

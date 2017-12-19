@@ -47,7 +47,7 @@ static void do_pretty(void) {
   if (cling_rd_parser_has_errors(&cling_parser)) {
     cling_rd_parser_report_errors(&cling_parser);
   } else {
-    pretty=cling_ast_pretty_program(json_ast); 
+    pretty = cling_ast_pretty_program(json_ast);
     puts(pretty);
   }
 }

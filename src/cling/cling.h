@@ -25,9 +25,9 @@
 #include <cling/ast_pretty.h>
 #include <cling/mips.h>
 #include <cling/opg_parser.h>
+#include <cling/optimize.h>
 #include <cling/rd_parser.h>
 #include <cling/scanner.h>
 #include <cling/symbol_table.h>
-#include <cling/optimize.h>
 
 #endif /* CLING_CLING_H */

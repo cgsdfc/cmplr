@@ -25,7 +25,7 @@
 #define MIPS_WORD_SIZE sizeof(int)
 #define MIPS_BYTE_SIZE sizeof(char)
 
-#define positive_number(X) ((X)?(X):1)
+#define positive_number(X) ((X) ? (X) : 1)
 #define quoted_string(X) "'%s'"
 /*
  * This union is **untyped**

@@ -19,14 +19,13 @@
 
 */
 #include "optimize.h"
-#include "lcse.h"
 #include "ast_ir.h"
 #include "basic_block.h"
+#include "lcse.h"
 #include <assert.h>
 #include <stdlib.h>
 
-void cling_lcse_optimize(struct cling_ast_function *ast_func)
-{ 
+void cling_lcse_optimize(struct cling_ast_function *ast_func) {
   struct cling_lcse_optimizer optimizer;
   struct utillib_vector instrs;
   struct utillib_vector basic_blocks;
@@ -36,13 +35,13 @@ void cling_lcse_optimize(struct cling_ast_function *ast_func)
   utillib_vector_init(&basic_blocks);
   cling_basic_block_construct(&basic_blocks, &ast_func->instrs);
   basic_block_display(&basic_blocks);
-  exit(0);
 
   cling_lcse_optimizer_init(&optimizer, ast_func);
   UTILLIB_VECTOR_FOREACH(block, &basic_blocks) {
     cling_lcse_optimizer_emit(&optimizer, block, &instrs);
   }
   ast_ir_fix_address(&instrs, optimizer.address_map);
+  ast_ir_vector_print(&instrs, stderr);
 
   utillib_vector_clear(&ast_func->instrs);
   utillib_vector_append(&ast_func->instrs, &instrs);
@@ -51,8 +50,7 @@ void cling_lcse_optimize(struct cling_ast_function *ast_func)
   utillib_vector_destroy_owning(&basic_blocks, free);
 }
 
-void cling_optimize(struct cling_ast_program *ast_program)
-{
+void cling_optimize(struct cling_ast_program *ast_program) {
   struct cling_ast_function *ast_func;
   UTILLIB_VECTOR_FOREACH(ast_func, &ast_program->funcs) {
     cling_lcse_optimize(ast_func);

@@ -53,7 +53,10 @@ enum {
   /*
    * We do not optimize call and index.
    */
-  LCSE_LOAD_LVALUE, LCSE_LOAD_RVALUE, LCSE_BINARY, LCSE_STORE,
+  LCSE_LOAD_LVALUE,
+  LCSE_LOAD_RVALUE,
+  LCSE_BINARY,
+  LCSE_STORE,
 };
 
 struct cling_lcse_ir {
@@ -69,7 +72,7 @@ struct cling_lcse_ir {
       char const *name;
       int scope;
       int address;
-    } load_lvalue ;
+    } load_lvalue;
     struct {
       int value;
     } load_rvalue;
@@ -80,11 +83,13 @@ struct cling_lcse_ir {
   };
 };
 
-void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self, 
-    struct cling_ast_function const *ast_func);
+void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
+                               struct cling_ast_function const *ast_func);
 void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self);
-void cling_lcse_optimizer_fix_address(struct cling_lcse_optimizer const *self, struct utillib_vector *instrs);
-void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self, struct cling_basic_block const *block, 
-    struct utillib_vector *instrs);
+void cling_lcse_optimizer_fix_address(struct cling_lcse_optimizer const *self,
+                                      struct utillib_vector *instrs);
+void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
+                               struct cling_basic_block const *block,
+                               struct utillib_vector *instrs);
 
 #endif /* CLING_LCSE_H */
