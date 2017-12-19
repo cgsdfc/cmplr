@@ -323,7 +323,6 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
                              struct cling_ast_ir *ast_ir,
                              struct cling_lcse_ir *lcse_ir) {
   struct cling_lcse_ir *new_ir;
-  unsigned int result, value, address;
 
   new_ir = utillib_hashmap_at(&self->operations, lcse_ir);
   if (new_ir) {

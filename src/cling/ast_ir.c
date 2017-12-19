@@ -87,38 +87,38 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_DEFCON:
     size_name = size_tostring(self->defcon.size);
     if (self->defcon.size == MIPS_WORD_SIZE) {
-      fprintf(file, "const %s %s = %d", self->defcon.name, size_name,
+      fprintf(file, "const %s %s = %d\n", self->defcon.name, size_name,
               self->defcon.value);
     } else {
-      fprintf(file, "const %s %s = '%c'", self->defcon.name, size_name,
+      fprintf(file, "const %s %s = '%c'\n", self->defcon.name, size_name,
               (char)self->defcon.value);
     }
     break;
   case OP_PARA:
     size_name = size_tostring(self->para.size);
-    fprintf(file, "para %s %s", size_name, self->para.name);
+    fprintf(file, "para %s %s\n", size_name, self->para.name);
     break;
   case OP_DEFVAR:
     size_name = size_tostring(self->defvar.size);
-    fprintf(file, "var %s %s", size_name, self->defvar.name);
+    fprintf(file, "var %s %s\n", size_name, self->defvar.name);
     break;
   case OP_DEFUNC:
     size_name = size_tostring(self->defunc.return_size);
-    fprintf(file, "%s %s()", size_name, self->defunc.name);
+    fprintf(file, "%s %s()\n", size_name, self->defunc.name);
     break;
   case OP_DEFARR:
     size_name = size_tostring(self->defarr.base_size);
-    fprintf(file, "var %s %s[%lu]", size_name, self->defarr.name,
+    fprintf(file, "var %s %s[%lu]\n", size_name, self->defarr.name,
             self->defarr.extend);
     break;
   case OP_CAL:
     if (self->call.has_result)
-      fprintf(file, "t%d = call %s", self->call.result, self->call.name);
+      fprintf(file, "t%d = call %s\n", self->call.result, self->call.name);
     else
-      fprintf(file, "call %s", self->call.name);
+      fprintf(file, "call %s\n", self->call.name);
     break;
   case OP_INDEX:
-    fprintf(file, "t%d = t%d [ t%d ]", self->index.result,
+    fprintf(file, "t%d = t%d [ t%d ]\n", self->index.result,
             self->index.array_addr, self->index.index_result);
     break;
   case OP_ADD:
@@ -131,53 +131,65 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_LE:
   case OP_GT:
   case OP_GE:
-    fprintf(file, "t%d = t%d %s t%d", self->binop.result, self->binop.temp1,
+    fprintf(file, "t%d = t%d %s t%d\n", self->binop.result, self->binop.temp1,
             opstr, self->binop.temp2);
     break;
   case OP_BEZ:
-    fprintf(file, "bez t%d %d", self->bez.temp, self->bez.addr);
+    fprintf(file, "bez t%d %d\n", self->bez.temp, self->bez.addr);
     break;
   case OP_BNE:
-    fprintf(file, "bne t%d t%d %d", self->bne.temp1, self->bne.temp2,
+    fprintf(file, "bne t%d t%d %d\n", self->bne.temp1, self->bne.temp2,
             self->bne.addr);
     break;
   case OP_JMP:
-    fprintf(file, "jmp %d", self->jmp.addr);
+    fprintf(file, "jmp %d\n", self->jmp.addr);
     break;
   case OP_RET:
     if (self->ret.has_result)
-      fprintf(file, "ret %d t%d", self->ret.addr, self->ret.result);
+      fprintf(file, "ret %d t%d\n", self->ret.addr, self->ret.result);
     else
-      fprintf(file, "ret %d", self->ret.addr);
+      fprintf(file, "ret %d\n", self->ret.addr);
     break;
   case OP_RDCHR:
   case OP_RDINT:
-    fprintf(file, "%s t%d", opstr, self->read.temp);
+    fprintf(file, "%s t%d\n", opstr, self->read.temp);
     break;
   case OP_WRINT:
   case OP_WRSTR:
   case OP_WRCHR:
-    fprintf(file, "%s t%d", opstr, self->write.temp);
+    fprintf(file, "%s t%d\n", opstr, self->write.temp);
     break;
   case OP_STORE:
-    fprintf(file, "store t%d t%d", self->store.addr, self->store.value);
+    fprintf(file, "store t%d t%d\n", self->store.addr, self->store.value);
     break;
   case OP_PUSH:
     size_name = size_tostring(self->push.size);
-    fprintf(file, "push %s t%d", size_name, self->push.temp);
+    fprintf(file, "push %s t%d\n", size_name, self->push.temp);
     break;
   case OP_LDSTR:
-    fprintf(file, "ldstr t%d \"%s\"", self->ldstr.temp, self->ldstr.string);
+    fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
     break;
   case OP_LDIMM:
     if (self->ldimm.size == MIPS_WORD_SIZE)
-      fprintf(file, "ldimm t%d %d", self->ldimm.temp, self->ldimm.value);
+      fprintf(file, "ldimm t%d %d\n", self->ldimm.temp, self->ldimm.value);
     else
-      fprintf(file, "ldimm t%d '%c'", self->ldimm.temp,
+      fprintf(file, "ldimm t%d '%c'\n", self->ldimm.temp,
               (char)self->ldimm.value);
     break;
   case OP_LOAD:
-    fprintf(file, "load t%d %s", self->load.temp, self->load.name);
+    fprintf(file, "load t%d %s\n", self->load.temp, self->load.name);
+    break;
+  case OP_LDADR:
+    fprintf(file, "ldadr t%d t%d\n", self->ldadr.temp, self->ldadr.addr);
+    break;
+  case OP_LDNAM:
+    fprintf(file, "ldnam t%d %s\n", self->ldnam.temp, self->ldnam.name);
+    break;
+  case OP_STADR:
+    fprintf(file, "stadr t%d t%d\n", self->stadr.addr, self->stadr.value);
+    break;
+  case OP_STNAM:
+    fprintf(file, "stnam %s t%d\n", self->stnam.name, self->stnam.value);
     break;
   default:
     assert(false);
@@ -191,7 +203,6 @@ void ast_ir_vector_print(struct utillib_vector const *instrs,
   UTILLIB_VECTOR_FOREACH(ir, instrs) {
     fprintf(file, "%4d: ", i);
     ast_ir_print(ir, file);
-    fputs("\n", file);
     ++i;
   }
 }

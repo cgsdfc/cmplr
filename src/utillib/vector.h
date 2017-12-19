@@ -38,14 +38,14 @@
  */
 
 #define UTILLIB_VECTOR_FOREACH(X, V)                                           \
-  for (void const **_begin = (V)->begin, **_end = (V)->end;                    \
+  for (void **_begin = (V)->begin, **_end = (V)->end;                    \
        _begin != _end && ((X = *_begin) || 1); ++_begin)
 
 /** \brief the element of utillib_vector is generic pointer */
 struct utillib_vector {
-  void const **begin;
-  void const **end;
-  void const **stor_end;
+  void **begin;
+  void **end;
+  void **stor_end;
 };
 
 /** \brief constructor destructor */

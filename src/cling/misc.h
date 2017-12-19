@@ -81,6 +81,7 @@ int cling_type_to_immediate(int type, char const *string);
 int cling_ast_opcode_to_syscall(int opcode);
 int cling_type_to_write(int type);
 int cling_type_to_read(int type);
+int cling_size_to_write(int size);
 
 extern const struct utillib_hashmap_callback cling_string_hash;
 

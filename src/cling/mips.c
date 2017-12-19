@@ -22,6 +22,7 @@
 #include "ast_ir.h"
 #include "misc.h"
 
+#include <utillib/strhash.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

@@ -51,10 +51,14 @@ UTILLIB_ENUM_ELEM(OP_LE)
 UTILLIB_ENUM_ELEM(OP_GT)
 UTILLIB_ENUM_ELEM(OP_GE)
 UTILLIB_ENUM_ELEM(OP_INDEX)
-UTILLIB_ENUM_ELEM(OP_STORE)
 UTILLIB_ENUM_ELEM(OP_LDIMM)
 UTILLIB_ENUM_ELEM(OP_LDSTR)
+UTILLIB_ENUM_ELEM(OP_LDADR)
+UTILLIB_ENUM_ELEM(OP_LDNAM)
 UTILLIB_ENUM_ELEM(OP_LOAD)
+UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_ELEM(OP_STADR)
+UTILLIB_ENUM_ELEM(OP_STNAM)
 UTILLIB_ENUM_ELEM(OP_WRSTR)
 UTILLIB_ENUM_ELEM(OP_WRINT)
 UTILLIB_ENUM_ELEM(OP_WRCHR)
@@ -90,6 +94,26 @@ struct cling_ast_ir {
       int temp;
       int size;
     } push;
+    struct {
+      int temp;
+      int addr;
+      int size;
+    } ldadr;
+    struct {
+      int temp;
+      char const *name;
+      int size;
+    } ldnam;
+    struct {
+      int addr;
+      int value;
+      int size;
+    } stadr;
+    struct {
+      char const *name;
+      int value;
+      int size;
+    } stnam;
     struct {
       int temp;
       bool is_rvalue;
@@ -186,7 +210,7 @@ struct cling_polish_ir {
  * Basic unit of code.
  */
 struct cling_ast_function {
-  char *name;
+  char const *name;
   unsigned int temps;
   struct utillib_vector instrs;
   struct utillib_vector init_code;

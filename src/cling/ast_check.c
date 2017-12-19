@@ -384,7 +384,7 @@ static int ast_check_expression(struct utillib_json_value const *self,
                                 struct utillib_token_scanner const *input,
                                 size_t context) {
   struct utillib_json_value const *op;
-  struct cling_symbol_entry const *entry;
+  struct cling_symbol_entry *entry;
 
   op = utillib_json_object_at(self, "op");
   if (!op) {
