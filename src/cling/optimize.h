@@ -18,24 +18,18 @@
    02110-1301 USA
 
 */
-#ifndef CLING_BASIC_BLOCK
-#define CLING_BASIC_BLOCK
-
+#ifndef CLING_OPTIMIZE_H
+#define CLING_OPTIMIZE_H
 #include <utillib/vector.h>
 
 /*
- * Divide each function into a number of basic_blocks
- * for optimizer to run on.
+ * High level modules that controls
+ * optizization.
  */
 
-struct cling_basic_block {
-  int block_id;
-  unsigned int begin;
-  unsigned int end;
-  struct utillib_vector *instrs;
-};
+struct cling_ast_function;
+struct cling_ast_program;
+void cling_lcse_optimize(struct cling_ast_function *ast_func);
+void cling_optimize(struct cling_ast_program *ast_program);
 
-void cling_basic_block_construct(struct utillib_vector * blocks, struct utillib_vector *instrs);
-void basic_block_display(struct utillib_vector const *basic_blocks);
-
-#endif /* CLING_BASIC_BLOCK */
+#endif /* CLING_OPTIMIZE_H */

@@ -1,34 +1,120 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
 #include "basic_block.h"
+#include "ast_ir.h"
+#include <assert.h>
+#include <stdlib.h>
 
-void cling_instrbuf_init(struct cling_instrbuf *self, struct utillib_vector *instrs, size_t address_size);
-{
+#define setleader(leader, index, instrs_size) do {\
+  assert((index) < (instrs_size));\
+  leaders[(index)]=true;\
+} while(0)
+
+static struct cling_basic_block * basic_block_create(int block_id, struct utillib_vector *instrs, unsigned int begin) {
+  struct cling_basic_block *  self=malloc(sizeof *self);
+  self->begin=begin;
   self->instrs=instrs;
-  self->count=0;
-  self->address_map=malloc(address_size * sizeof self->address_map[0]);
+  self->block_id=block_id;
+  return self;
 }
 
-void cling_instrbuf_push_back(struct cling_instrbuf *self, void const *ir)
+void cling_basic_block_construct(struct utillib_vector * blocks, struct utillib_vector *instrs)
 {
-  self->address_map[self->count]=utillib_vector_size(&self->instrs);
-  utillib_vector_push_back(&self->instrs, ir);
-  ++self->count;
+
+  bool *leaders;
+  struct cling_ast_ir const *ir;
+  struct cling_basic_block *cur_blk; 
+  const size_t instrs_size=utillib_vector_size(instrs);
+  int block_id=0, state=0;
+
+  leaders=calloc(sizeof leaders[0], instrs_size);
+  /*
+   * Set the first and last instr as leader.
+   */
+  setleader(leaders, 0, instrs_size);
+  setleader(leaders, instrs_size-1, instrs_size);
+  for (int i=0; i<instrs_size; ++i) {
+    ir=utillib_vector_at(instrs, i);
+    switch(ir->opcode) {
+      case OP_JMP:
+        setleader(leaders, ir->jmp.addr, instrs_size);
+        setleader(leaders, i+1, instrs_size);
+        break;
+      case OP_BEZ:
+        setleader(leaders, ir->bez.addr, instrs_size);
+        setleader(leaders, i+1, instrs_size);
+        break;
+      case OP_BNE:
+        setleader(leaders, ir->bne.addr, instrs_size);
+        setleader(leaders, i+1, instrs_size);
+        break;
+    }
+  }
+  for (int i=0; i<instrs_size; ) {
+    /*
+     * State Machine is good at pattern matching.
+     */
+    switch(state) {
+      case 0:
+        if (!leaders[i]) {
+          ++i;
+        } else {
+          cur_blk=basic_block_create(block_id, instrs, i);
+          ++block_id;
+          ++i;
+          state=1;
+        }
+        break;
+      case 1:
+        if (leaders[i]) { 
+          cur_blk->end=i;
+          utillib_vector_push_back(blocks, cur_blk);
+          state=0;
+        } else {
+          ++i;
+        }
+        break;
+      default: 
+        assert(false);
+    }
+  }
+  /*
+   * The Exit Block.
+   */
+  cur_blk=basic_block_create(block_id, instrs, instrs_size-1);
+  cur_blk->end=instrs_size;
+  utillib_vector_push_back(blocks, cur_blk);
 }
 
-void cling_instrbuf_fix_address(struct cling_instrbuf *self, void (*fixup_func)(void *ir, unsigned int *address_map))
-{
-  void *ir;
-  UTILLIB_VECTOR_FOREACH(ir, &self->instrs) {
-    fixup_func(ir, self->address_map);
+void basic_block_display(struct utillib_vector const *basic_blocks) {
+  struct cling_basic_block const *block;
+  int line=0;
+  UTILLIB_VECTOR_FOREACH(block, basic_blocks) {
+    printf("Block %d\n", block->block_id);
+    for (int i=block->begin; i<block->end; ++i) {
+      printf("%4d\t", line);
+      ast_ir_print(utillib_vector_at(block->instrs, i), stdout);
+      puts("");
+      ++line;
+    }
+    puts("");
   }
 }
-
-void cling_instrbuf_move(struct cling_instrbuf *self, struct utillib_vector *dest) {
-  utillib_vector_append(dest, &self->instrs);
-}
-
-void cling_instrbuf_destroy(struct cling_instrbuf *self)
-{
-  free(self->address_map);
-}
-
-

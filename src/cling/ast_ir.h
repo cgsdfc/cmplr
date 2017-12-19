@@ -211,4 +211,8 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
                                struct cling_ast_program *program);
 void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);
 
+void cling_ast_ir_destroy(struct cling_ast_ir *self);
+void ast_ir_fix_address(struct utillib_vector *instrs, unsigned int const *address_map) ;
+void ast_ir_print(struct cling_ast_ir const *self, FILE *file);
+
 #endif /* CLING_AST_IR_H */

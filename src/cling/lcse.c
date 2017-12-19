@@ -1,3 +1,23 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
 #include "lcse.h"
 #include "ast_ir.h"
 #include "mips.h"
@@ -62,7 +82,7 @@ static int interchangable_compare(struct cling_lcse_ir const *lhs, struct cling_
 }
 
 /*
- * load_lvalue s equals when the variable is the same one, so they have the same address.
+ * load_lvalue: name scope 
  */
 static int load_lvalue_compare(struct cling_lcse_ir const *lhs, struct cling_lcse_ir const *rhs)
 {
@@ -75,14 +95,13 @@ static int load_lvalue_compare(struct cling_lcse_ir const *lhs, struct cling_lcs
 }
 
 /*
- * value and name both need to be equal.
+ * load_rvalue: value
  */
 static int load_rvalue_compare(struct cling_lcse_ir const *lhs, struct cling_lcse_ir const *rhs)
 {
   if (lhs->opcode != rhs->opcode)
     return 1;
-  if (0 == strcmp(lhs->load_rvalue.name, rhs->load_rvalue.name) &&
-      lhs->load_rvalue.value == rhs->load_rvalue.value)
+  if(lhs->load_rvalue.value == rhs->load_rvalue.value)
     return 0;
   return 1;
 }
@@ -112,7 +131,7 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs, struct cling_lcse_ir
         case OP_LE:
         case OP_GT:
         case OP_GE:
-          return reflective_compare(lhs, rhs);
+          return interchangable_compare(lhs, rhs);
         case OP_DIV:
         case OP_SUB:
           return binary_compare(lhs, rhs); 
@@ -131,15 +150,16 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs, struct cling_lcse_ir
 }
 
 static size_t lcse_ir_hash(struct cling_lcse_ir const *self) {
-  switch(self->opcode) {
+  size_t hash=self->opcode;
+  switch(self->kind) {
     case LCSE_BINARY:
-      return self->binary.temp1 + self->binary.temp2;
+      return hash + self->binary.temp1 + self->binary.temp2;
     case LCSE_LOAD_LVALUE:
-      return self->load_lvalue.scope + self->load_lvalue.address + mysql_strhash(self->load_lvalue.name);
+      return hash + self->load_lvalue.scope + mysql_strhash(self->load_lvalue.name);
     case LCSE_LOAD_RVALUE:
-      return self->load_rvalue.value + mysql_strhash(self->load_rvalue.name);
+      return hash + self->load_rvalue.value;
     case LCSE_STORE:
-      return self->store.value + self->store.address;
+      return hash + self->store.value + self->store.address;
     default:
       assert(false);
   }
@@ -215,14 +235,6 @@ static unsigned int lookup_variable(struct cling_lcse_optimizer *self, unsigned 
   return var;
 }
 
-static void update_value(struct cling_lcse_optimizer *self, unsigned int address, unsigned int value) {
-  struct cling_lcse_value v, *val;
-  v.address=address;
-  val=utillib_hashmap_at(&self->values, &v);
-  assert(val);
-  val->value=value;
-}
-
 /*
  * Prepare operands for a lcse_ir by looking the operands of ast_ir
  * for various maps.
@@ -255,7 +267,6 @@ static void translate(struct cling_lcse_optimizer *self,
         /*
          * rvalue is about value and its stealness.
          */
-        lcse_ir->load_rvalue.name=name;
         address=lookup_named_address(self, name);
         lcse_ir->load_rvalue.value=lookup_value(self, address);
         lcse_ir->kind=LCSE_LOAD_RVALUE;
@@ -273,6 +284,7 @@ static void translate(struct cling_lcse_optimizer *self,
       value=lookup_variable(self, ast_ir->store.value);
       lcse_ir->store.address=address;
       lcse_ir->store.value=value;
+      lcse_ir->kind=LCSE_STORE;
       break;
     default:
       assert(false);
@@ -311,6 +323,7 @@ static bool insert_operation(struct cling_lcse_optimizer *self, struct cling_ast
 
   /*
    * New operation appears, new var must be allocated.
+   * Since temp is always new, pass it to lookup_variable is OK.
    */
   new_ir=malloc(sizeof *new_ir);
   memcpy(new_ir, lcse_ir, sizeof *new_ir);
@@ -321,7 +334,10 @@ static bool insert_operation(struct cling_lcse_optimizer *self, struct cling_ast
       new_ir->binary.result=ast_ir->binop.result;
       break;
     case LCSE_STORE:
-      update_value(self, new_ir->store.address, new_ir->store.value);
+      /*
+       * The value at address is updated.
+       */
+      lookup_value(self, new_ir->store.address);
       break;
     case LCSE_LOAD_LVALUE:
       address=ast_ir->load.temp;
@@ -437,9 +453,15 @@ static void optimize(struct cling_lcse_optimizer *self, struct cling_basic_block
          */
         ast_ir->write.temp=lookup_variable(self, ast_ir->write.temp);
       break;
+    case OP_NOP:
+      break;
+    default:
+      assert(false);
     }
     if (add_instr)
       utillib_vector_push_back(instrs, ast_ir);
+    else
+      cling_ast_ir_destroy(ast_ir);
   }
 }
 
@@ -450,22 +472,33 @@ void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self, struct cling_a
   size_t temp_size=ast_func->temps;
   self->var_count=LCSE_TEMP_ZERO+1;
   self->variables=malloc(sizeof self->variables[0] * temp_size);
+  /*
+   * Different basic_blocks do not share temps.
+   * So initialize it onece is OK.
+   */
   memset(self->variables, -1, sizeof self->variables[0] * temp_size);
-  utillib_hashmap_init(&self->operations, &lcse_ir_callback);
+  self->address_map=malloc(sizeof self->address_map[0] * utillib_vector_size(&ast_func->instrs));
+  /*
+   * Different basic_blocks can share address of names
+   */
   utillib_hashmap_init(&self->names, &mips_label_strcallback);
-  utillib_hashmap_init(&self->values, &lcse_value_intcallback);
 }
 
 void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self) {
+  free(self->address_map);
   free(self->variables);
-  utillib_hashmap_destroy_owning(&self->operations, NULL, lcse_ir_destroy);
   utillib_hashmap_destroy_owning(&self->names, NULL, mips_label_destroy);
-  utillib_hashmap_destroy_owning(&self->values, NULL, lcse_value_destroy);
 }
 
 void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
     struct cling_basic_block const *block, struct utillib_vector *instrs) {
+  /*
+   * Different basic_blocks should not share operations and values.
+   */
+  utillib_hashmap_init(&self->operations, &lcse_ir_callback);
+  utillib_hashmap_init(&self->values, &lcse_value_intcallback);
   optimize(self, block, instrs);
+  utillib_hashmap_destroy_owning(&self->operations, NULL, lcse_ir_destroy);
+  utillib_hashmap_destroy_owning(&self->values, NULL, lcse_value_destroy);
 }
-
 

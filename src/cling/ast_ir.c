@@ -71,13 +71,13 @@ static struct cling_ast_ir *emit_ir(int opcode) {
   return self;
 }
 
-static void cling_ast_ir_destroy(struct cling_ast_ir *self) {
+void cling_ast_ir_destroy(struct cling_ast_ir *self) {
   if (self->opcode == OP_NOP)
     return;
   free(self);
 }
 
-static void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
+void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   char const *opstr = cling_ast_opcode_kind_tostring(self->opcode);
   char const *size_name;
 
@@ -1221,3 +1221,29 @@ void cling_ast_program_print(struct cling_ast_program const *self, FILE *file) {
     fputs("\n", file);
   }
 }
+
+/*
+ * Fixup address from old to new in one pass
+ */
+void ast_ir_fix_address(struct utillib_vector *instrs, unsigned int const *address_map) {
+  struct cling_ast_ir *ast_ir;
+  unsigned int old_address;
+
+  UTILLIB_VECTOR_FOREACH(ast_ir, instrs) {
+    switch(ast_ir->opcode) {
+      case OP_BEZ:
+        old_address=ast_ir->bez.addr;
+        ast_ir->bez.addr=address_map[old_address];
+        break;
+      case OP_BNE:
+        old_address=ast_ir->bne.addr;
+        ast_ir->bne.addr=address_map[old_address];
+        break;
+      case OP_JMP:
+        old_address=ast_ir->jmp.addr;
+        ast_ir->jmp.addr=address_map[old_address];
+        break;
+    }
+  }
+}
+
