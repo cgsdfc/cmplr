@@ -180,7 +180,7 @@ struct cling_mips_function {
 
   bool *reg_pool;
   struct utillib_hashmap names;
-  struct utillib_vector saved_registers;
+  struct utillib_vector saved;
 
   uint32_t frame_size;
   uint32_t *address_map;

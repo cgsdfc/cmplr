@@ -563,14 +563,14 @@ static void mips_function_init(struct cling_mips_function *self,
                              utillib_vector_size(&ast_func->instrs));
   self->temps = calloc(sizeof self->temps[0], ast_func->temps);
   utillib_hashmap_init(&self->names, &cling_string_hash);
-  utillib_vector_init(&self->saved_registers);
+  utillib_vector_init(&self->saved);
 }
 
 static void mips_function_destroy(struct cling_mips_function *self) {
   free(self->reg_pool);
   free(self->address_map);
   free(self->temps);
-  utillib_vector_destroy_owning(&self->saved_registers, free);
+  utillib_vector_destroy_owning(&self->saved, free);
   utillib_hashmap_destroy_owning(&self->names, free, free);
 }
 
@@ -605,15 +605,6 @@ static bool mips_function_is_leaf(struct cling_ast_function const *ast_func) {
 static void mips_function_memmap_name(struct cling_mips_function *self,
                                       char const *name, uint32_t offset) {
   struct cling_mips_name *entry;
-  entry = utillib_hashmap_at(&self->names, name);
-  if (entry) {
-    /*
-     * Since we do regmap earlier than doing memmap
-     * there maybe some entries been regmapped.
-     */
-    entry->offset = offset;
-    return;
-  }
   entry = mips_name_create(MIPS_REGR_NULL, offset);
   utillib_hashmap_insert(&self->names, strdup(name), entry);
 }
@@ -635,8 +626,8 @@ static void mips_function_regmap_name(struct cling_mips_function *self,
   struct cling_mips_name *entry;
   entry = utillib_hashmap_at(&self->names, name);
   if (entry) {
-    printf("name %s was regmapped to %d, twice!\n", name, regid);
-    assert(false);
+    entry->regid=regid;
+    return;
   }
   entry = mips_name_create(regid, MIPS_ADDR_NULL);
   utillib_hashmap_insert(&self->names, strdup(name), entry);
@@ -699,7 +690,7 @@ static void mips_function_push_back(struct cling_mips_function *self,
 
 static void mips_function_saved_push_back(struct cling_mips_function *self,
                                           uint8_t regid, uint32_t offset) {
-  utillib_vector_push_back(&self->saved_registers,
+  utillib_vector_push_back(&self->saved,
                            mips_name_create(regid, offset));
 }
 
@@ -717,7 +708,7 @@ static void mips_function_prologue(struct cling_mips_function *self) {
   addi_sp = mips_addi(MIPS_SP, MIPS_SP, -self->frame_size);
   mips_function_push_back(self, addi_sp);
 
-  UTILLIB_VECTOR_FOREACH(saved, &self->saved_registers) {
+  UTILLIB_VECTOR_FOREACH(saved, &self->saved) {
     mips_function_push_back(self,
                             mips_sw(saved->regid, saved->offset, MIPS_SP));
   }
@@ -739,7 +730,7 @@ static void mips_function_epilogue(struct cling_mips_function *self) {
   struct cling_mips_ir *ir, *addi_sp;
   struct cling_mips_name const *saved;
 
-  UTILLIB_VECTOR_FOREACH(saved, &self->saved_registers) {
+  UTILLIB_VECTOR_FOREACH(saved, &self->saved) {
     ir = mips_lw(saved->regid, saved->offset, MIPS_SP);
     mips_function_push_back(self, ir);
   }
@@ -862,15 +853,6 @@ mips_function_local_layout(struct cling_mips_function *self,
   char const *name;
   size_t size, base_size;
   struct cling_ast_ir const *ast_ir;
-  /*
-   * Maps all temps as words.
-   */
-  for (int i = 0; i < self->temp_size; ++i) {
-    if (mips_is_saved_register(self->temps[i].regid))
-      continue;
-    local_offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
-    mips_function_memmap_temp(self, i, local_offset);
-  }
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     switch (ast_ir->opcode) {
@@ -892,13 +874,22 @@ mips_function_local_layout(struct cling_mips_function *self,
       break;
     }
   }
+  /*
+   * Maps all temps as words.
+   */
+  for (int i = 0; i < self->temp_size; ++i) {
+    if (mips_is_saved_register(self->temps[i].regid))
+      continue;
+    local_offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
+    mips_function_memmap_temp(self, i, local_offset);
+  }
 }
 
 /*
  * Allocate saved_register to 2 kinds of entities.
  * 1. PARA over four.
  * 2. SingleVariable or NAME.
- * Fills the saved_registers vector for prologue and epilogue.
+ * Fills the saved vector for prologue and epilogue.
  * Fills the temps with those temps having a saved_register.
  */
 static void
@@ -957,7 +948,6 @@ mips_function_args_layout(struct cling_mips_function *self,
 
   max_args = mips_function_max_args(ast_func);
   args_offset = mips_function_memalloc(self, max_args, MIPS_WORD_SIZE);
-  assert(args_offset == 0);
 }
 
 /*
@@ -995,6 +985,21 @@ mips_function_para_layout(struct cling_mips_function *self,
   self->para_size = para_cnt;
 }
 
+static void mips_function_fix_offset(struct cling_mips_function *self) {
+  struct utillib_pair *pair;
+  struct cling_mips_name *name;
+  for (int i=0; i<self->temp_size; ++i) {
+    self->temps[i].offset=self->frame_size-1-self->temps[i].offset;
+  }
+  UTILLIB_VECTOR_FOREACH(name, &self->saved) {
+    name->offset=self->frame_size-1-name->offset;
+  }
+  UTILLIB_HASHMAP_FOREACH(pair, &self->names) {
+    name=pair->up_second;
+    name->offset=self->frame_size-1-name->offset;
+  }
+}
+
 /*
  * Driver that layouts all kinds of stuffs on the stack.
  */
@@ -1005,25 +1010,26 @@ mips_function_stack_layout(struct cling_mips_function *self,
   bool is_leaf;
 
   is_leaf = mips_function_is_leaf(ast_func);
+  mips_function_local_layout(self, ast_func);
+  if (!is_leaf) {
+    /*
+     * Save $ra.
+     * Allocate a word for it and add it to the saved.
+     */
+    offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
+    mips_function_saved_push_back(self, MIPS_RA, offset);
+  }
+  /*
+   * Allocate global registers and put them in saved.
+   */
+  mips_function_save_registers(self, ast_func);
   if (!is_leaf) {
     /*
      * Reserve maximum space for call in the future.
      */
     mips_function_args_layout(self, ast_func);
   }
-  /*
-   * Allocate global registers and put them in saved_registers.
-   */
-  mips_function_save_registers(self, ast_func);
-  if (!is_leaf) {
-    /*
-     * Save $ra.
-     * Allocate a word for it and add it to the saved_registers.
-     */
-    offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
-    mips_function_saved_push_back(self, MIPS_RA, offset);
-  }
-  mips_function_local_layout(self, ast_func);
+  mips_function_fix_offset(self);
   mips_function_para_layout(self, ast_func);
 }
 
