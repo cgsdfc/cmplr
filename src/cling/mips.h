@@ -151,28 +151,35 @@ struct cling_mips_global {
 
 struct cling_mips_temp {
   int kind;
+  int state;
   uint8_t regid;
-  uint32_t offset;
-};
-
-struct cling_mips_local {
-  char const *name;
-  int kind;
   uint32_t offset;
 };
 
 struct cling_mips_name {
+  int kind;
   uint8_t regid;
   uint32_t offset;
 };
 
+/*
+ * For temp.state.
+ */
 enum {
-  MIPS_NONE,
+  MIPS_LOCKED,
+  MIPS_HAS_REG,
+  MIPS_NO_REG,
+};
+
+/*
+ * For temp.kind.
+ */
+enum {
   MIPS_SAVED,
+  MIPS_UNSAVED,
   MIPS_ARGREG,
   MIPS_ARGMEM,
   MIPS_TEMP,
-  MIPS_LOCKED,
 };
 
 /*
@@ -184,6 +191,7 @@ enum {
 };
 
 struct cling_mips_function {
+  int last_temp;
   int temp_size;
   int para_size;
   struct cling_mips_temp *temps;
