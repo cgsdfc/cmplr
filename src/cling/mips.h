@@ -161,6 +161,11 @@ struct cling_mips_local {
   uint32_t offset;
 };
 
+struct cling_mips_name {
+  uint8_t regid;
+  uint32_t offset;
+};
+
 enum {
   MIPS_NONE,
   MIPS_SAVED,
@@ -184,7 +189,7 @@ struct cling_mips_function {
   struct cling_mips_temp *temps;
 
   bool *reg_used;
-  struct utillib_hashmap locals;
+  struct utillib_hashmap names;
   struct utillib_vector saved;
 
   uint32_t frame_size;
