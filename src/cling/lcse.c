@@ -21,7 +21,7 @@
 #include "lcse.h"
 #include "ast_ir.h"
 #include "basic_block.h"
-#include "mips.h"
+#include "misc.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

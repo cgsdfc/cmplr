@@ -180,7 +180,10 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     fprintf(file, "load t%d %s\n", self->load.temp, self->load.name);
     break;
   case OP_LDADR:
-    fprintf(file, "ldadr t%d t%d\n", self->ldadr.temp, self->ldadr.addr);
+    fprintf(file, "ldadr t%d %s\n", self->ldadr.temp, self->ldadr.name);
+    break;
+  case OP_DEREF:
+    fprintf(file, "deref t%d\n", self->deref.addr);
     break;
   case OP_LDNAM:
     fprintf(file, "ldnam t%d %s\n", self->ldnam.temp, self->ldnam.name);

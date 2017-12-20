@@ -22,6 +22,7 @@
 #define CLING_AST_IR_H
 #include <utillib/enum.h>
 #include <utillib/vector.h>
+#include <utillib/hashmap.h>
 
 #include <assert.h>
 #include <inttypes.h>
@@ -55,6 +56,7 @@ UTILLIB_ENUM_ELEM(OP_LDIMM)
 UTILLIB_ENUM_ELEM(OP_LDSTR)
 UTILLIB_ENUM_ELEM(OP_LDADR)
 UTILLIB_ENUM_ELEM(OP_LDNAM)
+UTILLIB_ENUM_ELEM(OP_DEREF)
 UTILLIB_ENUM_ELEM(OP_LOAD)
 UTILLIB_ENUM_ELEM(OP_STORE)
 UTILLIB_ENUM_ELEM(OP_STADR)
@@ -96,14 +98,17 @@ struct cling_ast_ir {
     } push;
     struct {
       int temp;
-      int addr;
-      int size;
+      char const *name;
     } ldadr;
     struct {
       int temp;
       char const *name;
       int size;
     } ldnam;
+    struct {
+      int addr;
+      int size;
+    } deref;
     struct {
       int addr;
       int value;
@@ -214,6 +219,7 @@ struct cling_ast_function {
   unsigned int temps;
   struct utillib_vector instrs;
   struct utillib_vector init_code;
+  struct utillib_hashmap names;
 };
 
 /*

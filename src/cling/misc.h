@@ -21,6 +21,7 @@
 #ifndef CLING_MISC_H
 #define CLING_MISC_H
 #include <utillib/hashmap.h>
+#include <inttypes.h>
 
 #define MIPS_WORD_SIZE sizeof(int)
 #define MIPS_BYTE_SIZE sizeof(char)
@@ -39,6 +40,20 @@ union cling_primary {
   int signed_int;
   unsigned int unsigned_int;
 };
+
+struct cling_mips_label {
+  char *label;
+  uint32_t address;
+};
+
+/*
+ * mips_label
+ */
+struct cling_mips_label *mips_label_create(char const *label, uint32_t address);
+void mips_label_destroy(struct cling_mips_label *self);
+struct cling_mips_label * mips_label_name_find(struct utillib_hashmap const *self, char const *name);
+extern const struct utillib_hashmap_callback mips_label_strcallback;
+extern const struct utillib_hashmap_callback mips_label_callback;
 
 /*
  * Makes a bitwise copy of self and put

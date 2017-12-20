@@ -245,3 +245,63 @@ int cling_size_to_write(int size) {
     assert(false);
   }
 }
+
+/*
+ * Label Management.
+ */
+
+struct cling_mips_label *mips_label_create(char const *label,
+                                           uint32_t address) {
+  struct cling_mips_label *self = malloc(sizeof *self);
+  self->label = strdup(label);
+  self->address = address;
+  return self;
+}
+
+void mips_label_destroy(struct cling_mips_label *self) {
+  free(self->label);
+  free(self);
+}
+
+/*
+ * Address as key.
+ */
+static int mips_label_compare(struct cling_mips_label const *lhs,
+                              struct cling_mips_label const *rhs) {
+  return lhs->address - rhs->address;
+}
+
+static size_t mips_label_hash(struct cling_mips_label const *self) {
+  return self->address;
+}
+
+const struct utillib_hashmap_callback mips_label_callback = {
+    .compare_handler = mips_label_compare, .hash_handler = mips_label_hash,
+};
+
+struct cling_mips_label *
+mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
+  struct cling_mips_label key;
+  key.address = address;
+  return utillib_hashmap_at(self, &key);
+}
+
+struct cling_mips_label *
+mips_label_name_find(struct utillib_hashmap const *self, char const *name) {
+  struct cling_mips_label key;
+  key.label = name;
+  return utillib_hashmap_at(self, &key);
+}
+
+static int mips_label_strcmp(struct cling_mips_label const *lhs,
+    struct cling_mips_label const *rhs) {
+  return strcmp(lhs->label, rhs->label);
+}
+
+static size_t mips_label_strhash(struct cling_mips_label const *self) {
+  return mysql_strhash(self->label);
+}
+
+const struct utillib_hashmap_callback mips_label_strcallback = {
+  .hash_handler = mips_label_strhash, .compare_handler = mips_label_strcmp,
+};

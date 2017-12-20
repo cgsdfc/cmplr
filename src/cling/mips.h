@@ -132,11 +132,6 @@ struct cling_ast_ir;
 struct cling_ast_function;
 struct cling_ast_program;
 
-struct cling_mips_label {
-  char *label;
-  uint32_t address;
-};
-
 struct cling_mips_program {
   struct utillib_vector text;
   struct utillib_vector data;
@@ -238,13 +233,5 @@ void cling_mips_program_emit(struct cling_mips_program *self,
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
 
-/*
- * mips_label
- */
-struct cling_mips_label *mips_label_create(char const *label, uint32_t address);
-void mips_label_destroy(struct cling_mips_label *self);
-struct cling_mips_label *
-mips_label_name_find(struct utillib_hashmap const *self, char const *name);
-extern const struct utillib_hashmap_callback mips_label_strcallback;
 
 #endif /* CLING_MIPS_H */
