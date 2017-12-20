@@ -155,16 +155,17 @@ struct cling_mips_temp {
   uint32_t offset;
 };
 
-struct cling_mips_name {
+struct cling_mips_local {
   char const *name;
-  int temp;
+  int kind;
   uint32_t offset;
 };
 
 enum {
   MIPS_NONE,
   MIPS_SAVED,
-  MIPS_ARG,
+  MIPS_ARGREG,
+  MIPS_ARGMEM,
   MIPS_TEMP,
   MIPS_LOCKED,
 };
@@ -173,8 +174,8 @@ enum {
  * For function argument flags
  */
 enum {
-  MIPS_CONTEXT_SAVE, MIPS_CONTEXT_LOAD,
-  MIPS_REG_READ, MIPS_REG_WRITE,
+  MIPS_SAVE, MIPS_LOAD,
+  MIPS_READ, MIPS_WRITE,
 };
 
 struct cling_mips_function {
@@ -183,7 +184,8 @@ struct cling_mips_function {
   struct cling_mips_temp *temps;
 
   bool *reg_used;
-  struct utillib_hashmap names;
+  struct utillib_hashmap locals;
+  struct utillib_vector saved;
 
   uint32_t frame_size;
   uint32_t *address_map;

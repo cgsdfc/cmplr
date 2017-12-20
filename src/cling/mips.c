@@ -571,14 +571,6 @@ static char const *mips_ir_tostring(struct cling_mips_ir const *self) {
  * **this** function and arguments this function passes to call others.
  */
 
-static struct cling_mips_name *mips_name_create(uint8_t regid,
-                                                uint32_t offset) {
-  struct cling_mips_name *self = malloc(sizeof *self);
-  self->regid = regid;
-  self->offset = offset;
-  return self;
-}
-
 static void mips_function_init(struct cling_mips_function *self,
                                struct utillib_vector *instrs,
                                struct cling_mips_global *global,
@@ -620,37 +612,6 @@ static bool mips_function_is_leaf(struct cling_ast_function const *ast_func) {
      */
     return false;
   return true;
-}
-
-static void mips_function_memmap_name(struct cling_mips_function *self,
-                                      char const *name, uint32_t offset) {
-  struct cling_mips_label *label;
-  label=mips_label_create(name, offset);
-  utillib_hashmap_insert(&self->names, label, label);
-}
-
-static void mips_function_memmap_temp(struct cling_mips_function *self,
-                                      int temp, uint32_t offset) {
-  assert(temp < self->temp_size);
-  struct cling_mips_temp *entry;
-  entry = &self->temps[temp];
-  entry->offset = offset;
-  entry->regid = MIPS_REGR_NULL;
-}
-
-/*
- * Maps this name to a saved register.
- */
-static void mips_function_regmap_name(struct cling_mips_function *self,
-                                      char const *name, int regid) {
-  struct cling_mips_label *label;
-  label = mips_label_name_find(&self->names, name);
-  if (label) {
-    label->regid=regid;
-    return;
-  }
-  label = mips_name_create(regid, MIPS_ADDR_NULL);
-  utillib_hashmap_insert(&self->names, label, label);
 }
 
 /*
@@ -756,57 +717,33 @@ static void mips_function_epilogue(struct cling_mips_function *self) {
 }
 
 /*
- * Similar to prologue
- * and epilogue but it is for a subroutine call.
- * They save/load the temp registers in use and a0s.
- * The para_size controls the total number of registers
- * we saved.
+ * Save temps, if any in use.
  */
-static void mips_load_temps(struct cling_mips_function *self, int flag)
+static void mips_temp_context(struct cling_mips_function *self, int flag)
 {
   struct cling_mips_temp *temp_one;
   for (int i = 0; i < self->temp_size; ++i) {
     temp_one = &self->temps[i];
     if (temp_one->regid == MIPS_TEMP) {
       mips_function_push_back(
-          self, flag == MIPS_CONTEXT_LOAD ? 
+          self, flag == MIPS_LOAD ? 
           mips_lw(temp_one->regid, temp_one->offset, MIPS_SP)
           : mips_sw(temp_one->regid, temp_one->offset, MIPS_SP));
     }
   }
 }
 
-static void mips_function_load_paras(struct cling_mips_function *self,
-                                     int index, bool is_load) {
-  assert(index < MIPS_MEM_ARG_BLK);
-  mips_function_push_back(
-      self,
-      is_load
-          ? mips_lw(MIPS_A0 + index, self->frame_size + (index << 2), MIPS_SP)
-          : mips_sw(MIPS_A0 + index, self->frame_size + (index << 2), MIPS_SP));
-}
-
 /*
- * Allocate a block of size on top of *blk
- * and increament *blk. Memory address is aligned
- * to `align'.
+ * Save parameters, if any.
  */
-static uint32_t mips_align_alloc(uint32_t *blk, size_t size, size_t align) {
-  /*
-   * Align to size.
-   * if self->frame_size % size == 0, it is aligned.
-   * We use fast-modulo so it becomes frame_size & (size-1) == 0.
-   */
-  uint32_t now = *blk;
-  while (now & (align - 1))
-    ++now;
-  *blk = now + size;
-  return now;
-}
-
-static uint32_t mips_function_memalloc(struct cling_mips_function *self,
-                                       size_t size, size_t align) {
-  return mips_align_alloc(&self->frame_size, size, align);
+static void mips_para_context(struct cling_mips_function *self, int flag)
+{
+  for (int i=0; i<self->para_size && i<MIPS_REG_ARGS_N; ++i) {
+    mips_function_push_back(
+        self, flag == MIPS_LOAD
+          ? mips_lw(MIPS_A0 + i, self->frame_size + (i << 2), MIPS_SP)
+          : mips_sw(MIPS_A0 + i, self->frame_size + (i << 2), MIPS_SP));
+  }
 }
 
 /*
@@ -814,94 +751,124 @@ static uint32_t mips_function_memalloc(struct cling_mips_function *self,
  */
 
 /*
+ * size is the number of words.
+ */
+static uint32_t mips_alloc(struct cling_mips_function *self, unsigned int size)
+{
+  uint32_t alloc=self->frame_size;
+  self->frame_size+=size<<2;
+  return alloc;
+}
+
+/*
+ * set up the two level mapping from names to temps to regs.
+ * Note there are only 2 regions: ArgRegion and LocalRegion.
+ * And everything a multiple of 4.
+ */
+static void mips_setup_map(struct cling_mips_function *self, struct cling_ast_function const *ast_func)
+{
+  uint8_t regid;
+  bool is_leaf;
+  is_leaf=mips_function_is_leaf(ast_func);
+
+  if (!is_leaf)
+    self->frame_size=mips_function_max_args(self->ast_func);
+  UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
+    switch(ast_ir->opcode) {
+      case OP_DEFVAR:
+        regid=mips_regalloc(self, mips_is_saved_register);
+        if (regid != MIPS_REGR_NULL) {
+          mips_save_reg(self, regid, mips_alloc(self, 1));
+          kind=MIPS_SAVED;
+        } else {
+          kind=MIPS_NONE;
+        }
+        local=mips_local_create(ast_ir->defvar.name, kind, mips_alloc(self, 1)); 
+        utillib_hashmap_insert(&self->locals, local,local);
+        break;
+      case OP_DEFARR:
+        local=mips_local_create(ast_ir->defarr.name, MIPS_NONE, mips_alloc(self, ast_ir->defarr.extend));
+        utillib_hashmap_insert(&self->locals, local, local);
+        break;
+      case OP_PARA:
+        if (self->para_size < 4) {
+          regid=MIPS_A0+self->para_size;
+        } else {
+          regid=mips_regalloc(self, mips_is_saved_register);
+        }
+        ++self->para_size;
+        kind = mips_is_arg_register(regid) ? MIPS_ARGREG : regid == MIPS_REGR_NULL? MIPS_ARGMEM:MIPS_SAVED;
+        local=mips_local_create(ast_ir->para.name, kind, 0);
+        utillib_hashmap_insert(&self->locals, local, local);
+        break;
+    }
+    /*
+     * setup mapping from names to temp.
+     */
+    for (int i=0; i<self->temp_size; ++i) {
+      self->temps[i].kind=MIPS_NONE;
+    }
+    UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs) {
+      if (ast_ir->opcode != OP_LOAD || ast_ir->load.is_global ||
+          !ast_ir->load.is_rvalue)
+        continue;
+      local=utillib_hashmap_at(&self->locals, ast_ir->load.name);
+      temp=ast_ir->load.temp;
+      self->temps[temp].kind=local->kind;
+      self->temps[temp].regid=local->regid;
+    }
+    for (int i=0; i<self->temp_size; ++i) {
+      kind=self->temps[i].kind;
+      if (kind == MIPS_NONE) {
+        self->offset=mips_alloc(self, 1);
+      }
+    }
+    if (!is_leaf) {
+      mips_save_reg(self, MIPS_RA, mips_alloc(self, 1));
+    }
+
+        
+
+
+
+
+
+
+
+
+
+}
+
+/*
  * Figures out the maximum stack space required for
- * any function called by self.
+ * any function called by self. We use STATE MACHINE.
  */
 static uint32_t
 mips_function_max_args(struct cling_ast_function const *ast_func) {
   struct cling_ast_ir const *ast_ir;
   size_t arg_size;
-  uint32_t max_args = 0;
 
-  /*
-   * Stateful
-   */
-  uint32_t args_blk = 0;
   int state = 0;
-  int arg_cnt = 0;
+  uint32_t max_args = 0;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs) {
     if (ast_ir->opcode == OP_PUSH) {
       if (state == 0)
         state = 1;
-      if (arg_cnt++ < MIPS_REG_ARGS_N)
-        arg_size = MIPS_WORD_SIZE;
-      /*
-       * First Four are always words.
-       */
-      else
-        arg_size = ast_ir->push.size;
-      mips_align_alloc(&args_blk, arg_size, arg_size);
+        ++arg_size;
     } else if (state == 1) {
       /*
        * The end of a push seq.
        * Now we reduce it to max_args
        * and clear stateful stuffs.
        */
-      if (args_blk > max_args)
-        max_args = args_blk;
-      args_blk = 0;
+      if (arg_size > max_args)
+        max_args = arg_size;
       state = 0;
-      arg_cnt = 0;
-    }
-    /*
-     * Skip off the non-push instructions.
-     */
-  }
-  return max_args;
-}
-
-/*
- * local data region includes temps, array and single variable.
- * Allocates stack space for local data.
- */
-static void
-mips_function_local_layout(struct cling_mips_function *self,
-                           struct cling_ast_function const *ast_func) {
-  uint32_t local_offset;
-  char const *name;
-  size_t size, base_size;
-  struct cling_ast_ir const *ast_ir;
-
-  UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
-    switch (ast_ir->opcode) {
-    case OP_DEFVAR:
-      name = ast_ir->defvar.name;
-      size = ast_ir->defvar.size;
-      local_offset = mips_function_memalloc(self, size, size);
-      mips_function_memmap_name(self, name, local_offset);
-      break;
-    case OP_DEFARR:
-      name = ast_ir->defarr.name;
-      base_size = ast_ir->defarr.base_size;
-      size = ast_ir->defarr.extend;
-      /*
-       * Align to the base_size.
-       */
-      local_offset = mips_function_memalloc(self, size * base_size, base_size);
-      mips_function_memmap_name(self, name, local_offset);
-      break;
+      arg_size=0;
     }
   }
-  /*
-   * Maps all temps as words.
-   */
-  for (int i = 0; i < self->temp_size; ++i) {
-    if (mips_is_saved_register(self->temps[i].regid))
-      continue;
-    local_offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
-    mips_function_memmap_temp(self, i, local_offset);
-  }
+  return max_args << 2;
 }
 
 /*
@@ -918,6 +885,7 @@ mips_function_save_registers(struct cling_mips_function *self,
   uint32_t saved_offset;
   char const *name;
   int regid;
+  int temp;
   int para_cnt = 0;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
@@ -927,84 +895,17 @@ mips_function_save_registers(struct cling_mips_function *self,
         continue;
     /* Fall through */
     case OP_DEFVAR:
-      regid = mips_function_regalloc(self, mips_is_saved_register);
+      regid = mips_regalloc(self, mips_is_saved_register);
       if (regid == MIPS_REGR_NULL)
         continue;
       name = ast_ir->defvar.name;
-      saved_offset =
-          mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
+      saved_offset = mips_alloc(self, 1);
       mips_function_saved_push_back(self, regid, saved_offset);
-      mips_function_regmap_name(self, name, regid);
       break;
     }
   }
 }
 
-/*
- * If this function is non leaf, layouts
- * its Argument Region, which must be the
- * first region on the top of stack.
- * The space is reserved for future use of call.
- */
-static void
-mips_function_args_layout(struct cling_mips_function *self,
-                          struct cling_ast_function const *ast_func) {
-  uint32_t max_args;
-  uint32_t args_offset;
-
-  max_args = mips_function_max_args(ast_func);
-  args_offset = mips_function_memalloc(self, max_args, MIPS_WORD_SIZE);
-}
-
-/*
- * Layout parameters which have offsets start
- * at sp+frame_size.
- */
-static void
-mips_function_para_layout(struct cling_mips_function *self,
-                          struct cling_ast_function const *ast_func) {
-  char const *name;
-  struct cling_ast_ir const *ast_ir;
-  size_t para_size;
-  uint32_t para_offset;
-  int para_cnt = 0;
-  uint32_t para_blk = 0;
-
-  UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
-    if (ast_ir->opcode != OP_PARA)
-      continue;
-    name = ast_ir->para.name;
-    if (para_cnt < MIPS_REG_ARGS_N) {
-      para_size = MIPS_WORD_SIZE;
-    } else {
-      para_size = ast_ir->para.size;
-    }
-    para_offset =
-        mips_align_alloc(&para_blk, para_size, para_size) + self->frame_size;
-    mips_function_memmap_name(self, name, para_offset);
-    ++para_cnt;
-  }
-  /*
-   * Control how much parameters we will save
-   * before subroutine call.
-   */
-  self->para_size = para_cnt;
-}
-
-static void mips_function_fix_offset(struct cling_mips_function *self) {
-  struct utillib_pair *pair;
-  struct cling_mips_label *label;
-  for (int i=0; i<self->temp_size; ++i) {
-    self->temps[i].offset=self->frame_size-1-self->temps[i].offset;
-  }
-  UTILLIB_VECTOR_FOREACH(label, &self->saved) {
-    name->offset=self->frame_size-1-name->offset;
-  }
-  UTILLIB_HASHMAP_FOREACH(pair, &self->names) {
-    label=pair->up_second;
-    label->offset=self->frame_size-1-label->address;
-  }
-}
 
 /*
  * Driver that layouts all kinds of stuffs on the stack.
@@ -1022,7 +923,7 @@ mips_function_stack_layout(struct cling_mips_function *self,
      * Save $ra.
      * Allocate a word for it and add it to the saved.
      */
-    offset = mips_function_memalloc(self, MIPS_WORD_SIZE, MIPS_WORD_SIZE);
+    offset = mips_alloc(self, 1);
     mips_function_saved_push_back(self, MIPS_RA, offset);
   }
   /*
@@ -1035,13 +936,7 @@ mips_function_stack_layout(struct cling_mips_function *self,
      */
     mips_function_args_layout(self, ast_func);
   }
-  mips_function_fix_offset(self);
   mips_function_para_layout(self, ast_func);
-}
-
-static void mips_function_regfree(struct cling_mips_function *self,
-                                  uint8_t regid) {
-  self->reg_used[regid] = false;
 }
 
 /*
@@ -1051,7 +946,7 @@ static uint8_t mips_function_temp_alloc(struct cling_mips_function *self) {
   uint8_t regid;
   uint32_t offset;
 
-  regid = mips_function_regalloc(self, mips_is_temp_register);
+  regid = mips_regalloc(self, mips_is_temp_register);
   if (regid != MIPS_REGR_NULL)
     return regid;
   for (int i = 0; i < self->temp_size; ++i) {
@@ -1072,7 +967,7 @@ static uint8_t mips_function_temp_alloc(struct cling_mips_function *self) {
  * Try to allocate a register from one of those free
  * which `regkind' says yes.
  */
-static int mips_function_regalloc(struct cling_mips_function *self,
+static int mips_regalloc(struct cling_mips_function *self,
                                   bool (*regkind)(uint8_t regid)) {
   for (int i = 0; i < CLING_MIPS_REG_MAX; ++i)
     if (!self->reg_used[i] && regkind(i)) {
@@ -1112,18 +1007,6 @@ static inline uint8_t mips_function_locked_read(struct cling_mips_function *self
 
 static inline uint8_t mips_function_write(struct cling_mips_function *self, int temp) {
   return mips_function_temp_map(self, temp, MIPS_TEMP, MIPS_REG_WRITE);
-}
-
-/*
- * If temp is mapped to a MIPS_TEMP, free it.
- */
-static void mips_temp_free(struct cling_mips_function *self, int temp) {
-  struct cling_mips_temp *temp_var;
-  temp_var=&self->temps[temp];
-  if (temp_var->kind != MIPS_TEMP)
-    return;
-  self->reg_used[temp_var->regid]=false;
-  temp_var->kind = MIPS_NONE;
 }
 
 /*
@@ -1524,13 +1407,6 @@ static void mips_emit_write(struct cling_mips_function *self,
  */
 
 /*
- * Allocate space for arguments greater than four from MIPS_MEM_ARG_BLK.
- */
-static inline uint32_t mips_function_argalloc(uint32_t *args_blk, size_t size) {
-  return MIPS_MEM_ARG_BLK + mips_align_alloc(args_blk, size, size);
-}
-
-/*
  * Enter with a push or call, end with the first instruction
  * after call.
  */
@@ -1543,42 +1419,37 @@ static int mips_emit_push_call(struct cling_mips_function *self, size_t begin,
   int push_state = 0;
   uint32_t offset;
   struct cling_mips_ir *ir;
-  uint32_t args_blk = 0;
 
   for (ast_pc = begin; ast_pc < ast_instrs_size; ++ast_pc) {
     ast_ir = utillib_vector_at(&ast_func->instrs, ast_pc);
     switch (ast_ir->opcode) {
     case OP_PUSH:
       if (push_state == 0) {
-        mips_load_temps(self, false);
+        mips_temp_context(self, MIPS_SAVE);
+        mips_para_context(self, MIPS_SAVE);
       }
       regid = mips_function_read(self, ast_ir->push.temp);
       if (push_state < MIPS_REG_ARGS_N) {
-        mips_function_load_paras(self, push_state, false);
         ir = mips_move(MIPS_A0 + push_state, regid);
       } else {
-        offset = mips_function_argalloc(&args_blk, ast_ir->push.size);
-        if (ast_ir->push.size == MIPS_WORD_SIZE)
-          ir = mips_sw(regid, offset, MIPS_SP);
-        else
-          ir = mips_sb(regid, offset, MIPS_SP);
+        offset=MIPS_MEM_ARG_BLK+push_state<<2; 
+        ir = mips_sw(regid, MIPS_SP);
       }
       mips_function_push_back(self, ir);
       ++push_state;
       break;
     case OP_CAL:
       if (push_state == 0) {
-        mips_load_temps(self, false);
+        mips_temp_context(self, MIPS_SAVE);
       }
       mips_function_push_back(self, mips_jal(ast_ir->call.name));
-      mips_load_temps(self, true);
+      mips_temp_context(self, MIPS_LOAD);
       if (ast_ir->call.has_result) {
         regid = mips_function_write(self, ast_ir->call.result);
         mips_function_push_back(self, mips_move(regid, MIPS_V0));
       }
-      while (push_state) {
-        --push_state;
-        mips_function_load_paras(self, push_state, true);
+      if (push_state != 0) {
+        mips_para_context(self, MIPS_LOAD);
       }
       return ast_pc;
     }
