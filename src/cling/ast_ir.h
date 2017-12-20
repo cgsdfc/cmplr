@@ -99,6 +99,7 @@ struct cling_ast_ir {
     struct {
       int temp;
       char const *name;
+      bool is_global;
     } ldadr;
     struct {
       int temp;
@@ -196,6 +197,7 @@ struct cling_ast_ir {
 };
 
 struct cling_polish_ir {
+  int ophead;
   /*
    * Stack holding ast nodes
    */
