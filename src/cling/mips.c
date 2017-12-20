@@ -66,12 +66,12 @@ static struct cling_mips_data *mips_string_create(char const *label,
 static char *mips_global_label(struct cling_mips_global *self,
                                uint32_t address);
 
-static void mips_function_load_paras(struct cling_mips_function *self,
-                                     int index, bool is_load);
 static void mips_function_saved_push_back(struct cling_mips_function *self,
                                           uint8_t regid, uint32_t offset);
 static int mips_regalloc(struct cling_mips_function *self,
                                   bool (*regkind)(uint8_t regid));
+
+static void mips_para_context(struct cling_mips_function *self, int flag);
 
 /*
  * opcode and register strings.
@@ -499,6 +499,11 @@ static char const *mips_ir_print(struct cling_mips_ir const *self, FILE *file)
   case MIPS_LW:
   case MIPS_SB:
   case MIPS_LB:
+#ifndef NDEBUG
+    if (self->operands[1].offset & 3) {
+      printf(">>> Align Error: %" PRId16 "\n");
+    }
+#endif
     regstr[0] = mips_operand_regstr(self, 0);
     regstr[2] = mips_operand_regstr(self, 2);
     fprintf(file, ("%s %s, %" PRId16 "(%s)\n"), opstr, regstr[0],
@@ -574,7 +579,7 @@ static void mips_function_init(struct cling_mips_function *self,
                                struct utillib_vector *instrs,
                                struct cling_mips_global *global,
                                struct cling_ast_function const *ast_func) {
-  self->last_temp = 0;
+  self->last_temp = 1;
   self->global = global;
   self->instrs = instrs;
   self->temp_size = ast_func->temps;
@@ -689,6 +694,7 @@ static void mips_function_prologue(struct cling_mips_function *self) {
   mips_function_push_back(self, 
       mips_addi(MIPS_SP, MIPS_SP, -self->frame_size));
   mips_context_switch(self, MIPS_SAVE);
+  mips_para_context(self, MIPS_SAVE);
 }
 
 /*
@@ -711,7 +717,8 @@ static void mips_temp_context(struct cling_mips_function *self, int flag)
   struct cling_mips_temp *temp_one;
   for (int i = 0; i < self->temp_size; ++i) {
     temp_one = &self->temps[i];
-    if (temp_one->regid == MIPS_TEMP) {
+    if (temp_one->kind == MIPS_TEMP &&
+        temp_one->state == MIPS_HAS_REG) {
       mips_function_push_back(
           self, flag == MIPS_LOAD ? 
           mips_lw(temp_one->regid, temp_one->offset, MIPS_SP)
@@ -930,7 +937,7 @@ mips_function_para_layout(struct cling_mips_function *self,
     if (ast_ir->opcode != OP_PARA)
       continue;
     name = ast_ir->para.name;
-    para_offset = (self->para_size<<1) + self->frame_size;
+    para_offset = (self->para_size<<2) + self->frame_size;
     mips_function_memmap(self, name, para_offset);
     ++self->para_size;
   }
@@ -967,12 +974,12 @@ static uint8_t mips_function_temp_alloc(struct cling_mips_function *self) {
     return regid;
 
   if (self->last_temp >= self->temp_size) {
-      self->last_temp=0;
+      self->last_temp=1;
   }
 
   for (int i = self->last_temp; i < self->temp_size; ++i) {
     if (self->temps[i].kind != MIPS_TEMP && 
-        self->temps[i].kind != MIPS_UNSAVED &&
+        self->temps[i].kind != MIPS_UNSAVED ||
         self->temps[i].state != MIPS_HAS_REG) {
       continue;
     }
@@ -1709,7 +1716,6 @@ void cling_mips_program_emit(struct cling_mips_program *self,
     utillib_hashmap_insert(&self->labels, label, label);
     mips_function_init(&function, &self->text, &global, ast_func);
     mips_function_emit(&function, ast_func);
-    mips_function_layout_print(&function);
     mips_function_destroy(&function);
   }
 }
