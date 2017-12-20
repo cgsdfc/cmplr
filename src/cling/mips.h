@@ -132,19 +132,6 @@ struct cling_ast_ir;
 struct cling_ast_function;
 struct cling_ast_program;
 
-/*
- * Represent a segment of code
- * with a label.
- */
-struct cling_address_range {
-  union {
-    char const *label;
-    size_t scalar;
-  };
-  uint32_t begin;
-  uint32_t end;
-};
-
 struct cling_mips_label {
   char *label;
   uint32_t address;
@@ -162,15 +149,32 @@ struct cling_mips_global {
   int label_count;
 };
 
-struct cling_mips_name {
+struct cling_mips_temp {
+  int kind;
   uint8_t regid;
   uint32_t offset;
 };
 
-struct cling_mips_temp {
-  int age;
-  uint8_t regid;
+struct cling_mips_name {
+  char const *name;
+  int temp;
   uint32_t offset;
+};
+
+enum {
+  MIPS_NONE,
+  MIPS_SAVED,
+  MIPS_ARG,
+  MIPS_TEMP,
+  MIPS_LOCKED,
+};
+
+/*
+ * For function argument flags
+ */
+enum {
+  MIPS_CONTEXT_SAVE, MIPS_CONTEXT_LOAD,
+  MIPS_REG_READ, MIPS_REG_WRITE,
 };
 
 struct cling_mips_function {
@@ -178,9 +182,8 @@ struct cling_mips_function {
   int para_size;
   struct cling_mips_temp *temps;
 
-  bool *reg_pool;
+  bool *reg_used;
   struct utillib_hashmap names;
-  struct utillib_vector saved;
 
   uint32_t frame_size;
   uint32_t *address_map;
