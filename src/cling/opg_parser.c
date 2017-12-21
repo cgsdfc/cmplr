@@ -308,6 +308,9 @@ static inline bool good_token(size_t lookahead)
     case SYM_IDEN:
     case SYM_LK:
     case SYM_RK:
+    case SYM_UINT:
+    case SYM_INTEGER:
+    case SYM_CHAR:
     case SYM_EQ:
     case SYM_NE:
     case SYM_DEQ:
@@ -343,10 +346,10 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   const size_t eof_symbol = self->eof_symbol;
 
   while (!utillib_vector_empty(opstack)) {
-    opg_parser_show_stack(self);
+    /* opg_parser_show_stack(self); */
     lookahead = utillib_token_scanner_lookahead(input);
-    if (!good_token(lookahead))
-      goto error;
+    /* if (!good_token(lookahead)) */
+    /*   goto error; */
     if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
       /*
        * We will catch any success before the precedence is computed
