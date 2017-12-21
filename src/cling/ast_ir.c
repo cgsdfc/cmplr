@@ -296,10 +296,27 @@ static struct utillib_json_value *polish_ir_next_op(struct cling_polish_ir *self
     return utillib_vector_at(&self->stack, self->ophead+1);
 }
 
-/*
- * Hack: steal the elemsz from the precedent load of array_addr.
- * And hack the precedent load to be lvalue.
- */
+static int polish_ir_load_lvalue(struct cling_polish_ir *self,
+    struct utillib_json_value const *object) {
+  struct cling_symbol_entry *entry;
+  struct utillib_json_value const *value;
+  struct cling_ast_ir *ir;
+  value=utillib_json_object_at(object, "value");
+  entry=cling_symbol_table_find(self->global->symbol_table, value->as_ptr, CL_LEXICAL);
+
+  assert(entry->kind == CL_ARRAY);
+  base_size=cling_type_to_size(entry->array.base_type);
+  ir=emit_ir(OP_LDADR);
+  ir->ldadr.name=name;
+  ir->ldadr.is_global=entry->scope==0;
+  temp=make_temp(self->global);
+  ir->ldadr.temp=temp;
+  utillib_vector_push_back(instrs, ir);
+
+
+
+}
+
 static void polish_ir_emit_index(struct cling_polish_ir *self,
                                  struct utillib_vector *instrs) {
   struct utillib_json_value *array_iden, *index_temp, *next;
@@ -316,21 +333,6 @@ static void polish_ir_emit_index(struct cling_polish_ir *self,
   utillib_vector_pop_back(&self->opstack);
   index_temp = utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
-
-  /*
-   * load the address of this array.
-   */
-  name=utillib_json_object_at(array_iden, "value");
-  assert(name);
-  entry=cling_symbol_table_find(self->global->symbol_table, name, CL_LEXICAL);
-  assert(entry->kind == CL_ARRAY);
-  base_size=cling_type_to_size(entry->array.base_type);
-  ir=emit_ir(OP_LDADR);
-  ir->ldadr.name=name;
-  ir->ldadr.is_global=entry->scope==0;
-  temp=make_temp(self->global);
-  ir->ldadr.temp=temp;
-  utillib_vector_push_back(instrs, ir);
 
   /*
    * compute the address of element.
@@ -416,10 +418,12 @@ static void polish_ir_emit_call(struct cling_polish_ir *self,
   utillib_vector_push_back(instrs, ir);
 }
 
+
 /*
  * Load the rvalue of this iden.
+ * object should be an iden.
  */
-static void polish_ir_emit_load(struct cling_polish_ir *self, 
+static void polish_ir_load_rvalue(struct cling_polish_ir *self, 
     struct utillib_json_value const *object) {
   struct utillib_json_value const *value, *type;
   struct cling_symbol_entry *entry;
@@ -455,12 +459,17 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
 static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
                                   struct utillib_vector *instrs) {
   struct utillib_json_value *lhs, *rhs, *temp;
-  register struct cling_ast_ir *ir;
+  struct cling_ast_ir *ir;
+  int rhs_temp, lhs_temp;
 
   rhs = utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
+  rhs_temp=polish_ir_load_rvalue(self, rhs);
+
   lhs = utillib_vector_back(&self->opstack);
   utillib_vector_pop_back(&self->opstack);
+  lhs_temp=polish_ir_load_rvalue(self, lhs);
+
   temp = polish_ir_make_temp(self);
   ir = emit_ir(symbol_to_ast_opcode(op));
   ir->binop.result = temp->as_int;
@@ -472,9 +481,15 @@ static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
   polish_ir_maybe_release_temp(rhs);
 }
 
+static void polish_ir_emit_stnam(struct cling_polish_ir *self) {
+
+
+
+}
+
 /*
- * Hack: Modify the precedent instr to be of lvalue and
- * steal size from it.
+ * assignment is translated to stnam or ldadr + stadr depending the
+ * assignee is temp or iden.
  */
 static void polish_ir_emit_assign(struct cling_polish_ir *self,
                                   struct utillib_vector *instrs) {
@@ -516,15 +531,11 @@ static void polish_ir_emit_assign(struct cling_polish_ir *self,
       }
       break;
     case UT_JSON_OBJECT:
-      /*
-       * Must be local name.
-       */
       assert(utillib_json_object_at(assignee, "type")->as_size_t == SYM_IDEN);
-      name=utillib_json_object_at(assignee, "value");
-      assert(name);
+      value=utillib_json_object_at(assignee, "value");
+      assert(value);
       entry=cling_symbol_table_find(self->global->symbol_table, name, CL_LEXICAL);
-      if (entry->scope == 0) {
-        ir=emit_ir(OP_
+      ir=emit_ir(OP_
       ir=emit_ir(OP_STNAM);
       ir->size=cling_type_to_size(entry->kind);
       ir->name=name;
