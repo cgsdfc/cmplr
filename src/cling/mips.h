@@ -121,13 +121,6 @@ UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
 
-UTILLIB_ENUM_BEGIN(cling_mips_ecode)
-UTILLIB_ENUM_ELEM(MIPS_EC_OK)
-UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
-UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
-UTILLIB_ENUM_ELEM(MIPS_EC_BTAKEN)
-UTILLIB_ENUM_END(cling_mips_ecode);
-
 struct cling_ast_ir;
 struct cling_ast_function;
 struct cling_ast_program;
@@ -232,6 +225,7 @@ void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
-
+void mips_ir_fprint(struct cling_mips_ir const *self, FILE *file);
+void mips_ir_print(struct cling_mips_ir const *self);
 
 #endif /* CLING_MIPS_H */

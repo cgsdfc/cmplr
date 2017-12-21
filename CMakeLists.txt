@@ -155,6 +155,7 @@ add_library(cling
   ./src/cling/lcse.c
   ./src/cling/basic_block.c
   ./src/cling/optimize.c
+  ./src/cling/mips_interp.c
   )	
 target_link_libraries(cling utillib)
 

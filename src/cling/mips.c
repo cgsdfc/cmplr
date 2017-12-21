@@ -447,7 +447,7 @@ static void mips_ir_destroy(struct cling_mips_ir *self) {
  */
 #define mips_operand_regstr(self, index)                                       \
   cling_mips_regster_tostring(self->operands[index].regid)
-static char const *mips_ir_print(struct cling_mips_ir const *self, FILE *file) 
+void mips_ir_fprint(struct cling_mips_ir const *self, FILE *file) 
 {
   char const *opstr = cling_mips_opcode_kind_tostring(self->opcode);
   char const *regstr[CLING_MIPS_OPERAND_MAX];
@@ -462,7 +462,7 @@ static char const *mips_ir_print(struct cling_mips_ir const *self, FILE *file)
   case MIPS_LB:
 #ifndef NDEBUG
     if (self->operands[1].offset & 3) {
-      printf(">>> Align Error: %" PRId16 "\n");
+      printf(">>> Align Error: %" PRId16 "\n", self->operands[1].offset);
     }
 #endif
     regstr[0] = mips_operand_regstr(self, 0);
@@ -790,6 +790,7 @@ static void
 mips_function_local_layout(struct cling_mips_function *self,
                            struct cling_ast_function const *ast_func) {
   struct cling_ast_ir const *ast_ir;
+  size_t size;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     switch (ast_ir->opcode) {
@@ -1132,7 +1133,7 @@ static void mips_emit_index(struct cling_mips_function *self,
   /*
    * We borrow dest_regid to hold the elemsz.
    */
-  mips_function_push_back(self, mips_li(dest_regid, base_size));
+  mips_function_push_back(self, mips_li(dest_regid, MIPS_WORD_SIZE));
   mips_function_push_back(self, mips_mult(index_regid, dest_regid));
   mips_function_push_back(self, mips_mflo(dest_regid));
   mips_function_push_back(self, mips_add(dest_regid, dest_regid, array_regid));
@@ -1676,8 +1677,7 @@ static void mips_program_emit_data(struct cling_mips_program *self,
         utillib_vector_push_back(&self->data, data);
         break;
       case OP_DEFARR:
-        data = mips_array_create(ast_ir->defarr.name, ast_ir->defarr.base_size *
-            ast_ir->defarr.extend);
+        data = mips_array_create(ast_ir->defarr.name, ast_ir->defarr.extend << 2);
         utillib_vector_push_back(&self->data, data);
         break;
     }
@@ -1756,7 +1756,7 @@ void cling_mips_program_print(struct cling_mips_program const *self,
       fprintf(file, "\n%s:\n", label->label);
     }
     fputs("\t", file);
-    mips_ir_print(ir, file);
+    mips_ir_fprint(ir, file);
     ++address;
   }
 }
@@ -1817,5 +1817,9 @@ void mips_function_layout_print(struct cling_mips_function const *self) {
     }
   }
   puts("");
+}
+
+void mips_ir_print(struct cling_mips_ir const *self) {
+  mips_ir_fprint(self, stdout);
 }
 
