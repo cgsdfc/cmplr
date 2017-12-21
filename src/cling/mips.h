@@ -121,13 +121,6 @@ UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
 
-UTILLIB_ENUM_BEGIN(cling_mips_ecode)
-UTILLIB_ENUM_ELEM(MIPS_EC_OK)
-UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
-UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
-UTILLIB_ENUM_ELEM(MIPS_EC_BTAKEN)
-UTILLIB_ENUM_END(cling_mips_ecode);
-
 struct cling_ast_ir;
 struct cling_ast_function;
 struct cling_ast_program;

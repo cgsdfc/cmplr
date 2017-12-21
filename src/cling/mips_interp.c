@@ -19,54 +19,90 @@
 
 */
 #include "mips_interp.h"
+#include "misc.h"
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define memindex_1(address) ((address) >> 9)
+#define memindex_2(address) ((((address) >> 6)) & ((1<<3)-1))
+#define memoffset(address) ((address) & ((1<<6)-1))
+
+static void print_memory_usage(struct cling_mips_interp const *self);
+
+static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, uint32_t address)
+{
+  if (!address) {
+    self->errno=MIPS_EC_NULL;
+    return NULL;
+  }
+  if (address & 3) {
+    self->errno=MIPS_EC_ALIGN;
+    return NULL;
+  }
+  if (address >= MIPS_MEM_MAX) {
+    self->errno=MIPS_EC_NOMEM;
+    return NULL;
+  }
+  struct cling_mips_memblk ** memblk_array, *memblk;
+  unsigned int index;
+  
+  index=memindex_1(address);
+  assert(index < MIPS_MEM_ARRAY_MAX);
+  memblk_array=self->memory[index];
+  if (!memblk_array) {
+    memblk_array=calloc(sizeof memblk_array[0], MIPS_MEM_ARRAY_MAX);
+    self->memory[index]=memblk_array;
+  }
+  index=memindex_2(address);
+  assert(index < MIPS_MEM_ARRAY_MAX);
+  memblk=memblk_array[index];
+  if (!memblk) {
+    memblk=calloc(sizeof *memblk, 1);
+    memblk_array[index]=memblk;
+  }
+  return memblk->mem + memoffset(address);
+}
+
+
+static void mips_interp_load_label(struct cling_mips_interp *self, struct cling_mips_program const *program) {
+  struct cling_mips_label const *program_label, *interp_label;
+  struct utillib_pair const *pair;
+  UTILLIB_HASHMAP_FOREACH(pair, &program->labels) {
+    program_label=pair->up_first;
+    interp_label=mips_label_create(program_label->label, program_label->address);
+    utillib_hashmap_insert(&self->labels, interp_label, interp_label);
+  }
+}
 
 /*
- * string as key.
+ * Memory comes directly from the stack pointer.
  */
-static int mips_label_strcmp(struct cling_mips_label const *lhs,
-                             struct cling_mips_label const *rhs) {
-  return strcmp(lhs->label, rhs->label);
+static uint32_t mips_interp_alloc(struct cling_mips_interp *self, size_t size) {
+  uint32_t alloc=self->regs[MIPS_SP];
+  self->regs[MIPS_SP]+=(size<<2);
+  return alloc;
 }
 
-static size_t mips_label_strhash(struct cling_mips_label const *self) {
-  return php_strhash(self->label);
-}
-
-static const struct utillib_hashmap_callback mips_label_strcallback = {
-    .compare_handler = mips_label_strcmp, .hash_handler = mips_label_strhash,
-};
-
-void cling_mips_interp_init(struct cling_mips_interp *self,
-                            struct cling_mips_program const *program) {
-  self->pc = 0;
-  self->lo = 0;
-  self->program = program;
-  utillib_hashmap_init(&self->labels, &mips_label_strcallback);
-  memset(self->page_array, 0, sizeof self->page_array);
-  memset(self->regs, 0, sizeof self->regs);
-  mips_interp_load(self, program);
-}
-
-static void mips_interp_load_data(struct cling_mips_interp *self) {
+static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_mips_program const *program) {
   struct cling_mips_label *label;
-  struct cling_address_range *range;
   struct cling_mips_data *data;
   uint32_t address;
 
   UTILLIB_VECTOR_FOREACH(data, &program->data) {
     switch (data->type) {
     case MIPS_SPACE:
-      address = mips_interp_alloc(self, data->extend, true);
+      address = mips_interp_alloc(self, data->extend);
       break;
     case MIPS_WORD:
-      address = mips_interp_alloc(self, MIPS_WORD_SIZE, true);
+      address = mips_interp_alloc(self, 1);
       break;
     case MIPS_BYTE:
-      address = mips_interp_alloc(self, MIPS_BYTE_SIZE, true);
+      address = mips_interp_alloc(self, 1);
       break;
     case MIPS_ASCIIZ:
-      address = mips_interp_alloc(self, strlen(data->string) + 1, false);
-      strcpy((char *)(self->memory + address), data->string);
+      address=utillib_vector_size(&self->strings);
+      utillib_vector_push_back(&self->strings, data->string);
       break;
     }
     label = mips_label_create(data->label, address);
@@ -74,6 +110,9 @@ static void mips_interp_load_data(struct cling_mips_interp *self) {
   }
 }
 
+/*
+ * Execution of different instructions.
+ */
 static int mips_do_syscall(struct cling_mips_interp *self) {
   int int_val;
   char char_val;
@@ -84,7 +123,7 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
     printf("%d", (int)self->regs[MIPS_A0]);
     break;
   case MIPS_PRINT_STRING:
-    str_val = (char const *)self->memory + self->regs[MIPS_A0];
+    str_val = utillib_vector_at(&self->strings, self->regs[MIPS_A0]);
     printf("%s", str_val);
     break;
   case MIPS_PRINT_CHAR:
@@ -104,7 +143,7 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
   case MIPS_READ_STRING:
     assert(false);
   }
-  return MIPS_EC_EXIT;
+  return MIPS_EC_OK;
 }
 
 static void mips_do_move(struct cling_mips_interp *self,
@@ -134,28 +173,10 @@ static void mips_do_mflo(struct cling_mips_interp *self,
 
 static void mips_do_jal(struct cling_mips_interp *self,
                         struct cling_mips_ir const *ir) {
-  struct cling_mips_label const *label;
+  struct cling_mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
   assert(label);
   self->regs[MIPS_RA] = self->pc + 1;
   self->pc = label->address;
-}
-
-static void mips_do_div(struct cling_mips_interp *self,
-                        struct cling_mips_ir const *ir) {
-  uint8_t src_regid1 = ir->operands[0].regid;
-  uint8_t src_regid2 = ir->operands[1].regid;
-  self->lo = self->regs[src_regid1] / self->regs[src_regid2];
-}
-
-static int mips_do_beq(struct cling_mips_interp *self,
-                       struct cling_mips_ir const *ir) {
-  uint8_t src_regid1 = ir->operands[0].regid;
-  uint8_t src_regid2 = ir->operands[1].regid;
-  if (self->regs[src_regid1] == self->regs[src_regid2]) {
-    self->pc = self->pc + ir->operands[2].offset + 1;
-    return MIPS_EC_BTAKEN;
-  }
-  return MIPS_EC_OK;
 }
 
 static void mips_do_li(struct cling_mips_interp *self,
@@ -177,22 +198,30 @@ static uint32_t mips_do_address(struct cling_mips_interp *self,
   return self->regs[base_regid] + offset;
 }
 
-static int mips_do_lw(struct cling_mips_interp *self,
-                      struct cling_mips_ir const *ir) {
+static int mips_do_memory(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
   uint32_t address = mips_do_address(self, ir);
-  uint8_t dest_regid = ir->operands[0].regid;
-  if (address & (MIPS_WORD_SIZE - 1))
-    return MIPS_EC_ALIGN;
-  self->regs[dest_regid] = *(uint32_t *)(self->memory + address);
+  uint8_t regid=ir->operands[0].regid;
+  uint8_t *memory = mips_mem_lookup(self, address);
+  if (!memory) {
+    return 1;
+  }
+  switch(ir->opcode) {
+    case MIPS_SW:
+      *(uint32_t*) memory=self->regs[regid];
+      break;
+    case MIPS_LB:
+      self->regs[regid]=*(uint8_t*)memory;
+      break;
+    case MIPS_SB:
+      *(uint8_t*) memory=self->regs[regid];
+      break;
+    case MIPS_LW:
+      self->regs[regid]=*(uint32_t*)memory;
+      break;
+    default:
+     assert(false); 
+  }
   return 0;
-}
-
-static int mips_do_sw(struct cling_mips_interp *self,
-                      struct cling_mips_ir const *ir) {
-  uint32_t address = mips_do_address(self, ir);
-  uint8_t dest_regid = ir->operands[0].regid;
-  if (address & (MIPS_WORD_SIZE - 1))
-    return MIPS_EC_ALIGN;
 }
 
 static void mips_do_la(struct cling_mips_interp *self,
@@ -200,34 +229,131 @@ static void mips_do_la(struct cling_mips_interp *self,
   struct cling_mips_label const *label;
   uint8_t dest_regid;
   dest_regid = ir->operands[0].regid;
+  label=mips_label_name_find(&self->labels, ir->operands[1].label);
   assert(label);
   self->regs[dest_regid] = label->address;
 }
 
-void cling_mips_interp_destroy(struct cling_mips_interp *self) {
-  free(self->memory);
+/*
+ * Value must be converted to signed int.
+ */
+static bool mips_cmp_zero(int32_t value, uint8_t opcode) {
+  switch(opcode) {
+    case MIPS_BNE:
+      return value != 0;
+    case MIPS_BEQ:
+      return value == 0;
+    case MIPS_BGEZ:
+      return value >= 0;
+    case MIPS_BGTZ:
+      return value > 0;
+    case MIPS_BLEZ:
+      return value <= 0;
+    case MIPS_BLTZ:
+      return value < 0;
+    default:
+      assert(false);
+  }
 }
 
-int mips_do_branch(struct cling_mips_interp *self,
-                   struct cling_mips_ir const *ir) {}
-
-void mips_do_j(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
-
+static bool mips_do_branch(struct cling_mips_interp *self,
+                   struct cling_mips_ir const *ir) {
+  struct cling_mips_label const *label;
+  uint8_t src_regid1, src_regid2;
+  bool cmp;
+  switch(ir->opcode) {
+    case MIPS_BNE:
+    case MIPS_BEQ:
+      src_regid1=ir->operands[0].regid;
+      src_regid2=ir->operands[1].regid;
+      cmp=mips_cmp_zero(self->regs[src_regid1]-self->regs[src_regid2], ir->opcode);
+      label=mips_label_name_find(&self->labels, ir->operands[2].label);
+      break;
+    case MIPS_BGEZ:
+    case MIPS_BGTZ:
+    case MIPS_BLEZ:
+    case MIPS_BLTZ:
+      src_regid1=ir->operands[0].regid;
+      cmp=mips_cmp_zero(self->regs[src_regid1], ir->opcode);
+      label=mips_label_name_find(&self->labels, ir->operands[1].label);
+      break;
+    default:
+      assert(false);
+  }
+  if (cmp) {
+    self->pc=label->address;
+    return true;
+  }
+  return false;
 }
 
-int cling_mips_interp_exec(struct cling_mips_interp *self) {
+static void mips_do_j(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
+  struct cling_mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
+  assert(label);
+  self->pc=label->address;
+}
+
+/*
+ * Three regs arith
+ */
+static int mips_do_arith1(struct cling_mips_interp *self,
+  struct cling_mips_ir const *ir) {
+  uint8_t dest_regid = ir->operands[0].regid;
+  uint8_t src_regid1 = ir->operands[1].regid;
+  uint8_t src_regid2 = ir->operands[2].regid;
+  uint32_t result;
+
+  switch(ir->opcode) {
+    case MIPS_ADD:
+    case MIPS_ADDU:
+      result=self->regs[src_regid1]+self->regs[src_regid2];
+      break;
+    case MIPS_SUB:
+    case MIPS_SUBU:
+      result=self->regs[src_regid1]-self->regs[src_regid2];
+      break;
+    default:
+      assert(false);
+  }
+  self->regs[dest_regid]=result;
+  return 0;
+}
+
+/*
+ * div mult arith
+ */
+static int mips_do_arith2(struct cling_mips_interp *self,
+  struct cling_mips_ir const *ir) {
+  uint8_t src_regid1 = ir->operands[0].regid;
+  uint8_t src_regid2 = ir->operands[1].regid;
+  switch(ir->opcode) {
+    case MIPS_DIV:
+      self->lo = self->regs[src_regid1] / self->regs[src_regid2];
+      break;
+    case MIPS_MULT:
+      self->lo = self->regs[src_regid1] * self->regs[src_regid2];
+      break;
+    default:
+      assert(false);
+  }
+}
+
+int cling_mips_interp_exec(struct cling_mips_interp *self) 
+{
   struct cling_mips_ir const *ir;
-  const size_t instr_size = mips_program_size(self->program);
+  const size_t instr_size = utillib_vector_size(self->instrs);
 
   while (true) {
   fetch:
-    ir = mips_program_instr(self->program, self->pc);
+    /* print_memory_usage(self); */
+    ir = utillib_vector_at(self->instrs, self->pc); 
     switch (ir->opcode) {
     case MIPS_NOP:
       break;
     case MIPS_SYSCALL:
       if (MIPS_EC_EXIT == mips_do_syscall(self))
-        return 0;
+        return MIPS_EC_OK;
+      break;
     case MIPS_MOVE:
       mips_do_move(self, ir);
       break;
@@ -237,18 +363,17 @@ int cling_mips_interp_exec(struct cling_mips_interp *self) {
     case MIPS_MFLO:
       mips_do_mflo(self, ir);
       break;
-    case MIPS_ADDU:
+    case MIPS_DIV:
+    case MIPS_MULT:
+      mips_do_arith2(self, ir);
+      break;
+    case MIPS_ADD:
     case MIPS_SUB:
-    case MIPS_SUBU:
-      assert(false);
+      mips_do_arith1(self, ir);
+      break;
     case MIPS_JAL:
       mips_do_jal(self, ir);
       goto fetch;
-    case MIPS_DIV:
-      mips_do_div(self, ir);
-      break;
-    case MIPS_MULT:
-    case MIPS_ADD:
     case MIPS_J:
       mips_do_j(self, ir);
       goto fetch;
@@ -261,25 +386,67 @@ int cling_mips_interp_exec(struct cling_mips_interp *self) {
     case MIPS_BGTZ:
     case MIPS_BLEZ:
     case MIPS_BLTZ:
-      if (MIPS_EC_BTAKEN == mips_do_branch(self, ir))
+      if (mips_do_branch(self, ir))
         goto fetch;
       break;
     case MIPS_LW:
-      if (MIPS_EC_ALIGN == mips_do_lw(self, ir))
-        return MIPS_EC_ALIGN;
-      break;
     case MIPS_SW:
     case MIPS_LB:
     case MIPS_SB:
+      if (0 != mips_do_memory(self, ir))
+        return 1;
+      break;
     case MIPS_LA:
+      mips_do_la(self, ir);
+      break;
     case MIPS_LI:
       mips_do_li(self, ir);
       break;
+    case MIPS_ADDU:
+    case MIPS_SUBU:
     default:
       assert(false);
     }
     ++self->pc;
     if (self->pc >= instr_size)
       return 0;
+  }
+}
+
+static void print_memory_usage(struct cling_mips_interp const *self) {
+  size_t used_memblk=0;
+  for (int i=0; i<MIPS_MEM_ARRAY_MAX; ++i)
+    if (self->memory[i])
+      for (int j=0; j<MIPS_MEM_ARRAY_MAX; ++j)
+        if (self->memory[i][j])
+          ++used_memblk;
+  printf("$sp=%" PRIu32 "\n", self->regs[MIPS_SP]);
+  printf("total memory=%u\n", MIPS_MEM_MAX);
+  printf("used memory=%u\n", used_memblk*MIPS_MEMBLK_SIZE);
+}
+
+void cling_mips_interp_init(struct cling_mips_interp *self,
+                            struct cling_mips_program const *program) {
+  self->errno = 0;
+  self->pc = 0;
+  self->lo = 0;
+  self->instrs=&program->text;
+  utillib_hashmap_init(&self->labels, &mips_label_strcallback);
+  utillib_vector_init(&self->strings);
+  memset(self->memory, 0, sizeof self->memory);
+  memset(self->regs, 0, sizeof self->regs);
+  self->regs[MIPS_SP]=MIPS_MEM_MAX;
+  mips_interp_load_data(self, program);
+  mips_interp_load_label(self, program);
+}
+
+void cling_mips_interp_destroy(struct cling_mips_interp *self) {
+  utillib_hashmap_destroy_owning(&self->labels, NULL, mips_label_destroy);
+  utillib_vector_destroy(&self->strings);
+  for (int i=0; i<MIPS_MEM_ARRAY_MAX; ++i) {
+    if (self->memory[i])
+      for (int j=0; j<MIPS_MEM_ARRAY_MAX; ++j)
+        free(self->memory[i][j]);
+    free(self->memory[i]);
   }
 }
