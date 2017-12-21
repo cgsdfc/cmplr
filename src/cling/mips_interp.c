@@ -153,7 +153,7 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
   case MIPS_READ_STRING:
     assert(false);
   }
-  return MIPS_EC_OK;
+  return 0; 
 }
 
 static void mips_do_move(struct cling_mips_interp *self,
@@ -172,7 +172,7 @@ static int mips_do_addi(struct cling_mips_interp *self,
   /*
    * TODO: Overflow Detect.
    */
-  return MIPS_EC_OK;
+  return 0;
 }
 
 static void mips_do_mflo(struct cling_mips_interp *self,
@@ -247,7 +247,7 @@ static void mips_do_la(struct cling_mips_interp *self,
 /*
  * Value must be converted to signed int.
  */
-static bool mips_cmp_zero(int32_t value, uint8_t opcode) {
+static bool mips_cmp_zero(uint8_t opcode, int32_t value) {
   switch(opcode) {
     case MIPS_BNE:
       return value != 0;
@@ -270,13 +270,15 @@ static bool mips_do_branch(struct cling_mips_interp *self,
                    struct cling_mips_ir const *ir) {
   struct cling_mips_label const *label;
   uint8_t src_regid1, src_regid2;
+  int32_t value;
   bool cmp;
   switch(ir->opcode) {
     case MIPS_BNE:
     case MIPS_BEQ:
       src_regid1=ir->operands[0].regid;
       src_regid2=ir->operands[1].regid;
-      cmp=mips_cmp_zero(self->regs[src_regid1]-self->regs[src_regid2], ir->opcode);
+      value=self->regs[src_regid1]-self->regs[src_regid2];
+      cmp=mips_cmp_zero(ir->opcode, value);
       label=mips_label_name_find(&self->labels, ir->operands[2].label);
       break;
     case MIPS_BGEZ:
@@ -284,7 +286,8 @@ static bool mips_do_branch(struct cling_mips_interp *self,
     case MIPS_BLEZ:
     case MIPS_BLTZ:
       src_regid1=ir->operands[0].regid;
-      cmp=mips_cmp_zero(self->regs[src_regid1], ir->opcode);
+      value=self->regs[src_regid1];
+      cmp=mips_cmp_zero(ir->opcode, value);
       label=mips_label_name_find(&self->labels, ir->operands[1].label);
       break;
     default:
@@ -361,7 +364,7 @@ int cling_mips_interp_exec(struct cling_mips_interp *self)
       break;
     case MIPS_SYSCALL:
       if (MIPS_EC_EXIT == mips_do_syscall(self))
-        return MIPS_EC_OK;
+        return 0;
       break;
     case MIPS_MOVE:
       mips_do_move(self, ir);
@@ -429,10 +432,10 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
       for (int j=0; j<MIPS_MEM_ARRAY_MAX; ++j)
         if (self->memory[i][j])
           ++used_memblk;
-  puts("");
-  printf("$sp=%" PRIu32 "\n", self->regs[MIPS_SP]);
-  printf("total memory=%u\n", MIPS_MEM_MAX);
-  printf("used memory=%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
+  puts("memory usage:");
+  printf("total:%u\n", MIPS_MEM_MAX);
+  printf("allocated:%" PRIu32 "\n", self->regs[MIPS_SP]);
+  printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
 void cling_mips_interp_init(struct cling_mips_interp *self,
@@ -488,8 +491,9 @@ static void dump_regs(struct cling_mips_interp const *self) {
 
 void cling_mips_interp_report_errors(struct cling_mips_interp const *self) {
   char const * errmsg=cling_mips_ecode_tostring(self->errno);
-  fprintf(stderr, "ERROR: %s %d\n", errmsg, self->errno);
+  fprintf(stderr, "ERROR: %s (%d)\n", errmsg, self->errno);
   fprintf(stderr, "pc=%u\n", self->pc);
+  fprintf(stderr, "sp=%u\n", self->regs[MIPS_SP]);
   fputs("\t", stderr);
   mips_ir_fprint(utillib_vector_at(self->instrs, self->pc), stderr);
 }
@@ -499,6 +503,6 @@ static void dump_labels(struct cling_mips_interp const *self) {
   struct cling_mips_label const *label;
   UTILLIB_HASHMAP_FOREACH(pair, &self->labels) {
     label=pair->up_first;
-    printf("%s: 0x%08"PRIX32"\n", label->label, label->address);
+    printf("%s:\n\t0x%08"PRIX32"\n", label->label, label->address);
   }
 }

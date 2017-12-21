@@ -799,9 +799,8 @@ mips_function_local_layout(struct cling_mips_function *self,
           mips_alloc(self, 1));
       break;
     case OP_DEFARR:
-      size=ast_ir->defarr.extend<<2;
       mips_function_memmap(self, ast_ir->defarr.name, 
-          mips_alloc(self, size)-size);
+          mips_alloc(self, ast_ir->defarr.extend));
       break;
     }
   }
