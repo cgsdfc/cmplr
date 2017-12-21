@@ -223,7 +223,7 @@ static unsigned int lookup_value(struct cling_lcse_optimizer *self,
                                  unsigned int address) {
   struct cling_lcse_value *val, v;
   v.address = address;
-  val = utillib_hashmap_at(&self->values, &v);
+  val = utillib_hashmap_find(&self->values, &v);
   if (val) {
     return val->value;
   }
@@ -239,7 +239,7 @@ static unsigned int lookup_value(struct cling_lcse_optimizer *self,
 static void update_value(struct cling_lcse_optimizer *self, unsigned int address, unsigned int value) {
   struct cling_lcse_value *val, v;
   v.address=address;
-  val=utillib_hashmap_at(&self->values, &v);
+  val=utillib_hashmap_find(&self->values, &v);
   if (val) {
     val->value=value;
     return;
@@ -324,7 +324,7 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
                              struct cling_lcse_ir *lcse_ir) {
   struct cling_lcse_ir *new_ir;
 
-  new_ir = utillib_hashmap_at(&self->operations, lcse_ir);
+  new_ir = utillib_hashmap_find(&self->operations, lcse_ir);
   if (new_ir) {
     switch (new_ir->kind) {
     case LCSE_BINARY:

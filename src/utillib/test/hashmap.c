@@ -48,7 +48,7 @@ UTILLIB_TEST(hashmap_insert) {
   for (char **key = keys, **value = values; *key != NULL; ++key, ++value) {
     int retv = utillib_hashmap_insert(UT_FIXTURE, *key, *value);
     UTILLIB_TEST_ASSERT_EQ(retv, 0);
-    char const *expected_value = utillib_hashmap_at(UT_FIXTURE, *key);
+    char const *expected_value = utillib_hashmap_find(UT_FIXTURE, *key);
     UTILLIB_TEST_ASSERT_EQ(expected_value, *value);
   }
 }
@@ -78,7 +78,7 @@ UTILLIB_TEST(hashmap_discard) {
   utillib_hashmap_insert(UT_FIXTURE, key, value);
   char const *actual_value = utillib_hashmap_discard(UT_FIXTURE, key);
   UTILLIB_TEST_ASSERT_EQ(value, actual_value);
-  UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_at(UT_FIXTURE, key), NULL);
+  UTILLIB_TEST_ASSERT_EQ(utillib_hashmap_find(UT_FIXTURE, key), NULL);
 
   /* Now discard a non-exist_key */
   actual_value = utillib_hashmap_discard(UT_FIXTURE, "Not exist_key");
@@ -151,7 +151,7 @@ UTILLIB_TEST(hashmap_rehash) {
     utillib_hashmap_insert(UT_FIXTURE, *s, *s);
   }
   for (char const **s = input; *s != NULL; ++s) {
-    char const *value = utillib_hashmap_at(UT_FIXTURE, *s);
+    char const *value = utillib_hashmap_find(UT_FIXTURE, *s);
     UTILLIB_TEST_ASSERT_NE(NULL, value);
     UTILLIB_TEST_ASSERT_EQ(value, *s);
   }
@@ -159,7 +159,7 @@ UTILLIB_TEST(hashmap_rehash) {
   utillib_hashmap_rehash(UT_FIXTURE);
   utillib_hashmap_print_buckets(UT_FIXTURE);
   for (char const **s = input; *s != NULL; ++s) {
-    char const *value = utillib_hashmap_at(UT_FIXTURE, *s);
+    char const *value = utillib_hashmap_find(UT_FIXTURE, *s);
     UTILLIB_TEST_ASSERT_NE(NULL, value);
     UTILLIB_TEST_ASSERT_EQ(value, *s);
   }

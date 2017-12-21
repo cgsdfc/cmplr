@@ -98,7 +98,7 @@ static const struct utillib_hashmap_callback lr_itemset_callback = {
 struct utillib_lr_item *
 utillib_lr_builder_item_lookup(struct utillib_lr_builder *self,
                                struct utillib_lr_item const *item) {
-  struct utillib_lr_item *exist = utillib_hashmap_at(&self->item_index, item);
+  struct utillib_lr_item *exist = utillib_hashmap_find(&self->item_index, item);
   if (exist)
     return exist;
   exist = malloc(sizeof *exist);
@@ -233,7 +233,7 @@ static void lr_builder_core_bfs(struct utillib_lr_builder *self,
     lr_builder_build_goto(self, topset);
     UTILLIB_VECTOR_FOREACH(reachable, gotosets) {
       struct utillib_lr_itemset *maybe_exist;
-      maybe_exist = utillib_hashmap_at(itemset_index, reachable);
+      maybe_exist = utillib_hashmap_find(itemset_index, reachable);
       if (maybe_exist) {
         utillib_edge_list_add_edge(core, topset->value, maybe_exist->value,
                                    maybe_exist->access);

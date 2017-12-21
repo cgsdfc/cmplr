@@ -116,7 +116,7 @@ public:
   void *update(void const *key, void const *value);
   void *discard(void const *key);
   bool exist_key(void const *key) const;
-  void *at(void const *key);
+  void *find(void const *key);
   size_t size() const;
   bool empty() const;
   size_t buckets_size() const;

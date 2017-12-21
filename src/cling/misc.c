@@ -283,14 +283,14 @@ struct cling_mips_label *
 mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
   struct cling_mips_label key;
   key.address = address;
-  return utillib_hashmap_at(self, &key);
+  return utillib_hashmap_find(self, &key);
 }
 
 struct cling_mips_label *
 mips_label_name_find(struct utillib_hashmap const *self, char const *name) {
   struct cling_mips_label key;
   key.label = name;
-  return utillib_hashmap_at(self, &key);
+  return utillib_hashmap_find(self, &key);
 }
 
 static int mips_label_strcmp(struct cling_mips_label const *lhs,

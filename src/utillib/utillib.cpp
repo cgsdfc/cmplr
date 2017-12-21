@@ -161,7 +161,7 @@ bool hashmap::exist_key(void const *key) const {
   return utillib_hashmap_exist_key(&self, key);
 }
 
-void *hashmap::at(void const *key) { return utillib_hashmap_at(&self, key); }
+void *hashmap::find(void const *key) { return utillib_hashmap_find(&self, key); }
 
 json_value
 hashmap::tojson(utillib_json_value_create_func_t value_create) const {

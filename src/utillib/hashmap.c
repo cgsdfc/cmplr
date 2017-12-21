@@ -127,7 +127,7 @@ void utillib_hashmap_rehash(struct utillib_hashmap *self) {
   self->buckets_size = new_buckets_size;
 }
 
-void *utillib_hashmap_at(struct utillib_hashmap const *self, void const *key) {
+void *utillib_hashmap_find(struct utillib_hashmap const *self, void const *key) {
   struct utillib_hashmap_search_result result;
   utillib_hashmap_search_result_init(&result, self, key);
   if (result.pair)
