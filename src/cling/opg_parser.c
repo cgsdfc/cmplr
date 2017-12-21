@@ -298,12 +298,41 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self) {
 }
 
 /*
+ * Keep strange things out of touch.
+ */
+static inline bool good_token(size_t lookahead)
+{
+  switch(lookahead) {
+    case SYM_ADD:
+    case SYM_MUL:
+    case SYM_IDEN:
+    case SYM_LK:
+    case SYM_RK:
+    case SYM_EQ:
+    case SYM_NE:
+    case SYM_DEQ:
+    case SYM_LT:
+    case SYM_LE:
+    case SYM_GT:
+    case SYM_GE:
+    case SYM_DIV:
+    case SYM_MINUS:
+    case SYM_COMMA:
+    case SYM_LP:
+    case SYM_RP:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/*
  * Currently, it return null as indicator of error.
  * The client should check this and look at the last_error.
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-                       struct utillib_token_scanner *input) {
+    struct utillib_token_scanner *input) {
 
   size_t lookahead;
   size_t stacktop;
@@ -314,8 +343,10 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   const size_t eof_symbol = self->eof_symbol;
 
   while (!utillib_vector_empty(opstack)) {
-    /* opg_parser_show_opstack(self); */
+    opg_parser_show_stack(self);
     lookahead = utillib_token_scanner_lookahead(input);
+    if (!good_token(lookahead))
+      goto error;
     if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
       /*
        * We will catch any success before the precedence is computed
@@ -338,8 +369,8 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     }
 
     stacktop = utillib_vector_back(opstack);
-    if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
-        lookahead == SYM_CHAR) {
+    if (lookahead == SYM_IDEN || lookahead == SYM_UINT || 
+        lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
       utillib_vector_push_back(
           stack,
           cling_ast_factor(lookahead, utillib_token_scanner_semantic(input)));
@@ -364,19 +395,19 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     }
     cmp = opg_parser_compare(self, stacktop, lookahead);
     switch (cmp) {
-    case CL_OPG_LT:
-    shiftin:
-      utillib_vector_push_back(opstack, lookahead);
-      utillib_token_scanner_shiftaway(input);
-      break;
-    case CL_OPG_GT:
-      if (0 != opg_parser_reduce(self, lookahead)) {
+      case CL_OPG_LT:
+shiftin:
+        utillib_vector_push_back(opstack, lookahead);
+        utillib_token_scanner_shiftaway(input);
+        break;
+      case CL_OPG_GT:
+        if (0 != opg_parser_reduce(self, lookahead)) {
+          goto error;
+        }
+        break;
+      default:
+      case CL_OPG_ERR:
         goto error;
-      }
-      break;
-    default:
-    case CL_OPG_ERR:
-      goto error;
     }
   }
 error:

@@ -582,14 +582,17 @@ maybe_multiple_var_decls(struct cling_rd_parser *self,
       cling_symbol_table_insert_variable(self->symbol_table, object);
       utillib_json_array_push_back(array, object);
       code = utillib_token_scanner_lookahead(input);
-      if (code != SYM_KW_INT && code != SYM_KW_CHAR)
-        return array;
-      *type = code;
-      utillib_token_scanner_shiftaway(input);
+      switch(code) {
+        case SYM_KW_INT:
+        case SYM_KW_CHAR:
+          *type = code;
+          utillib_token_scanner_shiftaway(input);
+          break;
+        default:
+          goto return_array;
+      }
       break;
     default:
-      /* We are screw */
-      error = cling_unexpected_error(input, context);
       goto skip;
     }
   }
@@ -597,6 +600,7 @@ return_array:
   return array;
 
 skip:
+  error = cling_unexpected_error(input, context);
   rd_parser_error_push_back(self, error);
   rd_parser_skip_init(self, SYM_SEMI);
   switch (rd_parser_skipto(self, input)) {
@@ -1819,8 +1823,7 @@ multiple_function(struct cling_rd_parser *self,
     utillib_json_array_push_back(array, object);
     break;
   default:
-    /* Checked by `maybe_multiple_var_decls' */
-    assert(false);
+    goto unexpected;
   }
   while (true) {
     code = utillib_token_scanner_lookahead(input);
