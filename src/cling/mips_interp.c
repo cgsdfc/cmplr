@@ -429,10 +429,8 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
       for (int j=0; j<MIPS_MEM_ARRAY_MAX; ++j)
         if (self->memory[i][j])
           ++used_memblk;
-  puts("");
-  printf("$sp=%" PRIu32 "\n", self->regs[MIPS_SP]);
-  printf("total memory=%u\n", MIPS_MEM_MAX);
-  printf("used memory=%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
+  puts("\nmemory usage:");
+  printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
 void cling_mips_interp_init(struct cling_mips_interp *self,
