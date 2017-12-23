@@ -64,7 +64,7 @@ UTILLIB_ENUM_ELEM(CL_LOCAL)
 UTILLIB_ENUM_ELEM(CL_LEXICAL)
 UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
 
-UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
+UTILLIB_ENUM_BEGIN(cling_type)
 UTILLIB_ENUM_ELEM(CL_UNDEF)
 UTILLIB_ENUM_ELEM(CL_INT)
 UTILLIB_ENUM_ELEM(CL_CHAR)
@@ -72,7 +72,7 @@ UTILLIB_ENUM_ELEM(CL_VOID)
 UTILLIB_ENUM_ELEM(CL_CONST)
 UTILLIB_ENUM_ELEM(CL_ARRAY)
 UTILLIB_ENUM_ELEM(CL_FUNC)
-UTILLIB_ENUM_END(cling_symbol_entry_kind);
+UTILLIB_ENUM_END(cling_type);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
 void cling_symbol_table_destroy(struct cling_symbol_table *self);

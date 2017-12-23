@@ -43,6 +43,11 @@ int main(int argc, char **argv)
   }
   cling_frontend_init(&frontend, source_file);
   cling_frontend_parse(&frontend);
+  cling_backend_init(&backend);
+  cling_backend_codegen(&backend, &frontend);
+  cling_backend_dump_ast_ir(&backend, stdout);
+
+  cling_backend_destroy(&backend);
   cling_frontend_destroy(&frontend);
   return 0;
 }

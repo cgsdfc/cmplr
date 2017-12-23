@@ -140,6 +140,7 @@ static int scanner_read_handler(struct utillib_char_scanner *chars,
     break;
   }
   if (code != UT_SYM_NULL) {
+    utillib_string_append_char(buffer, ch);
     utillib_char_scanner_shiftaway(chars);
     return code;
   }

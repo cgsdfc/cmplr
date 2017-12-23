@@ -22,6 +22,7 @@
 #include "ast_pretty.h"
 #include "misc.h"
 #include "symbols.h"
+#include "symbol_table.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -89,8 +90,8 @@ cling_incompatible_type_error(struct utillib_token_scanner const *input,
                               int actual_type, int expected_type,
                               size_t context) {
   struct cling_error *self = error_create(CL_EINCTYPE, input, context);
-  self->inctype.expected = cling_symbol_entry_kind_tostring(expected_type);
-  self->inctype.actual = cling_symbol_entry_kind_tostring(actual_type);
+  self->inctype.expected = cling_type_tostring(expected_type);
+  self->inctype.actual = cling_type_tostring(actual_type);
   return self;
 }
 
@@ -115,10 +116,22 @@ cling_invalid_expr_error(struct utillib_token_scanner const *input,
 }
 
 struct cling_error *
-cling_dupcase_error(struct utillib_token_scanner const *input, int label,
-                    size_t context) {
+cling_dupcase_error(struct utillib_token_scanner const *input, int case_type,
+    char const *label, size_t context) 
+{
   struct cling_error *self = error_create(CL_EDUPCASE, input, context);
-  self->dupcase.label = label;
+  self->dupcase.case_type=case_type;
+  self->dupcase.label = strdup(label);
+  return self;
+}
+
+struct cling_error *
+cling_badcase_error(struct utillib_token_scanner const *input, int expected, 
+    int actual, size_t context)
+{
+  struct cling_error *self=error_create(CL_EBADCASE, input, context);
+  self->badcase.expected=cling_type_tostring(expected);
+  self->badcase.actual=cling_type_tostring(actual);
   return self;
 }
 
@@ -160,7 +173,13 @@ void cling_error_print(struct cling_error const *self) {
     fprintf(stderr, "'%s' is not allowed here\n", self->invexpr.expr);
     break;
   case CL_EDUPCASE:
-    fprintf(stderr, "duplicated case label '%d'\n", self->dupcase.label);
+    fprintf(stderr, "duplicated case label '%s' of type '%s'\n", self->dupcase.label,
+        cling_symbol_kind_tostring(self->dupcase.case_type));
+    break;
+  case CL_EBADCASE:
+    fprintf(stderr, "expects case type '%s' but actually gets '%s'\n",
+        self->badcase.expected,
+        self->badcase.actual);
     break;
   default:
     assert(false && "unimplemented");
@@ -183,6 +202,9 @@ void cling_error_destroy(struct cling_error *self) {
     break;
   case CL_EINVEXPR:
     free(self->invexpr.expr);
+    break;
+  case CL_EDUPCASE:
+    free(self->dupcase.label);
     break;
   }
   free(self);

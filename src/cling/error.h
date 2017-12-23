@@ -34,6 +34,7 @@ UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
 UTILLIB_ENUM_ELEM(CL_EINCARG)
 UTILLIB_ENUM_ELEM(CL_EARGCUNMAT)
 UTILLIB_ENUM_ELEM(CL_EDUPCASE)
+UTILLIB_ENUM_ELEM(CL_EBADCASE)
 UTILLIB_ENUM_ELEM(CL_EINVEXPR)
 UTILLIB_ENUM_END(cling_error_kind);
 
@@ -72,8 +73,14 @@ struct cling_error {
       char const *actual;
     } inctype;
     struct {
-      int label;
+      int case_type;
+      char *label;
     } dupcase;
+    struct {
+      char const *expected;
+      char const *actual;
+    } badcase;
+
   };
 };
 
@@ -114,8 +121,12 @@ cling_argc_unmatched_error(struct utillib_token_scanner const *input,
                            unsigned int expected_argc, size_t context);
 
 struct cling_error *
-cling_dupcase_error(struct utillib_token_scanner const *input, int label,
-                    size_t context);
+cling_dupcase_error(struct utillib_token_scanner const *input, int case_type,
+    char const *label, size_t context);
+
+struct cling_error *
+cling_badcase_error(struct utillib_token_scanner const *input, int expected, 
+    int actual, size_t context);
 
 void cling_error_print(struct cling_error const *self);
 
