@@ -219,11 +219,13 @@ void cling_rd_parser_init(struct cling_rd_parser *self,
                           struct cling_symbol_table *symbol_table) {
   self->curfunc = NULL;
   self->symbol_table = symbol_table;
+  self->root = utillib_json_object_create_empty();
   utillib_vector_init(&self->elist);
 }
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self) {
   utillib_vector_destroy_owning(&self->elist, cling_error_destroy);
+  utillib_json_value_destroy(self->root);
 }
 
 struct utillib_json_value *
@@ -233,8 +235,6 @@ cling_rd_parser_parse(struct cling_rd_parser *self,
   case 0:
     return program(self, input);
   default:
-    if (self->root)
-      utillib_json_value_destroy(self->root);
     return NULL;
   }
 }
@@ -1866,7 +1866,6 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
   struct utillib_json_value *const_decls, *var_decls, *func_decls;
 
   const size_t context = SYM_PROGRAM;
-  self->root = utillib_json_object_create_empty();
   code = utillib_token_scanner_lookahead(input);
   switch (code) {
   case SYM_KW_CONST:

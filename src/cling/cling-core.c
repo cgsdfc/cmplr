@@ -1,0 +1,79 @@
+/*
+   Cmplr Library
+   Copyright (C) 2017-2018 Cong Feng <cgsdfc@126.com>
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301 USA
+
+*/
+
+#include "cling-core.h"
+#include <stdlib.h>
+
+/*
+ * file must be opened for reading.
+ */
+void cling_frontend_init(struct cling_frontend *self, FILE *file)
+{
+  cling_scanner_init(&self->scanner, file);
+  cling_symbol_table_init(&self->symbol_table);
+  cling_rd_parser_init(&self->parser, &self->symbol_table);
+}
+
+void cling_frontend_destroy(struct cling_frontend *self)
+{
+  cling_rd_parser_destroy(&self->parser);
+  cling_symbol_table_destroy(&self->symbol_table);
+  cling_scanner_destroy(&self->scanner);
+}
+
+int cling_frontend_run(struct cling_frontend *self)
+{
+  cling_rd_parser_parse(&self->parser, &self->scanner);
+  if (cling_rd_parser_has_errors(&self->parser)) {
+    cling_rd_parser_report_errors(&self->parser);
+    return 1;
+  }
+  return 0;
+}
+
+void cling_backend_init(struct cling_backend *self)
+{
+  cling_ast_program_init(&self->ast_program);
+  cling_mips_program_init(&self->mips_program);
+  cling_mips_interp_init(&self->mips_interp);
+}
+
+
+void cling_backend_destroy(struct cling_backend *self)
+{
+  cling_ast_program_destroy(&self->ast_program);
+  cling_mips_program_destroy(&self->mips_program);
+  cling_mips_interp_destroy(&self->mips_interp);
+}
+
+
+void cling_backend_emit(struct cling_backend *self, struct cling_frontend *frontend)
+{
+  cling_ast_ir_emit_program(frontend->parser.root, &frontend->symbol_table, &self->ast_program);
+  cling_mips_program_emit(&self->mips_program, &self->ast_program);
+}
+
+void cling_backend_run(struct cling_backend *self, int option)
+{
+
+
+
+}

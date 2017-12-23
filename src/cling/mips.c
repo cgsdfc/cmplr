@@ -1646,8 +1646,8 @@ static void mips_global_init(struct cling_mips_global *self,
   self->labels = &program->labels;
 }
 
-void cling_mips_program_init(struct cling_mips_program *self,
-    struct cling_ast_program const *program) {
+void cling_mips_program_init(struct cling_mips_program *self)
+{
   utillib_vector_init(&self->text);
   utillib_vector_init(&self->data);
   utillib_hashmap_init(&self->labels, &mips_label_callback);

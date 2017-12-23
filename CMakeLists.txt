@@ -139,7 +139,7 @@ add_executable(pascal_ll1_table_gen ./src/pascal/ll1_table_gen.c)
 target_link_libraries(pascal_ll1_table_gen pascal)
 
 ## Cling
-add_library(cling
+add_library(cling-core
   ./src/cling/symbol_table.c
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
@@ -156,26 +156,9 @@ add_library(cling
   ./src/cling/basic_block.c
   ./src/cling/optimize.c
   ./src/cling/mips_interp.c
+  ./src/cling/cling-core.c
   )	
-target_link_libraries(cling utillib)
+target_link_libraries(cling-core utillib)
 
-# add_executable(cling_test
-#   ./src/cling/test/scanner.c
-#   ./src/cling/test/symbol_table.c
-#   ./src/cling/test/driver.c
-#   )
-# target_link_libraries(cling_test cling)
-# add_test(Cling_Test cling_test)
-# add_executable(cling-scanner ./src/cling/smain.c)
-# target_link_libraries(cling-scanner cling)
-set(cling-app cling-parser cling-pretty)
-foreach(app ${cling-app})
-  add_executable(${app} ./src/cling/${app}.c)
-  target_link_libraries(${app} cling)
-endforeach()
-
-# add_library(cling++ ./src/cling/cling.cpp)
-# target_link_libraries(cling++ cling utillib++)
-# add_executable(clingcppmain ./src/cling/cppmain.cpp)
-# target_link_libraries(clingcppmain cling++)
-
+add_executable(cling ./src/cling/cling.c)
+target_link_libraries(cling cling-core)

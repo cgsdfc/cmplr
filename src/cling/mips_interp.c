@@ -438,17 +438,23 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
   printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
-void cling_mips_interp_init(struct cling_mips_interp *self,
-                            struct cling_mips_program const *program) {
+void cling_mips_interp_init(struct cling_mips_interp *self)
+{
   self->errno = 0;
   self->pc = 0;
   self->lo = 0;
-  self->instrs=&program->text;
+  self->instrs=NULL;
   utillib_hashmap_init(&self->labels, &mips_label_strcallback);
   utillib_vector_init(&self->strings);
   memset(self->memory, 0, sizeof self->memory);
   memset(self->regs, 0, sizeof self->regs);
   self->regs[MIPS_SP]=MIPS_MEM_MAX;
+}
+
+void cling_mips_interp_load(struct cling_mips_interp *self,
+                            struct cling_mips_program const *program)
+{
+  self->instrs=&program->text;
   mips_interp_load_data(self, program);
   mips_interp_load_label(self, program);
 }

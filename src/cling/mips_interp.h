@@ -53,7 +53,9 @@ struct cling_mips_interp {
   struct utillib_hashmap labels;
 };
 
-void cling_mips_interp_init(struct cling_mips_interp *self,
+void cling_mips_interp_init(struct cling_mips_interp *self);
+
+void cling_mips_interp_load(struct cling_mips_interp *self,
                             struct cling_mips_program const *program);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);

@@ -218,8 +218,7 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-void cling_mips_program_init(struct cling_mips_program *self,
-                             struct cling_ast_program const *program);
+void cling_mips_program_init(struct cling_mips_program *self);
 void cling_mips_program_destroy(struct cling_mips_program *self);
 void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
