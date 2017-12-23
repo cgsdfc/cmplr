@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     exit(EFOPEN);
   }
   cling_frontend_init(&frontend, source_file);
-  cling_frontend_tokenize(&frontend, stdout);
+  cling_frontend_parse(&frontend);
   cling_frontend_destroy(&frontend);
   return 0;
 }

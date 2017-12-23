@@ -116,6 +116,35 @@ static int rd_parser_skipto_decl(struct cling_rd_parser *self,
   }
 }
 
+/*
+ * It should be used in whenever an integer is needed.
+ * Note the term integer here means '0' or [+|-](non-zero-digit)+
+ * But in expr, use utillib_token_scanner_lookahead instead.
+ * opg_parser has its own idea of how to parse integer.
+ * It is essentially a wrapper around utillib_token_scanner_lookahead
+ * that handles possible prefix of +|-.
+ * It returns SYM_INTEGER on success and raises UT_SYM_ERR otherwise.
+ */
+static size_t read_integer(struct utillib_token_scanner *self) {
+  size_t code = utillib_token_scanner_lookahead(self);
+  char sign;
+
+  switch (code) {
+  case SYM_ADD:
+  case SYM_MINUS:
+    sign = code == SYM_ADD ? '+' : '-';
+    utillib_token_scanner_shiftaway(self);
+    utillib_string_append_char(&self->buffer, sign);
+    if (SYM_UINT == utillib_token_scanner_lookahead(self)) {
+      return SYM_INTEGER;
+    }
+    return UT_SYM_ERR;
+  case SYM_UINT:
+    return SYM_INTEGER;
+  default:
+    return code;
+  }
+}
 bool cling_rd_parser_has_errors(struct cling_rd_parser const *self) {
   return !utillib_vector_empty(&self->elist);
 }
@@ -263,6 +292,8 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
   struct utillib_json_value *object, *array, *value;
   struct cling_error *error;
   const size_t context = SYM_CONST_DEF;
+  assert(expected_initializer == SYM_CHAR ||
+         expected_initializer == SYM_INTEGER);
 
   array = utillib_json_array_create_empty();
 
@@ -290,7 +321,7 @@ const_defs(struct cling_rd_parser *self, struct utillib_token_scanner *input,
     }
     utillib_token_scanner_shiftaway(input);
 
-    code = utillib_token_scanner_lookahead(input);
+    code = read_integer(input);
     if (code != expected_initializer) {
       error = cling_expected_error(input, expected_initializer, context);
       goto skip;
@@ -356,7 +387,7 @@ single_const_decl(struct cling_rd_parser *self,
   utillib_token_scanner_shiftaway(input);
   utillib_json_object_push_back(
       object, "const_defs", /* expected_initializer */
-      const_defs(self, input, code == SYM_KW_INT ? SYM_UINT : SYM_CHAR,
+      const_defs(self, input, code == SYM_KW_INT ? SYM_INTEGER : SYM_CHAR,
                  scope_kind));
 
   code = utillib_token_scanner_lookahead(input);
@@ -422,7 +453,6 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
   size_t const context = SYM_VAR_DEF;
   struct utillib_json_value *array = utillib_json_array_create_empty();
   struct utillib_json_value *object = utillib_json_object_create_empty();
-  struct cling_error *error;
 
   if (cling_symbol_table_exist_name(self->symbol_table, first_iden,
                                     scope_kind)) {
@@ -439,6 +469,9 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
     case SYM_LK:
       utillib_token_scanner_shiftaway(input);
       code = utillib_token_scanner_lookahead(input);
+      /*
+       * Extend must be a uint.
+       */
       if (code != SYM_UINT) {
         expected = SYM_UINT;
         goto expected;
@@ -698,7 +731,7 @@ formal_arglist(struct cling_rd_parser *self,
   char const *name;
   struct utillib_json_value *object;
   struct utillib_json_value *array;
-  struct cling_error *error;
+
   const size_t context = SYM_NARGS;
 
   utillib_token_scanner_shiftaway(input);
@@ -784,7 +817,7 @@ skip:
  */
 static struct utillib_json_value *
 expr_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
-  size_t code;
+
   struct cling_opg_parser opg_parser;
   struct utillib_json_value *object, *expr;
   const size_t context = SYM_EXPR_STMT;
@@ -835,7 +868,7 @@ return_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
   struct utillib_json_value *expr = NULL, *object;
   struct cling_opg_parser opg_parser;
-  struct cling_error *error;
+
   const size_t context = SYM_RETURN_STMT;
   bool void_flag;
 
@@ -915,7 +948,6 @@ lp_expr_rp(struct cling_rd_parser *self, struct utillib_token_scanner *input,
   size_t code;
   struct cling_opg_parser opg_parser;
   struct utillib_json_value *expr;
-  struct cling_error *error;
 
   cling_opg_parser_init(&opg_parser, SYM_RP);
   code = utillib_token_scanner_lookahead(input);
@@ -1025,10 +1057,12 @@ switch_stmt_case_clause(struct cling_rd_parser *self,
     utillib_json_object_push_back(object, "default", &utillib_json_true);
     goto parse_colon_stmt;
   case SYM_KW_CASE:
-    code = utillib_token_scanner_lookahead(input);
+    /*
+     * Note we use read_integer here.
+     */
+    code = read_integer(input);
     switch (code) {
     case SYM_INTEGER:
-    case SYM_UINT:
     case SYM_CHAR:
       cling_primary_init(&label, code, utillib_token_scanner_semantic(input));
       cling_primary_toint(&label, code);
@@ -1296,7 +1330,6 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
   size_t code;
   struct cling_opg_parser opg_parser;
   struct utillib_json_value *init, *cond, *step, *stmt, *object;
-  struct cling_error *error;
 
   size_t context = SYM_FOR_STMT;
   cling_opg_parser_init(&opg_parser, SYM_SEMI);
@@ -1318,11 +1351,11 @@ for_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
                               cling_expected_error(input, SYM_EXPR, context));
     goto expected_init;
   }
-  if (CL_UNDEF != cling_ast_check_for_init(init, self, input, context))
-    utillib_json_object_push_back(object, "init", init);
-  else
+  if (CL_UNDEF == cling_ast_check_for_init(init, self, input, context)) {
     utillib_json_value_destroy(init);
-
+    goto expected_init;
+  }
+  utillib_json_object_push_back(object, "init", init);
 parse_cond:
   context = SYM_CONDITION;
   utillib_token_scanner_shiftaway(input);
@@ -1333,11 +1366,11 @@ parse_cond:
                               cling_expected_error(input, SYM_EXPR, context));
     goto expected_cond;
   }
-  if (CL_UNDEF != cling_ast_check_condition(cond, self, input, context))
-    utillib_json_object_push_back(object, "cond", cond);
-  else
+  if (CL_UNDEF == cling_ast_check_condition(cond, self, input, context)) {
     utillib_json_value_destroy(cond);
-
+    goto expected_cond;
+  }
+  utillib_json_object_push_back(object, "cond", cond);
 parse_step:
   context = SYM_FOR_STEP;
   utillib_token_scanner_shiftaway(input);
@@ -1349,10 +1382,11 @@ parse_step:
                               cling_expected_error(input, SYM_EXPR, context));
     goto expected_step;
   }
-  if (CL_UNDEF != cling_ast_check_for_step(step, self, input, context))
-    utillib_json_object_push_back(object, "step", step);
-  else
+  if (CL_UNDEF == cling_ast_check_for_step(step, self, input, context)) {
     utillib_json_value_destroy(step);
+    goto expected_step;
+  }
+  utillib_json_object_push_back(object, "step", step);
   code = utillib_token_scanner_lookahead(input);
   if (code != SYM_RP) {
     rd_parser_error_push_back(self,
@@ -1584,10 +1618,15 @@ printf_stmt(struct cling_rd_parser *self, struct utillib_token_scanner *input) {
       goto unexpected;
     }
     break;
+    /*
+     * These are lookaheads for expr, note we use SYM_UINT & SYM_ADD
+     * instead of SYM_INTEGER.
+     */
   case SYM_IDEN:
   case SYM_LP:
   case SYM_UINT:
-  case SYM_INTEGER:
+  case SYM_ADD:
+  case SYM_MINUS:
   case SYM_CHAR:
   parse_expr:
     expr = cling_opg_parser_parse(&opg_parser, input);
@@ -1639,7 +1678,7 @@ static struct utillib_json_value *
 function_args_body(struct cling_rd_parser *self,
                    struct utillib_token_scanner *input,
                    struct utillib_json_value *object) {
-  size_t code;
+
   struct utillib_json_value *comp_stmt, *arglist;
 
   cling_symbol_table_enter_scope(self->symbol_table);
@@ -1796,13 +1835,11 @@ multiple_function(struct cling_rd_parser *self,
                   struct utillib_token_scanner *input, size_t maybe_type,
                   char *maybe_name) {
   size_t code;
-  size_t type;
-  char const *name;
+
   bool is_main;
   struct utillib_json_value *array;
   struct utillib_json_value *object;
 
-  const size_t context = SYM_FUNC_DECL;
   code = utillib_token_scanner_lookahead(input);
   array = utillib_json_array_create_empty();
 
@@ -1865,7 +1902,6 @@ static struct utillib_json_value *program(struct cling_rd_parser *self,
   char *first_iden;
   struct utillib_json_value *const_decls, *var_decls, *func_decls;
 
-  const size_t context = SYM_PROGRAM;
   code = utillib_token_scanner_lookahead(input);
   switch (code) {
   case SYM_KW_CONST:

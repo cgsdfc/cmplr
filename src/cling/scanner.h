@@ -41,5 +41,4 @@ UTILLIB_ENUM_END(cling_scanner_error_kind)
 
 void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
 void cling_scanner_destroy(struct utillib_token_scanner *self);
-
 #endif /* CLING_SCANNER_H */

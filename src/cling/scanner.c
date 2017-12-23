@@ -83,11 +83,9 @@ static int scanner_read_string(struct utillib_char_scanner *chars,
 
 static int scanner_read_number(struct utillib_char_scanner *chars,
                                      struct utillib_string *buffer) {
-  char ch = utillib_char_scanner_lookahead(chars);
+  char ch;
+  ch = utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
-  char const *str = utillib_string_c_str(buffer);
-  if (str[0] == '0' && utillib_string_size(buffer) > 1)
-    return -CL_ELEADZERO;
   return SYM_UINT;
 }
 
@@ -131,6 +129,12 @@ static int scanner_read_handler(struct utillib_char_scanner *chars,
     break;
   case ':':
     code = SYM_COLON;
+    break;
+  case '+':
+    code = SYM_ADD;
+    break;
+  case '-':
+    code = SYM_MINUS;
     break;
   default:
     break;
@@ -187,46 +191,9 @@ static int scanner_read_handler(struct utillib_char_scanner *chars,
     utillib_char_scanner_shiftaway(chars);
     return scanner_read_char(chars, buffer);
   }
-  /*
-   * digit, -, + may lead to different token or even error
-   * depending on the following char.
-   */
-  if (isdigit(ch) ||  ch == '-' || ch == '+') {
-    return maybe_number(chars, buffer);
-  }
+  if (isdigit(ch))
+    return scanner_read_number(chars, buffer);
   return -CL_EUNKNOWN;
-}
-
-static int maybe_number(struct utillib_char_scanner *chars, struct utillib_string *buffer) {
-  char ch, next_ch;
-  ch=utillib_char_scanner_lookahead(chars);
-  utillib_string_append_char(buffer, ch);
-  utillib_char_scanner_shiftaway(chars);
-  next_ch=utillib_char_scanner_lookahead(chars);
-
-  switch(ch) {
-    case '+':
-      if (!isdigit(next_ch))
-        return SYM_ADD;
-      break;
-    case '-':
-      if (!isdigit(next_ch))
-        return SYM_MINUS;
-      break;
-    case '0':
-      if (!isdigit(next_ch))
-        return SYM_INTEGER;
-      return -CL_ELEADZERO;
-    default:
-      if (!isdigit(next_ch))
-        return SYM_UINT;
-      break;
-  }
-
-  utillib_token_scanner_collect_digit(chars, buffer);
-  if (ch == '-' || ch == '+')
-    return SYM_INTEGER;
-  return SYM_UINT;
 }
 
 static int

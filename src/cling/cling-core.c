@@ -76,8 +76,7 @@ void cling_frontend_destroy(struct cling_frontend *self)
   cling_scanner_destroy(&self->scanner);
 }
 
-int cling_frontend_run(struct cling_frontend *self)
-{
+int cling_frontend_parse(struct cling_frontend *self) {
   cling_rd_parser_parse(&self->parser, &self->scanner);
   if (cling_rd_parser_has_errors(&self->parser)) {
     cling_rd_parser_report_errors(&self->parser);
