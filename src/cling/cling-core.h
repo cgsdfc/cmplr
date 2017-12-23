@@ -21,12 +21,13 @@
 
 #ifndef CLING_CLING_CORE_H
 #define CLING_CLING_CORE_H
+#include "symbols.h"
 #include "scanner.h"
 #include "rd_parser.h"
 #include "symbol_table.h"
-#include "mips_interp.h"
 #include "ast_ir.h"
 #include "mips.h"
+#include "mips_interp.h"
 #include <stdio.h>
 /*
  * Main cling driver
@@ -46,6 +47,7 @@ struct cling_backend {
 
 void cling_frontend_init(struct cling_frontend *self, FILE *file);
 void cling_frontend_destroy(struct cling_frontend *self);
+int cling_frontend_tokenize(struct cling_frontend *self, FILE *output);
 int cling_frontend_run(struct cling_frontend *self);
 
 void cling_backend_emit(struct cling_backend *self, struct cling_frontend *frontend);

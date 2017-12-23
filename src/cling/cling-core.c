@@ -32,6 +32,43 @@ void cling_frontend_init(struct cling_frontend *self, FILE *file)
   cling_rd_parser_init(&self->parser, &self->symbol_table);
 }
 
+int cling_frontend_tokenize(struct cling_frontend *self, FILE *output)
+{
+  size_t code;
+  /*
+   * All semantic is string.
+   */
+  char const *semantic;
+  char const *name;
+  for (;(code=utillib_token_scanner_lookahead(&self->scanner))!=UT_SYM_EOF;
+    utillib_token_scanner_shiftaway(&self->scanner)) 
+  {
+    if (code == UT_SYM_ERR) {
+      return 1;
+    }
+    semantic = utillib_token_scanner_semantic(&self->scanner);
+    name = cling_symbol_kind_tostring(code);
+    fprintf(output, "'%s'\t", name);
+    switch (code) {
+    case SYM_INTEGER:
+    case SYM_UINT:
+    case SYM_IDEN:
+      fprintf(output, "%s\n", semantic);
+      break;
+    case SYM_STRING:
+      fprintf(output, "\"%s\"\n", semantic);
+      break;
+    case SYM_CHAR:
+      fprintf(output, "'%s'\n", semantic);
+      break;
+    default:
+      fputs("\n", output);
+      break;
+    }
+  }
+  return 0;
+}
+
 void cling_frontend_destroy(struct cling_frontend *self)
 {
   cling_rd_parser_destroy(&self->parser);

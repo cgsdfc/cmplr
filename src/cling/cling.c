@@ -22,10 +22,27 @@
 #include "cling-core.h"
 #include <stdlib.h>
 
+enum {
+  ENOINPUT=1, EFOPEN, ESYNTAX
+};
+
+static struct cling_frontend frontend;
+static struct cling_backend backend;
+FILE *source_file;
+
 int main(int argc, char **argv)
 {
-
-
-
-
+  if (argc != 2) {
+    fprintf(stderr, "no input file\n");
+    exit(ENOINPUT);
+  }
+  source_file=fopen(argv[1], "r");
+  if (!source_file) {
+    fprintf(stderr, "%s cannot be opened\n", argv[1]);
+    exit(EFOPEN);
+  }
+  cling_frontend_init(&frontend, source_file);
+  cling_frontend_tokenize(&frontend, stdout);
+  cling_frontend_destroy(&frontend);
+  return 0;
 }

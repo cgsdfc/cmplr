@@ -22,9 +22,8 @@
 #include "misc.h"
 #include "symbols.h"
 #include <ctype.h>
+#include <assert.h>
 #define CLING_KW_SIZE 14
-
-bool cling_scanner_signed_number;
 
 UTILLIB_ETAB_BEGIN(cling_scanner_error_kind)
 UTILLIB_ETAB_ELEM_INIT(CL_EBADNEQ, "expected `=' after `!' to form `!=' token")
@@ -37,6 +36,8 @@ UTILLIB_ETAB_ELEM_INIT(CL_EUNKNOWN, "unrecogized character")
 UTILLIB_ETAB_ELEM_INIT(CL_ELEADZERO, "leading zero in a number is not allowed")
 UTILLIB_ETAB_END(cling_scanner_error_kind)
 
+static int maybe_number(struct utillib_char_scanner *chars, struct utillib_string *buffer);
+
 static const struct utillib_keyword_pair cling_keywords[] = {
     {"case", SYM_KW_CASE},     {"char", SYM_KW_CHAR},
     {"const", SYM_KW_CONST},   {"default", SYM_KW_DEFAULT},
@@ -47,7 +48,7 @@ static const struct utillib_keyword_pair cling_keywords[] = {
     {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-static int cling_scanner_read_char(struct utillib_char_scanner *chars,
+static int scanner_read_char(struct utillib_char_scanner *chars,
                                    struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
@@ -63,7 +64,7 @@ static int cling_scanner_read_char(struct utillib_char_scanner *chars,
   return -CL_ECHRCHAR;
 }
 
-static int cling_scanner_read_string(struct utillib_char_scanner *chars,
+static int scanner_read_string(struct utillib_char_scanner *chars,
                                      struct utillib_string *buffer) {
   char ch;
   for (; (ch = utillib_char_scanner_lookahead(chars)) != '\"';
@@ -80,7 +81,7 @@ static int cling_scanner_read_string(struct utillib_char_scanner *chars,
   return SYM_STRING;
 }
 
-static int cling_scanner_read_number(struct utillib_char_scanner *chars,
+static int scanner_read_number(struct utillib_char_scanner *chars,
                                      struct utillib_string *buffer) {
   char ch = utillib_char_scanner_lookahead(chars);
   utillib_token_scanner_collect_digit(chars, buffer);
@@ -90,7 +91,7 @@ static int cling_scanner_read_number(struct utillib_char_scanner *chars,
   return SYM_UINT;
 }
 
-static int cling_scanner_read_handler(struct utillib_char_scanner *chars,
+static int scanner_read_handler(struct utillib_char_scanner *chars,
                                       struct utillib_string *buffer) {
   utillib_token_scanner_skipspace(chars);
   if (utillib_char_scanner_reacheof(chars))
@@ -121,12 +122,6 @@ static int cling_scanner_read_handler(struct utillib_char_scanner *chars,
     break;
   case ',':
     code = SYM_COMMA;
-    break;
-  case '-':
-    code = SYM_MINUS;
-    break;
-  case '+':
-    code = SYM_ADD;
     break;
   case '/':
     code = SYM_DIV;
@@ -186,21 +181,56 @@ static int cling_scanner_read_handler(struct utillib_char_scanner *chars,
   }
   if (ch == '\"') {
     utillib_char_scanner_shiftaway(chars);
-    return cling_scanner_read_string(chars, buffer);
+    return scanner_read_string(chars, buffer);
   }
   if (ch == '\'') {
     utillib_char_scanner_shiftaway(chars);
-    return cling_scanner_read_char(chars, buffer);
+    return scanner_read_char(chars, buffer);
   }
-  /* Maybe number is over simplified */
-  if (isdigit(ch) || cling_scanner_signed_number && (ch == '-' || ch == '+')) {
-    return cling_scanner_read_number(chars, buffer);
+  /*
+   * digit, -, + may lead to different token or even error
+   * depending on the following char.
+   */
+  if (isdigit(ch) ||  ch == '-' || ch == '+') {
+    return maybe_number(chars, buffer);
   }
   return -CL_EUNKNOWN;
 }
 
+static int maybe_number(struct utillib_char_scanner *chars, struct utillib_string *buffer) {
+  char ch, next_ch;
+  ch=utillib_char_scanner_lookahead(chars);
+  utillib_string_append_char(buffer, ch);
+  utillib_char_scanner_shiftaway(chars);
+  next_ch=utillib_char_scanner_lookahead(chars);
+
+  switch(ch) {
+    case '+':
+      if (!isdigit(next_ch))
+        return SYM_ADD;
+      break;
+    case '-':
+      if (!isdigit(next_ch))
+        return SYM_MINUS;
+      break;
+    case '0':
+      if (!isdigit(next_ch))
+        return SYM_INTEGER;
+      return -CL_ELEADZERO;
+    default:
+      if (!isdigit(next_ch))
+        return SYM_UINT;
+      break;
+  }
+
+  utillib_token_scanner_collect_digit(chars, buffer);
+  if (ch == '-' || ch == '+')
+    return SYM_INTEGER;
+  return SYM_UINT;
+}
+
 static int
-cling_scanner_error_handler(struct utillib_char_scanner *chars,
+scanner_error_handler(struct utillib_char_scanner *chars,
                             struct utillib_token_scanner_error const *error) {
   char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
   char victim = error->victim;
@@ -219,13 +249,18 @@ cling_scanner_error_handler(struct utillib_char_scanner *chars,
   case CL_ESTRCHAR:
     fprintf(stderr, "character '%c' is not allowed\n", victim);
     break;
+  case CL_ELEADZERO:
+    fputs("\n", stderr);
+    break;
+  default:
+    assert(false);
   }
   return 1;
 }
 
 static const struct utillib_token_scanner_callback cling_scanner_callback = {
-    .read_handler = cling_scanner_read_handler,
-    .error_handler = cling_scanner_error_handler,
+    .read_handler = scanner_read_handler,
+    .error_handler = scanner_error_handler,
 };
 
 void cling_scanner_init(struct utillib_token_scanner *self, FILE *file) {
