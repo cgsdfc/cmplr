@@ -1597,7 +1597,7 @@ static void mips_data_print(struct cling_mips_data const *self, FILE *file) {
       fputs("0\n", file);
       break;
     case MIPS_SPACE:
-      fprintf(file, "%lu\n", self->extend);
+      fprintf(file, "%lu\n", self->extend << 2);
       break;
   }
 }
@@ -1621,7 +1621,7 @@ static void mips_program_emit_data(struct cling_mips_program *self,
         utillib_vector_push_back(&self->data, data);
         break;
       case OP_DEFARR:
-        data = mips_array_create(ast_ir->defarr.name, ast_ir->defarr.extend << 2);
+        data = mips_array_create(ast_ir->defarr.name, ast_ir->defarr.extend);
         utillib_vector_push_back(&self->data, data);
         break;
     }

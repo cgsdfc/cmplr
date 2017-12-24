@@ -68,7 +68,12 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
     memblk=calloc(sizeof *memblk, 1);
     memblk_array[index]=memblk;
   }
-  return memblk->mem + memoffset(address);
+  index=memoffset(address);
+  if (index >= MIPS_MEMBLK_SIZE-4) {
+   self->errno=MIPS_EC_INDEX;
+   return NULL;
+  } 
+  return memblk->mem + index;
 }
 
 
@@ -481,6 +486,7 @@ UTILLIB_ETAB_ELEM(MIPS_EC_EXIT)
 UTILLIB_ETAB_ELEM_INIT(MIPS_EC_ALIGN, "align error")
 UTILLIB_ETAB_ELEM_INIT(MIPS_EC_NULL, "null pointer error")
 UTILLIB_ETAB_ELEM_INIT(MIPS_EC_NOMEM, "no memory")
+UTILLIB_ETAB_ELEM_INIT(MIPS_EC_INDEX, "index out of range")
 UTILLIB_ETAB_END(cling_mips_ecode);
 
 static void mips_dump_regs(struct cling_mips_interp const *self, FILE *file) {
@@ -499,7 +505,7 @@ static void dump_regs(struct cling_mips_interp const *self) {
   mips_dump_regs(self, stdout);
 }
 
-void cling_mips_interp_report_errors(struct cling_mips_interp const *self) {
+void cling_mips_interp_print_error(struct cling_mips_interp const *self) {
   char const * errmsg=cling_mips_ecode_tostring(self->errno);
   fprintf(stderr, "ERROR: %s (%d)\n", errmsg, self->errno);
   fprintf(stderr, "pc=%u\n", self->pc);

@@ -33,6 +33,11 @@
 /*
  * Main cling driver
  */
+enum {
+  CL_INTERP_ERROR=1,
+  CL_SYNTAX_ERROR,
+  CL_FILE_ERROR,
+};
 
 struct cling_frontend {
   struct cling_scanner scanner;

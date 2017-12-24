@@ -74,12 +74,12 @@ void cling_frontend_destroy(struct cling_frontend *self)
   cling_scanner_destroy(&self->scanner);
 }
 
-inline int cling_frontend_parse(struct cling_frontend *self) {
-  return cling_rd_parser_parse(&self->parser, &self->scanner);
-}
-
-inline void cling_frontend_print_error(struct cling_frontend const *self) {
-  cling_rd_parser_report_errors(&self->parser);
+int cling_frontend_parse(struct cling_frontend *self) {
+  if (0 != cling_rd_parser_parse(&self->parser, &self->scanner)) {
+    cling_rd_parser_print_error(&self->parser);
+    return 1;
+  }
+  return 0;
 }
 
 inline void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output) {
@@ -119,10 +119,13 @@ inline void cling_backend_dump_mips(struct cling_backend const *self, FILE *outp
   cling_mips_program_print(&self->mips_program, output);
 }
 
-inline int cling_backend_interpret(struct cling_backend *self)
+int cling_backend_interpret(struct cling_backend *self)
 {
   cling_mips_interp_load(&self->mips_interp, &self->mips_program);
-  return cling_mips_interp_exec(&self->mips_interp);
+  if (0 != cling_mips_interp_exec(&self->mips_interp)) {
+    cling_mips_interp_print_error(&self->mips_interp);
+    return 1;
+  }
+  return 0;
 }
-
 

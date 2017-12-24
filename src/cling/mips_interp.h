@@ -35,6 +35,7 @@ UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
 UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
 UTILLIB_ENUM_ELEM(MIPS_EC_NULL)
 UTILLIB_ENUM_ELEM(MIPS_EC_NOMEM)
+UTILLIB_ENUM_ELEM(MIPS_EC_INDEX)
 UTILLIB_ENUM_END(cling_mips_ecode);
 
 
@@ -61,6 +62,6 @@ void cling_mips_interp_unload(struct cling_mips_interp *self);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);
 void cling_mips_interp_destroy(struct cling_mips_interp *self);
-void cling_mips_interp_report_errors(struct cling_mips_interp const *self);
+void cling_mips_interp_print_error(struct cling_mips_interp const *self);
 
 #endif /* CLING_MIPS_INTERP */

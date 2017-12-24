@@ -233,7 +233,7 @@ int cling_rd_parser_parse(struct cling_rd_parser *self,
 /*
  * Call when cling_rd_parser_has_errors returns true.
  */
-void cling_rd_parser_report_errors(struct cling_rd_parser const *self) {
+void cling_rd_parser_print_error(struct cling_rd_parser const *self) {
   struct cling_error const *error;
   UTILLIB_VECTOR_FOREACH(error, &self->elist) { cling_error_print(error); }
 }
