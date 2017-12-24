@@ -36,8 +36,8 @@ static struct cling_error *
 error_create(int kind, struct cling_scanner const *scanner, size_t context) {
   struct cling_error *self = malloc(sizeof *self);
   self->kind = kind;
-  self->row = scanner->input.chars.row;
-  self->col = scanner->input.chars.col;
+  self->row = scanner->input.row;
+  self->col = scanner->input.col;
   self->context = cling_symbol_cast(context);
   return self;
 }
@@ -120,12 +120,12 @@ struct cling_error *cling_dupcase_error(struct cling_scanner const *scanner,
   return self;
 }
 
-struct cling_error *cling_badcase_error(struct cling_scanner const *scanner,
-                                        int expected, int actual,
-                                        size_t context) {
-  struct cling_error *self = error_create(CL_EBADCASE, scanner, context);
-  self->badcase.expected=cling_type_tostring(expected);
-  self->badcase.actual=cling_type_tostring(actual);
+struct cling_error *cling_badtoken_error(struct cling_scanner const *scanner,
+                                         int type, char const *evidence,
+                                         size_t context) {
+  struct cling_error *self = error_create(CL_EBADTOKEN, scanner, context);
+  self->badtoken.type = type;
+  self->badtoken.evidence = strdup(evidence);
   return self;
 }
 
@@ -170,13 +170,34 @@ void cling_error_print(struct cling_error const *self) {
     fprintf(stderr, "duplicated case label '%s' of type '%s'\n", self->dupcase.label,
         cling_symbol_kind_tostring(self->dupcase.case_type));
     break;
-  case CL_EBADCASE:
-    fprintf(stderr, "expects case type '%s' but actually gets '%s'\n",
-        self->badcase.expected,
-        self->badcase.actual);
+  case CL_EBADTOKEN:
+    switch (self->badtoken.type) {
+    case CL_EUNKNOWN:
+      fprintf(stderr, "insane char '%s' in the program\n",
+              self->badtoken.evidence);
+      break;
+    case CL_EBADNEQ:
+      fprintf(stderr, "a single exclaim (%s) without equal makes no sense\n",
+              self->badtoken.evidence);
+      break;
+    case CL_ECHRCHAR:
+      fprintf(stderr, "unrecogized char '%s' in char constant\n",
+              self->badtoken.evidence);
+      break;
+    case CL_ESTRCHAR:
+      fprintf(stderr, "unrecogized char '%s' in string constant\n",
+              self->badtoken.evidence);
+      break;
+    case CL_ELEADZERO:
+      fprintf(stderr, "leading zero (%s) in unsigned integer is not allowed\n",
+              self->badtoken.evidence);
+      break;
+    default:
+      assert(false);
+    }
     break;
   default:
-    assert(false && "unimplemented");
+    assert(false);
   }
 }
 
@@ -199,6 +220,9 @@ void cling_error_destroy(struct cling_error *self) {
     break;
   case CL_EDUPCASE:
     free(self->dupcase.label);
+    break;
+  case CL_EBADTOKEN:
+    free(self->badtoken.evidence);
     break;
   }
   free(self);

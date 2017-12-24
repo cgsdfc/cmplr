@@ -19,24 +19,11 @@
 
 */
 #include "scanner.h"
-#include "misc.h"
+#include "error.h"
 #include "symbols.h"
-#include <ctype.h>
 #include <assert.h>
+#include <ctype.h>
 #define CLING_KW_SIZE 14
-
-UTILLIB_ETAB_BEGIN(cling_scanner_error_kind)
-UTILLIB_ETAB_ELEM_INIT(CL_EBADNEQ, "expected `=' after `!' to form `!=' token")
-UTILLIB_ETAB_ELEM_INIT(CL_EUNTCHAR, "unterminated character constant")
-UTILLIB_ETAB_ELEM_INIT(CL_EUNTSTR, "unterminated string constant")
-UTILLIB_ETAB_ELEM_INIT(CL_ESTRCHAR, "unrecogized character in string constant")
-UTILLIB_ETAB_ELEM_INIT(CL_ECHRCHAR,
-                       "unrecogized character in character constant")
-UTILLIB_ETAB_ELEM_INIT(CL_EUNKNOWN, "unrecogized character")
-UTILLIB_ETAB_ELEM_INIT(CL_ELEADZERO, "leading zero in a number is not allowed")
-UTILLIB_ETAB_END(cling_scanner_error_kind)
-
-static int maybe_number(struct utillib_char_scanner *chars, struct utillib_string *buffer);
 
 static const struct utillib_keyword_pair cling_keywords[] = {
     {"case", SYM_KW_CASE},     {"char", SYM_KW_CHAR},
@@ -48,55 +35,55 @@ static const struct utillib_keyword_pair cling_keywords[] = {
     {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-static int scanner_read_char(struct utillib_char_scanner *chars,
-                                   struct utillib_string *buffer) {
-  char ch = utillib_char_scanner_lookahead(chars);
+static int read_char(struct cling_scanner *self) {
+  char ch;
+  ch = utillib_char_scanner_lookahead(&self->input);
   if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
       isalnum(ch)) {
-    utillib_string_append_char(buffer, ch);
-    utillib_char_scanner_shiftaway(chars);
-    if (utillib_char_scanner_lookahead(chars) != '\'') {
+    utillib_string_append_char(&self->buffer, ch);
+    utillib_char_scanner_shiftaway(&self->input);
+    if (utillib_char_scanner_lookahead(&self->input) != '\'') {
       return -CL_EUNTCHAR;
     }
-    utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
     return SYM_CHAR;
   }
   return -CL_ECHRCHAR;
 }
 
-static int scanner_read_string(struct utillib_char_scanner *chars,
-                                     struct utillib_string *buffer) {
+static int read_string(struct cling_scanner *self) {
   char ch;
-  for (; (ch = utillib_char_scanner_lookahead(chars)) != '\"';
-       utillib_char_scanner_shiftaway(chars)) {
-    if (utillib_char_scanner_reacheof(chars))
+  for (; (ch = utillib_char_scanner_lookahead(&self->input)) != '\"';
+       utillib_char_scanner_shiftaway(&self->input)) {
+    if (utillib_char_scanner_reacheof(&self->input))
       return -CL_EUNTSTR;
     if (ch == 32 || ch == 33 || 35 <= ch && ch <= 126) {
-      utillib_string_append_char(buffer, ch);
+      utillib_string_append_char(&self->buffer, ch);
       continue;
     }
     return -CL_ESTRCHAR;
   }
-  utillib_char_scanner_shiftaway(chars);
+  utillib_char_scanner_shiftaway(&self->input);
   return SYM_STRING;
 }
 
-static int scanner_read_number(struct utillib_char_scanner *chars,
-                                     struct utillib_string *buffer) {
+/*
+ * XXX: Can't be so easy
+ */
+static int read_number(struct cling_scanner *self) {
   char ch;
-  ch = utillib_char_scanner_lookahead(chars);
-  utillib_token_scanner_collect_digit(chars, buffer);
+  ch = utillib_char_scanner_lookahead(&self->input);
+  utillib_token_scanner_collect_digit(&self->input, &self->buffer);
   return SYM_UINT;
 }
 
-static int scanner_read_handler(struct utillib_char_scanner *chars,
-                                      struct utillib_string *buffer) {
-  utillib_token_scanner_skipspace(chars);
-  if (utillib_char_scanner_reacheof(chars))
-    return UT_SYM_EOF;
-  char ch = utillib_char_scanner_lookahead(chars);
+static int read_dispatch(struct cling_scanner *self, char ch) {
   int code = UT_SYM_NULL;
+  char const *keyword;
   switch (ch) {
+  /*
+   * Level 1 dispatch: single char.
+   */
   case '[':
     code = SYM_LK;
     break;
@@ -130,124 +117,100 @@ static int scanner_read_handler(struct utillib_char_scanner *chars,
   case ':':
     code = SYM_COLON;
     break;
-  case '+':
-    code = SYM_ADD;
-    break;
-  case '-':
-    code = SYM_MINUS;
-    break;
   default:
     break;
   }
   if (code != UT_SYM_NULL) {
-    utillib_string_append_char(buffer, ch);
-    utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
     return code;
   }
   switch (ch) {
+  /*
+   * Level 2 dispatch: two chars.
+   */
   case '=':
-    utillib_char_scanner_shiftaway(chars);
-    if (utillib_char_scanner_lookahead(chars) == '=') {
-      utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
+    if (utillib_char_scanner_lookahead(&self->input) == '=') {
+      utillib_char_scanner_shiftaway(&self->input);
       return SYM_DEQ;
     }
     return SYM_EQ;
   case '<':
-    utillib_char_scanner_shiftaway(chars);
-    if (utillib_char_scanner_lookahead(chars) == '=') {
-      utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
+    if (utillib_char_scanner_lookahead(&self->input) == '=') {
+      utillib_char_scanner_shiftaway(&self->input);
       return SYM_LE;
     }
     return SYM_LT;
   case '>':
-    utillib_char_scanner_shiftaway(chars);
-    if (utillib_char_scanner_lookahead(chars) == '=') {
-      utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
+    if (utillib_char_scanner_lookahead(&self->input) == '=') {
+      utillib_char_scanner_shiftaway(&self->input);
       return SYM_GE;
     }
     return SYM_GT;
   case '!':
-    utillib_char_scanner_shiftaway(chars);
-    if (utillib_char_scanner_lookahead(chars) == '=') {
-      utillib_char_scanner_shiftaway(chars);
+    utillib_char_scanner_shiftaway(&self->input);
+    if (utillib_char_scanner_lookahead(&self->input) == '=') {
+      utillib_char_scanner_shiftaway(&self->input);
       return SYM_NE;
     }
     return -CL_EBADNEQ;
   }
 
-  char const *keyword;
+  /*
+   * Level 3 : keyword and iden.
+   */
   if (utillib_token_scanner_isidbegin(ch)) {
-    utillib_token_scanner_collect_identifier(chars, buffer);
-    keyword = utillib_string_c_str(buffer);
-    int code = utillib_keyword_bsearch(keyword, cling_keywords, CLING_KW_SIZE);
+    utillib_token_scanner_collect_identifier(&self->input, &self->buffer);
+    keyword = utillib_string_c_str(&self->buffer);
+    code = utillib_keyword_bsearch(keyword, cling_keywords, CLING_KW_SIZE);
     if (code != UT_SYM_NULL)
       return code;
     return SYM_IDEN;
   }
+
+  /*
+   * Level 4 : char, string and number
+   */
   if (ch == '\"') {
-    utillib_char_scanner_shiftaway(chars);
-    return scanner_read_string(chars, buffer);
+    utillib_char_scanner_shiftaway(&self->input);
+    return read_string(self);
   }
   if (ch == '\'') {
-    utillib_char_scanner_shiftaway(chars);
-    return scanner_read_char(chars, buffer);
+    utillib_char_scanner_shiftaway(&self->input);
+    return read_char(self);
   }
-  if (isdigit(ch))
-    return scanner_read_number(chars, buffer);
+  if (isdigit(ch) || ch == '+' || ch == '-')
+    return read_number(self);
   return -CL_EUNKNOWN;
 }
 
-static int
-scanner_error_handler(struct utillib_char_scanner *chars,
-                            struct utillib_token_scanner_error const *error) {
-  char const *errmsg = cling_scanner_error_kind_tostring(error->kind);
-  char victim = error->victim;
-
-  fprintf(stderr, "ERROR at %lu:%lu %s ", positive_number(chars->row),
-          positive_number(chars->col), errmsg);
-
-  switch (error->kind) {
-  case CL_EUNKNOWN:
-    fprintf(stderr, "character '%c' does not make sense\n", victim);
-    break;
-  case CL_EBADNEQ:
-    fprintf(stderr, "but got '%c'\n", victim);
-    break;
-  case CL_ECHRCHAR:
-  case CL_ESTRCHAR:
-    fprintf(stderr, "character '%c' is not allowed\n", victim);
-    break;
-  case CL_ELEADZERO:
-    fputs("\n", stderr);
-    break;
-  default:
-    assert(false);
-  }
-  return 1;
-}
-
-static const struct utillib_token_scanner_callback scanner_callback = {
-    .read_handler = scanner_read_handler,
-    .error_handler = scanner_error_handler,
-};
-
-void cling_scanner_init(struct cling_scanner *self, FILE *file) {
-  self->bind_sign = true;
-  utillib_token_scanner_init(&self->input, file, &scanner_callback);
+void cling_scanner_init(struct cling_scanner *self,
+                        struct utillib_vector *elist, FILE *file) {
+  /*
+   * context will be set by each parse function.
+   */
+  self->elist = elist;
+  utillib_char_scanner_init(&self->input, file);
+  utillib_string_init(&self->buffer);
 }
 
 void cling_scanner_destroy(struct cling_scanner *self) {
-  utillib_token_scanner_destroy(&self->input);
+  utillib_string_destroy(&self->buffer);
+  utillib_char_scanner_destroy(&self->input);
+}
+
+inline void cling_scanner_context(struct cling_scanner *self, size_t context) {
+  self->context = context;
 }
 
 inline size_t cling_scanner_lookahead(struct cling_scanner const *self) {
-  return utillib_token_scanner_lookahead(&self->input);
+  return self->lookahead;
 }
 
-inline void cling_scanner_shiftaway(struct cling_scanner *self) {
-  utillib_token_scanner_shiftaway(&self->input);
-}
+void cling_scanner_shiftaway(struct cling_scanner *self) {}
 
 inline char const *cling_scanner_semantic(struct cling_scanner const *self) {
-  return utillib_token_scanner_semantic(&self->input);
+  return utillib_string_c_str(&self->buffer);
 }

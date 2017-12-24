@@ -27,7 +27,7 @@
  */
 void cling_frontend_init(struct cling_frontend *self, FILE *file)
 {
-  cling_scanner_init(&self->scanner, file);
+  cling_scanner_init(&self->scanner, &self->parser.elist, file);
   cling_symbol_table_init(&self->symbol_table);
   cling_rd_parser_init(&self->parser, &self->symbol_table);
 }

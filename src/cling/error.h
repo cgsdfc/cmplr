@@ -20,22 +20,35 @@
 */
 #ifndef CLING_ERROR_H
 #define CLING_ERROR_H
-#include <utillib/enum.h>
 #include <utillib/json.h>
 
-UTILLIB_ENUM_BEGIN(cling_error_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_EEXPECT, 1)
-UTILLIB_ENUM_ELEM(CL_EUNEXPECTED)
-UTILLIB_ENUM_ELEM(CL_EREDEFINED)
-UTILLIB_ENUM_ELEM(CL_EINCTYPE)
-UTILLIB_ENUM_ELEM(CL_EUNDEFINED)
-UTILLIB_ENUM_ELEM(CL_ENOTLVALUE)
-UTILLIB_ENUM_ELEM(CL_EINCARG)
-UTILLIB_ENUM_ELEM(CL_EARGCUNMAT)
-UTILLIB_ENUM_ELEM(CL_EDUPCASE)
-UTILLIB_ENUM_ELEM(CL_EBADCASE)
-UTILLIB_ENUM_ELEM(CL_EINVEXPR)
-UTILLIB_ENUM_END(cling_error_kind);
+enum {
+  CL_EEXPECT = 1,
+  CL_EUNEXPECTED,
+  CL_EREDEFINED,
+  CL_EINCTYPE,
+  CL_EUNDEFINED,
+  CL_ENOTLVALUE,
+  CL_EINCARG,
+  CL_EARGCUNMAT,
+  CL_EDUPCASE,
+  CL_EBADCASE,
+  CL_EINVEXPR,
+  CL_EBADTOKEN,
+};
+
+/*
+ * Badtoken kind
+ */
+enum {
+  CL_EBADNEQ = 1,
+  CL_EUNTCHAR,
+  CL_EUNTSTR,
+  CL_ESTRCHAR,
+  CL_ECHRCHAR,
+  CL_ELEADZERO,
+  CL_EUNKNOWN,
+};
 
 struct cling_scanner;
 struct cling_error {
@@ -77,10 +90,9 @@ struct cling_error {
       char *label;
     } dupcase;
     struct {
-      char const *expected;
-      char const *actual;
-    } badcase;
-
+      int type;
+      char *evidence;
+    } badtoken;
   };
 };
 
@@ -120,10 +132,9 @@ cling_argc_unmatched_error(struct cling_scanner const *scanner,
 struct cling_error *cling_dupcase_error(struct cling_scanner const *scanner,
                                         int case_type, char const *label,
                                         size_t context);
-
-struct cling_error *cling_badcase_error(struct cling_scanner const *scanner,
-                                        int expected, int actual,
-                                        size_t context);
+struct cling_error *cling_badtoken_error(struct cling_scanner const *scanner,
+                                         int type, char const *evidence,
+                                         size_t context);
 
 void cling_error_print(struct cling_error const *self);
 
