@@ -26,7 +26,10 @@ enum {
   ENOINPUT=1, EFOPEN, ESYNTAX
 };
 
-static struct cling_option option;
+static struct cling_option option={
+  .allow_comment=true,
+};
+
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 FILE *source_file;
@@ -43,7 +46,8 @@ int main(int argc, char **argv)
     exit(EFOPEN);
   }
   cling_frontend_init(&frontend, &option, source_file);
-  cling_frontend_tokenize(&frontend, stdout);
+  if (0 != cling_frontend_tokenize(&frontend, stdout))
+    cling_frontend_print_error(&frontend);
   /* if (0 != cling_frontend_parse(&frontend)) { */
   /*   cling_frontend_print_error(&frontend); */
   /* } */

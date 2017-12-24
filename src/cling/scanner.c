@@ -213,7 +213,7 @@ void cling_scanner_init(struct cling_scanner *self,
   self->context = SYM_PROGRAM;
   utillib_char_scanner_init(&self->input, file);
   utillib_string_init(&self->buffer);
-  self->lookahead=read_dispatch(self);
+  cling_scanner_shiftaway(self);
 }
 
 void cling_scanner_destroy(struct cling_scanner *self) {
@@ -240,11 +240,13 @@ static void skipcomment(struct cling_scanner *self) {
 
 void cling_scanner_shiftaway(struct cling_scanner *self) {
   int code;
-  if (utillib_char_scanner_reacheof(&self->input))
-    return;
   utillib_token_scanner_skipspace(&self->input);
   if (self->option->allow_comment)
     skipcomment(self);
+  if (utillib_char_scanner_reacheof(&self->input)) {
+    self->lookahead=UT_SYM_EOF;
+    return;
+  }
   utillib_string_clear(&self->buffer);
   code = read_dispatch(self);
   if (code < 0) {
