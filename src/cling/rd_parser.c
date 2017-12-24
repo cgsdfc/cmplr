@@ -49,7 +49,7 @@
 
 static bool rd_parser_is_stmt_lookahead(size_t code);
 
-void rd_parser_fatal(struct cling_rd_parser *self) {
+static void rd_parser_fatal(struct cling_rd_parser *self) {
   longjmp(self->fatal_saver, 1);
 }
 
@@ -1004,7 +1004,6 @@ switch_stmt_case_clause(struct cling_rd_parser *self,
                         struct utillib_hashmap *label_map) {
   size_t code;
   char const *label;
-  int actual_type;
   struct cling_error *error = NULL;
   struct utillib_json_value *object, *stmt;
   const size_t context = SYM_CASE_CLAUSE;
@@ -1020,7 +1019,6 @@ switch_stmt_case_clause(struct cling_rd_parser *self,
     switch (code) {
     case SYM_INTEGER:
     case SYM_CHAR:
-      actual_type=cling_symbol_to_type(code);
       label = cling_scanner_semantic(scanner);
       if (utillib_hashmap_exist_key(label_map, label)) {
         /*

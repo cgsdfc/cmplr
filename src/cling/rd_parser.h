@@ -58,5 +58,4 @@ void cling_rd_parser_report_errors(struct cling_rd_parser const *self);
 
 void rd_parser_error_push_back(struct cling_rd_parser *self,
                                struct cling_error *error);
-void rd_parser_fatal(struct cling_rd_parser *self);
 #endif /* CLING_RD_PARSER_H */

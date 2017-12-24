@@ -18,17 +18,24 @@
    02110-1301 USA
 
 */
-#ifndef CLING_CLING_H
-#define CLING_CLING_H
+#include "cling/symbol_table.h"
+#include <utillib/test.h>
 
-#include <cling/ast_ir.h>
-#include <cling/ast_pretty.h>
-#include <cling/mips.h>
-#include <cling/opg_parser.h>
-#include <cling/optimize.h>
-#include <cling/rd_parser.h>
-#include <cling/scanner.h>
-#include <cling/symbol_table.h>
-#include <cling/mips_interp.h>
+UTILLIB_TEST_SET_UP() { cling_symbol_table_init(UT_FIXTURE); }
+UTILLIB_TEST_TEAR_DOWN() { cling_symbol_table_destroy(UT_FIXTURE); }
 
-#endif /* CLING_CLING_H */
+UTILLIB_TEST(symbol_table_insert) {
+  cling_symbol_table_insert(UT_FIXTURE, "x", CL_INT | CL_CONST,
+                            utillib_json_null_create(), CL_LOCAL);
+  struct utillib_json_value *val =
+      cling_symbol_table_json_object_create(UT_FIXTURE);
+  utillib_json_pretty_print(val, stderr);
+}
+
+UTILLIB_TEST_DEFINE(Cling_SymbolTable) {
+  UTILLIB_TEST_BEGIN(Cling_SymbolTable)
+  UTILLIB_TEST_RUN(symbol_table_insert)
+  UTILLIB_TEST_END(Cling_SymbolTable)
+  UTILLIB_TEST_FIXTURE(struct cling_symbol_table)
+  UTILLIB_TEST_RETURN(Cling_SymbolTable)
+}

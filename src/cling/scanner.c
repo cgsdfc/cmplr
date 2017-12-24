@@ -95,7 +95,8 @@ match_op:
   return ch == '+' ? SYM_ADD : SYM_MINUS;
 }
 
-static int read_dispatch(struct cling_scanner *self, char ch) {
+static int read_dispatch(struct cling_scanner *self) {
+  char ch=utillib_char_scanner_lookahead(&self->input);
   int code = UT_SYM_NULL;
   char const *keyword;
   int two_chars, one_char;
@@ -212,7 +213,7 @@ void cling_scanner_init(struct cling_scanner *self,
   self->context = SYM_PROGRAM;
   utillib_char_scanner_init(&self->input, file);
   utillib_string_init(&self->buffer);
-  read_dispatch(self, utillib_char_scanner_lookahead(&self->input));
+  self->lookahead=read_dispatch(self);
 }
 
 void cling_scanner_destroy(struct cling_scanner *self) {
@@ -225,7 +226,6 @@ inline void cling_scanner_context(struct cling_scanner *self, size_t context) {
 }
 
 inline size_t cling_scanner_lookahead(struct cling_scanner const *self) {
-  assert(self->context);
   return self->lookahead;
 }
 
@@ -239,20 +239,20 @@ static void skipcomment(struct cling_scanner *self) {
 }
 
 void cling_scanner_shiftaway(struct cling_scanner *self) {
-  int code, ch;
+  int code;
   if (utillib_char_scanner_reacheof(&self->input))
     return;
   utillib_token_scanner_skipspace(&self->input);
   if (self->option->allow_comment)
     skipcomment(self);
-  ch = utillib_char_scanner_lookahead(&self->input);
-  code = read_dispatch(self, ch);
+  utillib_string_clear(&self->buffer);
+  code = read_dispatch(self);
   if (code < 0) {
     rd_parser_error_push_back(
         self->parser,
         cling_badtoken_error(self, -code, utillib_string_c_str(&self->buffer),
                              self->context));
-    rd_parser_fatal(self->parser);
+    code=UT_SYM_ERR;
   }
   self->lookahead = code;
 }

@@ -18,37 +18,13 @@
    02110-1301 USA
 
 */
+#include <utillib/test.h>
 
-#include "cling-core.h"
-#include <stdlib.h>
+UTILLIB_TEST(hello) {}
 
-enum {
-  ENOINPUT=1, EFOPEN, ESYNTAX
-};
-
-static struct cling_option option;
-static struct cling_frontend frontend;
-static struct cling_backend backend;
-FILE *source_file;
-
-int main(int argc, char **argv)
-{
-  if (argc != 2) {
-    fprintf(stderr, "no input file\n");
-    exit(ENOINPUT);
-  }
-  source_file=fopen(argv[1], "r");
-  if (!source_file) {
-    fprintf(stderr, "%s cannot be opened\n", argv[1]);
-    exit(EFOPEN);
-  }
-  cling_frontend_init(&frontend, &option, source_file);
-  cling_frontend_tokenize(&frontend, stdout);
-  /* if (0 != cling_frontend_parse(&frontend)) { */
-  /*   cling_frontend_print_error(&frontend); */
-  /* } */
-
-  cling_backend_destroy(&backend);
-  cling_frontend_destroy(&frontend);
-  return 0;
+UTILLIB_TEST_DEFINE(Cling_Scanner) {
+  UTILLIB_TEST_BEGIN(Cling_Scanner)
+  UTILLIB_TEST_RUN(hello)
+  UTILLIB_TEST_END(Cling_Scanner)
+  UTILLIB_TEST_RETURN(Cling_Scanner)
 }

@@ -51,6 +51,7 @@ void cling_frontend_init(struct cling_frontend *self,
 void cling_frontend_destroy(struct cling_frontend *self);
 int cling_frontend_tokenize(struct cling_frontend *self, FILE *output);
 int cling_frontend_parse(struct cling_frontend *self);
+void cling_frontend_print_error(struct cling_frontend const *self);
 void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output);
 
 void cling_backend_init(struct cling_backend *self);

@@ -78,6 +78,10 @@ inline int cling_frontend_parse(struct cling_frontend *self) {
   return cling_rd_parser_parse(&self->parser, &self->scanner);
 }
 
+inline void cling_frontend_print_error(struct cling_frontend const *self) {
+  cling_rd_parser_report_errors(&self->parser);
+}
+
 inline void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output) {
   utillib_json_pretty_fprint(self->parser.root, output);
 }
