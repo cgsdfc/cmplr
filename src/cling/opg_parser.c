@@ -344,7 +344,9 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   struct utillib_vector *stack = &self->stack;
   struct utillib_vector *opstack = &self->opstack;
   const size_t eof_symbol = self->eof_symbol;
+  const size_t old_context=scanner->context;
 
+  cling_scanner_context(scanner, SYM_EXPR);
   while (!utillib_vector_empty(opstack)) {
     /* opg_parser_show_stack(self); */
     lookahead = cling_scanner_lookahead(scanner);
@@ -368,6 +370,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
        */
       val = utillib_vector_back(stack);
       utillib_vector_pop_back(stack);
+      cling_scanner_context(scanner, old_context);
       return val;
     }
 
@@ -412,6 +415,7 @@ shiftin:
     }
   }
 error:
+  cling_scanner_context(scanner, old_context);
   return NULL;
 }
 

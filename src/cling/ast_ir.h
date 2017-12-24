@@ -68,17 +68,6 @@ UTILLIB_ENUM_ELEM(OP_RDCHR)
 UTILLIB_ENUM_ELEM(OP_RDINT)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
 
-/*
- * Holds global information
- * that ast_ir need to access.
- * Notes the symbol_table will
- * be reentered.
- */
-struct cling_ast_ir_global {
-  struct cling_symbol_table *symbol_table;
-  unsigned int temps;
-};
-
 struct cling_ast_ir {
   int opcode;
   union {
@@ -195,18 +184,21 @@ struct cling_ast_ir {
   };
 };
 
+/*
+ * Holds global information
+ * that ast_ir need to access.
+ * Notes the symbol_table will
+ * be reentered.
+ */
+struct cling_ast_ir_global {
+  struct cling_symbol_table *symbol_table;
+  struct cling_option const *option;
+  unsigned int temps;
+};
+
 struct cling_polish_ir {
-  /*
-   * Stack holding ast nodes
-   */
   struct utillib_vector stack;
-  /*
-   * Stack holding operands when evaluating.
-   */
   struct utillib_vector opstack;
-  /*
-   * From which temps counter starts
-   */
   struct cling_ast_ir_global *global;
 };
 
@@ -236,6 +228,7 @@ void cling_ast_program_init(struct cling_ast_program *self);
 void cling_ast_program_destroy(struct cling_ast_program *self);
 
 void cling_ast_ir_emit_program(struct utillib_json_value const *self,
+                               struct cling_option const *option,
                                struct cling_symbol_table *symbol_table,
                                struct cling_ast_program *program);
 void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);

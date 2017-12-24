@@ -459,6 +459,13 @@ void cling_mips_interp_load(struct cling_mips_interp *self,
   mips_interp_load_label(self, program);
 }
 
+void cling_mips_interp_unload(struct cling_mips_interp *self)
+{
+
+
+
+}
+
 void cling_mips_interp_destroy(struct cling_mips_interp *self) {
   utillib_hashmap_destroy_owning(&self->labels, NULL, mips_label_destroy);
   utillib_vector_destroy(&self->strings);

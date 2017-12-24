@@ -19,6 +19,7 @@
 
 */
 #include "ast_ir.h"
+#include "option.h"
 #include "misc.h"
 #include "symbol_table.h"
 #include "symbols.h"
@@ -724,8 +725,10 @@ static void emit_for_stmt(struct utillib_json_value const *self,
 
   cling_polish_ir_init(&polish_ir, init, global);
   cling_polish_ir_emit(&polish_ir, instrs);
-  tricky_jump = emit_ir(OP_JMP);
-  utillib_vector_push_back(instrs, tricky_jump);
+  if (!global->option->no_tricky_jump) {
+    tricky_jump = emit_ir(OP_JMP);
+    utillib_vector_push_back(instrs, tricky_jump);
+  }
   /*
    * The JTA of loop_jump
    * is the next instr of the tricky_jump,
@@ -750,7 +753,9 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    * cond_test, which is also the beginning of
    * body.
    */
-  tricky_jump->jmp.addr = utillib_vector_size(instrs);
+  if (!global->option->no_tricky_jump) {
+    tricky_jump->jmp.addr = utillib_vector_size(instrs);
+  }
   cling_polish_ir_destroy(&polish_ir);
 
   /*
@@ -1195,12 +1200,15 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
 }
 
 static inline void ast_ir_global_init(struct cling_ast_ir_global *self,
+                                      struct cling_option const *option,
                                       struct cling_symbol_table *symbol_table) {
   self->temps = 0;
   self->symbol_table = symbol_table;
+  self->option = option;
 }
 
 void cling_ast_ir_emit_program(struct utillib_json_value const *self,
+                               struct cling_option const *option,
                                struct cling_symbol_table *symbol_table,
                                struct cling_ast_program *program) {
   struct utillib_json_value const *func_decls, *object;
@@ -1208,7 +1216,7 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
   struct cling_ast_ir_global global;
   int temps;
 
-  ast_ir_global_init(&global, symbol_table);
+  ast_ir_global_init(&global, option, symbol_table);
   /*
    * Enters these names to global-scope.
    */

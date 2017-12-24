@@ -22,14 +22,9 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file (STRINGS "VERSION" CMPLR_VERSION)
 include_directories(src)
-add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
-add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
-add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
-add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
 
 # For strdup
 add_definitions(-D_POSIX_C_SOURCE=200809L)
-
 set(CMAKE_CXX_FLAGS "-std=c++11 -g")
 enable_testing()
 
@@ -72,71 +67,6 @@ add_library(utillib
   ./src/utillib/slist.c
   ./src/utillib/vector.c
   ./src/utillib/string.c)
-
-add_executable(utillib_test 
-  ./src/utillib/test/graph.c
-  ./src/utillib/test/hashmap.c
-  ./src/utillib/test/json_scanner.c
-  ./src/utillib/test/ll1_generator.c
-  ./src/utillib/test/non_ll1_sample_1.c
-  ./src/utillib/test/non_ll1_sample_2.c
-  ./src/utillib/test/ll1_sample_1.c
-  ./src/utillib/test/ll1_sample_2.c
-  ./src/utillib/test/scanner.c
-  ./src/utillib/test/ll1_parser.c
-  ./src/utillib/test/print.c
-  ./src/utillib/test/vector2.c
-  ./src/utillib/test/bitset.c
-  ./src/utillib/test/ll1_builder.c
-  ./src/utillib/test/symbol.c
-  ./src/utillib/test/rule.c
-  ./src/utillib/test/json.c
-  ./src/utillib/test/string.c
-  ./src/utillib/test/test.c
-  ./src/utillib/test/slist.c
-  ./src/utillib/test/vector.c
-  ./src/utillib/test/json_parser.c
-  ./src/utillib/test/driver.c)
-
-target_link_libraries(utillib_test utillib)
-add_test(Utillib_Test utillib_test)
-
-add_library(utillib++
-  ./src/utillib/utillib.cpp
-)
-target_link_libraries(utillib++ utillib)
-add_executable(cppmain ./src/utillib/cppmain.cpp)
-target_link_libraries(cppmain utillib++)
-add_executable(example-json ./src/utillib/example/json.c)
-target_link_libraries(example-json utillib)
-add_executable(example-vector ./src/utillib/example/vector.c)
-target_link_libraries(example-vector utillib)
-add_executable(example-string ./src/utillib/example/string.c)
-target_link_libraries(example-string utillib)
-add_executable(json_parser_table_gen ./src/utillib/json_parser_table_gen.c)
-target_link_libraries(json_parser_table_gen utillib)
-
-## Pascal 
-add_library(pascal
-  ./src/pascal/parser.c
-  ./src/pascal/scanner.c
-  ./src/pascal/symbols.c
-  ./src/pascal/rules.c
-)
-target_link_libraries(pascal utillib)
-
-add_executable(pascal_test
-  ./src/pascal/test/scanner.c
-  ./src/pascal/test/parser.c
-  ./src/pascal/test/driver.c
-  ./src/pascal/test/rules.c
-  ./src/pascal/test/symbols.c
-)
-
-target_link_libraries(pascal_test pascal)
-add_test(Pascal_Test pascal_test)
-add_executable(pascal_ll1_table_gen ./src/pascal/ll1_table_gen.c)
-target_link_libraries(pascal_ll1_table_gen pascal)
 
 ## Cling
 add_library(cling-core

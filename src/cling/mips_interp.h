@@ -57,6 +57,7 @@ void cling_mips_interp_init(struct cling_mips_interp *self);
 
 void cling_mips_interp_load(struct cling_mips_interp *self,
                             struct cling_mips_program const *program);
+void cling_mips_interp_unload(struct cling_mips_interp *self);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);
 void cling_mips_interp_destroy(struct cling_mips_interp *self);

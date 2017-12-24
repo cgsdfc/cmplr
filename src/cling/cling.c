@@ -46,13 +46,16 @@ int main(int argc, char **argv)
     exit(EFOPEN);
   }
   cling_frontend_init(&frontend, &option, source_file);
-  if (0 != cling_frontend_tokenize(&frontend, stdout))
-    cling_frontend_print_error(&frontend);
-  /* if (0 != cling_frontend_parse(&frontend)) { */
+  /* if (0 != cling_frontend_tokenize(&frontend, stdout)) */
   /*   cling_frontend_print_error(&frontend); */
-  /* } */
-
-  cling_backend_destroy(&backend);
+  if (0 != cling_frontend_parse(&frontend)) {
+    cling_frontend_print_error(&frontend);
+    return ESYNTAX;
+  }
+  cling_backend_init(&backend);
+  cling_backend_codegen(&backend, &option, &frontend);
+  /* cling_backend_dump_mips(&backend, stdout); */
+  cling_backend_interpret(&backend);
   cling_frontend_destroy(&frontend);
   return 0;
 }

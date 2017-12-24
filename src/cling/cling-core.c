@@ -101,20 +101,28 @@ void cling_backend_destroy(struct cling_backend *self)
   cling_mips_interp_destroy(&self->mips_interp);
 }
 
-
-void cling_backend_codegen(struct cling_backend *self, struct cling_frontend *frontend)
-{
-  cling_ast_ir_emit_program(frontend->parser.root, &frontend->symbol_table, &self->ast_program);
+void cling_backend_codegen(struct cling_backend *self,
+                           struct cling_option const *option,
+                           struct cling_frontend *frontend) {
+  cling_ast_ir_emit_program(frontend->parser.root, option,
+                            &frontend->symbol_table, &self->ast_program);
   cling_mips_program_emit(&self->mips_program, &self->ast_program);
 }
 
-void cling_backend_dump_ast_ir(struct cling_backend const *self, FILE *output) 
+inline void cling_backend_dump_ast_ir(struct cling_backend const *self, FILE *output) 
 {
   cling_ast_program_print(&self->ast_program, output);
 }
 
-void cling_backend_dump_mips(struct cling_backend const *self, FILE *output)
+inline void cling_backend_dump_mips(struct cling_backend const *self, FILE *output)
 {
   cling_mips_program_print(&self->mips_program, output);
 }
+
+inline int cling_backend_interpret(struct cling_backend *self)
+{
+  cling_mips_interp_load(&self->mips_interp, &self->mips_program);
+  return cling_mips_interp_exec(&self->mips_interp);
+}
+
 

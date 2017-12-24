@@ -58,7 +58,9 @@ void cling_backend_init(struct cling_backend *self);
 void cling_backend_destroy(struct cling_backend *self);
 void cling_backend_dump_mips(struct cling_backend const *self, FILE *output);
 void cling_backend_dump_ast_ir(struct cling_backend const *self, FILE *output);
-void cling_backend_codegen(struct cling_backend *self, struct cling_frontend *frontend);
-
+int cling_backend_interpret(struct cling_backend *self);
+void cling_backend_codegen(struct cling_backend *self,
+                           struct cling_option const *option,
+                           struct cling_frontend *frontend);
 
 #endif /* CLING_CLING_CORE_H */

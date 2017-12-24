@@ -201,13 +201,6 @@ static struct utillib_json_value *function(struct cling_rd_parser *self,
 
 static struct utillib_json_value *program(struct cling_rd_parser *self,
                                           struct cling_scanner *scanner);
-
-/*
- * For test.
- */
-static struct utillib_json_value *mock(struct cling_rd_parser *self,
-                                       struct cling_scanner *scanner);
-
 /*
  * init/destroy
  */
@@ -1898,20 +1891,4 @@ unexpected:
   case SYM_KW_VOID:
     goto parse_function;
   }
-}
-
-static struct utillib_json_value *mock(struct cling_rd_parser *self,
-                                       struct cling_scanner *scanner) {
-  struct cling_opg_parser opg_parser;
-  cling_opg_parser_init(&opg_parser, UT_SYM_EOF);
-  bool is_main;
-  struct utillib_json_value *val;
-  /* val = cling_opg_parser_parse(&opg_parser, scanner); */
-  /* cling_opg_parser_destroy(&opg_parser); */
-  /* return program(self, scanner); */
-  /* return switch_stmt_cases(self, scanner); */
-  /* return printf_stmt(self, scanner); */
-  val = function(self, scanner, &is_main);
-  utillib_json_pretty_print(val);
-  return val;
 }

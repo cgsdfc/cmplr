@@ -39,12 +39,14 @@ struct cling_mips_label {
  */
 struct cling_mips_label *mips_label_create(char const *label, uint32_t address);
 void mips_label_destroy(struct cling_mips_label *self);
+struct cling_mips_label * mips_label_find(struct utillib_hashmap const *self, uint32_t address);
 struct cling_mips_label * mips_label_name_find(struct utillib_hashmap const *self, char const *name);
+
 extern const struct utillib_hashmap_callback mips_label_strcallback;
 extern const struct utillib_hashmap_callback mips_label_callback;
+extern const struct utillib_hashmap_callback cling_string_hash;
 
 int cling_symbol_to_type(int symbol);
-int cling_type_to_wide(int type);
 int symbol_to_ast_opcode(size_t symbol);
 int cling_type_to_size(int type);
 int cling_symbol_to_size(int symbol);
@@ -53,10 +55,6 @@ char const *size_tostring(int size);
 int cling_symbol_to_immediate(int symbol, char const *string);
 int cling_type_to_immediate(int type, char const *string);
 int cling_ast_opcode_to_syscall(int opcode);
-int cling_type_to_write(int type);
 int cling_type_to_read(int type);
 int cling_size_to_write(int size);
-
-extern const struct utillib_hashmap_callback cling_string_hash;
-
 #endif /* CLING_MISC_H */
