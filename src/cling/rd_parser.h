@@ -35,6 +35,7 @@
 #define RD_PARSER_SKIP_MAX 4
 
 struct cling_error;
+struct cling_scanner;
 struct cling_rd_parser {
   jmp_buf fatal_saver;
   struct utillib_vector elist;
@@ -49,9 +50,8 @@ void cling_rd_parser_init(struct cling_rd_parser *self,
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self);
 
-struct utillib_json_value *
-cling_rd_parser_parse(struct cling_rd_parser *self,
-                      struct utillib_token_scanner *input);
+struct utillib_json_value *cling_rd_parser_parse(struct cling_rd_parser *self,
+                                                 struct cling_scanner *scanner);
 
 void cling_rd_parser_report_errors(struct cling_rd_parser const *self);
 

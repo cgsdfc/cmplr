@@ -23,7 +23,6 @@
 #define CLING_AST_CHECK_H
 
 #include <utillib/json.h>
-#include <utillib/scanner.h>
 
 #include <stddef.h>
 
@@ -33,6 +32,7 @@
  * a signal of failure which caller should note.
  */
 struct cling_rd_parser;
+struct cling_scanner;
 
 /*
  * Specially for scanf_stmt where
@@ -42,7 +42,7 @@ struct cling_rd_parser;
  */
 int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
                                     struct cling_rd_parser *parser,
-                                    struct utillib_token_scanner const *input,
+                                    struct cling_scanner const *scanner,
                                     size_t context);
 
 /*
@@ -53,7 +53,7 @@ int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
  */
 int cling_ast_check_expression(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
-                               struct utillib_token_scanner const *input,
+                               struct cling_scanner const *scanner,
                                size_t context);
 
 /*
@@ -63,7 +63,7 @@ int cling_ast_check_expression(struct utillib_json_value const *self,
  */
 int cling_ast_check_expr_stmt(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
-                              struct utillib_token_scanner const *input,
+                              struct cling_scanner const *scanner,
                               size_t context);
 
 /*
@@ -72,7 +72,7 @@ int cling_ast_check_expr_stmt(struct utillib_json_value const *self,
  */
 int cling_ast_check_returnness(struct utillib_json_value const *self,
                                struct cling_rd_parser *parser,
-                               struct utillib_token_scanner const *input,
+                               struct cling_scanner const *scanner,
                                size_t context, bool void_flag);
 /*
  * The following functions are due to grammar limitness.
@@ -85,14 +85,14 @@ int cling_ast_check_returnness(struct utillib_json_value const *self,
  */
 int cling_ast_check_for_init(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
-                             struct utillib_token_scanner const *input,
+                             struct cling_scanner const *scanner,
                              size_t context);
 /*
  * condition ::= expr relop expr
  */
 int cling_ast_check_condition(struct utillib_json_value const *self,
                               struct cling_rd_parser *parser,
-                              struct utillib_token_scanner const *input,
+                              struct cling_scanner const *scanner,
                               size_t context);
 
 /*
@@ -101,7 +101,7 @@ int cling_ast_check_condition(struct utillib_json_value const *self,
  */
 int cling_ast_check_for_step(struct utillib_json_value const *self,
                              struct cling_rd_parser *parser,
-                             struct utillib_token_scanner const *input,
+                             struct cling_scanner const *scanner,
                              size_t context);
 
 #endif /* CLING_AST_CHECK_H */

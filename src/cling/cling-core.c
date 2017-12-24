@@ -40,13 +40,12 @@ int cling_frontend_tokenize(struct cling_frontend *self, FILE *output)
    */
   char const *semantic;
   char const *name;
-  for (;(code=utillib_token_scanner_lookahead(&self->scanner))!=UT_SYM_EOF;
-    utillib_token_scanner_shiftaway(&self->scanner)) 
-  {
+  for (; (code = cling_scanner_lookahead(&self->scanner)) != UT_SYM_EOF;
+       cling_scanner_shiftaway(&self->scanner)) {
     if (code == UT_SYM_ERR) {
       return 1;
     }
-    semantic = utillib_token_scanner_semantic(&self->scanner);
+    semantic = cling_scanner_semantic(&self->scanner);
     name = cling_symbol_kind_tostring(code);
     fprintf(output, "'%s'\t", name);
     switch (code) {

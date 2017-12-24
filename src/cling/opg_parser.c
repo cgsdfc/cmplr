@@ -21,6 +21,7 @@
 
 #include "opg_parser.h"
 #include "ast_build.h"
+#include "scanner.h"
 #include "symbols.h"
 
 #include <assert.h>
@@ -335,7 +336,7 @@ static inline bool good_token(size_t lookahead)
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-    struct utillib_token_scanner *input) {
+                       struct cling_scanner *scanner) {
 
   size_t lookahead;
   size_t stacktop;
@@ -347,7 +348,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
 
   while (!utillib_vector_empty(opstack)) {
     /* opg_parser_show_stack(self); */
-    lookahead = utillib_token_scanner_lookahead(input);
+    lookahead = cling_scanner_lookahead(scanner);
     /* if (!good_token(lookahead)) */
     /*   goto error; */
     if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
@@ -375,15 +376,14 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     if (lookahead == SYM_IDEN || lookahead == SYM_UINT || 
         lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
       utillib_vector_push_back(
-          stack,
-          cling_ast_factor(lookahead, utillib_token_scanner_semantic(input)));
+          stack, cling_ast_factor(lookahead, cling_scanner_semantic(scanner)));
       if (lookahead == SYM_IDEN)
         /*
          * SYM_IDEN matters in call_expr
          * so pushes it.
          */
         utillib_vector_push_back(opstack, lookahead);
-      utillib_token_scanner_shiftaway(input);
+      cling_scanner_shiftaway(scanner);
       continue;
     }
     /*
@@ -401,7 +401,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
       case CL_OPG_LT:
 shiftin:
         utillib_vector_push_back(opstack, lookahead);
-        utillib_token_scanner_shiftaway(input);
+        cling_scanner_shiftaway(scanner);
         break;
       case CL_OPG_GT:
         if (0 != opg_parser_reduce(self, lookahead)) {

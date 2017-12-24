@@ -226,14 +226,28 @@ scanner_error_handler(struct utillib_char_scanner *chars,
   return 1;
 }
 
-static const struct utillib_token_scanner_callback cling_scanner_callback = {
+static const struct utillib_token_scanner_callback scanner_callback = {
     .read_handler = scanner_read_handler,
     .error_handler = scanner_error_handler,
 };
 
-void cling_scanner_init(struct utillib_token_scanner *self, FILE *file) {
-  utillib_token_scanner_init(self, file, &cling_scanner_callback);
+void cling_scanner_init(struct cling_scanner *self, FILE *file) {
+  self->bind_sign = true;
+  utillib_token_scanner_init(&self->input, file, &scanner_callback);
 }
-void cling_scanner_destroy(struct utillib_token_scanner *self) {
-  utillib_token_scanner_destroy(self);
+
+void cling_scanner_destroy(struct cling_scanner *self) {
+  utillib_token_scanner_destroy(&self->input);
+}
+
+inline size_t cling_scanner_lookahead(struct cling_scanner const *self) {
+  return utillib_token_scanner_lookahead(&self->input);
+}
+
+inline void cling_scanner_shiftaway(struct cling_scanner *self) {
+  utillib_token_scanner_shiftaway(&self->input);
+}
+
+inline char const *cling_scanner_semantic(struct cling_scanner const *self) {
+  return utillib_token_scanner_semantic(&self->input);
 }

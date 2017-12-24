@@ -34,7 +34,7 @@
  */
 
 struct cling_frontend {
-  struct utillib_token_scanner scanner;
+  struct cling_scanner scanner;
   struct cling_rd_parser parser;
   struct cling_symbol_table symbol_table;
 };

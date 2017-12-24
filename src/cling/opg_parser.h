@@ -21,11 +21,10 @@
 #ifndef CLING_OPG_PARSER
 #define CLING_OPG_PARSER
 #include <utillib/json.h>
-#include <utillib/scanner.h>
 #include <utillib/vector.h>
 
 #include <stddef.h>
-
+struct cling_scanner;
 /**
  * Ths language construct this parser can recognize is as follow:
  * ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
@@ -56,7 +55,7 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self);
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-                       struct utillib_token_scanner *input);
+                       struct cling_scanner *scanner);
 
 /*
  * Reinitialize.

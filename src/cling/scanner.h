@@ -32,13 +32,21 @@ UTILLIB_ENUM_ELEM(CL_ESTRCHAR)
 UTILLIB_ENUM_ELEM(CL_ECHRCHAR)
 UTILLIB_ENUM_ELEM(CL_ELEADZERO)
 UTILLIB_ENUM_ELEM(CL_EUNKNOWN)
-UTILLIB_ENUM_END(cling_scanner_error_kind)
+UTILLIB_ENUM_END(cling_scanner_error_kind);
+
+struct cling_scanner {
+  struct utillib_token_scanner input;
+  bool bind_sign;
+};
 
 /* ＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝" */
 /* ＜无符号整数＞  ::= ＜非零数字＞｛＜数字＞｝ */
 /* ＜整数＞    ::= ［＋｜－］＜无符号整数＞｜０ */
 /* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
-void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
-void cling_scanner_destroy(struct utillib_token_scanner *self);
+void cling_scanner_init(struct cling_scanner *self, FILE *file);
+void cling_scanner_destroy(struct cling_scanner *self);
+size_t cling_scanner_lookahead(struct cling_scanner const *self);
+void cling_scanner_shiftaway(struct cling_scanner *self);
+char const *cling_scanner_semantic(struct cling_scanner const *self);
 #endif /* CLING_SCANNER_H */
