@@ -84,11 +84,11 @@ static void mips_interp_load_label(struct cling_mips_interp *self, struct cling_
 
 /*
  * Memory comes directly from the stack pointer.
+ * size is the number of words
  */
 static uint32_t mips_interp_alloc(struct cling_mips_interp *self, size_t size) {
-  uint32_t alloc=self->regs[MIPS_SP];
   self->regs[MIPS_SP]-=(size<<2);
-  return alloc;
+  return self->regs[MIPS_SP];
 }
 
 static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_mips_program const *program) {
@@ -99,7 +99,7 @@ static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_m
   UTILLIB_VECTOR_FOREACH(data, &program->data) {
     switch (data->type) {
     case MIPS_SPACE:
-      address = mips_interp_alloc(self, data->extend)-data->extend;
+      address = mips_interp_alloc(self, data->extend);
       break;
     case MIPS_WORD:
       address = mips_interp_alloc(self, 1);
