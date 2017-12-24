@@ -49,7 +49,7 @@
 
 static bool rd_parser_is_stmt_lookahead(size_t code);
 
-static void rd_parser_fatal(struct cling_rd_parser *self) {
+void rd_parser_fatal(struct cling_rd_parser *self) {
   longjmp(self->fatal_saver, 1);
 }
 
@@ -115,38 +115,6 @@ static int rd_parser_skipto_decl(struct cling_rd_parser *self,
       return code;
     cling_scanner_shiftaway(scanner);
   }
-}
-
-/*
- * It should be used in whenever an integer is needed.
- * Note the term integer here means '0' or [+|-](non-zero-digit)+
- * But in expr, use cling_scanner_lookahead instead.
- * opg_parser has its own idea of how to parse integer.
- * It is essentially a wrapper around cling_scanner_lookahead
- * that handles possible prefix of +|-.
- * It returns SYM_INTEGER on success and raises UT_SYM_ERR otherwise.
- */
-static size_t read_integer(struct cling_scanner *self) {
-  size_t code = cling_scanner_lookahead(self);
-  char sign;
-
-  switch (code) {
-  case SYM_ADD:
-  case SYM_MINUS:
-    sign = code == SYM_ADD ? '+' : '-';
-    cling_scanner_shiftaway(self);
-    if (SYM_UINT == cling_scanner_lookahead(self)) {
-      return SYM_INTEGER;
-    }
-    return UT_SYM_ERR;
-  case SYM_UINT:
-    return SYM_INTEGER;
-  default:
-    return code;
-  }
-}
-bool cling_rd_parser_has_errors(struct cling_rd_parser const *self) {
-  return !utillib_vector_empty(&self->elist);
 }
 
 void rd_parser_error_push_back(struct cling_rd_parser *self,
@@ -244,7 +212,9 @@ static struct utillib_json_value *mock(struct cling_rd_parser *self,
  * init/destroy
  */
 void cling_rd_parser_init(struct cling_rd_parser *self,
+                          struct cling_option const *option,
                           struct cling_symbol_table *symbol_table) {
+  self->option = option;
   self->curfunc = NULL;
   self->symbol_table = symbol_table;
   self->root = utillib_json_object_create_empty();
@@ -256,14 +226,14 @@ void cling_rd_parser_destroy(struct cling_rd_parser *self) {
   utillib_json_value_destroy(self->root);
 }
 
-struct utillib_json_value *
-cling_rd_parser_parse(struct cling_rd_parser *self,
+int cling_rd_parser_parse(struct cling_rd_parser *self,
                       struct cling_scanner *scanner) {
   switch (setjmp(self->fatal_saver)) {
   case 0:
-    return program(self, scanner);
+    program(self, scanner);
+    return !utillib_vector_empty(&self->elist);
   default:
-    return NULL;
+    return 1;
   }
 }
 
@@ -321,7 +291,7 @@ static struct utillib_json_value *const_defs(struct cling_rd_parser *self,
     }
     cling_scanner_shiftaway(scanner);
 
-    code = read_integer(scanner);
+    code = cling_scanner_lookahead(scanner);
     if (code != expected_initializer) {
       error = cling_expected_error(scanner, expected_initializer, context);
       goto skip;
@@ -473,8 +443,8 @@ static struct utillib_json_value *var_defs(struct cling_rd_parser *self,
       /*
        * Extend must be a uint.
        */
-      if (code != SYM_UINT) {
-        expected = SYM_UINT;
+      if (code != SYM_INTEGER) {
+        expected = SYM_INTEGER;
         goto expected;
       }
       char const *extend = cling_scanner_semantic(scanner);
@@ -521,7 +491,7 @@ expected:
   rd_parser_error_push_back(self,
                             cling_expected_error(scanner, expected, context));
   switch (expected) {
-  case SYM_UINT:
+  case SYM_INTEGER:
     rd_parser_skip_init(self, SYM_RK, SYM_COMMA, SYM_SEMI);
     switch (rd_parser_skipto(self, scanner)) {
     case SYM_RK:
@@ -1046,10 +1016,7 @@ switch_stmt_case_clause(struct cling_rd_parser *self,
     utillib_json_object_push_back(object, "default", &utillib_json_true);
     goto parse_colon_stmt;
   case SYM_KW_CASE:
-    /*
-     * Note we use read_integer here.
-     */
-    code = read_integer(scanner);
+    code = cling_scanner_lookahead(scanner);
     switch (code) {
     case SYM_INTEGER:
     case SYM_CHAR:
@@ -1611,12 +1578,12 @@ static struct utillib_json_value *printf_stmt(struct cling_rd_parser *self,
     }
     break;
     /*
-     * These are lookaheads for expr, note we use SYM_UINT & SYM_ADD
+     * These are lookaheads for expr, note we use SYM_INTEGER & SYM_ADD
      * instead of SYM_INTEGER.
      */
   case SYM_IDEN:
   case SYM_LP:
-  case SYM_UINT:
+  case SYM_INTEGER:
   case SYM_ADD:
   case SYM_MINUS:
   case SYM_CHAR:

@@ -26,6 +26,7 @@ enum {
   ENOINPUT=1, EFOPEN, ESYNTAX
 };
 
+static struct cling_option option;
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 FILE *source_file;
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
     fprintf(stderr, "%s cannot be opened\n", argv[1]);
     exit(EFOPEN);
   }
-  cling_frontend_init(&frontend, source_file);
+  cling_frontend_init(&frontend, &option, source_file);
   cling_frontend_parse(&frontend);
   cling_backend_init(&backend);
   cling_backend_codegen(&backend, &frontend);

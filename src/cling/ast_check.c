@@ -49,7 +49,7 @@ static int ast_check_expression(struct utillib_json_value const *self,
                                 size_t context);
 
 /*
- * Factors are SYM_IDEN, SYM_INTEGER, SYM_UINT, SYM_CHAR.
+ * Factors are SYM_IDEN, SYM_INTEGER, SYM_CHAR.
  * If self is `SYM_IDEN' and exists
  * in symbol_table, the symbol_entry of it
  * will be returned together with its kind.
@@ -154,7 +154,6 @@ static int ast_check_factor(struct utillib_json_value const *self,
     return (*entry)->kind;
   case SYM_CHAR:
     return CL_CHAR;
-  case SYM_UINT:
   case SYM_INTEGER:
     return CL_INT;
   default:
@@ -644,10 +643,10 @@ int cling_ast_check_for_step(struct utillib_json_value const *self,
     goto error;
   rhs = utillib_json_object_at(rhs, "rhs");
   type = utillib_json_object_at(rhs, "type");
-  if (!type || type->as_size_t != SYM_UINT)
+  if (!type || type->as_size_t != SYM_INTEGER)
     /*
-     * The rhs of the rhs of self is not SYM_UINT
-     * Notes SYM_UINT should be non-zero.
+     * The rhs of the rhs of self is not SYM_INTEGER
+     * FIXME: check non zero
      */
     goto error;
   /*

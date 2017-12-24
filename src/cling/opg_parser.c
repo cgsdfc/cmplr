@@ -309,7 +309,6 @@ static inline bool good_token(size_t lookahead)
     case SYM_IDEN:
     case SYM_LK:
     case SYM_RK:
-    case SYM_UINT:
     case SYM_INTEGER:
     case SYM_CHAR:
     case SYM_EQ:
@@ -373,8 +372,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     }
 
     stacktop = utillib_vector_back(opstack);
-    if (lookahead == SYM_IDEN || lookahead == SYM_UINT || 
-        lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
+    if (lookahead == SYM_IDEN || lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
       utillib_vector_push_back(
           stack, cling_ast_factor(lookahead, cling_scanner_semantic(scanner)));
       if (lookahead == SYM_IDEN)

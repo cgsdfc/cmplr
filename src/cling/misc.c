@@ -32,7 +32,6 @@
 int cling_symbol_to_type(int symbol) {
   switch (symbol) {
   case SYM_INTEGER:
-  case SYM_UINT:
   case SYM_KW_INT:
     return CL_INT;
   case SYM_CHAR:
@@ -101,7 +100,6 @@ char const *size_tostring(int size) {
 int cling_symbol_to_size(int symbol) {
   switch (symbol) {
   case SYM_INTEGER:
-  case SYM_UINT:
     return MIPS_WORD_SIZE;
   case SYM_CHAR:
     return MIPS_BYTE_SIZE;
@@ -132,7 +130,6 @@ int cling_symbol_to_immediate(int symbol, char const *string) {
     return char_val;
   case SYM_INTEGER:
   case SYM_KW_INT:
-  case SYM_UINT:
     sscanf(string, "%d", &int_val);
     return int_val;
   default:

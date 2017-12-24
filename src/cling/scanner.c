@@ -20,6 +20,8 @@
 */
 #include "scanner.h"
 #include "error.h"
+#include "option.h"
+#include "rd_parser.h"
 #include "symbols.h"
 #include <assert.h>
 #include <ctype.h>
@@ -67,19 +69,36 @@ static int read_string(struct cling_scanner *self) {
   return SYM_STRING;
 }
 
-/*
- * XXX: Can't be so easy
- */
-static int read_number(struct cling_scanner *self) {
-  char ch;
-  ch = utillib_char_scanner_lookahead(&self->input);
+static int read_number(struct cling_scanner *self, char ch) {
+  char next_char;
+  switch (ch) {
+  case '+':
+  case '-':
+    utillib_char_scanner_shiftaway(&self->input);
+    if (self->context == SYM_EXPR)
+      goto match_op;
+    next_char = utillib_char_scanner_lookahead(&self->input);
+    if (isdigit(next_char)) {
+      utillib_string_append_char(&self->buffer, ch);
+      goto match_integer;
+    }
+    goto match_op;
+  default:
+    assert(isdigit(ch));
+    goto match_integer;
+  }
+match_integer:
   utillib_token_scanner_collect_digit(&self->input, &self->buffer);
-  return SYM_UINT;
+  return SYM_INTEGER;
+
+match_op:
+  return ch == '+' ? SYM_ADD : SYM_MINUS;
 }
 
 static int read_dispatch(struct cling_scanner *self, char ch) {
   int code = UT_SYM_NULL;
   char const *keyword;
+  int two_chars, one_char;
   switch (ch) {
   /*
    * Level 1 dispatch: single char.
@@ -129,35 +148,34 @@ static int read_dispatch(struct cling_scanner *self, char ch) {
    * Level 2 dispatch: two chars.
    */
   case '=':
-    utillib_char_scanner_shiftaway(&self->input);
-    if (utillib_char_scanner_lookahead(&self->input) == '=') {
-      utillib_char_scanner_shiftaway(&self->input);
-      return SYM_DEQ;
-    }
-    return SYM_EQ;
+    two_chars = SYM_DEQ;
+    one_char = SYM_EQ;
+    goto level2;
   case '<':
-    utillib_char_scanner_shiftaway(&self->input);
-    if (utillib_char_scanner_lookahead(&self->input) == '=') {
-      utillib_char_scanner_shiftaway(&self->input);
-      return SYM_LE;
-    }
-    return SYM_LT;
+    two_chars = SYM_LE;
+    one_char = SYM_LT;
+    goto level2;
   case '>':
-    utillib_char_scanner_shiftaway(&self->input);
-    if (utillib_char_scanner_lookahead(&self->input) == '=') {
-      utillib_char_scanner_shiftaway(&self->input);
-      return SYM_GE;
-    }
-    return SYM_GT;
+    two_chars = SYM_GE;
+    one_char = SYM_GT;
+    goto level2;
   case '!':
-    utillib_char_scanner_shiftaway(&self->input);
-    if (utillib_char_scanner_lookahead(&self->input) == '=') {
-      utillib_char_scanner_shiftaway(&self->input);
-      return SYM_NE;
-    }
-    return -CL_EBADNEQ;
+    two_chars = SYM_NE;
+    one_char = -CL_EBADNEQ;
+    goto level2;
+  default:
+    goto level3;
   }
 
+level2:
+  utillib_char_scanner_shiftaway(&self->input);
+  if (utillib_char_scanner_lookahead(&self->input) == '=') {
+    utillib_char_scanner_shiftaway(&self->input);
+    return two_chars;
+  }
+  return one_char;
+
+level3:
   /*
    * Level 3 : keyword and iden.
    */
@@ -182,18 +200,19 @@ static int read_dispatch(struct cling_scanner *self, char ch) {
     return read_char(self);
   }
   if (isdigit(ch) || ch == '+' || ch == '-')
-    return read_number(self);
+    return read_number(self, ch);
   return -CL_EUNKNOWN;
 }
 
 void cling_scanner_init(struct cling_scanner *self,
-                        struct utillib_vector *elist, FILE *file) {
-  /*
-   * context will be set by each parse function.
-   */
-  self->elist = elist;
+                        struct cling_option const *option,
+                        struct cling_rd_parser *parser, FILE *file) {
+  self->option = option;
+  self->parser = parser;
+  self->context = SYM_PROGRAM;
   utillib_char_scanner_init(&self->input, file);
   utillib_string_init(&self->buffer);
+  read_dispatch(self, utillib_char_scanner_lookahead(&self->input));
 }
 
 void cling_scanner_destroy(struct cling_scanner *self) {
@@ -206,10 +225,37 @@ inline void cling_scanner_context(struct cling_scanner *self, size_t context) {
 }
 
 inline size_t cling_scanner_lookahead(struct cling_scanner const *self) {
+  assert(self->context);
   return self->lookahead;
 }
 
-void cling_scanner_shiftaway(struct cling_scanner *self) {}
+static void skipcomment(struct cling_scanner *self) {
+  char ch;
+  while ((ch = utillib_char_scanner_lookahead(&self->input)) == '#') {
+    while ((ch = utillib_char_scanner_lookahead(&self->input)) != '\n')
+      utillib_char_scanner_shiftaway(&self->input);
+    utillib_token_scanner_skipspace(&self->input);
+  }
+}
+
+void cling_scanner_shiftaway(struct cling_scanner *self) {
+  int code, ch;
+  if (utillib_char_scanner_reacheof(&self->input))
+    return;
+  utillib_token_scanner_skipspace(&self->input);
+  if (self->option->allow_comment)
+    skipcomment(self);
+  ch = utillib_char_scanner_lookahead(&self->input);
+  code = read_dispatch(self, ch);
+  if (code < 0) {
+    rd_parser_error_push_back(
+        self->parser,
+        cling_badtoken_error(self, -code, utillib_string_c_str(&self->buffer),
+                             self->context));
+    rd_parser_fatal(self->parser);
+  }
+  self->lookahead = code;
+}
 
 inline char const *cling_scanner_semantic(struct cling_scanner const *self) {
   return utillib_string_c_str(&self->buffer);

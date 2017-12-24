@@ -25,11 +25,11 @@
 /*
  * file must be opened for reading.
  */
-void cling_frontend_init(struct cling_frontend *self, FILE *file)
-{
-  cling_scanner_init(&self->scanner, &self->parser.elist, file);
+void cling_frontend_init(struct cling_frontend *self,
+                         struct cling_option const *option, FILE *file) {
   cling_symbol_table_init(&self->symbol_table);
-  cling_rd_parser_init(&self->parser, &self->symbol_table);
+  cling_scanner_init(&self->scanner, option, &self->parser, file);
+  cling_rd_parser_init(&self->parser, option, &self->symbol_table);
 }
 
 int cling_frontend_tokenize(struct cling_frontend *self, FILE *output)
@@ -50,7 +50,6 @@ int cling_frontend_tokenize(struct cling_frontend *self, FILE *output)
     fprintf(output, "'%s'\t", name);
     switch (code) {
     case SYM_INTEGER:
-    case SYM_UINT:
     case SYM_IDEN:
       fprintf(output, "%s\n", semantic);
       break;
@@ -75,13 +74,8 @@ void cling_frontend_destroy(struct cling_frontend *self)
   cling_scanner_destroy(&self->scanner);
 }
 
-int cling_frontend_parse(struct cling_frontend *self) {
-  cling_rd_parser_parse(&self->parser, &self->scanner);
-  if (cling_rd_parser_has_errors(&self->parser)) {
-    cling_rd_parser_report_errors(&self->parser);
-    return 1;
-  }
-  return 0;
+inline int cling_frontend_parse(struct cling_frontend *self) {
+  return cling_rd_parser_parse(&self->parser, &self->scanner);
 }
 
 inline void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output) {

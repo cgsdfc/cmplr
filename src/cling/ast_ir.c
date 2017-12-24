@@ -501,7 +501,6 @@ static void polish_ir_emit_load(struct cling_polish_ir *self,
     goto make_ldstr;
   case SYM_CHAR:
   case SYM_INTEGER:
-  case SYM_UINT:
     size = cling_symbol_to_size(type->as_size_t);
     value = cling_symbol_to_immediate(type->as_size_t, json_value->as_ptr);
     goto make_ldimm;
