@@ -1766,6 +1766,7 @@ static struct utillib_json_value *first_function(struct cling_rd_parser *self,
   struct utillib_json_value *object;
   object = utillib_json_object_create_empty();
   cling_ast_set_type(object, type);
+  *is_main=strcmp(name, "main")==0;
 
   if (cling_symbol_table_exist_name(self->symbol_table, name, CL_GLOBAL)) {
     rd_parser_error_push_back(self,
@@ -1773,8 +1774,6 @@ static struct utillib_json_value *first_function(struct cling_rd_parser *self,
   } else {
     cling_symbol_table_reserve(self->symbol_table, name, CL_GLOBAL);
     self->curfunc = cling_ast_set_name(object, name);
-    if (strcmp(name, "main")==0)
-      *is_main=true;
   }
   return function_args_body(self, scanner, object);
 }

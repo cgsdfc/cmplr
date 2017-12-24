@@ -4,5 +4,6 @@ int factoral(int N) {
 }
 
 void main() {
-  printf("factoral 16 ", factoral(16));
+  const int arg=-1;
+  printf("factoral 10 ", factoral(arg));
 }
