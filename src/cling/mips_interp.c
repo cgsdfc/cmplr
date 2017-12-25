@@ -40,15 +40,15 @@ static void print_memory_usage(struct cling_mips_interp const *self);
 static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
 {
   if (0 == address) {
-    self->errno=MIPS_EC_NULL;
+    self->error=MIPS_EC_NULL;
     return NULL;
   }
   if (address < 0) {
-    self->errno=MIPS_EC_NOMEM;
+    self->error=MIPS_EC_NOMEM;
     return NULL;
   }
   if (address & 3) {
-    self->errno=MIPS_EC_ALIGN;
+    self->error=MIPS_EC_ALIGN;
     return NULL;
   }
   struct cling_mips_memblk ** memblk_array, *memblk;
@@ -70,7 +70,7 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
   }
   index=memoffset(address);
   if (index >= MIPS_MEMBLK_SIZE-4) {
-   self->errno=MIPS_EC_INDEX;
+   self->error=MIPS_EC_INDEX;
    return NULL;
   } 
   return memblk->mem + index;
@@ -443,7 +443,7 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
 
 void cling_mips_interp_init(struct cling_mips_interp *self)
 {
-  self->errno = 0;
+  self->error = 0;
   self->pc = 0;
   self->lo = 0;
   self->instrs=NULL;
@@ -506,8 +506,8 @@ static void dump_regs(struct cling_mips_interp const *self) {
 }
 
 void cling_mips_interp_print_error(struct cling_mips_interp const *self) {
-  char const * errmsg=cling_mips_ecode_tostring(self->errno);
-  fprintf(stderr, "ERROR: %s (%d)\n", errmsg, self->errno);
+  char const * errmsg=cling_mips_ecode_tostring(self->error);
+  fprintf(stderr, "ERROR: %s (%d)\n", errmsg, self->error);
   fprintf(stderr, "pc=%u\n", self->pc);
   fprintf(stderr, "sp=%u\n", self->regs[MIPS_SP]);
   fputs("\t", stderr);
