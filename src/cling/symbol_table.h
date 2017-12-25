@@ -51,7 +51,6 @@ struct cling_symbol_entry {
 };
 
 /**
- * \enum cling_symbol_table_scope_kind
  * Determine the scope in which searches
  * or insertions are done.
  * Object like function should be inserted into global scope.
@@ -65,7 +64,7 @@ UTILLIB_ENUM_ELEM(CL_LOCAL)
 UTILLIB_ENUM_ELEM(CL_LEXICAL)
 UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
 
-UTILLIB_ENUM_BEGIN(cling_symbol_entry_kind)
+UTILLIB_ENUM_BEGIN(cling_type)
 UTILLIB_ENUM_ELEM(CL_UNDEF)
 UTILLIB_ENUM_ELEM(CL_INT)
 UTILLIB_ENUM_ELEM(CL_CHAR)
@@ -73,30 +72,27 @@ UTILLIB_ENUM_ELEM(CL_VOID)
 UTILLIB_ENUM_ELEM(CL_CONST)
 UTILLIB_ENUM_ELEM(CL_ARRAY)
 UTILLIB_ENUM_ELEM(CL_FUNC)
-UTILLIB_ENUM_END(cling_symbol_entry_kind);
+UTILLIB_ENUM_END(cling_type);
 
 void cling_symbol_table_init(struct cling_symbol_table *self);
 void cling_symbol_table_destroy(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_enter_scope
  * Init the local scope and increases the scope counter.
- * This means the following insertions will be done in the new scope.
+ * This means the following insertions will be done in the local scope.
  */
 void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_leave_scope
  * Clear the local scope.
  * All the symbols of it are lost.
  */
 void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
 
 /**
- * \function cling_symbol_table_find
  * Finds the entry for symbol `name' in the scope
  * specified by `scope_kind'.
- * \return If the symbol is not found, NULL, or else the entry
+ * If the symbol is not found, NULL, or else the entry
  * of it.
  */
 struct cling_symbol_entry *
@@ -104,7 +100,6 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
                         int scope_kind);
 
 /**
- * \function cling_symbol_table_reserve
  * Reserves an entry in scope specified by `scope_kind'
  * with the `name' as key so that the following
  * lookup shows thats `name' exists.
@@ -115,7 +110,6 @@ void cling_symbol_table_reserve(struct cling_symbol_table *self,
                                 char const *name, int scope_kind);
 
 /**
- * \function cling_symbol_table_exist_name
  * Parallel with `cling_symbol_table_find', but only answers
  * whether the name exists regardless of its entry.
  */
@@ -134,7 +128,5 @@ void cling_symbol_table_insert_function(
 
 void cling_symbol_table_insert_variable(
     struct cling_symbol_table *self, struct utillib_json_value const *variable);
-
-unsigned int gettype(size_t type);
 
 #endif /* CLING_SYMBOL_TABLE_H */

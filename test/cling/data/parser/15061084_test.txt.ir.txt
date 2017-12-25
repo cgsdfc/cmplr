@@ -1,0 +1,564 @@
+   0: const const_int_decl int = 1
+   1: const const_int_1 int = 1
+   2: const const_int_2 int = 2
+   3: const const_int_3 int = 3
+   4: const const_int_4 int = 4
+   5: const const_int_zero int = 0
+   6: const const_int_nega int = 1234
+   7: const const_int_posi int = 1234
+   8: const const_char_decl char = 'a'
+   9: const const_char_add char = '+'
+  10: const const_char_minus char = '-'
+  11: const const_char_mul char = '*'
+  12: const const_char_div char = '/'
+  13: const const_char_number char = '1'
+  14: var int int_1
+  15: var char char_1
+  16: var int int_array_1[10]
+  17: var char char_array_1[20]
+  18: var int int_2
+  19: var int int_array_2[2]
+  20: var char char_2
+  21: var char char_array_2[3]
+
+
+   0: int int_function()
+   1: para int int_arg_1
+   2: var int local_int_1
+   3: var char local_char_1
+   0: ldimm t0 2
+   1: load t1 local_int_1
+   2: store t1 t0
+   3: ldimm t2 'b'
+   4: load t3 local_char_1
+   5: store t3 t2
+   6: load t4 local_int_1
+   7: ldimm t5 1
+   8: t6 = t4 + t5
+   9: ret 6 t10
+  10: nop
+
+   0: int int_function_noargs()
+   1: var int local_int_2
+   2: var int local_sum
+   0: ldimm t0 0
+   1: load t1 local_sum
+   2: store t1 t0
+   3: ldimm t2 1
+   4: load t3 local_int_2
+   5: store t3 t2
+   6: jmp 11
+   7: load t4 local_int_2
+   8: ldimm t5 100
+   9: t6 = t4 < t5
+  10: bez t6 22
+  11: load t7 local_int_2
+  12: ldimm t8 1
+  13: t9 = t7 + t8
+  14: load t10 local_sum
+  15: store t10 t9
+  16: load t11 local_int_2
+  17: ldimm t12 1
+  18: t13 = t11 + t12
+  19: load t14 local_int_2
+  20: store t14 t13
+  21: jmp 7
+  22: load t15 local_sum
+  23: ret 15 t24
+  24: nop
+
+   0: void void_function()
+   1: para char char_arg_1
+   2: para int int_arg_2
+   3: para char char_arg_3
+   0: ldimm t0 0
+   1: ldimm t1 0
+   2: t2 = t0 == t1
+   3: bez t2 6
+   4: ldstr t3 "zero equals to zero"
+   5: write-str t3
+   6: load t4 char_arg_1
+   7: ldimm t5 'a'
+   8: bne t5 t4 14
+   9: ldstr t6 "A: prints int_arg_2"
+  10: write-str t6
+  11: load t7 int_arg_2
+  12: write-int t7
+  13: jmp 23
+  14: ldimm t8 'b'
+  15: bne t8 t4 21
+  16: ldstr t9 "B: prints char_arg_3"
+  17: write-str t9
+  18: load t10 char_arg_3
+  19: write-chr t10
+  20: jmp 23
+  21: ldstr t11 "Nothing to do"
+  22: write-str t11
+  23: nop
+
+   0: void void_function_noargs()
+   0: ret 1
+   1: nop
+
+   0: void void_function_noargs_2()
+   1: var int local_int_1
+   2: var int local_int_2
+   0: load t0 local_int_1
+   1: read-int t0
+   2: load t1 local_int_1
+   3: ldimm t2 1
+   4: t3 = t1 == t2
+   5: bez t3 14
+   6: ldimm t4 'b'
+   7: load t5 local_int_1
+   8: ldimm t6 'a'
+   9: push char t6
+  10: push int t5
+  11: push char t4
+  12: call void_function
+  13: jmp 44
+  14: load t7 local_int_1
+  15: ldimm t8 2
+  16: t9 = t7 == t8
+  17: bez t9 26
+  18: t10 = call int_function_noargs
+  19: load t11 local_int_2
+  20: store t11 t10
+  21: ldstr t12 "Calls int_function_noargs returns "
+  22: write-str t12
+  23: load t13 local_int_2
+  24: write-int t13
+  25: jmp 44
+  26: ldimm t14 2
+  27: load t15 local_int_2
+  28: store t15 t14
+  29: jmp 34
+  30: load t16 local_int_2
+  31: ldimm t17 3
+  32: t18 = t16 < t17
+  33: bez t18 44
+  34: ldstr t19 "void_function_noargs_2 does loop "
+  35: write-str t19
+  36: load t20 local_int_2
+  37: write-int t20
+  38: load t21 local_int_2
+  39: ldimm t22 1
+  40: t23 = t21 + t22
+  41: load t24 local_int_2
+  42: store t24 t23
+  43: jmp 30
+  44: nop
+
+   0: int recursive_function_1()
+   1: para int int_arg_1
+   0: load t0 int_arg_1
+   1: ldimm t1 2
+   2: t2 = t0 < t1
+   3: bez t2 6
+   4: ldimm t3 1
+   5: ret 3 t14
+   6: load t4 int_arg_1
+   7: load t5 int_arg_1
+   8: ldimm t6 1
+   9: t7 = t5 - t6
+  10: push int t7
+  11: t8 = call recursive_function_1
+  12: t9 = t4 * t8
+  13: ret 9 t14
+  14: nop
+
+   0: void recursive_function_2()
+   1: para char A
+   2: para char B
+   3: para char C
+   4: para int n
+   0: load t0 n
+   1: ldimm t1 1
+   2: t2 = t0 == t1
+   3: bez t2 17
+   4: ldstr t3 "Move disk "
+   5: write-str t3
+   6: load t4 n
+   7: write-int t4
+   8: ldstr t5 " from "
+   9: write-str t5
+  10: load t6 A
+  11: write-chr t6
+  12: ldstr t7 " to "
+  13: write-str t7
+  14: load t8 C
+  15: write-chr t8
+  16: jmp 51
+  17: load t9 n
+  18: ldimm t10 1
+  19: t11 = t9 - t10
+  20: load t12 B
+  21: load t13 C
+  22: load t14 A
+  23: push char t14
+  24: push char t13
+  25: push char t12
+  26: push int t11
+  27: call recursive_function_2
+  28: ldstr t15 "Move disk "
+  29: write-str t15
+  30: load t16 n
+  31: write-int t16
+  32: ldstr t17 "from "
+  33: write-str t17
+  34: load t18 A
+  35: write-chr t18
+  36: ldstr t19 "to "
+  37: write-str t19
+  38: load t20 C
+  39: write-chr t20
+  40: load t21 n
+  41: ldimm t22 1
+  42: t23 = t21 - t22
+  43: load t24 C
+  44: load t25 A
+  45: load t26 B
+  46: push char t26
+  47: push char t25
+  48: push char t24
+  49: push int t23
+  50: call recursive_function_2
+  51: nop
+
+   0: void recursive_function_3()
+   1: para int int_arg_1
+   2: const cnt int = 4
+   3: var int i
+   4: var int j
+   5: var int k
+   0: load t0 int_arg_1
+   1: ldimm t1 0
+   2: t2 = t0 == t1
+   3: bez t2 7
+   4: ldstr t3 "End of recursive_function_3"
+   5: write-str t3
+   6: ret 115
+   7: load t4 int_arg_1
+   8: ldimm t5 1
+   9: t6 = t4 == t5
+  10: bez t6 29
+  11: ldimm t7 0
+  12: load t8 i
+  13: store t8 t7
+  14: jmp 19
+  15: load t9 i
+  16: ldimm t10 4
+  17: t11 = t9 < t10
+  18: bez t11 28
+  19: load t12 i
+  20: push int t12
+  21: call recursive_function_3
+  22: load t13 i
+  23: ldimm t14 1
+  24: t15 = t13 + t14
+  25: load t16 i
+  26: store t16 t15
+  27: jmp 15
+  28: ret 115
+  29: load t17 int_arg_1
+  30: ldimm t18 2
+  31: t19 = t17 == t18
+  32: bez t19 65
+  33: ldimm t20 0
+  34: load t21 i
+  35: store t21 t20
+  36: jmp 41
+  37: load t22 i
+  38: ldimm t23 4
+  39: t24 = t22 < t23
+  40: bez t24 64
+  41: ldimm t25 0
+  42: load t26 j
+  43: store t26 t25
+  44: jmp 49
+  45: load t27 j
+  46: ldimm t28 4
+  47: t29 = t27 < t28
+  48: bez t29 58
+  49: load t30 i
+  50: push int t30
+  51: call recursive_function_3
+  52: load t31 j
+  53: ldimm t32 1
+  54: t33 = t31 + t32
+  55: load t34 j
+  56: store t34 t33
+  57: jmp 45
+  58: load t35 i
+  59: ldimm t36 1
+  60: t37 = t35 + t36
+  61: load t38 i
+  62: store t38 t37
+  63: jmp 37
+  64: ret 115
+  65: load t39 int_arg_1
+  66: ldimm t40 3
+  67: t41 = t39 == t40
+  68: bez t41 115
+  69: ldimm t42 0
+  70: load t43 i
+  71: store t43 t42
+  72: jmp 77
+  73: load t44 i
+  74: ldimm t45 4
+  75: t46 = t44 < t45
+  76: bez t46 114
+  77: ldimm t47 0
+  78: load t48 j
+  79: store t48 t47
+  80: jmp 85
+  81: load t49 j
+  82: ldimm t50 4
+  83: t51 = t49 < t50
+  84: bez t51 108
+  85: ldimm t52 0
+  86: load t53 k
+  87: store t53 t52
+  88: jmp 93
+  89: load t54 k
+  90: ldimm t55 4
+  91: t56 = t54 < t55
+  92: bez t56 102
+  93: load t57 i
+  94: push int t57
+  95: call recursive_function_3
+  96: load t58 k
+  97: ldimm t59 1
+  98: t60 = t58 + t59
+  99: load t61 k
+ 100: store t61 t60
+ 101: jmp 89
+ 102: load t62 j
+ 103: ldimm t63 1
+ 104: t64 = t62 + t63
+ 105: load t65 j
+ 106: store t65 t64
+ 107: jmp 81
+ 108: load t66 i
+ 109: ldimm t67 1
+ 110: t68 = t66 + t67
+ 111: load t69 i
+ 112: store t69 t68
+ 113: jmp 73
+ 114: ret 115
+ 115: nop
+
+   0: void print_usage()
+   0: ldstr t0 "Enter a number to select one function to run:"
+   1: write-str t0
+   2: ldstr t1 "  `0': int_function: takes one int arg and returns a local int variable"
+   3: write-str t1
+   4: ldstr t2 "  `1': int_function_noargs: takes no args and returns a somehow sum of something"
+   5: write-str t2
+   6: ldstr t3 "  `2': void_function: take in a char as command and displays the other args according to that command char"
+   7: write-str t3
+   8: ldstr t4 "                      if that char is 'a', it displays the second arg. if the char is 'b', it displays the third arg"
+   9: write-str t4
+  10: ldstr t5 "  `3': void_function_noargs: takes and returns nothing. the most boring function."
+  11: write-str t5
+  12: ldstr t6 "  `4': void_function_noargs_2: scanfs an int and does different things according to the inputted int."
+  13: write-str t6
+  14: ldstr t7 "  `5': recursive_function_1: scanfs an int and recursively computes the factual of it"
+  15: write-str t7
+  16: ldstr t8 "  `6': recursive_function_3: scanfs an int and does different recursions according to the input"
+  17: write-str t8
+  18: ldstr t9 "  `7': recursive_function_2: scanfs an int and plays HANOI game with you."
+  19: write-str t9
+  20: ldstr t10 "  `8': int_array_do_sth: swaps the int_array_1 and int_array_2, element-wise"
+  21: write-str t10
+  22: ldstr t11 "  `9': swap_sth: swaps int_1 and int_2"
+  23: write-str t11
+  24: ldstr t12 "  `h': shows this menu argain."
+  25: write-str t12
+  26: ldstr t13 "  `q': quits"
+  27: write-str t13
+  28: nop
+
+   0: void int_array_do_sth()
+   1: var int tmp
+   0: ldstr t0 "Swaps int_array_1 and int_array_2"
+   1: write-str t0
+   2: ldimm t1 0
+   3: load t2 int_1
+   4: store t2 t1
+   5: jmp 10
+   6: load t3 int_1
+   7: ldimm t4 1
+   8: t5 = t3 < t4
+   9: bez t5 33
+  10: load t6 int_1
+  11: load t7 int_array_1
+  12: t8 = t7 [ t6 ]
+  13: load t9 tmp
+  14: store t9 t8
+  15: load t10 int_1
+  16: load t11 int_array_2
+  17: t12 = t11 [ t10 ]
+  18: load t13 int_1
+  19: load t14 int_array_1
+  20: t15 = t14 [ t13 ]
+  21: store t15 t12
+  22: load t16 tmp
+  23: load t17 int_1
+  24: load t18 int_array_2
+  25: t19 = t18 [ t17 ]
+  26: store t19 t16
+  27: load t20 int_1
+  28: ldimm t21 1
+  29: t22 = t20 + t21
+  30: load t23 int_1
+  31: store t23 t22
+  32: jmp 6
+  33: nop
+
+   0: void swap_sth()
+   1: var int tmp
+   0: ldstr t0 "Swaps int_1 and int_2"
+   1: write-str t0
+   2: nop
+
+   0: void main()
+   1: var int select
+   0: ldstr t0 "const_int_decl="
+   1: write-str t0
+   2: ldimm t1 1
+   3: write-int t1
+   4: ldstr t2 "const_int_1="
+   5: write-str t2
+   6: ldimm t3 1
+   7: write-int t3
+   8: ldstr t4 "const_char_add="
+   9: write-str t4
+  10: ldimm t5 '+'
+  11: write-chr t5
+  12: ldstr t6 "const_char_number="
+  13: write-str t6
+  14: ldimm t7 '1'
+  15: write-chr t7
+  16: call print_usage
+  17: ldimm t8 0
+  18: load t9 int_1
+  19: store t9 t8
+  20: jmp 25
+  21: load t10 int_1
+  22: ldimm t11 1
+  23: t12 = t10 < t11
+  24: bez t12 136
+  25: ldstr t13 "(^_^)"
+  26: write-str t13
+  27: load t14 select
+  28: read-int t14
+  29: load t15 select
+  30: ldimm t16 0
+  31: bne t16 t15 41
+  32: ldstr t17 "int_function takes one int. please input that:"
+  33: write-str t17
+  34: load t18 int_1
+  35: read-int t18
+  36: ldstr t19 "int_function returns "
+  37: write-str t19
+  38: load t20 int_1
+  39: write-int t20
+  40: jmp 130
+  41: ldimm t21 1
+  42: bne t21 t15 48
+  43: ldstr t22 "int_function_noargs returns "
+  44: write-str t22
+  45: t23 = call int_function_noargs
+  46: write-int t23
+  47: jmp 130
+  48: ldimm t24 2
+  49: bne t24 t15 62
+  50: ldstr t25 "void_function takes one char. please input that:"
+  51: write-str t25
+  52: load t26 char_1
+  53: read-chr t26
+  54: ldimm t27 '+'
+  55: ldimm t28 0
+  56: load t29 char_1
+  57: push char t29
+  58: push int t28
+  59: push char t27
+  60: call void_function
+  61: jmp 130
+  62: ldimm t30 3
+  63: bne t30 t15 68
+  64: ldstr t31 "void_function_noargs does nothing."
+  65: write-str t31
+  66: call void_function_noargs
+  67: jmp 130
+  68: ldimm t32 4
+  69: bne t32 t15 76
+  70: ldstr t33 "void_function_noargs_2 takes one int. please input that:"
+  71: write-str t33
+  72: load t34 int_1
+  73: read-int t34
+  74: call void_function_noargs_2
+  75: jmp 130
+  76: ldimm t35 5
+  77: bne t35 t15 86
+  78: ldstr t36 "recursive_function_1 takes one int. please input that:"
+  79: write-str t36
+  80: load t37 int_1
+  81: read-int t37
+  82: load t38 int_1
+  83: push int t38
+  84: t39 = call recursive_function_1
+  85: jmp 130
+  86: ldimm t40 6
+  87: bne t40 t15 96
+  88: ldstr t41 "recursive_function_3 takes one int. please input that:"
+  89: write-str t41
+  90: load t42 int_1
+  91: read-int t42
+  92: load t43 int_1
+  93: push int t43
+  94: call recursive_function_3
+  95: jmp 130
+  96: ldimm t44 7
+  97: bne t44 t15 112
+  98: ldstr t45 "recursive_function_2 takes one int. please input that:"
+  99: write-str t45
+ 100: load t46 int_1
+ 101: read-int t46
+ 102: load t47 int_1
+ 103: ldimm t48 '*'
+ 104: ldimm t49 '/'
+ 105: ldimm t50 '+'
+ 106: push char t50
+ 107: push char t49
+ 108: push char t48
+ 109: push int t47
+ 110: call recursive_function_2
+ 111: jmp 130
+ 112: ldimm t51 8
+ 113: bne t51 t15 116
+ 114: call int_array_do_sth
+ 115: jmp 130
+ 116: ldimm t52 9
+ 117: bne t52 t15 120
+ 118: call swap_sth
+ 119: jmp 130
+ 120: ldimm t53 'q'
+ 121: bne t53 t15 124
+ 122: ret 136
+ 123: jmp 130
+ 124: ldimm t54 'h'
+ 125: bne t54 t15 128
+ 126: call print_usage
+ 127: jmp 130
+ 128: ldstr t55 "Not understood. type `h'."
+ 129: write-str t55
+ 130: load t56 int_1
+ 131: ldimm t57 1
+ 132: t58 = t56 - t57
+ 133: load t59 int_1
+ 134: store t59 t58
+ 135: jmp 21
+ 136: nop
+

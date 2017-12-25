@@ -21,15 +21,11 @@
 #ifndef CL_AST_BUILD_H
 #define CL_AST_BUILD_H
 
-#include <utillib/json.h>
-
 #include <stddef.h>
+#include <utillib/json.h>
 
 /*
  * AST construction helpers.
- * Deliberately separated out from
- * ast.h for its rather fixed interface
- * and less common usage.
  */
 
 /*

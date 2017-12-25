@@ -125,12 +125,6 @@ static void ast_pretty_expr(struct utillib_json_value const *self,
   }
 }
 
-void cling_ast_pretty_expr(struct utillib_json_value const *self,
-                           struct utillib_string *string) {
-  utillib_string_init(string);
-  ast_pretty_expr(self, string);
-}
-
 static void ast_pretty_array(
     struct utillib_json_value const *self, struct utillib_string *string,
     int indent_level,
@@ -491,8 +485,16 @@ static void ast_pretty_program(struct utillib_json_value const *self,
   ast_pretty_array(func_decls, string, 0, ast_pretty_function);
 }
 
-void cling_ast_pretty_program(struct utillib_json_value const *self,
-                              struct utillib_string *string) {
-  utillib_string_init(string);
-  ast_pretty_program(self, string);
+char *cling_ast_pretty_expr(struct utillib_json_value const *self) {
+  struct utillib_string string;
+  utillib_string_init(&string);
+  ast_pretty_expr(self, &string);
+  return utillib_string_c_str(&string);
+}
+
+char *cling_ast_pretty_program(struct utillib_json_value const *self) {
+  struct utillib_string string;
+  utillib_string_init(&string);
+  ast_pretty_program(self, &string);
+  return utillib_string_c_str(&string);
 }

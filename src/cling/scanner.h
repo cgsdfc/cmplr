@@ -20,27 +20,32 @@
 */
 #ifndef CLING_SCANNER_H
 #define CLING_SCANNER_H
-#include <stdio.h> // FILE*
-#include <utillib/enum.h>
 #include <utillib/scanner.h>
+#include <stdio.h>
+struct cling_option;
+struct cling_rd_parser;
 
-UTILLIB_ENUM_BEGIN(cling_scanner_error_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_EBADNEQ, 1)
-UTILLIB_ENUM_ELEM(CL_EUNTCHAR)
-UTILLIB_ENUM_ELEM(CL_EUNTSTR)
-UTILLIB_ENUM_ELEM(CL_ESTRCHAR)
-UTILLIB_ENUM_ELEM(CL_ECHRCHAR)
-UTILLIB_ENUM_ELEM(CL_ELEADZERO)
-UTILLIB_ENUM_ELEM(CL_EUNKNOWN)
-UTILLIB_ENUM_END(cling_scanner_error_kind)
+struct cling_scanner {
+  struct utillib_char_scanner input;
+  struct utillib_string buffer;
+  struct cling_rd_parser *parser;
+  struct cling_option const *option;
+  size_t context;
+  size_t lookahead;
+};
 
 /* ＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝" */
 /* ＜无符号整数＞  ::= ＜非零数字＞｛＜数字＞｝ */
 /* ＜整数＞    ::= ［＋｜－］＜无符号整数＞｜０ */
 /* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
-void cling_scanner_init(struct utillib_token_scanner *self, FILE *file);
-void cling_scanner_destroy(struct utillib_token_scanner *self);
-extern bool cling_scanner_signed_number;
+void cling_scanner_init(struct cling_scanner *self,
+                        struct cling_option const *option,
+                        struct cling_rd_parser *parser, FILE *file);
+void cling_scanner_destroy(struct cling_scanner *self);
+size_t cling_scanner_lookahead(struct cling_scanner const *self);
+void cling_scanner_shiftaway(struct cling_scanner *self);
+char const *cling_scanner_semantic(struct cling_scanner const *self);
+void cling_scanner_context(struct cling_scanner *self, size_t context);
 
 #endif /* CLING_SCANNER_H */

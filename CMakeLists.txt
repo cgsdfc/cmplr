@@ -22,14 +22,9 @@ cmake_minimum_required(VERSION 3.0)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 file (STRINGS "VERSION" CMPLR_VERSION)
 include_directories(src)
-add_definitions(-DPASCAL_SOURCE_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/\")
-add_definitions(-DPASCAL_TEST_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/\")
-add_definitions(-DPASCAL_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/pascal/test/data/\")
-add_definitions(-DUTILLIB_TEST_DATA_DIR=\"${CMAKE_SOURCE_DIR}/src/utillib/test/data/\")
 
 # For strdup
 add_definitions(-D_POSIX_C_SOURCE=200809L)
-
 set(CMAKE_CXX_FLAGS "-std=c++11 -g")
 enable_testing()
 
@@ -72,7 +67,7 @@ add_library(utillib
   ./src/utillib/string.c)
 
 ## Cling
-add_library(cling
+add_library(cling-core
   ./src/cling/symbol_table.c
   ./src/cling/symbols.c 
   ./src/cling/scanner.c
@@ -85,26 +80,13 @@ add_library(cling
   ./src/cling/opg_parser.c
   ./src/cling/mips.c
   ./src/cling/misc.c
+  ./src/cling/lcse.c
+  ./src/cling/basic_block.c
+  ./src/cling/optimize.c
+  ./src/cling/mips_interp.c
+  ./src/cling/cling-core.c
   )	
-target_link_libraries(cling utillib)
+target_link_libraries(cling-core utillib)
 
-# add_executable(cling_test
-#   ./src/cling/test/scanner.c
-#   ./src/cling/test/symbol_table.c
-#   ./src/cling/test/driver.c
-#   )
-# target_link_libraries(cling_test cling)
-# add_test(Cling_Test cling_test)
-# add_executable(cling-scanner ./src/cling/smain.c)
-# target_link_libraries(cling-scanner cling)
-set(cling-app cling-parser)
-foreach(app ${cling-app})
-  add_executable(${app} ./src/cling/${app}.c)
-  target_link_libraries(${app} cling)
-endforeach()
-
-# add_library(cling++ ./src/cling/cling.cpp)
-# target_link_libraries(cling++ cling utillib++)
-# add_executable(clingcppmain ./src/cling/cppmain.cpp)
-# target_link_libraries(clingcppmain cling++)
-
+add_executable(cling ./src/cling/cling.c)
+target_link_libraries(cling cling-core)

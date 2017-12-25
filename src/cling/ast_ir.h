@@ -22,10 +22,11 @@
 #define CLING_AST_IR_H
 #include <utillib/enum.h>
 #include <utillib/vector.h>
+#include <utillib/hashmap.h>
 
 #include <assert.h>
-#include <stdio.h>
 #include <inttypes.h>
+#include <stdio.h>
 
 UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ENUM_ELEM(OP_NOP)
@@ -41,7 +42,6 @@ UTILLIB_ENUM_ELEM(OP_SUB)
 UTILLIB_ENUM_ELEM(OP_BEZ)
 UTILLIB_ENUM_ELEM(OP_BNE)
 UTILLIB_ENUM_ELEM(OP_JMP)
-UTILLIB_ENUM_ELEM(OP_IDX)
 UTILLIB_ENUM_ELEM(OP_CAL)
 UTILLIB_ENUM_ELEM(OP_DIV)
 UTILLIB_ENUM_ELEM(OP_MUL)
@@ -51,41 +51,22 @@ UTILLIB_ENUM_ELEM(OP_LT)
 UTILLIB_ENUM_ELEM(OP_LE)
 UTILLIB_ENUM_ELEM(OP_GT)
 UTILLIB_ENUM_ELEM(OP_GE)
-UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_ELEM(OP_INDEX)
 UTILLIB_ENUM_ELEM(OP_LDIMM)
 UTILLIB_ENUM_ELEM(OP_LDSTR)
+UTILLIB_ENUM_ELEM(OP_LDADR)
+UTILLIB_ENUM_ELEM(OP_LDNAM)
+UTILLIB_ENUM_ELEM(OP_DEREF)
 UTILLIB_ENUM_ELEM(OP_LOAD)
+UTILLIB_ENUM_ELEM(OP_STORE)
+UTILLIB_ENUM_ELEM(OP_STADR)
+UTILLIB_ENUM_ELEM(OP_STNAM)
 UTILLIB_ENUM_ELEM(OP_WRSTR)
 UTILLIB_ENUM_ELEM(OP_WRINT)
 UTILLIB_ENUM_ELEM(OP_WRCHR)
-UTILLIB_ENUM_ELEM(OP_READ)
 UTILLIB_ENUM_ELEM(OP_RDCHR)
 UTILLIB_ENUM_ELEM(OP_RDINT)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
-
-UTILLIB_ENUM_BEGIN(cling_operand_info_kind)
-UTILLIB_ENUM_ELEM_INIT(CL_NULL, 0)
-UTILLIB_ENUM_ELEM_INIT(CL_BYTE, 1)
-UTILLIB_ENUM_ELEM_INIT(CL_WORD, 2)
-UTILLIB_ENUM_ELEM_INIT(CL_GLBL, 4)
-UTILLIB_ENUM_ELEM_INIT(CL_LOCL, 8)
-UTILLIB_ENUM_ELEM_INIT(CL_NAME, 16)
-UTILLIB_ENUM_ELEM_INIT(CL_TEMP, 32)
-UTILLIB_ENUM_ELEM_INIT(CL_IMME, 64)
-UTILLIB_ENUM_ELEM_INIT(CL_LABL, 128)
-UTILLIB_ENUM_ELEM_INIT(CL_STRG, 256)
-UTILLIB_ENUM_END(cling_operand_info_kind);
-
-/*
- * Holds global information
- * that ast_ir need to access.
- * Notes the symbol_table will
- * be reentered.
- */
-struct cling_ast_ir_global {
-  struct cling_symbol_table *symbol_table;
-  unsigned int temps;
-};
 
 struct cling_ast_ir {
   int opcode;
@@ -93,8 +74,8 @@ struct cling_ast_ir {
     struct {
       int temp;
       char const *string;
-    } ldstr ;
-    struct  {
+    } ldstr;
+    struct {
       int temp;
     } write;
     struct {
@@ -104,6 +85,29 @@ struct cling_ast_ir {
       int temp;
       int size;
     } push;
+    struct {
+      int temp;
+      char const *name;
+    } ldadr;
+    struct {
+      int temp;
+      char const *name;
+      int size;
+    } ldnam;
+    struct {
+      int addr;
+      int size;
+    } deref;
+    struct {
+      int addr;
+      int value;
+      int size;
+    } stadr;
+    struct {
+      char const *name;
+      int value;
+      int size;
+    } stnam;
     struct {
       int temp;
       bool is_rvalue;
@@ -178,21 +182,23 @@ struct cling_ast_ir {
       int addr;
     } bez;
   };
+};
 
+/*
+ * Holds global information
+ * that ast_ir need to access.
+ * Notes the symbol_table will
+ * be reentered.
+ */
+struct cling_ast_ir_global {
+  struct cling_symbol_table *symbol_table;
+  struct cling_option const *option;
+  unsigned int temps;
 };
 
 struct cling_polish_ir {
-  /*
-   * Stack holding ast nodes
-   */
   struct utillib_vector stack;
-  /*
-   * Stack holding operands when evaluating.
-   */
   struct utillib_vector opstack;
-  /*
-   * From which temps counter starts
-   */
   struct cling_ast_ir_global *global;
 };
 
@@ -201,10 +207,11 @@ struct cling_polish_ir {
  * Basic unit of code.
  */
 struct cling_ast_function {
-  char *name;
+  char const *name;
   unsigned int temps;
   struct utillib_vector instrs;
   struct utillib_vector init_code;
+  struct utillib_hashmap names;
 };
 
 /*
@@ -221,8 +228,16 @@ void cling_ast_program_init(struct cling_ast_program *self);
 void cling_ast_program_destroy(struct cling_ast_program *self);
 
 void cling_ast_ir_emit_program(struct utillib_json_value const *self,
+                               struct cling_option const *option,
                                struct cling_symbol_table *symbol_table,
                                struct cling_ast_program *program);
 void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);
+
+void cling_ast_ir_destroy(struct cling_ast_ir *self);
+void ast_ir_fix_address(struct utillib_vector *instrs,
+                        unsigned int const *address_map);
+void ast_ir_print(struct cling_ast_ir const *self, FILE *file);
+void ast_ir_vector_print(struct utillib_vector const *instrs,
+                                FILE *file);
 
 #endif /* CLING_AST_IR_H */

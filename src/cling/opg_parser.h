@@ -21,15 +21,12 @@
 #ifndef CLING_OPG_PARSER
 #define CLING_OPG_PARSER
 #include <utillib/json.h>
-#include <utillib/scanner.h>
 #include <utillib/vector.h>
 
 #include <stddef.h>
-
+struct cling_scanner;
 /**
- * \struct cling_opg_parser
  * Ths language construct this parser can recognize is as follow:
- * Chinese Version:
  * ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
  * ＜有返回值函数调用语句＞|‘(’＜表达式＞‘)’
  *
@@ -52,15 +49,13 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self);
 
 /**
  * Parses the expression regarding `eof_symbol'.
- * If failed, `null' is returned
- * and the last lookahead symbol is kept in
- * `last_error'.
+ * If failed, NULL is returned
  * If succeeded, the tree is popped off the stack
  * and both stacks will be empty.
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-                       struct utillib_token_scanner *input);
+                       struct cling_scanner *scanner);
 
 /*
  * Reinitialize.

@@ -1,0 +1,78 @@
+
+   0: int mod()
+   1: para int x
+   2: para int y
+   3: var int z
+   0: load t0 x
+   1: load t1 x
+   2: load t2 y
+   3: t3 = t1 / t2
+   4: load t4 y
+   5: t5 = t3 * t4
+   6: t6 = t0 - t5
+   7: load t7 z
+   8: store t7 t6
+   9: ldstr t8 " z = "
+  10: write-str t8
+  11: load t9 z
+  12: write-int t9
+  13: load t10 z
+  14: ret 15 t10
+  15: nop
+
+   0: int gcd()
+   1: para int a
+   2: para int b
+   0: load t0 b
+   1: ldimm t1 0
+   2: t2 = t0 == t1
+   3: bez t2 7
+   4: ldimm t3 0
+   5: ret 28 t3
+   6: jmp 28
+   7: load t4 b
+   8: load t5 a
+   9: push int t5
+  10: push int t4
+  11: t6 = call mod
+  12: ldimm t7 0
+  13: t8 = t6 == t7
+  14: bez t8 18
+  15: load t9 b
+  16: ret 28 t9
+  17: jmp 28
+  18: load t10 b
+  19: load t11 a
+  20: push int t11
+  21: push int t10
+  22: t12 = call mod
+  23: load t13 b
+  24: push int t13
+  25: push int t12
+  26: t14 = call gcd
+  27: ret 28 t14
+  28: nop
+
+   0: void main()
+   1: var int a
+   2: var int b
+   3: var int r
+   0: ldimm t0 15
+   1: load t1 a
+   2: store t1 t0
+   3: ldimm t2 24
+   4: load t3 b
+   5: store t3 t2
+   6: load t4 b
+   7: load t5 a
+   8: push int t5
+   9: push int t4
+  10: t6 = call gcd
+  11: load t7 r
+  12: store t7 t6
+  13: ldstr t8 " "
+  14: write-str t8
+  15: load t9 r
+  16: write-int t9
+  17: nop
+

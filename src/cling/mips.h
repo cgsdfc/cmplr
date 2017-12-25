@@ -121,41 +121,14 @@ UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
 UTILLIB_ENUM_END(cling_mips_data_kind);
 
-UTILLIB_ENUM_BEGIN(cling_mips_ecode)
-UTILLIB_ENUM_ELEM(MIPS_EC_OK)
-UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
-UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
-UTILLIB_ENUM_ELEM(MIPS_EC_BTAKEN)
-UTILLIB_ENUM_END(cling_mips_ecode);
-
 struct cling_ast_ir;
 struct cling_ast_function;
 struct cling_ast_program;
-
-/*
- * Represent a segment of code
- * with a label.
- */
-struct cling_address_range {
-  union {
-    char const *label;
-    size_t scalar;
-  };
-  uint32_t begin;
-  uint32_t end;
-};
-
-struct cling_mips_label {
-  char *label;
-  uint32_t address;
-};
 
 struct cling_mips_program {
   struct utillib_vector text;
   struct utillib_vector data;
   struct utillib_hashmap labels;
-  struct cling_address_range *func_range;
-  size_t func_size;
 };
 
 struct cling_mips_global {
@@ -164,25 +137,56 @@ struct cling_mips_global {
   int label_count;
 };
 
-struct cling_mips_name {
+struct cling_mips_temp {
+  int kind;
+  int state;
   uint8_t regid;
   uint32_t offset;
 };
 
-struct cling_mips_temp {
-  int age;
+struct cling_mips_name {
+  int kind;
   uint8_t regid;
   uint32_t offset;
+};
+
+/*
+ * For temp.state.
+ */
+enum {
+  MIPS_LOCKED,
+  MIPS_HAS_REG,
+  MIPS_NO_REG,
+};
+
+/*
+ * For temp.kind.
+ */
+enum {
+  MIPS_SAVED,
+  MIPS_UNSAVED,
+  MIPS_ARGREG,
+  MIPS_ARGMEM,
+  MIPS_TEMP,
+};
+
+/*
+ * For function argument flags
+ */
+enum {
+  MIPS_SAVE, MIPS_LOAD,
+  MIPS_READ, MIPS_WRITE,
 };
 
 struct cling_mips_function {
+  int last_temp;
   int temp_size;
   int para_size;
   struct cling_mips_temp *temps;
 
-  bool *reg_pool;
+  bool *reg_used;
   struct utillib_hashmap names;
-  struct utillib_vector saved_registers;
+  struct utillib_vector saved;
 
   uint32_t frame_size;
   uint32_t *address_map;
@@ -214,14 +218,13 @@ struct cling_mips_ir {
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-void cling_mips_program_init(struct cling_mips_program *self,
-                             struct cling_ast_program const *program);
+void cling_mips_program_init(struct cling_mips_program *self);
 void cling_mips_program_destroy(struct cling_mips_program *self);
 void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
                               FILE *file);
-void cling_mips_program_pretty(
-    struct cling_mips_program const *self, FILE *file);
+void mips_ir_fprint(struct cling_mips_ir const *self, FILE *file);
+void mips_ir_print(struct cling_mips_ir const *self);
 
 #endif /* CLING_MIPS_H */

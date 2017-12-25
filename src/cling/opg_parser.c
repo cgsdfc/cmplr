@@ -21,6 +21,7 @@
 
 #include "opg_parser.h"
 #include "ast_build.h"
+#include "scanner.h"
 #include "symbols.h"
 
 #include <assert.h>
@@ -40,7 +41,7 @@
  * noted in opg_parser.h just in a stupid way.
  *
  */
-enum { CL_OPG_GT, CL_OPG_LT, CL_OPG_ERR };
+enum { OPG_REDUCE, OPG_SHIFTIN, OPG_ERROR };
 
 static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
   /*
@@ -55,13 +56,12 @@ static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
 }
 
 /**
- * \function opg_parser_compare
  * This is a hard-coded Precedence Matrix.
  * Compares the precedence of the stack-top symbol(lhs)
  * and the lookahead symbol(rhs).
- * If it is `CL_OPG_GT', we should reduce. (read, begin hacking)
- * If it is `CL_OPG_LT', we should shift rhs into stack.
- * If it is `CL_OPG_ERR', we hit an error.
+ * If it is `OPG_REDUCE', we should reduce. (read, begin hacking)
+ * If it is `OPG_SHIFTIN', we should shift rhs into stack.
+ * If it is `OPG_ERROR', we hit an error.
  * Hack: The judgements are kept from low to high precedence, which means
  * the code can be less and cleaner.
  * What's worse, the order within the same group (lhs==..., rhs==...) matters.
@@ -76,67 +76,66 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
     /*
      * Make sure it is a true eof_symbol on the stacktop.
      */
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (lhs == SYM_LP || rhs == SYM_LP)
     /*
      * Give expression more chances than eof_symbol.
      */
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (lhs == SYM_RP || rhs == SYM_RP)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
 
   if (rhs == eof_symbol)
     /*
      * But if it is a true eof_symbol...
      */
-    return CL_OPG_GT;
+    return OPG_REDUCE;
 
   if (lhs == SYM_LK || rhs == SYM_LK)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (lhs == SYM_RK || rhs == SYM_RK)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
 
   if (lhs == SYM_COMMA) /* shift in as much SYM_COMMA as possible */
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
   if (rhs == SYM_COMMA)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
 
   if (rhs == SYM_EQ)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
   if (lhs == SYM_EQ)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (rhs_is_relop)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
   if (lhs_is_relop)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (rhs == SYM_ADD || rhs == SYM_MINUS)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
   if (lhs == SYM_ADD || lhs == SYM_MINUS)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (rhs == SYM_MUL || rhs == SYM_DIV)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
   if (lhs == SYM_MUL || lhs == SYM_DIV)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
   if (lhs == SYM_IDEN && rhs == SYM_IDEN)
-    return CL_OPG_ERR;
+    return OPG_ERROR;
   if (lhs == SYM_IDEN)
-    return CL_OPG_GT;
+    return OPG_REDUCE;
   if (rhs == SYM_IDEN)
-    return CL_OPG_LT;
+    return OPG_SHIFTIN;
 
-  return CL_OPG_ERR;
+  return OPG_ERROR;
 }
 
 /*
- * Two debugging functions.
- * Show you the stack and opstack, repectedly.
+ * debugging functions.
  */
 static void opg_parser_show_opstack(struct cling_opg_parser const *self) {
   size_t op;
@@ -298,12 +297,42 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self) {
 }
 
 /*
+ * Keep strange things out of touch.
+ */
+static bool good_token(size_t lookahead)
+{
+  switch(lookahead) {
+    case SYM_ADD:
+    case SYM_MUL:
+    case SYM_IDEN:
+    case SYM_LK:
+    case SYM_RK:
+    case SYM_INTEGER:
+    case SYM_CHAR:
+    case SYM_EQ:
+    case SYM_NE:
+    case SYM_DEQ:
+    case SYM_LT:
+    case SYM_LE:
+    case SYM_GT:
+    case SYM_GE:
+    case SYM_DIV:
+    case SYM_MINUS:
+    case SYM_COMMA:
+    case SYM_LP:
+    case SYM_RP:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/*
  * Currently, it return null as indicator of error.
- * The client should check this and look at the last_error.
  */
 struct utillib_json_value *
 cling_opg_parser_parse(struct cling_opg_parser *self,
-                       struct utillib_token_scanner *input) {
+                       struct cling_scanner *scanner) {
 
   size_t lookahead;
   size_t stacktop;
@@ -312,10 +341,14 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
   struct utillib_vector *stack = &self->stack;
   struct utillib_vector *opstack = &self->opstack;
   const size_t eof_symbol = self->eof_symbol;
+  const size_t old_context=scanner->context;
 
+  cling_scanner_context(scanner, SYM_EXPR);
   while (!utillib_vector_empty(opstack)) {
-    /* opg_parser_show_opstack(self); */
-    lookahead = utillib_token_scanner_lookahead(input);
+    /* opg_parser_show_stack(self); */
+    lookahead = cling_scanner_lookahead(scanner);
+    /* if (!good_token(lookahead)) */
+    /*   goto error; */
     if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
       /*
        * We will catch any success before the precedence is computed
@@ -334,22 +367,21 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
        */
       val = utillib_vector_back(stack);
       utillib_vector_pop_back(stack);
+      cling_scanner_context(scanner, old_context);
       return val;
     }
 
     stacktop = utillib_vector_back(opstack);
-    if (lookahead == SYM_IDEN || lookahead == SYM_UINT ||
-        lookahead == SYM_CHAR) {
+    if (lookahead == SYM_IDEN || lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
       utillib_vector_push_back(
-          stack,
-          cling_ast_factor(lookahead, utillib_token_scanner_semantic(input)));
+          stack, cling_ast_factor(lookahead, cling_scanner_semantic(scanner)));
       if (lookahead == SYM_IDEN)
         /*
          * SYM_IDEN matters in call_expr
          * so pushes it.
          */
         utillib_vector_push_back(opstack, lookahead);
-      utillib_token_scanner_shiftaway(input);
+      cling_scanner_shiftaway(scanner);
       continue;
     }
     /*
@@ -364,22 +396,23 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
     }
     cmp = opg_parser_compare(self, stacktop, lookahead);
     switch (cmp) {
-    case CL_OPG_LT:
-    shiftin:
-      utillib_vector_push_back(opstack, lookahead);
-      utillib_token_scanner_shiftaway(input);
-      break;
-    case CL_OPG_GT:
-      if (0 != opg_parser_reduce(self, lookahead)) {
+      case OPG_SHIFTIN:
+shiftin:
+        utillib_vector_push_back(opstack, lookahead);
+        cling_scanner_shiftaway(scanner);
+        break;
+      case OPG_REDUCE:
+        if (0 != opg_parser_reduce(self, lookahead)) {
+          goto error;
+        }
+        break;
+      default:
+      case OPG_ERROR:
         goto error;
-      }
-      break;
-    default:
-    case CL_OPG_ERR:
-      goto error;
     }
   }
 error:
+  cling_scanner_context(scanner, old_context);
   return NULL;
 }
 

@@ -216,10 +216,10 @@ void utillib_token_scanner_init(
     struct utillib_token_scanner *self, FILE *file,
     struct utillib_token_scanner_callback const *callback);
 void utillib_token_scanner_destroy(struct utillib_token_scanner *self);
-size_t utillib_token_scanner_lookahead(struct utillib_token_scanner *self);
-char const *utillib_token_scanner_semantic(struct utillib_token_scanner *self);
+size_t utillib_token_scanner_lookahead(struct utillib_token_scanner const *self);
+char const *utillib_token_scanner_semantic(struct utillib_token_scanner const *self);
 void utillib_token_scanner_shiftaway(struct utillib_token_scanner *self);
-bool utillib_token_scanner_reacheof(struct utillib_token_scanner *self);
+bool utillib_token_scanner_reacheof(struct utillib_token_scanner const *self);
 
 /*
  * Helpers of utillib_token_scanner

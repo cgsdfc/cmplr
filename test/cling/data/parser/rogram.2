@@ -1,0 +1,58 @@
+const int const_int_decl=-1;
+const int const_int_1=+1, const_int_2=2,
+      const_int_3=3, const_int_4=4;
+
+const int const_int_zero=0;
+const int const_int_nega=1234;
+const int const_int_posi=1234;
+
+const char const_char_decl='a';
+const char const_char_add='+', const_char_minus='-',
+      const_char_mul='*', const_char_div='/';
+
+const char const_char_number='1';
+
+int int_1;
+char char_1;
+int int_array_1[10];
+char char_array_1[20];
+int int_2, int_array_2[2];
+char char_2, char_array_2[3];
+
+int int_function(int int_arg_1)
+{
+  int local_int_1;
+  char local_char_1;
+
+  local_int_1=2;
+  local_char_1='b';
+  return (local_int_1 + 1);
+}
+int int_function_noargs()
+{
+  int local_int_2;
+  int local_sum;
+
+  local_sum=0;
+  for (local_int_2=1; local_int_2 < 100;
+      local_int_2 = local_int_2 + 1)
+    local_sum=local_int_2+1;
+  return (local_sum);
+}
+
+void void_function(char char_arg_1, int int_arg_2, char char_arg_3)
+{
+  if (const_int_zero == const_int_zero) {
+    printf("zero equals to zero");
+  }
+  switch (char_arg_1) {
+    case 'a':
+      printf("A: prints int_arg_2", int_arg_2);
+    case 'b':
+      printf("B: prints char_arg_3", char_arg_3);
+    default:
+      printf("Nothing to do");
+  }
+}
+void main()
+{}
