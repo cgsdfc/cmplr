@@ -21,6 +21,7 @@
 
 #include "cling-core.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 enum {
   ENOINPUT=1, EFOPEN, ESYNTAX
@@ -32,31 +33,29 @@ static struct cling_option option={
 
 static struct cling_frontend frontend;
 static struct cling_backend backend;
-FILE *source_file;
+static FILE *source_file;
+static char filename_buffer[100];
 
-int main(int argc, char **argv)
+int main(void)
 {
-  if (argc != 2) {
-    fprintf(stderr, "no input file\n");
-    exit(ENOINPUT);
-  }
-  source_file=fopen(argv[1], "r");
+  printf("please input a file\n");
+  fgets(filename_buffer, sizeof filename_buffer, stdin);
+  source_file=fopen(filename_buffer, "r");
   if (!source_file) {
     fprintf(stderr, "%s cannot be opened\n", argv[1]);
     exit(EFOPEN);
   }
   cling_frontend_init(&frontend, &option, source_file);
-  /* if (0 != cling_frontend_tokenize(&frontend, stdout)) */
-  /*   cling_frontend_print_error(&frontend); */
   if (0 != cling_frontend_parse(&frontend)) {
+    cling_frontend_destroy(&frontend);
+    fclose(source_file);
     return ESYNTAX;
   }
   cling_backend_init(&backend);
   cling_backend_codegen(&backend, &option, &frontend);
-  /* cling_backend_dump_mips(&backend, stdout); */
-  if (0 != cling_backend_interpret(&backend))
-    return 1;
+  cling_backend_dump_mips(&backend, stdout);
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
+  fclose(source_file);
   return 0;
 }
