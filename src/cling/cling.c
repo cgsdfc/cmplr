@@ -22,6 +22,7 @@
 #include "cling-core.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 enum {
   ENOINPUT=1, EFOPEN, ESYNTAX

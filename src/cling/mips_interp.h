@@ -44,7 +44,7 @@ struct cling_mips_memblk {
 };
 
 struct cling_mips_interp {
-  int errno;
+  int error;
   uint32_t regs[CLING_MIPS_REG_MAX];
   uint32_t lo;
   uint32_t pc;
