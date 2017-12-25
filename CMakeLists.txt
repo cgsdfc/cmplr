@@ -48,7 +48,6 @@ add_library(utillib
   ./src/utillib/vector2.c
   ./src/utillib/bitset.c
   ./src/utillib/symbol.c
-  ./src/utillib/rule.c
   ./src/utillib/pair.c
   ./src/utillib/json.c
   ./src/utillib/print.c

@@ -189,15 +189,3 @@ bool utillib_string_richcmp(struct utillib_string const *self,
     return UTILLIB_STR_CMP(self, t, !=);
   }
 }
-
-/**
- * \function utillib_string_fmemopen
- * Opens in read mode to allow stream-like operation.
- * Client should close the returned pointer.
- */
-#ifndef WITH_WINDOWS
-FILE *utillib_string_fmemopen(struct utillib_string *self) {
-  char const *buf = utillib_string_c_str(self);
-  return fmemopen((void *)buf, self->size, "r");
-}
-#endif /* WITH_WINDOWS */
