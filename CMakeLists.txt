@@ -26,7 +26,6 @@ include_directories(src)
 # For strdup
 add_definitions(-D_POSIX_C_SOURCE=200809L)
 set(CMAKE_CXX_FLAGS "-std=c++11 -g")
-enable_testing()
 
 if (MSVC OR WIN32)
   set(CMPLR_PLATFORM "WINDOWS")
@@ -45,22 +44,13 @@ add_library(utillib
   ./src/utillib/graph.c
   ./src/utillib/strhash.c
   ./src/utillib/hashmap_impl.c
-  ./src/utillib/test_impl.c
-  ./src/utillib/json_parser.c
-  ./src/utillib/json_scanner.c
-  ./src/utillib/json_parser_impl.c
-  ./src/utillib/ll1_builder_impl.c
-  ./src/utillib/ll1_generator.c
   ./src/utillib/scanner.c
-  ./src/utillib/ll1_parser.c
   ./src/utillib/vector2.c
   ./src/utillib/bitset.c
-  ./src/utillib/ll1_builder.c
   ./src/utillib/symbol.c
   ./src/utillib/rule.c
   ./src/utillib/pair.c
   ./src/utillib/json.c
-  ./src/utillib/test.c
   ./src/utillib/print.c
   ./src/utillib/slist.c
   ./src/utillib/vector.c
