@@ -1279,17 +1279,25 @@ static void mips_emit_branch(struct cling_mips_function *self,
 
 static void mips_emit_ldnam(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
-  struct cling_mips_name *name;
+  struct cling_mips_name *named_var;
   uint8_t regid=mips_function_write(self, ast_ir->ldnam.temp);
   if (ast_ir->ldnam.scope) {
-    name=utillib_hashmap_find(&self->names, ast_ir->ldnam.name);
+    /*
+     * Local Variable
+     */
+    named_var=utillib_hashmap_find(&self->names, ast_ir->ldnam.name);
     mips_function_push_back(self, ast_ir->ldnam.size == MIPS_WORD_SIZE
-      ? mips_lw(regid, name->offset, MIPS_SP)
-      : mips_lb(regid, name->offset, MIPS_SP));
+      ? mips_lw(regid, named_var->offset, MIPS_SP)
+      : mips_lb(regid, named_var->offset, MIPS_SP));
     return;
+    /*
+     * Global Variable
+     */
   }
   mips_function_push_back(self, mips_la(regid, ast_ir->ldnam.name));
-  mips_function_push_back(self, mips_lw(regid, 0, MIPS_SP));
+  mips_function_push_back(self, ast_ir->ldnam.size == MIPS_WORD_SIZE?
+      mips_lw(regid, 0, MIPS_SP):
+      mips_lb(regid, 0, MIPS_SP));
 }
 
 static void mips_emit_ldadr(struct cling_mips_function *self,
@@ -1298,7 +1306,10 @@ static void mips_emit_ldadr(struct cling_mips_function *self,
   uint8_t regid=mips_function_write(self, ast_ir->ldadr.temp);
   if (ast_ir->ldadr.scope) {
     name=utillib_hashmap_find(&self->names, ast_ir->ldadr.name);
-    mips_function_push_back(self, mips_addi(regid, name->offset, MIPS_SP));
+    /*
+     * This is a load of address, not a lw!
+     */
+    mips_function_push_back(self, mips_addi(regid, MIPS_SP, name->offset));
     return;
   }
   mips_function_push_back(self, mips_la(regid, ast_ir->ldadr.name));
@@ -1326,10 +1337,6 @@ static void mips_emit_stnam(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
   uint8_t regid=mips_function_read(self, ast_ir->stnam.value);
   struct cling_mips_name *name=utillib_hashmap_find(&self->names, ast_ir->stnam.name);
-  if (!name) {
-    puts(ast_ir->stnam.name);
-    exit(0);
-  }
   assert(name);
   mips_function_push_back(self, ast_ir->stnam.size == MIPS_WORD_SIZE 
       ? mips_sw(regid, name->offset, MIPS_SP)
@@ -1337,9 +1344,7 @@ static void mips_emit_stnam(struct cling_mips_function *self,
 }
 
 /*
- * Notes the function-absolute address.
- * Since Mars accepts label as jta rather than number,
- * we change the format of `j' to `j label, address'.
+ * Those jump address needed to fixed later.
  */
 static void mips_emit_jmp(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
@@ -1398,10 +1403,6 @@ static void mips_emit_write(struct cling_mips_function *self,
 }
 
 /*
- * End of translation of different ast_ir.
- */
-
-/*
  * Enter with a push or call, end with the first instruction
  * after call.
  */
@@ -1415,9 +1416,6 @@ static int mips_emit_call(struct cling_mips_function *self,
   mips_para_context(self, MIPS_SAVE);
   for (int i=0; i<ast_ir->call.argc; ++i) {
     regid=mips_function_read(self, ast_ir->call.argv[i]);
-    /*
-     * How to pass this argument?
-     */
     if (i < MIPS_REG_ARGS_N) {
       ir = mips_move(MIPS_A0 + i, regid);
     } else {
@@ -1434,6 +1432,7 @@ static int mips_emit_call(struct cling_mips_function *self,
   mips_temp_context(self, MIPS_LOAD);
   mips_para_context(self, MIPS_LOAD);
 }
+
 
 /*
  * Loop over all the ast_ir and emit mips_ir.
@@ -1455,9 +1454,6 @@ static void mips_function_instrs(struct cling_mips_function *self,
       case OP_ADD:
         mips_emit_ternary_calc(self, ast_ir);
         break;
-      case OP_RET:
-        mips_emit_ret(self, ast_ir);
-        break;
       case OP_DIV:
       case OP_MUL:
         mips_emit_binary_calc(self, ast_ir);
@@ -1473,10 +1469,14 @@ static void mips_function_instrs(struct cling_mips_function *self,
       case OP_LT:
         relop = ast_ir;
         break;
+      case OP_RET:
+        if (ast_ir_useless_jump(ast_ir, ast_pc))
+          break;
+        mips_emit_ret(self, ast_ir);
+        break;
       case OP_BEZ:
-        /*
-         * bez is used to impl if.
-         */
+        if (ast_ir_useless_jump(ast_ir, ast_pc))
+          break;
         if (relop) {
           mips_emit_branch_relop(self, relop, ast_ir);
           relop = NULL;
@@ -1485,10 +1485,14 @@ static void mips_function_instrs(struct cling_mips_function *self,
         }
         break;
       case OP_BNE:
-        /*
-         * bne is used in `switch'.
-         */
+        if (ast_ir_useless_jump(ast_ir, ast_pc))
+          break;
         mips_emit_branch(self, ast_ir);
+        break;
+      case OP_JMP:
+        if (ast_ir_useless_jump(ast_ir, ast_pc))
+          break;
+        mips_emit_jmp(self, ast_ir);
         break;
       case OP_LDIMM:
         mips_emit_ldimm(self, ast_ir);
@@ -1510,9 +1514,6 @@ static void mips_function_instrs(struct cling_mips_function *self,
         break;
       case OP_INDEX:
         mips_emit_index(self, ast_ir);
-        break;
-      case OP_JMP:
-        mips_emit_jmp(self, ast_ir);
         break;
       case OP_READ:
         mips_emit_read(self, ast_ir);
@@ -1547,7 +1548,6 @@ static void mips_function_emit(struct cling_mips_function *self,
 /*
  * Data Directive
  */
-
 static struct cling_mips_data *mips_data_create(uint8_t type,
     char const *label) {
   struct cling_mips_data *self = malloc(sizeof *self);

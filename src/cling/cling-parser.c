@@ -48,10 +48,13 @@ int main(int argc, char *argv[]) {
 
   cling_ast_program_init(&program);
   cling_ast_ir_emit_program(&program, json_ast,&cling_symbol_table );
-  cling_ast_program_print(&program, stdout);
-  /* cling_mips_program_init(&cling_mips, &program); */
-  /* cling_mips_program_emit(&cling_mips, &program); */
-  /* cling_mips_program_print(&cling_mips, stdout); */
+  cling_mips_program_init(&cling_mips, &program);
+  cling_mips_program_emit(&cling_mips, &program);
+  cling_mips_program_print(&cling_mips, stdout);
+  cling_mips_interp_init(&interp, &cling_mips);
+  if (0 != cling_mips_interp_exec(&interp))
+    cling_mips_interp_report_errors(&interp);
+
 
   /* cling_optimize(&program); */
 
@@ -63,5 +66,5 @@ cleanup:
   cling_rd_parser_destroy(&cling_parser);
   cling_symbol_table_destroy(&cling_symbol_table);
   cling_scanner_destroy(&cling_scanner);
-  /* cling_mips_program_destroy(&cling_mips); */
+  cling_mips_program_destroy(&cling_mips);
 }

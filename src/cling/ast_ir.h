@@ -306,7 +306,12 @@ void cling_ast_ir_destroy(struct cling_ast_ir *self);
 void ast_ir_fix_address(struct utillib_vector *instrs,
                         unsigned int const *address_map);
 void ast_ir_print(struct cling_ast_ir const *self, FILE *file);
+
+bool ast_ir_is_local_jump(struct cling_ast_ir const *ast_ir);
 void ast_ir_vector_print(struct utillib_vector const *instrs,
                                 FILE *file);
+int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir);
+ 
+bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc);
 
 #endif /* CLING_AST_IR_H */

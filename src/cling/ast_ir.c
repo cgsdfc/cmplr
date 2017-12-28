@@ -132,14 +132,14 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
       fprintf(file, "call %s\n", self->call.name);
     break;
   case OP_INDEX:
-    fprintf(file, "t%d = t%d [ t%d ]\n", self->index.result,
+    fprintf(file, "t%d = t%d [t%d]\n", self->index.result,
             self->index.array_addr, self->index.index_result);
     break;
   case OP_BEZ:
-    fprintf(file, "bez t%d (%d)\n", self->bez.temp, self->bez.addr);
+    fprintf(file, "bez t%d (addr=%d)\n", self->bez.temp, self->bez.addr);
     break;
   case OP_BNE:
-    fprintf(file, "bne t%d t%d (%d)\n", self->bne.temp1, self->bne.temp2,
+    fprintf(file, "bne t%d t%d (addr=%d)\n", self->bne.temp1, self->bne.temp2,
             self->bne.addr);
     break;
   case OP_JMP:
@@ -147,15 +147,15 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     break;
   case OP_RET:
     if (self->ret.has_result)
-      fprintf(file, "ret (%d) t%d\n", self->ret.addr, self->ret.result);
+      fprintf(file, "ret (addr=%d) t%d\n", self->ret.addr, self->ret.result);
     else
-      fprintf(file, "ret (%d)\n", self->ret.addr);
+      fprintf(file, "ret (addr=%d)\n", self->ret.addr);
     break;
   case OP_READ:
-    fprintf(file, "read t%d (%d)\n", self->read.temp, self->read.kind);
+    fprintf(file, "read t%d (kind=%d)\n", self->read.temp, self->read.kind);
     break;
   case OP_WRITE:
-    fprintf(file, "write t%d (%d)\n", self->write.temp, self->write.kind);
+    fprintf(file, "write t%d (kind=%d)\n", self->write.temp, self->write.kind);
     break;
   case OP_LDSTR:
     fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
@@ -168,19 +168,19 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
               (char)self->ldimm.value);
     break;
   case OP_LDADR:
-    fprintf(file, "ldadr t%d %s (%d)\n", self->ldadr.temp, self->ldadr.name, self->ldadr.scope);
+    fprintf(file, "ldadr t%d %s (scope=%d)\n", self->ldadr.temp, self->ldadr.name, self->ldadr.scope);
     break;
   case OP_DEREF:
-    fprintf(file, "deref t%d\n", self->deref.addr);
+    fprintf(file, "deref t%d (size=%d)\n", self->deref.addr, self->deref.size);
     break;
   case OP_LDNAM:
-    fprintf(file, "ldnam t%d %s (%d)\n", self->ldnam.temp, self->ldnam.name, self->ldnam.scope);
+    fprintf(file, "ldnam t%d %s (scope=%d) (size=%d)\n", self->ldnam.temp, self->ldnam.name, self->ldnam.scope, self->ldnam.size);
     break;
   case OP_STADR:
-    fprintf(file, "stadr t%d t%d\n", self->stadr.addr, self->stadr.value);
+    fprintf(file, "stadr t%d t%d (size=%d)\n", self->stadr.addr, self->stadr.value, self->stadr.size);
     break;
   case OP_STNAM:
-    fprintf(file, "stnam %s t%d\n", self->stnam.name, self->stnam.value);
+    fprintf(file, "stnam %s t%d (size=%d)\n", self->stnam.name, self->stnam.value, self->stnam.size);
     break;
   case OP_ADD:
   case OP_SUB:
@@ -318,7 +318,6 @@ static int emit_binary(struct cling_ast_ir_global *self, size_t op, struct utill
 static void emit_assign(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
 {
   struct utillib_json_value const *lhs, *rhs, *value;
-  struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
   int rhs_value;
 
@@ -330,6 +329,7 @@ static void emit_assign(struct cling_ast_ir_global *self, struct utillib_json_va
     /*
      * Variable
      */
+    struct cling_symbol_entry const *entry;
     entry=find_name(self, value->as_ptr);
     if (entry->scope == 0) {
       /*
@@ -354,14 +354,15 @@ static void emit_assign(struct cling_ast_ir_global *self, struct utillib_json_va
     ir->stnam.name=value->as_ptr;
     ir->stnam.size=cling_type_to_size(entry->kind);
     ir->stnam.value=rhs_value;
-  } else {
-    /*
-     * Array.
-     */
-    ir=emit_ir(OP_STADR);
-    ir->stadr.value=rhs_value;
-    ir->stadr.addr=emit_index(self, lhs, &ir->stadr.size, CL_LVALUE);
+    utillib_vector_push_back(self->instrs, ir);
+    return;
   }
+  /*
+   * Array.
+   */
+  ir=emit_ir(OP_STADR);
+  ir->stadr.value=rhs_value;
+  ir->stadr.addr=emit_index(self, lhs, &ir->stadr.size, CL_LVALUE);
   utillib_vector_push_back(self->instrs, ir);
 }
 
@@ -417,6 +418,7 @@ make_ldadr:
 
 make_ldnam:
   ir=emit_ir(OP_LDNAM);
+  ir->ldnam.size=cling_type_to_size(entry->kind);
   ir->ldnam.scope=entry->scope;
   ir->ldnam.name=name->as_ptr;
   ir->ldnam.temp=make_temp(self);
@@ -1069,4 +1071,34 @@ void ast_ir_fix_address(struct utillib_vector *instrs,
       break;
     }
   }
+}
+
+bool ast_ir_is_local_jump(struct cling_ast_ir const *ast_ir) {
+  switch(ast_ir->opcode) {
+    case OP_BEZ:
+    case OP_BNE:
+    case OP_JMP:
+    case OP_RET:
+      return true;
+    default: return false;
+  }
+}
+
+int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir) {
+  switch(ast_ir->opcode) {
+    case OP_BEZ:
+      return ast_ir->bez.addr;
+    case OP_BNE:
+      return ast_ir->bne.addr;
+    case OP_JMP:
+      return ast_ir->jmp.addr;
+    case OP_RET:
+      return ast_ir->ret.addr;
+    default: assert(false);
+  }
+}
+
+bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc) {
+  int jump_addr=ast_ir_get_jump_address(ast_ir);
+  return jump_addr==ast_pc+1;
 }
