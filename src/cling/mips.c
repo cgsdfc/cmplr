@@ -722,26 +722,16 @@ static uint32_t mips_alloc(struct cling_mips_function *self, unsigned int size)
 static uint32_t
 mips_function_max_args(struct cling_ast_function const *ast_func) {
   struct cling_ast_ir const *ast_ir;
-  size_t arg_size=0;;
-  int state = 0;
+  uint32_t arg_size;
   uint32_t max_args = 0;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs) {
-    if (ast_ir->opcode == OP_PUSH) {
-      if (state == 0)
-        state = 1;
-        ++arg_size;
-    } else if (state == 1) {
-      /*
-       * The end of a push seq.
-       * Now we reduce it to max_args
-       * and clear stateful stuffs.
-       */
-      if (arg_size > max_args)
+    if (ast_ir->opcode != OP_CAL)
+      continue;
+    arg_size= ast_ir->call.argc;
+    if (arg_size > arg_size)
         max_args = arg_size;
-      state = 0;
       arg_size=0;
-    }
   }
   return max_args << 2;
 }
@@ -769,13 +759,13 @@ static void mips_function_temp_layout(struct cling_mips_function *self,
     self->temps[i].kind=MIPS_TEMP;
   }
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->instrs) {
-    if (ast_ir->opcode == OP_LOAD && !ast_ir->load.is_global) {
-      var=utillib_hashmap_find(&self->names, ast_ir->load.name);
+    if (ast_ir->opcode == OP_LDNAM && ast_ir->ldnam.scope) {
+      var=utillib_hashmap_find(&self->names, ast_ir->ldnam.name);
       /*
        * These temps are alias of var.
        */
-      self->temps[ast_ir->load.temp].kind=var->kind;
-      self->temps[ast_ir->load.temp].regid=var->regid;
+      self->temps[ast_ir->ldnam.temp].kind=var->kind;
+      self->temps[ast_ir->ldnam.temp].regid=var->regid;
     }
   }
   for (int i=0; i<self->temp_size; ++i) {
@@ -790,7 +780,6 @@ static void
 mips_function_local_layout(struct cling_mips_function *self,
                            struct cling_ast_function const *ast_func) {
   struct cling_ast_ir const *ast_ir;
-  size_t size;
 
   UTILLIB_VECTOR_FOREACH(ast_ir, &ast_func->init_code) {
     switch (ast_ir->opcode) {
@@ -1176,20 +1165,6 @@ static void mips_emit_ldimm(struct cling_mips_function *self,
   mips_function_push_back(self, mips_li(dest_regid, ast_ir->ldimm.value));
 }
 
-static void mips_emit_store(struct cling_mips_function *self,
-    struct cling_ast_ir const *ast_ir) {
-  uint8_t addr_regid;
-  uint8_t src_regid;
-  size_t size;
-
-  addr_regid = mips_function_locked_read(self, ast_ir->store.addr);
-  src_regid = mips_function_read(self, ast_ir->store.value);
-  size = ast_ir->store.size;
-  mips_function_push_back(self, size == MIPS_WORD_SIZE
-      ? mips_sw(src_regid, 0, addr_regid)
-      : mips_sb(src_regid, 0, addr_regid));
-}
-
 /*
  * We utilize the fact that the grammar restrict the use of condition
  * expression right above a branch instruction to translate condition
@@ -1304,23 +1279,29 @@ static void mips_emit_branch(struct cling_mips_function *self,
 
 static void mips_emit_ldnam(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
-  struct cling_mips_name *name=utillib_hashmap_find(&self->names, ast_ir->ldnam.name);
+  struct cling_mips_name *name;
   uint8_t regid=mips_function_write(self, ast_ir->ldnam.temp);
-  mips_function_push_back(self, ast_ir->ldnam.size == MIPS_WORD_SIZE
+  if (ast_ir->ldnam.scope) {
+    name=utillib_hashmap_find(&self->names, ast_ir->ldnam.name);
+    mips_function_push_back(self, ast_ir->ldnam.size == MIPS_WORD_SIZE
       ? mips_lw(regid, name->offset, MIPS_SP)
       : mips_lb(regid, name->offset, MIPS_SP));
+    return;
+  }
+  mips_function_push_back(self, mips_la(regid, ast_ir->ldnam.name));
+  mips_function_push_back(self, mips_lw(regid, 0, MIPS_SP));
 }
 
 static void mips_emit_ldadr(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
   struct cling_mips_name *name;
   uint8_t regid=mips_function_write(self, ast_ir->ldadr.temp);
-  if (ast_ir->ldadr.is_global) {
-    mips_function_push_back(self, mips_la(regid, ast_ir->ldadr.name));
+  if (ast_ir->ldadr.scope) {
+    name=utillib_hashmap_find(&self->names, ast_ir->ldadr.name);
+    mips_function_push_back(self, mips_addi(regid, name->offset, MIPS_SP));
     return;
   }
-  name=utillib_hashmap_find(&self->names, ast_ir->ldadr.name);
-  mips_function_push_back(self, mips_addi(regid, name->offset, MIPS_SP));
+  mips_function_push_back(self, mips_la(regid, ast_ir->ldadr.name));
 }
 
 static void mips_emit_deref(struct cling_mips_function *self,
@@ -1351,27 +1332,6 @@ static void mips_emit_stnam(struct cling_mips_function *self,
 }
 
 /*
- * load the address or content of name into temp.
- */
-static void mips_emit_load(struct cling_mips_function *self,
-    struct cling_ast_ir const *ast_ir) {
-  uint8_t dest_regid = mips_function_write(self, ast_ir->load.temp);
-  struct cling_mips_name *name;
-
-  if (ast_ir->load.is_global) {
-    mips_function_push_back(self, mips_la(dest_regid, ast_ir->load.name));
-  } else {
-    name = utillib_hashmap_find(&self->names, ast_ir->load.name);
-    mips_function_push_back(self, mips_addi(dest_regid, MIPS_SP, name->offset));
-  }
-  if (ast_ir->load.is_rvalue) {
-    mips_function_push_back(self, ast_ir->load.size == MIPS_WORD_SIZE
-        ? mips_lw(dest_regid, 0, dest_regid)
-        : mips_lb(dest_regid, 0, dest_regid));
-  }
-}
-
-/*
  * Notes the function-absolute address.
  * Since Mars accepts label as jta rather than number,
  * we change the format of `j' to `j label, address'.
@@ -1390,7 +1350,7 @@ static void mips_emit_read(struct cling_mips_function *self,
   uint8_t regid;
   int syscall;
 
-  syscall = cling_ast_opcode_to_syscall(ast_ir->opcode);
+  syscall = cling_ast_opcode_to_syscall(ast_ir->read.kind);
   mips_function_push_back(self, mips_li(MIPS_V0, syscall));
   mips_function_push_back(self, &cling_mips_syscall);
   regid = mips_function_write(self, ast_ir->read.temp);
@@ -1421,7 +1381,7 @@ static void mips_emit_write(struct cling_mips_function *self,
   /*
    * syscall number.
    */
-  syscall = cling_ast_opcode_to_syscall(ast_ir->opcode);
+  syscall = cling_ast_opcode_to_syscall(ast_ir->write.kind);
   mips_function_push_back(self, mips_li(MIPS_V0, syscall));
   mips_function_push_back(self, &cling_mips_syscall);
   if (self->para_size) {
@@ -1440,50 +1400,34 @@ static void mips_emit_write(struct cling_mips_function *self,
  * Enter with a push or call, end with the first instruction
  * after call.
  */
-static int mips_emit_push_call(struct cling_mips_function *self, size_t begin,
-    size_t ast_instrs_size,
-    struct cling_ast_function const *ast_func) {
-  int ast_pc;
+static int mips_emit_call(struct cling_mips_function *self, 
+    struct cling_ast_ir const *ast_ir) {
   uint8_t regid;
-  struct cling_ast_ir const *ast_ir;
-  int push_state = 0;
   uint32_t offset;
   struct cling_mips_ir *ir;
 
-  for (ast_pc = begin; ast_pc < ast_instrs_size; ++ast_pc) {
-    ast_ir = utillib_vector_at(&ast_func->instrs, ast_pc);
-    switch (ast_ir->opcode) {
-      case OP_PUSH:
-        if (push_state == 0) {
-          mips_temp_context(self, MIPS_SAVE);
-          mips_para_context(self, MIPS_SAVE);
-        }
-        regid = mips_function_read(self, ast_ir->push.temp);
-        if (push_state < MIPS_REG_ARGS_N) {
-          ir = mips_move(MIPS_A0 + push_state, regid);
-        } else {
-          offset=MIPS_MEM_ARG_BLK+push_state<<2; 
-          ir = mips_sw(regid, offset, MIPS_SP);
-        }
-        mips_function_push_back(self, ir);
-        ++push_state;
-        break;
-      case OP_CAL:
-        if (push_state == 0) {
-          mips_temp_context(self, MIPS_SAVE);
-        }
-        mips_function_push_back(self, mips_jal(ast_ir->call.name));
-        mips_temp_context(self, MIPS_LOAD);
-        if (ast_ir->call.has_result) {
-          regid = mips_function_write(self, ast_ir->call.result);
-          mips_function_push_back(self, mips_move(regid, MIPS_V0));
-        }
-        if (push_state != 0) {
-          mips_para_context(self, MIPS_LOAD);
-        }
-        return ast_pc;
+  mips_temp_context(self, MIPS_SAVE);
+  mips_para_context(self, MIPS_SAVE);
+  for (int i=0; i<ast_ir->call.argc; ++i) {
+    regid=mips_function_read(self, ast_ir->call.argv[i]);
+    /*
+     * How to pass this argument?
+     */
+    if (i < MIPS_REG_ARGS_N) {
+      ir = mips_move(MIPS_A0 + i, regid);
+    } else {
+      offset=MIPS_MEM_ARG_BLK+i<<2; 
+      ir = mips_sw(regid, offset, MIPS_SP);
     }
+    mips_function_push_back(self, ir);
   }
+  mips_function_push_back(self, mips_jal(ast_ir->call.name));
+  if (ast_ir->call.has_result) {
+    regid = mips_function_write(self, ast_ir->call.result);
+    mips_function_push_back(self, mips_move(regid, MIPS_V0));
+  }
+  mips_temp_context(self, MIPS_LOAD);
+  mips_para_context(self, MIPS_LOAD);
 }
 
 /*
@@ -1513,9 +1457,8 @@ static void mips_function_instrs(struct cling_mips_function *self,
       case OP_MUL:
         mips_emit_binary_calc(self, ast_ir);
         break;
-      case OP_PUSH:
       case OP_CAL:
-        ast_pc = mips_emit_push_call(self, ast_pc, ast_instrs_size, ast_func);
+        mips_emit_call(self, ast_ir);
         break;
       case OP_NE:
       case OP_EQ:
@@ -1566,26 +1509,14 @@ static void mips_function_instrs(struct cling_mips_function *self,
       case OP_JMP:
         mips_emit_jmp(self, ast_ir);
         break;
-      case OP_RDCHR:
-      case OP_RDINT:
+      case OP_READ:
         mips_emit_read(self, ast_ir);
         break;
-      case OP_WRSTR:
-      case OP_WRINT:
-      case OP_WRCHR:
+      case OP_WRITE:
         mips_emit_write(self, ast_ir);
         break;
       case OP_LDSTR:
         mips_emit_ldstr(self, ast_ir);
-        break;
-        /*
-         * Obselated
-         */
-      case OP_LOAD:
-        mips_emit_load(self, ast_ir);
-        break;
-      case OP_STORE:
-        mips_emit_store(self, ast_ir);
         break;
       default:
         assert(false);

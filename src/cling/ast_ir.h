@@ -36,7 +36,6 @@ UTILLIB_ENUM_ELEM(OP_DEFUNC)
 UTILLIB_ENUM_ELEM(OP_DEFCON)
 UTILLIB_ENUM_ELEM(OP_PARA)
 UTILLIB_ENUM_ELEM(OP_RET)
-UTILLIB_ENUM_ELEM(OP_PUSH)
 UTILLIB_ENUM_ELEM(OP_ADD)
 UTILLIB_ENUM_ELEM(OP_SUB)
 UTILLIB_ENUM_ELEM(OP_BEZ)
@@ -57,16 +56,20 @@ UTILLIB_ENUM_ELEM(OP_LDSTR)
 UTILLIB_ENUM_ELEM(OP_LDADR)
 UTILLIB_ENUM_ELEM(OP_LDNAM)
 UTILLIB_ENUM_ELEM(OP_DEREF)
-UTILLIB_ENUM_ELEM(OP_LOAD)
-UTILLIB_ENUM_ELEM(OP_STORE)
 UTILLIB_ENUM_ELEM(OP_STADR)
 UTILLIB_ENUM_ELEM(OP_STNAM)
-UTILLIB_ENUM_ELEM(OP_WRSTR)
-UTILLIB_ENUM_ELEM(OP_WRINT)
-UTILLIB_ENUM_ELEM(OP_WRCHR)
-UTILLIB_ENUM_ELEM(OP_RDCHR)
-UTILLIB_ENUM_ELEM(OP_RDINT)
+UTILLIB_ENUM_ELEM(OP_READ)
+UTILLIB_ENUM_ELEM(OP_WRITE)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
+
+enum { CL_LVALUE, CL_RVALUE, };
+enum {
+  OP_WRSTR,
+  OP_WRINT,
+  OP_WRCHR,
+  OP_RDCHR,
+  OP_RDINT,
+};
 
 /*
  * Holds global information
@@ -76,93 +79,144 @@ UTILLIB_ENUM_END(cling_ast_opcode_kind);
  */
 struct cling_ast_ir_global {
   struct cling_symbol_table *symbol_table;
+  struct utillib_vector *instrs;
   unsigned int temps;
 };
 
+/*
+ * Opposed to __cdecl, MIPS requires the first argument be
+ * accessed from the top of the stack and so on.
+ * +---------+
+ * |         | argn sp+8
+ * +---------+ ...
+ * |         | arg1 sp+4
+ * +---------+
+ * |         | arg0 <-- sp
+ * +---------+
+ */
 struct cling_ast_ir {
   int opcode;
   union {
     struct {
+    /*
+     * load string into temp
+     */
       int temp;
       char const *string;
     } ldstr;
     struct {
+      /*
+       * write temp to stdout depending on opcode
+       */
       int temp;
+      int kind;
     } write;
     struct {
+      /*
+       * read into temp depending on opcode
+       */
       int temp;
+      int kind;
     } read;
     struct {
-      int temp;
-      int size;
-    } push;
-    struct {
+      /*
+       * load address of name into temp
+       */
       int temp;
       char const *name;
-      bool is_global;
+      int scope;
     } ldadr;
     struct {
+      /*
+       * load value of name into temp
+       */
       int temp;
       char const *name;
       int size;
+      int scope;
     } ldnam;
     struct {
+      /*
+       * load value of addr into addr
+       */
       int addr;
       int size;
     } deref;
     struct {
+      /*
+       * store value into addr
+       */
       int addr;
       int value;
       int size;
     } stadr;
     struct {
+      /*
+       * store value into named addr
+       */
       char const *name;
       int value;
       int size;
     } stnam;
     struct {
-      int temp;
-      bool is_rvalue;
-      int size;
-      bool is_global;
-      char const *name;
-    } load;
-    struct {
+      /*
+       * load immediate value into temp
+       */
       int temp;
       int value;
       int size;
     } ldimm;
     struct {
+      /*
+       * define an array
+       * later referred as temp
+       */
       char const *name;
       size_t extend;
       int base_size;
+      int temp;
     } defarr;
     struct {
+      /*
+       * call name and store the result
+       * if any
+       */
       char const *name;
+      int argc;
+      int *argv;
       int result;
       bool has_result;
     } call;
     struct {
-      int addr;
-      int value;
-      int size;
-    } store;
-    struct {
+      /*
+       * define a const having no
+       * effect on codegen
+       */
       char const *name;
       int size;
       int value;
     } defcon;
     struct {
+      /*
+       * do a binary op
+       */
       int result;
       int temp1;
       int temp2;
     } binop;
     struct {
+      /*
+       * jump to addr (exit) and store a value
+       * in result
+       */
       int result;
       bool has_result;
       int addr;
     } ret;
     struct {
+      /*
+       * get the addr of an element from array
+       */
       int result;
       int base_size;
       bool is_rvalue;
@@ -170,46 +224,52 @@ struct cling_ast_ir {
       int index_result;
     } index;
     struct {
+      /*
+       * define a variable referred as temp
+       */
+      int temp;
       char const *name;
       int size;
     } defvar;
     struct {
+      /*
+       * define a function having no meaning
+       * to codegen.
+       */
       char const *name;
       int return_size;
     } defunc;
     struct {
+      /*
+       * define a parameter of this function
+       * referred as temp
+       */
+      int temp;
       char const *name;
       int size;
     } para;
     struct {
+      /*
+       * jump to function addr
+       */
       int addr;
     } jmp;
     struct {
+      /*
+       * jump to function addr if temp1 != temp2
+       */
       int temp1;
       int temp2;
       int addr;
     } bne;
     struct {
+      /*
+       * jump to function addr if temp==0
+       */
       int temp;
       int addr;
     } bez;
   };
-};
-
-struct cling_polish_ir {
-  int ophead;
-  /*
-   * Stack holding ast nodes
-   */
-  struct utillib_vector stack;
-  /*
-   * Stack holding operands when evaluating.
-   */
-  struct utillib_vector opstack;
-  /*
-   * From which temps counter starts
-   */
-  struct cling_ast_ir_global *global;
 };
 
 /*
@@ -221,7 +281,6 @@ struct cling_ast_function {
   unsigned int temps;
   struct utillib_vector instrs;
   struct utillib_vector init_code;
-  struct utillib_hashmap names;
 };
 
 /*

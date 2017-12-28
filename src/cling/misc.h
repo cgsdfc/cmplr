@@ -52,6 +52,7 @@ struct cling_mips_label {
 struct cling_mips_label *mips_label_create(char const *label, uint32_t address);
 void mips_label_destroy(struct cling_mips_label *self);
 struct cling_mips_label * mips_label_name_find(struct utillib_hashmap const *self, char const *name);
+struct cling_mips_label * mips_label_find(struct utillib_hashmap const *self, uint32_t address);
 extern const struct utillib_hashmap_callback mips_label_strcallback;
 extern const struct utillib_hashmap_callback mips_label_callback;
 

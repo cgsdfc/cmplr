@@ -37,7 +37,6 @@ UTILLIB_ETAB_ELEM(OP_DEFARR)
 UTILLIB_ETAB_ELEM_INIT(OP_DEFCON, "const")
 UTILLIB_ETAB_ELEM_INIT(OP_PARA, "para")
 UTILLIB_ETAB_ELEM_INIT(OP_RET, "ret")
-UTILLIB_ETAB_ELEM_INIT(OP_PUSH, "push")
 UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
 UTILLIB_ETAB_ELEM_INIT(OP_SUB, "-")
 UTILLIB_ETAB_ELEM_INIT(OP_INDEX, "index")
@@ -53,7 +52,6 @@ UTILLIB_ETAB_ELEM_INIT(OP_GE, ">=")
 UTILLIB_ETAB_ELEM_INIT(OP_BEZ, "bez")
 UTILLIB_ETAB_ELEM_INIT(OP_BNE, "bne")
 UTILLIB_ETAB_ELEM_INIT(OP_JMP, "jmp")
-UTILLIB_ETAB_ELEM_INIT(OP_STORE, "store")
 UTILLIB_ETAB_ELEM_INIT(OP_LDIMM, "ldimm")
 UTILLIB_ETAB_ELEM_INIT(OP_LDSTR, "ldstr")
 UTILLIB_ETAB_ELEM_INIT(OP_WRINT, "write-int")
@@ -64,7 +62,18 @@ UTILLIB_ETAB_ELEM_INIT(OP_RDCHR, "read-chr")
 UTILLIB_ETAB_END(cling_ast_opcode_kind);
 
 static const struct cling_ast_ir cling_ast_ir_nop = {.opcode = OP_NOP};
-static const struct utillib_json_value temp_zero = {.kind=UT_JSON_INT, .as_int=AST_IR_TEMP_ZERO};
+
+static int emit_expr(struct cling_ast_ir_global *self,
+                     struct utillib_json_value const *object);
+
+static void emit_statement(struct utillib_json_value const *self,
+                           struct cling_ast_ir_global *global,
+                           struct utillib_vector *instrs);
+
+static void emit_composite(struct utillib_json_value const *self,
+                           struct cling_ast_ir_global *global,
+                           struct utillib_vector *instrs);
+
 
 static struct cling_ast_ir *emit_ir(int opcode) {
   struct cling_ast_ir *self = calloc(sizeof *self, 1);
@@ -73,8 +82,13 @@ static struct cling_ast_ir *emit_ir(int opcode) {
 }
 
 void cling_ast_ir_destroy(struct cling_ast_ir *self) {
-  if (self->opcode == OP_NOP)
-    return;
+  switch(self->opcode) {
+    case OP_NOP:
+      return;
+    case OP_CAL:
+      free(self->call.argv);
+      break;
+  }
   free(self);
 }
 
@@ -114,6 +128,9 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
             self->defarr.extend);
     break;
   case OP_CAL:
+    for (int i=0; i<self->call.argc; ++i) {
+      fprintf(file, "push t%d\n", self->call.argv[i]);
+    }
     if (self->call.has_result)
       fprintf(file, "t%d = call %s\n", self->call.result, self->call.name);
     else
@@ -122,6 +139,53 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_INDEX:
     fprintf(file, "t%d = t%d [ t%d ]\n", self->index.result,
             self->index.array_addr, self->index.index_result);
+    break;
+  case OP_BEZ:
+    fprintf(file, "bez t%d (%d)\n", self->bez.temp, self->bez.addr);
+    break;
+  case OP_BNE:
+    fprintf(file, "bne t%d t%d (%d)\n", self->bne.temp1, self->bne.temp2,
+            self->bne.addr);
+    break;
+  case OP_JMP:
+    fprintf(file, "jmp %d\n", self->jmp.addr);
+    break;
+  case OP_RET:
+    if (self->ret.has_result)
+      fprintf(file, "ret (%d) t%d\n", self->ret.addr, self->ret.result);
+    else
+      fprintf(file, "ret (%d)\n", self->ret.addr);
+    break;
+  case OP_READ:
+    fprintf(file, "read t%d\n", self->read.temp);
+    break;
+  case OP_WRITE:
+    fprintf(file, "write t%d\n", self->write.temp);
+    break;
+  case OP_LDSTR:
+    fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
+    break;
+  case OP_LDIMM:
+    if (self->ldimm.size == MIPS_WORD_SIZE)
+      fprintf(file, "ldimm t%d %d\n", self->ldimm.temp, self->ldimm.value);
+    else
+      fprintf(file, "ldimm t%d '%c'\n", self->ldimm.temp,
+              (char)self->ldimm.value);
+    break;
+  case OP_LDADR:
+    fprintf(file, "ldadr t%d %s (%d)\n", self->ldadr.temp, self->ldadr.name, self->ldadr.scope);
+    break;
+  case OP_DEREF:
+    fprintf(file, "deref t%d\n", self->deref.addr);
+    break;
+  case OP_LDNAM:
+    fprintf(file, "ldnam t%d %s (%d)\n", self->ldnam.temp, self->ldnam.name, self->ldnam.scope);
+    break;
+  case OP_STADR:
+    fprintf(file, "stadr t%d t%d\n", self->stadr.addr, self->stadr.value);
+    break;
+  case OP_STNAM:
+    fprintf(file, "stnam %s t%d\n", self->stnam.name, self->stnam.value);
     break;
   case OP_ADD:
   case OP_SUB:
@@ -135,66 +199,6 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_GE:
     fprintf(file, "t%d = t%d %s t%d\n", self->binop.result, self->binop.temp1,
             opstr, self->binop.temp2);
-    break;
-  case OP_BEZ:
-    fprintf(file, "bez t%d %d\n", self->bez.temp, self->bez.addr);
-    break;
-  case OP_BNE:
-    fprintf(file, "bne t%d t%d %d\n", self->bne.temp1, self->bne.temp2,
-            self->bne.addr);
-    break;
-  case OP_JMP:
-    fprintf(file, "jmp %d\n", self->jmp.addr);
-    break;
-  case OP_RET:
-    if (self->ret.has_result)
-      fprintf(file, "ret %d t%d\n", self->ret.addr, self->ret.result);
-    else
-      fprintf(file, "ret %d\n", self->ret.addr);
-    break;
-  case OP_RDCHR:
-  case OP_RDINT:
-    fprintf(file, "%s t%d\n", opstr, self->read.temp);
-    break;
-  case OP_WRINT:
-  case OP_WRSTR:
-  case OP_WRCHR:
-    fprintf(file, "%s t%d\n", opstr, self->write.temp);
-    break;
-  case OP_STORE:
-    fprintf(file, "store t%d t%d\n", self->store.addr, self->store.value);
-    break;
-  case OP_PUSH:
-    size_name = size_tostring(self->push.size);
-    fprintf(file, "push %s t%d\n", size_name, self->push.temp);
-    break;
-  case OP_LDSTR:
-    fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
-    break;
-  case OP_LDIMM:
-    if (self->ldimm.size == MIPS_WORD_SIZE)
-      fprintf(file, "ldimm t%d %d\n", self->ldimm.temp, self->ldimm.value);
-    else
-      fprintf(file, "ldimm t%d '%c'\n", self->ldimm.temp,
-              (char)self->ldimm.value);
-    break;
-  case OP_LOAD:
-    fprintf(file, "load t%d %s\n", self->load.temp, self->load.name);
-    break;
-  case OP_LDADR:
-    fprintf(file, "ldadr t%d %s\n", self->ldadr.temp, self->ldadr.name);
-    break;
-  case OP_DEREF:
-    fprintf(file, "deref t%d\n", self->deref.addr);
-    break;
-  case OP_LDNAM:
-    fprintf(file, "ldnam t%d %s\n", self->ldnam.temp, self->ldnam.name);
-    break;
-  case OP_STADR:
-    fprintf(file, "stadr t%d t%d\n", self->stadr.addr, self->stadr.value);
-    break;
-  case OP_STNAM:
-    fprintf(file, "stnam %s t%d\n", self->stnam.name, self->stnam.value);
     break;
   default:
     assert(false);
@@ -212,362 +216,157 @@ void ast_ir_vector_print(struct utillib_vector const *instrs,
   }
 }
 
-/*
- * Polish-ir Emission.
- * Hack: we use a trick to tell lvalue from rvalue, which
- * affects the result of a load instruction given an iden.
- * That is, for lvalue iden, we load its address and for
- * rvalue iden, we load its content (the thing at that address).
- * The hack is: assume all the iden as rvalue; when a assignment
- * is seen, we twist the iden in the last instruction to lvalue.
- * The same applies to index operator.
- */
-
-static void polish_ir_post_order(struct cling_polish_ir *self,
-                                 struct utillib_json_value const *node) {
-  assert(node);
-  struct utillib_json_value *op, *lhs, *rhs;
-  struct utillib_json_value const *arg;
-
-  op = utillib_json_object_at(node, "op");
-  if (!op) {
-    /*
-     * Trivial case.
-     */
-    utillib_vector_push_back(&self->stack, node);
-    return;
-  }
-  lhs = utillib_json_object_at(node, "lhs");
-  rhs = utillib_json_object_at(node, "rhs");
-  if (op->as_size_t == SYM_RP) {
-    /*
-     * call_expr case
-     * first arglist, then name.
-     * We reverse the arglist here.
-     * FIXME: We should not reverse it
-     * in the first place at opg_parser?
-     * but that will change ast_check tooo.
-     */
-    size_t size = utillib_json_array_size(rhs);
-    for (int i = size - 1; i >= 0; --i) {
-      arg = utillib_json_array_at(rhs, i);
-      polish_ir_post_order(self, arg);
-    }
-    polish_ir_post_order(self, lhs);
-  } else if (op->as_size_t == SYM_EQ || op->as_size_t == SYM_RK) {
-    /*
-     * Assignment is right associative.
-     * We want the array iden to be loaded _after_ the index expr
-     * is evaluated so that we can peek its type/size by looking
-     * at the latest instruction.
-     */
-    polish_ir_post_order(self, rhs);
-    polish_ir_post_order(self, lhs);
-  } else {
-    /*
-     * Other left associative binary operators.
-     */
-    polish_ir_post_order(self, lhs);
-    polish_ir_post_order(self, rhs);
-  }
-  utillib_vector_push_back(&self->stack, node);
+static inline struct cling_symbol_entry * find_name(struct cling_ast_ir_global const *self, char const *name)
+{
+  return cling_symbol_table_find(self->symbol_table, name, CL_LEXICAL);
 }
 
 static inline int make_temp(struct cling_ast_ir_global *self) {
   return self->temps++;
 }
 
-static struct utillib_json_value *
-polish_ir_make_temp(struct cling_polish_ir *self) {
-  int temp = make_temp(self->global);
-  return utillib_json_int_create(&temp);
-}
-
-static void polish_ir_maybe_release_temp(struct utillib_json_value *val) {
-  if (val == &temp_zero)
-    return;
-  if (val->kind == UT_JSON_INT)
-    utillib_json_value_destroy(val);
-}
-
-static struct utillib_json_value *polish_ir_next_op(struct cling_polish_ir *self) {
-    if (self->ophead == utillib_vector_size(&self->stack)-1)
-      return NULL;
-    return utillib_vector_at(&self->stack, self->ophead+1);
-}
-
-static int polish_ir_load_lvalue(struct cling_polish_ir *self,
-    struct utillib_json_value const *object) {
-  struct cling_symbol_entry *entry;
-  struct utillib_json_value const *value;
+static int load_array(struct cling_ast_ir_global *self, char const *name, int *base_size)
+{
+  struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
-  value=utillib_json_object_at(object, "value");
-  entry=cling_symbol_table_find(self->global->symbol_table, value->as_ptr, CL_LEXICAL);
 
-  assert(entry->kind == CL_ARRAY);
-  base_size=cling_type_to_size(entry->array.base_type);
+  entry=find_name(self, name);
   ir=emit_ir(OP_LDADR);
+  ir->ldadr.temp=make_temp(self);
   ir->ldadr.name=name;
-  ir->ldadr.is_global=entry->scope==0;
-  temp=make_temp(self->global);
-  ir->ldadr.temp=temp;
-  utillib_vector_push_back(instrs, ir);
-
-
-
-}
-
-static void polish_ir_emit_index(struct cling_polish_ir *self,
-                                 struct utillib_vector *instrs) {
-  struct utillib_json_value *array_iden, *index_temp, *next;
-  struct cling_ast_ir *ir;
-  struct cling_symbol_entry *entry;
-  int base_size, temp;
-  char const *name;
-
-  /*
-   * Get 2 operands.
-   */
-  array_iden= utillib_vector_back(&self->opstack);
-  assert(utillib_json_object_at(array_iden, "type")->as_size_t == SYM_IDEN);
-  utillib_vector_pop_back(&self->opstack);
-  index_temp = utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
-
-  /*
-   * compute the address of element.
-   */
-  ir = emit_ir(OP_INDEX);
-  ir->index.array_addr = temp;
-  temp=make_temp(self->global);
-  ir->index.result = temp;
-  ir->index.index_result = index_temp->as_int;
-  ir->index.base_size = base_size;
-  utillib_vector_push_back(instrs, ir);
-
-  /*
-   * maybe do a deref based on the _next_ op is
-   * assign or not.
-   */
-  next=polish_ir_next_op(self);
-  if (next) {
-    next=utillib_json_object_at(next, "op");
-    if (next && next->as_size_t == SYM_EQ)
-      goto skip_deref;
-  }
-  ir=emit_ir(OP_DEREF);
-  ir->deref.addr=temp;
-  ir->deref.size=base_size;
-  utillib_vector_push_back(instrs, ir);
-    
-skip_deref:
-  utillib_vector_push_back(&self->opstack, utillib_json_int_create(&temp));
-  polish_ir_maybe_release_temp(index_temp);
+  ir->ldadr.scope=entry->scope;
+  *base_size=cling_type_to_size(entry->array.base_type);
+  utillib_vector_push_back(self->instrs, ir);
+  return ir->ldadr.temp;
 }
 
 /*
- * Opposed to __cdecl, MIPS requires the first argument be
- * accessed from the top of the stack and so on.
- * +---------+
- * |         | argn sp+8
- * +---------+ ...
- * |         | arg1 sp+4
- * +---------+
- * |         | arg0 <-- sp
- * +---------+
+ * Index should only compute _addr_
  */
-static void polish_ir_emit_call(struct cling_polish_ir *self,
-                                struct utillib_vector *instrs) {
-  struct utillib_json_value *callee, *arg;
-  struct utillib_json_value *value, *temp;
+static int emit_index(struct cling_ast_ir_global *self,
+    struct utillib_json_value const *object, int vflag)
+{
+  struct utillib_json_value const *lhs, *rhs, *value;
+  struct cling_ast_ir *ir;
+  int base_size;
+
+  lhs=utillib_json_object_at(object, "lhs"); 
+  rhs=utillib_json_object_at(object, "rhs");
+  value=utillib_json_object_at(lhs, "value");
+  ir = emit_ir(OP_INDEX);
+  ir->index.array_addr=load_array(self, value->as_ptr, &base_size);
+  ir->index.base_size=base_size;
+  ir->index.index_result=emit_expr(self, rhs);
+  ir->index.result = make_temp(self);
+  utillib_vector_push_back(self->instrs, ir);
+
+  if (vflag == CL_RVALUE) {
+    ir=emit_ir(OP_DEREF);
+    ir->deref.addr=self->temps-1;
+    ir->deref.size=base_size;
+    utillib_vector_push_back(self->instrs, ir);
+    return ir->deref.addr;
+  }
+  return ir->index.result;
+}
+
+static int emit_call(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
+{
+  struct utillib_json_value *lhs, *rhs;
+  struct utillib_json_value *value; 
+  struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
 
-  /*
-   * Fetch all the field about function.
-   */
-  struct cling_symbol_entry const *entry;
-
-  callee = utillib_vector_back(&self->opstack);
-  value = utillib_json_object_at(callee, "value");
-  entry = cling_symbol_table_find(self->global->symbol_table, value->as_ptr,
-                                  CL_GLOBAL);
-  assert(entry && entry->kind == CL_FUNC);
-  utillib_vector_pop_back(&self->opstack);
-  /*
-   * Only pop argc elements.
-   */
-  for (int i = 0; i < entry->function.argc; ++i) {
-    arg = utillib_vector_back(&self->opstack);
-    utillib_vector_pop_back(&self->opstack);
-    ir = emit_ir(OP_PUSH);
-    ir->push.size = cling_type_to_size(entry->function.argv_types[i]);
-    ir->push.temp = arg->as_int;
-    utillib_vector_push_back(instrs, ir);
-    polish_ir_maybe_release_temp(arg);
-  }
+  lhs=utillib_json_object_at(object, "lhs");
+  rhs=utillib_json_object_at(object, "rhs");
+  value = utillib_json_object_at(lhs, "value");
+  entry = cling_symbol_table_find(self->symbol_table, value->as_ptr, CL_GLOBAL);
   ir = emit_ir(OP_CAL);
   ir->call.name = value->as_ptr;
+  ir->call.argc=entry->function.argc;
+  ir->call.argv=malloc(sizeof ir->call.argv[0] * ir->call.argc);
+
+  for (int i = 0; i < entry->function.argc; ++i) {
+    ir->call.argv[i]=emit_expr(self, utillib_json_array_at(rhs, i));
+  }
   if (entry->function.return_type != CL_VOID) {
-    temp = polish_ir_make_temp(self);
     ir->call.has_result = true;
-    ir->call.result = temp->as_int;
-    utillib_vector_push_back(&self->opstack, temp);
+    ir->call.result=make_temp(self);
   } else {
     ir->call.has_result = false;
   }
-  utillib_vector_push_back(instrs, ir);
+  utillib_vector_push_back(self->instrs, ir);
 }
 
-
-/*
- * Load the rvalue of this iden.
- * object should be an iden.
- */
-static void polish_ir_load_rvalue(struct cling_polish_ir *self, 
-    struct utillib_json_value const *object) {
-  struct utillib_json_value const *value, *type;
-  struct cling_symbol_entry *entry;
-
-  type=utillib_json_object_at(object, "type");
-  value=utillib_json_object_at(object, "value");
-  assert(type->as_size_t == SYM_IDEN);
-  entry=cling_symbol_table_find(self->global->symbol_table, value, CL_LEXICAL);
-  if (0 == entry->scope) {
-    /*
-     * Global Evil.
-     */
-    ir=emit_ir(OP_LDADR);
-    ir->ldadr.name=value;
-    ir->ldadr.is_global=true;
-    temp=make_temp(self->global);
-    ir->ldadr.temp=temp;
-    utillib_vector_push_back(instrs, ir);
-    ir=emit_ir(OP_DEREF);
-    ir->deref.size=cling_type_to_size(entry->kind);
-    ir->deref.addr=temp;
-    utillib_vector_push_back(instrs, ir);
-  } else {
-    ir=emit_ir(OP_LDNAM);
-    ir->ldnam.name=value;
-    temp=make_temp(self->global);
-    ir->ldnam.temp=temp;
-    ir->ldnam.size=cling_type_to_size(entry->kind);
-    utillib_vector_push_back(instrs, ir);
-  }
-}
-
-static void polish_ir_emit_binary(struct cling_polish_ir *self, size_t op,
-                                  struct utillib_vector *instrs) {
-  struct utillib_json_value *lhs, *rhs, *temp;
+static int emit_binary(struct cling_ast_ir_global *self, size_t op, struct utillib_json_value const *object)
+{
+  struct utillib_json_value const *lhs, *rhs;
   struct cling_ast_ir *ir;
-  int rhs_temp, lhs_temp;
 
-  rhs = utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
-  rhs_temp=polish_ir_load_rvalue(self, rhs);
-
-  lhs = utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
-  lhs_temp=polish_ir_load_rvalue(self, lhs);
-
-  temp = polish_ir_make_temp(self);
   ir = emit_ir(symbol_to_ast_opcode(op));
-  ir->binop.result = temp->as_int;
-  ir->binop.temp1 = lhs->as_int;
-  ir->binop.temp2 = rhs->as_int;
-  utillib_vector_push_back(instrs, ir);
-  utillib_vector_push_back(&self->opstack, temp);
-  polish_ir_maybe_release_temp(lhs);
-  polish_ir_maybe_release_temp(rhs);
+  lhs=utillib_json_object_at(object, "lhs");
+  rhs=utillib_json_object_at(object, "rhs");
+  ir->binop.temp1 = emit_expr(self, lhs);
+  ir->binop.temp2 = emit_expr(self, rhs);
+  ir->binop.result = make_temp(self);
+  utillib_vector_push_back(self->instrs, ir);
+  return ir->binop.result;
 }
-
-static void polish_ir_emit_stnam(struct cling_polish_ir *self) {
-
-
-
-}
-
-/*
- * assignment is translated to stnam or ldadr + stadr depending the
- * assignee is temp or iden.
- */
-static void polish_ir_emit_assign(struct cling_polish_ir *self,
-                                  struct utillib_vector *instrs) {
-
-  struct utillib_json_value *assignee, *assigner;
-  struct cling_ast_ir *ir, *prev;
-  struct cling_symbol_entry *entry;
-  char const *name;
-  int size;
-
-  /*
-   * The assignee maybe a temp or iden.
-   */
-  assignee = utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
-  assigner = utillib_vector_back(&self->opstack);
-  utillib_vector_pop_back(&self->opstack);
-  switch(assignee->kind) {
-    case UT_JSON_INT:
-      /*
-       * This is an address
-       */
-      ir=emit_ir(OP_STADR);
-      ir->stadr.value=assigner->as_int;
-      ir->stadr.addr=assignee->as_int;
-      prev=utillib_vector_back(instrs);
-      switch(prev->opcode) {
-        /*
-         * Get the size.
-         */
-        case OP_INDEX:
-          ir->size=prev->index.base_size;
-          break;
-        case OP_LDADR:
-          ir->size=prev->ldadr.size;
-          break;
-        default:
-          assert(false);
-      }
-      break;
-    case UT_JSON_OBJECT:
-      assert(utillib_json_object_at(assignee, "type")->as_size_t == SYM_IDEN);
-      value=utillib_json_object_at(assignee, "value");
-      assert(value);
-      entry=cling_symbol_table_find(self->global->symbol_table, name, CL_LEXICAL);
-      ir=emit_ir(OP_
-      ir=emit_ir(OP_STNAM);
-      ir->size=cling_type_to_size(entry->kind);
-      ir->name=name;
-      ir->value=assigner->as_int;
-      break;
-    default:
-      assert(false);
-  }
-  utillib_vector_push_back(instrs, ir);
-  polish_ir_maybe_release_temp(assignee);
-  polish_ir_maybe_release_temp(assigner);
-}
-
-/*
- * Assume every iden is rvalue and fix up
- * later in `polish_ir_emit_assign'.
- */
-static void polish_ir_emit_factor(struct cling_polish_ir *self,
-                                struct utillib_json_value const *object,
-                                struct utillib_vector *instrs) {
-  struct utillib_json_value const *type, *json_value;
+   
+static int emit_assign(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
+{
+  struct utillib_json_value const *lhs, *rhs, *value;
   struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
-  int size;
-  int value;
+  int rhs_value;
 
-  json_value = utillib_json_object_at(object, "value");
+  rhs=utillib_json_object_at(object, "rhs");
+  rhs_value=emit_expr(self, rhs);
+  lhs=utillib_json_object_at(object, "lhs");
+  value=utillib_json_object_at(lhs, "value");
+  if (value) {
+    /*
+     * Variable
+     */
+    entry=find_name(self, value->as_ptr);
+    if (entry->scope == 0) {
+      ir=emit_ir(OP_LDADR);
+      ir->ldadr.scope=0;
+      ir->ldadr.name=value->as_ptr;
+      ir->ldadr.temp=make_temp(self);
+      utillib_vector_push_back(self->instrs, ir);
+    }
+    ir=emit_ir(OP_STNAM);
+    ir->stnam.name=value;
+    ir->stnam.size=cling_type_to_size(entry->kind);
+    ir->stnam.value=rhs_value;
+  } else {
+    /*
+     * Array.
+     */
+    ir=emit_ir(OP_STADR);
+    ir->stadr.value=rhs_value;
+    ir->stadr.addr=emit_index(self, lhs, CL_LVALUE);
+    ir->stadr.size=cling_type_to_size(entry->array.base_type);
+  }
+  utillib_vector_push_back(self->instrs, ir);
+}
+
+/*
+ * object should be a token and treated as rvalue
+ */
+static int emit_rvalue(struct cling_ast_ir_global *self,
+                                struct utillib_json_value const *object) {
+  struct utillib_json_value const *type, *name;
+  struct cling_symbol_entry const *entry;
+  struct cling_ast_ir *ir;
+  int size, temp, value;
+
+  name = utillib_json_object_at(object, "value");
   type = utillib_json_object_at(object, "type");
   switch (type->as_size_t) {
   case SYM_IDEN:
-    entry = cling_symbol_table_find(self->global->symbol_table,
-                                    json_value->as_ptr, CL_LEXICAL);
+    entry = cling_symbol_table_find(self->symbol_table, name->as_ptr, CL_LEXICAL);
     switch (entry->kind) {
     case CL_CONST:
       size = cling_type_to_size(entry->constant.type);
@@ -575,13 +374,10 @@ static void polish_ir_emit_factor(struct cling_polish_ir *self,
       goto make_ldimm;
     case CL_ARRAY:
     case CL_FUNC:
+      goto make_ldadr;
     case CL_INT:
     case CL_CHAR:
-      /*
-       * Other idens are handled separatly.
-       */
-      utillib_vector_push_back(&self->opstack, object);
-      return;
+      goto make_ldnam;
     default:
       assert(false);
     }
@@ -591,169 +387,139 @@ static void polish_ir_emit_factor(struct cling_polish_ir *self,
   case SYM_INTEGER:
   case SYM_UINT:
     size = cling_symbol_to_size(type->as_size_t);
-    value = cling_symbol_to_immediate(type->as_size_t, json_value->as_ptr);
+    value = cling_symbol_to_immediate(type->as_size_t, name->as_ptr);
     goto make_ldimm;
   default:
     assert(false);
   }
+make_ldadr:
+  ir=emit_ir(OP_LDADR);
+  ir->ldadr.scope=entry->scope;
+  ir->ldadr.name=name->as_ptr;
+  ir->ldadr.temp=make_temp(self);
+  temp=ir->ldadr.temp;
+  goto done;
+
+make_ldnam:
+  ir=emit_ir(OP_LDNAM);
+  ir->ldnam.scope=entry->scope;
+  ir->ldnam.name=name->as_ptr;
+  ir->ldnam.temp=make_temp(self);
+  temp=ir->ldnam.temp;
+  goto done;
+
 make_ldimm:
   ir = emit_ir(OP_LDIMM);
   ir->ldimm.size = size;
   ir->ldimm.value = value;
-  ir->ldimm.temp=AST_IR_TEMP_ZERO;
+  ir->ldimm.temp=make_temp(self);
+  temp=ir->ldimm.temp;
   goto done;
 
 make_ldstr:
   ir = emit_ir(OP_LDSTR);
-  ir->ldstr.temp = AST_IR_TEMP_ZERO;
-  ir->ldstr.string = json_value->as_ptr;
+  ir->ldstr.string = name->as_ptr;
+  ir->ldstr.temp = make_temp(self);
+  temp=ir->ldstr.temp;
   goto done;
 
 done:
-  utillib_vector_push_back(instrs, ir);
-  utillib_vector_push_back(&self->opstack, &temp_zero);
-}
-
-static void cling_polish_ir_emit(struct cling_polish_ir *self,
-                                 struct utillib_vector *instrs) {
-
-  struct utillib_json_value const *object, *op, *type;
-  struct cling_symbol_entry const *entry;
-
-  UTILLIB_VECTOR_FOREACH(object, &self->stack) {
-    op = utillib_json_object_at(object, "op");
-    if (!op) {
-      polish_ir_emit_factor(self, object, instrs);
-      continue;      
-    }
-    switch (op->as_size_t) {
-    case SYM_RK:
-      polish_ir_emit_index(self, instrs);
-      break;
-    case SYM_RP:
-      polish_ir_emit_call(self, instrs);
-      break;
-    case SYM_EQ:
-      polish_ir_emit_assign(self, instrs);
-      break;
-    default:
-      /*
-       * polish_ir_emit_binary handles all the
-       * rest of cases.
-       */
-      polish_ir_emit_binary(self, op->as_size_t, instrs);
-      break;
-    }
-  }
-}
-
-static int polish_ir_result(struct cling_polish_ir const *self) {
-  struct utillib_json_value *result = utillib_vector_back(&self->opstack);
-  assert(result->kind == UT_JSON_INT);
-  return result->as_int;
-}
-
-static void cling_polish_ir_init(struct cling_polish_ir *self,
-                                 struct utillib_json_value const *root,
-                                 struct cling_ast_ir_global *global) {
-  self->global = global;
-  utillib_vector_init(&self->stack);
-  utillib_vector_init(&self->opstack);
-  polish_ir_post_order(self, root);
-}
-
-static void cling_polish_ir_destroy(struct cling_polish_ir *self) {
-  utillib_vector_destroy(&self->stack);
-  utillib_vector_destroy_owning(&self->opstack, polish_ir_maybe_release_temp);
+  utillib_vector_push_back(self->instrs, ir);
+  return temp;
 }
 
 /*
- * AST visitor functions.
+ * This function calls the above, so gets to the last
  */
-
-static void emit_statement(struct utillib_json_value const *self,
-                           struct cling_ast_ir_global *global,
-                           struct utillib_vector *instrs);
-
-static void emit_composite(struct utillib_json_value const *self,
-                           struct cling_ast_ir_global *global,
-                           struct utillib_vector *instrs);
+static int emit_expr(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
+{
+  struct utillib_json_value const *op;
+  op=utillib_json_object_at(object, "op");
+  if (!op) {
+    return emit_rvalue(self, object);
+  }
+  switch(op->as_size_t) {
+    case SYM_RK:
+      /*
+       * true for is_rvalue, emit_expr always
+       * gets called at rhs
+       */
+      return emit_index(self, object, CL_RVALUE);
+    case SYM_RP:
+      return emit_call(self, object);
+    case SYM_EQ:
+      return emit_assign(self, object);
+    default:
+      return emit_binary(self, op->as_size_t, object);
+  }
+}
 
 static void emit_scanf_stmt(struct utillib_json_value const *self,
                             struct cling_ast_ir_global *global,
                             struct utillib_vector *instrs) {
-  struct utillib_json_value *value, *arglist;
+  struct utillib_json_value *name, *arglist;
   struct utillib_json_value const *object;
   struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
-  int temp;
-  int size;
 
   arglist = utillib_json_object_at(self, "arglist");
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
-    value = utillib_json_object_at(object, "value");
-    entry = cling_symbol_table_find(global->symbol_table, value->as_ptr,
-                                    CL_LEXICAL);
-    temp = make_temp(global);
-    size = cling_type_to_size(entry->kind);
-    ir = emit_ir(OP_LOAD);
-    ir->load.name = value->as_ptr;
-    ir->load.size = size;
-    ir->load.is_rvalue = false;
-    ir->load.is_global = entry->scope == 0;
-    ir->load.temp = temp;
-    utillib_vector_push_back(instrs, ir);
-    ir = emit_ir(cling_type_to_read(entry->kind));
-    ir->read.temp = temp;
+    name=utillib_json_object_at(object, "value");
+    entry=find_name(global, name->as_ptr);
+    ir = emit_ir(OP_READ);
+    ir->read.temp = emit_expr(global, object);
+    ir->read.kind=cling_type_to_read(entry->kind);
     utillib_vector_push_back(instrs, ir);
   }
 }
 
+static int write_kind(struct utillib_json_value const *self, 
+    struct cling_ast_ir_global const *global)
+{
+  struct utillib_json_value const *json;
+  struct cling_symbol_entry const *entry;
+
+  json=utillib_json_object_at(self, "op");
+  if (json) { return OP_WRINT; }
+  json=utillib_json_object_at(self, "type");
+  switch(json->as_size_t) {
+    case SYM_CHAR:
+      return OP_WRCHR;
+    case SYM_INTEGER:
+      return OP_WRINT;
+    case SYM_STRING:
+      return OP_WRSTR;
+    case SYM_IDEN:
+      json=utillib_json_object_at(self, "value");
+      entry=find_name(global, json->as_ptr);
+      switch(entry->kind) {
+        case CL_INT:
+          return OP_WRINT;
+        case CL_CHAR:
+          return OP_WRCHR;
+        default:
+          /*
+           * TODO: OP_WRADR
+           */
+          return OP_WRINT;
+      }
+  }
+}
+
+  
 static void emit_printf_stmt(struct utillib_json_value const *self,
                              struct cling_ast_ir_global *global,
                              struct utillib_vector *instrs) {
   struct utillib_json_value const *arglist;
   struct utillib_json_value const *object;
-  int opcode;
   struct cling_ast_ir *ir;
-  struct cling_polish_ir polish_ir;
   arglist = utillib_json_object_at(self, "arglist");
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
-    cling_polish_ir_init(&polish_ir, object, global);
-    cling_polish_ir_emit(&polish_ir, instrs);
-    /*
-     * Hack: look at the precedent instruction to
-     * steal possible type so that we can have
-     * const char a='a'; printf(a);
-     * int b; b=1; printf(b);
-     * char c[10]; c[0]='a'; printf(c[0]);
-     * shows, 'a' 1 'a'.
-     */
-    ir = utillib_vector_back(instrs);
-    switch (ir->opcode) {
-    case OP_LDSTR:
-      opcode = OP_WRSTR;
-      break;
-    case OP_LDIMM:
-      opcode = cling_size_to_write(ir->ldimm.size);
-      break;
-    case OP_LOAD:
-      opcode = cling_size_to_write(ir->load.size);
-      break;
-    case OP_INDEX:
-      opcode = cling_size_to_write(ir->index.base_size);
-      break;
-    default:
-      /*
-       * Result of expression is int.
-       */
-      opcode = OP_WRINT;
-    }
-    ir = emit_ir(opcode);
-    ir->write.temp = polish_ir_result(&polish_ir);
+    ir = emit_ir(OP_WRITE);
+    ir->write.temp = emit_expr(global, self);
+    ir->write.kind=write_kind(self, global);
     utillib_vector_push_back(instrs, ir);
-    cling_polish_ir_destroy(&polish_ir);
   }
 }
 
@@ -787,7 +553,6 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    * to tricky_jmp.
    */
   struct cling_ast_ir *tricky_jump, *cond_test, *loop_jump;
-  struct cling_polish_ir polish_ir;
   int loop_jump_jta;
 
   init = utillib_json_object_at(self, "init");
@@ -795,8 +560,7 @@ static void emit_for_stmt(struct utillib_json_value const *self,
   step = utillib_json_object_at(self, "step");
   stmt = utillib_json_object_at(self, "stmt");
 
-  cling_polish_ir_init(&polish_ir, init, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
+  emit_expr(global, init);
   tricky_jump = emit_ir(OP_JMP);
   utillib_vector_push_back(instrs, tricky_jump);
   /*
@@ -805,18 +569,15 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    * which is also the beginning of cond_test.
    */
   loop_jump_jta = utillib_vector_size(instrs);
-  cling_polish_ir_destroy(&polish_ir);
 
   /*
    * cond.
    */
-  cling_polish_ir_init(&polish_ir, cond, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
   cond_test = emit_ir(OP_BEZ);
   /*
    * The result of cond is the judgement of cond_test.
    */
-  cond_test->bez.temp = polish_ir_result(&polish_ir);
+  cond_test->bez.temp = emit_expr(global, cond);
   utillib_vector_push_back(instrs, cond_test);
   /*
    * The JTA of tricky_jump is the next instr of
@@ -824,7 +585,6 @@ static void emit_for_stmt(struct utillib_json_value const *self,
    * body.
    */
   tricky_jump->jmp.addr = utillib_vector_size(instrs);
-  cling_polish_ir_destroy(&polish_ir);
 
   /*
    * body
@@ -834,8 +594,7 @@ static void emit_for_stmt(struct utillib_json_value const *self,
   /*
    * step
    */
-  cling_polish_ir_init(&polish_ir, step, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
+  emit_expr(global, step);
   /*
    * The JTA of cond_test is the next instr
    * of loop_jump.
@@ -844,11 +603,6 @@ static void emit_for_stmt(struct utillib_json_value const *self,
   loop_jump->jmp.addr = loop_jump_jta;
   utillib_vector_push_back(instrs, loop_jump);
   cond_test->bez.addr = utillib_vector_size(instrs);
-
-  /*
-   * Clean up
-   */
-  cling_polish_ir_destroy(&polish_ir);
 }
 
 /*
@@ -878,7 +632,6 @@ static void emit_for_stmt(struct utillib_json_value const *self,
 static void emit_switch_stmt(struct utillib_json_value const *self,
                              struct cling_ast_ir_global *global,
                              struct utillib_vector *instrs) {
-  struct cling_polish_ir polish_ir;
   struct utillib_json_value const *object, *case_clause, *expr;
   struct utillib_json_value const *value, *case_, *stmt, *type;
   struct cling_ast_ir *case_gaurd, *break_jump, *load_label;
@@ -894,8 +647,6 @@ static void emit_switch_stmt(struct utillib_json_value const *self,
   utillib_vector_init(&break_jumps);
   expr = utillib_json_object_at(self, "expr");
   case_clause = utillib_json_object_at(self, "cases");
-  cling_polish_ir_init(&polish_ir, expr, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
 
   UTILLIB_JSON_ARRAY_FOREACH(object, case_clause) {
     case_ = utillib_json_object_at(object, "case");
@@ -920,7 +671,7 @@ static void emit_switch_stmt(struct utillib_json_value const *self,
        */
       case_gaurd = emit_ir(OP_BNE);
       case_gaurd->bne.temp1 = loaded_const;
-      case_gaurd->bne.temp2 = polish_ir_result(&polish_ir);
+      case_gaurd->bne.temp2 = emit_expr(global, expr);
       utillib_vector_push_back(instrs, case_gaurd);
 
       /*
@@ -949,19 +700,14 @@ static void emit_switch_stmt(struct utillib_json_value const *self,
   }
 
   utillib_vector_destroy(&break_jumps);
-  cling_polish_ir_destroy(&polish_ir);
 }
 
 static void emit_expr_stmt(struct utillib_json_value const *self,
                            struct cling_ast_ir_global *global,
                            struct utillib_vector *instrs) {
   struct utillib_json_value const *expr;
-  struct cling_polish_ir polish_ir;
 
   expr = utillib_json_object_at(self, "expr");
-  cling_polish_ir_init(&polish_ir, expr, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
-  cling_polish_ir_destroy(&polish_ir);
 }
 
 /*
@@ -972,17 +718,13 @@ static void emit_return_stmt(struct utillib_json_value const *self,
                              struct cling_ast_ir_global *global,
                              struct utillib_vector *instrs) {
   struct utillib_json_value const *expr;
-  struct cling_polish_ir polish_ir;
   struct cling_ast_ir *ir;
 
   expr = utillib_json_object_at(self, "expr");
   ir = emit_ir(OP_RET);
   if (expr) {
-    cling_polish_ir_init(&polish_ir, expr, global);
-    cling_polish_ir_emit(&polish_ir, instrs);
     ir->ret.has_result = true;
-    ir->ret.result = polish_ir_result(&polish_ir);
-    cling_polish_ir_destroy(&polish_ir);
+    ir->ret.result = emit_expr(global, expr);
   } else {
     ir->ret.has_result = false;
   }
@@ -993,16 +735,13 @@ static void emit_if_stmt(struct utillib_json_value const *self,
                          struct cling_ast_ir_global *global,
                          struct utillib_vector *instrs) {
   struct utillib_json_value const *expr, *then_clause, *else_clause;
-  struct cling_polish_ir polish_ir;
   struct cling_ast_ir *skip_branch, *jump;
 
   expr = utillib_json_object_at(self, "expr");
-  cling_polish_ir_init(&polish_ir, expr, global);
-  cling_polish_ir_emit(&polish_ir, instrs);
 
   then_clause = utillib_json_object_at(self, "then");
   skip_branch = emit_ir(OP_BEZ);
-  skip_branch->bez.temp = polish_ir_result(&polish_ir);
+  skip_branch->bez.temp = emit_expr(global, expr);
   utillib_vector_push_back(instrs, skip_branch);
 
   emit_statement(then_clause, global, instrs);
@@ -1016,7 +755,6 @@ static void emit_if_stmt(struct utillib_json_value const *self,
   } else {
     skip_branch->bez.addr = utillib_vector_size(instrs);
   }
-  cling_polish_ir_destroy(&polish_ir);
 }
 
 static void emit_statement(struct utillib_json_value const *self,
@@ -1171,20 +909,18 @@ static void emit_composite(struct utillib_json_value const *self,
     }
 }
 
-static struct cling_ast_function *cling_ast_function_create(char const *name) {
+static struct cling_ast_function *ast_function_create(char const *name) {
   struct cling_ast_function *self = malloc(sizeof *self);
   self->name = name;
   self->temps = 0;
   utillib_vector_init(&self->instrs);
   utillib_vector_init(&self->init_code);
-  utillib_hashmap_init(&self->names, &mips_label_callback);
   return self;
 }
 
-static void cling_ast_function_destroy(struct cling_ast_function *self) {
+static void ast_function_destroy(struct cling_ast_function *self) {
   utillib_vector_destroy_owning(&self->instrs, cling_ast_ir_destroy);
   utillib_vector_destroy_owning(&self->init_code, cling_ast_ir_destroy);
-  utillib_hashmap_destroy_owning(&self->names, NULL, mips_label_destroy);
   free(self);
 }
 
@@ -1194,7 +930,7 @@ void cling_ast_program_init(struct cling_ast_program *self) {
 }
 
 void cling_ast_program_destroy(struct cling_ast_program *self) {
-  utillib_vector_destroy_owning(&self->funcs, cling_ast_function_destroy);
+  utillib_vector_destroy_owning(&self->funcs, ast_function_destroy);
   utillib_vector_destroy_owning(&self->init_code, cling_ast_ir_destroy);
 }
 
@@ -1213,8 +949,9 @@ static void emit_return_address(struct utillib_vector *instrs) {
  * Create an cling_ast_function from the func_node.
  */
 static struct cling_ast_function *
-cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
-                           struct cling_ast_ir_global *global) {
+ast_ir_emit_function(struct cling_ast_ir_global *global,
+    struct utillib_json_value const *func_node)
+{
   struct cling_ast_function *self;
   struct utillib_json_value const *name, *arglist, *arg, *comp;
   struct cling_symbol_entry const *entry;
@@ -1245,7 +982,7 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
    * const
    * var...
    */
-  self = cling_ast_function_create(name->as_ptr);
+  self = ast_function_create(name->as_ptr);
   ir = emit_ir(OP_DEFUNC);
   ir->defunc.name = name->as_ptr;
   ir->defunc.return_size = cling_type_to_size(entry->function.return_type);
@@ -1264,15 +1001,12 @@ cling_ast_ir_emit_function(struct utillib_json_value const *func_node,
   /*
    * instrs emision
    */
+  global->instrs=&self->instrs;
+  global->temps=0;
   emit_composite(comp, global, &self->instrs);
   emit_return_address(&self->instrs);
+  self->temps=global->temps;
   return self;
-}
-
-static inline void ast_ir_global_init(struct cling_ast_ir_global *self,
-                                      struct cling_symbol_table *symbol_table) {
-  self->temps = 0;
-  self->symbol_table = symbol_table;
 }
 
 void cling_ast_ir_emit_program(struct utillib_json_value const *self,
@@ -1282,7 +1016,7 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
   struct cling_ast_function *func;
   struct cling_ast_ir_global global;
 
-  ast_ir_global_init(&global, symbol_table);
+  global.symbol_table=symbol_table;
   /*
    * Enters these names to global-scope.
    */
@@ -1293,14 +1027,9 @@ void cling_ast_ir_emit_program(struct utillib_json_value const *self,
    * All functions.
    */
   UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
-    /*
-     * Clear the temps counter.
-     */
-    global.temps = 0;
     cling_symbol_table_enter_scope(symbol_table);
-    func = cling_ast_ir_emit_function(object, &global);
+    func = ast_ir_emit_function(&global, object);
     cling_symbol_table_leave_scope(symbol_table);
-    func->temps = global.temps;
     utillib_vector_push_back(&program->funcs, func);
   }
 }
