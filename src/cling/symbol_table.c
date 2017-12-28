@@ -68,9 +68,9 @@ static struct cling_symbol_entry *
 symbol_table_lexical_find(struct cling_symbol_table const *self,
                           char const *name) {
   struct cling_symbol_entry *entry;
-  if ((entry = utillib_hashmap_at(&self->local, name)))
+  if ((entry = utillib_hashmap_find(&self->local, name)))
     return entry;
-  return utillib_hashmap_at(&self->global, name);
+  return utillib_hashmap_find(&self->global, name);
 }
 
 static bool
@@ -102,12 +102,12 @@ struct cling_symbol_entry *
 cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
                         int scope_kind) {
   if (self->scope == 0 || scope_kind == CL_GLOBAL)
-    return utillib_hashmap_at(&self->global, name);
+    return utillib_hashmap_find(&self->global, name);
   switch (scope_kind) {
   case CL_LEXICAL:
     return symbol_table_lexical_find(self, name);
   case CL_LOCAL:
-    return utillib_hashmap_at(&self->local, name);
+    return utillib_hashmap_find(&self->local, name);
   }
 }
 

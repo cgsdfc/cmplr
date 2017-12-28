@@ -170,12 +170,12 @@ bool utillib_hashmap_exist_key(struct utillib_hashmap const *self,
                                void const *key);
 
 /**
- * \function utillib_hashmap_at
+ * \function utillib_hashmap_find
  * Searches for value corresponding to this `key'
  * and return the address of the value if it was found.
  * Returns `NULL' if not.
  */
-void *utillib_hashmap_at(struct utillib_hashmap const *self, void const *key);
+void *utillib_hashmap_find(struct utillib_hashmap const *self, void const *key);
 /**
  * \function utillib_hashmap_size
  * Counts the elements and return the number of them.
