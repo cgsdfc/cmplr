@@ -152,9 +152,9 @@ add_library(cling
   ./src/cling/opg_parser.c
   ./src/cling/mips.c
   ./src/cling/misc.c
-  ./src/cling/lcse.c
-  ./src/cling/basic_block.c
-  ./src/cling/optimize.c
+# ./src/cling/lcse.c
+# ./src/cling/basic_block.c
+# ./src/cling/optimize.c
   ./src/cling/mips_interp.c
   )	
 target_link_libraries(cling utillib)
