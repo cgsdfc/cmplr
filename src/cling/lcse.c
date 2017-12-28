@@ -134,6 +134,7 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
     case OP_GT:
     case OP_GE:
       return interchangable_compare(lhs, rhs);
+    case OP_INDEX:
     case OP_DIV:
     case OP_SUB:
       return binary_compare(lhs, rhs);
@@ -272,6 +273,11 @@ static void translate(struct cling_lcse_optimizer *self,
 
   lcse_ir->opcode = ast_ir->opcode;
   switch (ast_ir->opcode) {
+    case OP_INDEX:
+      lcse_ir->kind=LCSE_BINARY;
+      lcse_ir->binary.temp1=lookup_variable(self, ast_ir->index.array_addr);
+      lcse_ir->binary.temp2=lookup_variable(self, ast_ir->index.index_result);
+      break;
   case OP_LT:
   case OP_LE:
   case OP_GT:
@@ -314,6 +320,18 @@ static void translate(struct cling_lcse_optimizer *self,
     lcse_ir->store.value = value;
     lcse_ir->kind = LCSE_STORE;
     break;
+  case OP_STNAM:
+    lcse_ir->store.address=lookup_named_address(self, ast_ir->stnam.name);
+    lcse_ir->store.value=lookup_variable(self, ast_ir->stnam.value);
+    lcse_ir->kind=LCSE_STORE;
+    break;
+  case OP_STADR:
+    lcse_ir->store.address=lookup_variable(self, ast_ir->stadr.addr);
+    lcse_ir->stadr.value=lookup_variable(self, 
+    lcse_ir->kind=LCSE_STORE;
+
+
+
   default:
     assert(false);
   }

@@ -1326,6 +1326,11 @@ static void mips_emit_stnam(struct cling_mips_function *self,
     struct cling_ast_ir const *ast_ir) {
   uint8_t regid=mips_function_read(self, ast_ir->stnam.value);
   struct cling_mips_name *name=utillib_hashmap_find(&self->names, ast_ir->stnam.name);
+  if (!name) {
+    puts(ast_ir->stnam.name);
+    exit(0);
+  }
+  assert(name);
   mips_function_push_back(self, ast_ir->stnam.size == MIPS_WORD_SIZE 
       ? mips_sw(regid, name->offset, MIPS_SP)
       : mips_sb(regid, name->offset, MIPS_SP));

@@ -98,7 +98,7 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
 
   switch (self->opcode) {
   case OP_NOP:
-    fputs("nop", file);
+    fputs("nop\n", file);
     break;
   case OP_DEFCON:
     size_name = size_tostring(self->defcon.size);
@@ -129,7 +129,7 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
     break;
   case OP_CAL:
     for (int i=0; i<self->call.argc; ++i) {
-      fprintf(file, "push t%d\n", self->call.argv[i]);
+      fprintf(file, "push t%d; ", self->call.argv[i]);
     }
     if (self->call.has_result)
       fprintf(file, "t%d = call %s\n", self->call.result, self->call.name);
@@ -157,10 +157,10 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
       fprintf(file, "ret (%d)\n", self->ret.addr);
     break;
   case OP_READ:
-    fprintf(file, "read t%d\n", self->read.temp);
+    fprintf(file, "read t%d (%d)\n", self->read.temp, self->read.kind);
     break;
   case OP_WRITE:
-    fprintf(file, "write t%d\n", self->write.temp);
+    fprintf(file, "write t%d (%d)\n", self->write.temp, self->write.kind);
     break;
   case OP_LDSTR:
     fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
@@ -221,6 +221,10 @@ static inline struct cling_symbol_entry * find_name(struct cling_ast_ir_global c
   return cling_symbol_table_find(self->symbol_table, name, CL_LEXICAL);
 }
 
+static inline int last_temp(struct cling_ast_ir_global const *self) {
+  return self->temps-1;
+}
+
 static inline int make_temp(struct cling_ast_ir_global *self) {
   return self->temps++;
 }
@@ -243,27 +247,26 @@ static int load_array(struct cling_ast_ir_global *self, char const *name, int *b
 /*
  * Index should only compute _addr_
  */
-static int emit_index(struct cling_ast_ir_global *self,
-    struct utillib_json_value const *object, int vflag)
+static int emit_index(struct cling_ast_ir_global *self, 
+    struct utillib_json_value const *object, int *base_size, int vflag)
 {
   struct utillib_json_value const *lhs, *rhs, *value;
   struct cling_ast_ir *ir;
-  int base_size;
 
   lhs=utillib_json_object_at(object, "lhs"); 
   rhs=utillib_json_object_at(object, "rhs");
   value=utillib_json_object_at(lhs, "value");
   ir = emit_ir(OP_INDEX);
-  ir->index.array_addr=load_array(self, value->as_ptr, &base_size);
-  ir->index.base_size=base_size;
+  ir->index.array_addr=load_array(self, value->as_ptr, base_size);
+  ir->index.base_size=*base_size;
   ir->index.index_result=emit_expr(self, rhs);
   ir->index.result = make_temp(self);
   utillib_vector_push_back(self->instrs, ir);
 
   if (vflag == CL_RVALUE) {
     ir=emit_ir(OP_DEREF);
-    ir->deref.addr=self->temps-1;
-    ir->deref.size=base_size;
+    ir->deref.addr=last_temp(self);
+    ir->deref.size=*base_size;
     utillib_vector_push_back(self->instrs, ir);
     return ir->deref.addr;
   }
@@ -276,6 +279,7 @@ static int emit_call(struct cling_ast_ir_global *self, struct utillib_json_value
   struct utillib_json_value *value; 
   struct cling_symbol_entry const *entry;
   struct cling_ast_ir *ir;
+  int temp;
 
   lhs=utillib_json_object_at(object, "lhs");
   rhs=utillib_json_object_at(object, "rhs");
@@ -292,10 +296,13 @@ static int emit_call(struct cling_ast_ir_global *self, struct utillib_json_value
   if (entry->function.return_type != CL_VOID) {
     ir->call.has_result = true;
     ir->call.result=make_temp(self);
+    temp=ir->call.result;
   } else {
     ir->call.has_result = false;
+    temp=0;
   }
   utillib_vector_push_back(self->instrs, ir);
+  return temp;
 }
 
 static int emit_binary(struct cling_ast_ir_global *self, size_t op, struct utillib_json_value const *object)
@@ -313,7 +320,7 @@ static int emit_binary(struct cling_ast_ir_global *self, size_t op, struct utill
   return ir->binop.result;
 }
    
-static int emit_assign(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
+static void emit_assign(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
 {
   struct utillib_json_value const *lhs, *rhs, *value;
   struct cling_symbol_entry const *entry;
@@ -330,14 +337,26 @@ static int emit_assign(struct cling_ast_ir_global *self, struct utillib_json_val
      */
     entry=find_name(self, value->as_ptr);
     if (entry->scope == 0) {
+      /*
+       * Global Variable
+       */
       ir=emit_ir(OP_LDADR);
       ir->ldadr.scope=0;
       ir->ldadr.name=value->as_ptr;
       ir->ldadr.temp=make_temp(self);
       utillib_vector_push_back(self->instrs, ir);
+      ir=emit_ir(OP_STADR);
+      ir->stadr.addr=last_temp(self);
+      ir->stadr.value=rhs_value;
+      ir->stadr.size=cling_type_to_size(entry->kind);
+      utillib_vector_push_back(self->instrs, ir);
+      return;
     }
+    /*
+     * Local Variable
+     */
     ir=emit_ir(OP_STNAM);
-    ir->stnam.name=value;
+    ir->stnam.name=value->as_ptr;
     ir->stnam.size=cling_type_to_size(entry->kind);
     ir->stnam.value=rhs_value;
   } else {
@@ -346,8 +365,7 @@ static int emit_assign(struct cling_ast_ir_global *self, struct utillib_json_val
      */
     ir=emit_ir(OP_STADR);
     ir->stadr.value=rhs_value;
-    ir->stadr.addr=emit_index(self, lhs, CL_LVALUE);
-    ir->stadr.size=cling_type_to_size(entry->array.base_type);
+    ir->stadr.addr=emit_index(self, lhs, &ir->stadr.size, CL_LVALUE);
   }
   utillib_vector_push_back(self->instrs, ir);
 }
@@ -379,6 +397,7 @@ static int emit_rvalue(struct cling_ast_ir_global *self,
     case CL_CHAR:
       goto make_ldnam;
     default:
+      puts(cling_symbol_entry_kind_tostring(entry->kind));
       assert(false);
     }
   case SYM_STRING:
@@ -390,6 +409,7 @@ static int emit_rvalue(struct cling_ast_ir_global *self,
     value = cling_symbol_to_immediate(type->as_size_t, name->as_ptr);
     goto make_ldimm;
   default:
+    puts(cling_symbol_kind_tostring(type->as_size_t));
     assert(false);
   }
 make_ldadr:
@@ -434,6 +454,7 @@ done:
 static int emit_expr(struct cling_ast_ir_global *self, struct utillib_json_value const *object)
 {
   struct utillib_json_value const *op;
+  int base_size;
   op=utillib_json_object_at(object, "op");
   if (!op) {
     return emit_rvalue(self, object);
@@ -444,11 +465,12 @@ static int emit_expr(struct cling_ast_ir_global *self, struct utillib_json_value
        * true for is_rvalue, emit_expr always
        * gets called at rhs
        */
-      return emit_index(self, object, CL_RVALUE);
+      return emit_index(self, object, &base_size, CL_RVALUE);
     case SYM_RP:
       return emit_call(self, object);
     case SYM_EQ:
-      return emit_assign(self, object);
+      emit_assign(self, object);
+      return 0;
     default:
       return emit_binary(self, op->as_size_t, object);
   }
@@ -466,8 +488,13 @@ static void emit_scanf_stmt(struct utillib_json_value const *self,
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     name=utillib_json_object_at(object, "value");
     entry=find_name(global, name->as_ptr);
+    ir=emit_ir(OP_LDADR);
+    ir->ldadr.scope=entry->scope;
+    ir->ldadr.name=name->as_ptr;
+    ir->ldadr.temp=make_temp(global);
+    utillib_vector_push_back(instrs, ir);
     ir = emit_ir(OP_READ);
-    ir->read.temp = emit_expr(global, object);
+    ir->read.temp = last_temp(global);
     ir->read.kind=cling_type_to_read(entry->kind);
     utillib_vector_push_back(instrs, ir);
   }
@@ -485,6 +512,7 @@ static int write_kind(struct utillib_json_value const *self,
   switch(json->as_size_t) {
     case SYM_CHAR:
       return OP_WRCHR;
+    case SYM_UINT:
     case SYM_INTEGER:
       return OP_WRINT;
     case SYM_STRING:
@@ -503,6 +531,7 @@ static int write_kind(struct utillib_json_value const *self,
            */
           return OP_WRINT;
       }
+    default: assert(false);
   }
 }
 
@@ -517,8 +546,8 @@ static void emit_printf_stmt(struct utillib_json_value const *self,
 
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     ir = emit_ir(OP_WRITE);
-    ir->write.temp = emit_expr(global, self);
-    ir->write.kind=write_kind(self, global);
+    ir->write.temp = emit_expr(global, object);
+    ir->write.kind=write_kind(object, global);
     utillib_vector_push_back(instrs, ir);
   }
 }
@@ -702,12 +731,10 @@ static void emit_switch_stmt(struct utillib_json_value const *self,
   utillib_vector_destroy(&break_jumps);
 }
 
-static void emit_expr_stmt(struct utillib_json_value const *self,
+inline static void emit_expr_stmt(struct utillib_json_value const *self,
                            struct cling_ast_ir_global *global,
                            struct utillib_vector *instrs) {
-  struct utillib_json_value const *expr;
-
-  expr = utillib_json_object_at(self, "expr");
+  emit_expr(global,  utillib_json_object_at(self, "expr"));
 }
 
 /*
