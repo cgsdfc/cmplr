@@ -911,7 +911,6 @@ static void emit_composite(struct cling_ast_ir_global *self,
 static struct cling_ast_function *ast_function_create(char const *name) {
   struct cling_ast_function *self = malloc(sizeof *self);
   self->name = name;
-  self->temps = 0;
   utillib_vector_init(&self->instrs);
   utillib_vector_init(&self->init_code);
   return self;
@@ -970,6 +969,8 @@ ast_ir_emit_function(struct cling_ast_ir_global *global,
    * Attention! maybe_insert_decls must come
    * before maybe_emit_decls for all those symbols
    * to be reachable!
+   * FIXME: enhance the symbol_table so that every local
+   * scope is retained and need no reinsertion
    */
   maybe_insert_decls(comp, global->symbol_table);
   cling_symbol_table_insert_arglist(global->symbol_table, arglist);
@@ -984,6 +985,10 @@ ast_ir_emit_function(struct cling_ast_ir_global *global,
   self = ast_function_create(name->as_ptr);
   ir = emit_ir(OP_DEFUNC);
   ir->defunc.name = name->as_ptr;
+  /*
+   * FIXME: unify the type and size with type-system so all the convertor
+   * disappear
+   */
   ir->defunc.return_size = cling_type_to_size(entry->function.return_type);
   utillib_vector_push_back(&self->init_code, ir);
   UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
@@ -1009,29 +1014,23 @@ ast_ir_emit_function(struct cling_ast_ir_global *global,
   return self;
 }
 
-void cling_ast_ir_emit_program(struct utillib_json_value const *self,
-                               struct cling_symbol_table *symbol_table,
-                               struct cling_ast_program *program) {
-  struct utillib_json_value const *func_decls, *object;
-  struct cling_ast_function *func;
+void cling_ast_ir_emit_program(struct cling_ast_program *self,
+                               struct utillib_json_value const *object,
+                               struct cling_symbol_table *symbol_table) {
   struct cling_ast_ir_global global;
+  struct utillib_json_value const *func_decls, *func_node;
+  struct cling_ast_function *ast_func;
 
   global.symbol_table=symbol_table;
-  /*
-   * Enters these names to global-scope.
-   */
-  global.instrs = &program->init_code;
-  maybe_emit_decls(&global, self);
-  func_decls = utillib_json_object_at(self, "func_decls");
-
-  /*
-   * All functions.
-   */
-  UTILLIB_JSON_ARRAY_FOREACH(object, func_decls) {
+  global.instrs = &self->init_code;
+  maybe_emit_decls(&global, object);
+  func_decls = utillib_json_object_at(object, "func_decls");
+   
+  UTILLIB_JSON_ARRAY_FOREACH(func_node, func_decls) {
     cling_symbol_table_enter_scope(symbol_table);
-    func = ast_ir_emit_function(&global, object);
+    ast_func = ast_ir_emit_function(&global, func_node);
     cling_symbol_table_leave_scope(symbol_table);
-    utillib_vector_push_back(&program->funcs, func);
+    utillib_vector_push_back(&self->funcs, ast_func);
   }
 }
 
