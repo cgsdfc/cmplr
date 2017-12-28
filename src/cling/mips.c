@@ -730,9 +730,8 @@ mips_function_max_args(struct cling_ast_function const *ast_func) {
     if (ast_ir->opcode != OP_CAL)
       continue;
     arg_size= ast_ir->call.argc;
-    if (arg_size > arg_size)
+    if (arg_size > max_args)
         max_args = arg_size;
-      arg_size=0;
   }
   return max_args << 2;
 }
@@ -1291,14 +1290,14 @@ static void mips_emit_ldnam(struct cling_mips_function *self,
       ? mips_lw(regid, named_var->offset, MIPS_SP)
       : mips_lb(regid, named_var->offset, MIPS_SP));
     return;
-    /*
-     * Global Variable
-     */
   }
+  /*
+   * Global Variable needs a deref
+   */
   mips_function_push_back(self, mips_la(regid, ast_ir->ldnam.name));
   mips_function_push_back(self, ast_ir->ldnam.size == MIPS_WORD_SIZE?
-      mips_lw(regid, 0, MIPS_SP):
-      mips_lb(regid, 0, MIPS_SP));
+      mips_lw(regid, 0, regid):
+      mips_lb(regid, 0, regid));
 }
 
 static void mips_emit_ldadr(struct cling_mips_function *self,
@@ -1365,7 +1364,7 @@ static void mips_emit_read(struct cling_mips_function *self,
   mips_function_push_back(self, mips_li(MIPS_V0, syscall));
   mips_function_push_back(self, &cling_mips_syscall);
   regid = mips_function_write(self, ast_ir->read.temp);
-  mips_function_push_back(self, ast_ir->opcode == OP_RDINT
+  mips_function_push_back(self, ast_ir->read.kind == OP_RDINT
       ? mips_sw(MIPS_V0, 0, regid)
       : mips_sb(MIPS_V0, 0, regid));
 }
@@ -1426,12 +1425,12 @@ static int mips_emit_call(struct cling_mips_function *self,
     mips_function_push_back(self, ir);
   }
   mips_function_push_back(self, mips_jal(ast_ir->call.name));
+  mips_temp_context(self, MIPS_LOAD);
+  mips_para_context(self, MIPS_LOAD);
   if (ast_ir->call.has_result) {
     regid = mips_function_write(self, ast_ir->call.result);
     mips_function_push_back(self, mips_move(regid, MIPS_V0));
   }
-  mips_temp_context(self, MIPS_LOAD);
-  mips_para_context(self, MIPS_LOAD);
 }
 
 
@@ -1471,8 +1470,6 @@ static void mips_function_instrs(struct cling_mips_function *self,
         relop = ast_ir;
         break;
       case OP_RET:
-        if (ast_ir_useless_jump(ast_ir, ast_pc))
-          break;
         mips_emit_ret(self, ast_ir);
         break;
       case OP_BEZ:

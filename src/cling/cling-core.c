@@ -104,8 +104,10 @@ void cling_backend_destroy(struct cling_backend *self)
 void cling_backend_codegen(struct cling_backend *self,
                            struct cling_option const *option,
                            struct cling_frontend *frontend) {
-  cling_ast_ir_emit_program(frontend->parser.root, option,
-                            &frontend->symbol_table, &self->ast_program);
+  cling_ast_ir_emit_program(&self->ast_program,
+      option,
+      frontend->parser.root,
+      &frontend->symbol_table);
   cling_mips_program_emit(&self->mips_program, &self->ast_program);
 }
 

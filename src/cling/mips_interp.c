@@ -69,10 +69,11 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
     memblk_array[index]=memblk;
   }
   index=memoffset(address);
-  if (index >= MIPS_MEMBLK_SIZE-4) {
-   self->error=MIPS_EC_INDEX;
-   return NULL;
-  } 
+  /* if (index >= MIPS_MEMBLK_SIZE-4) { */
+  /*   printf("%u\n", index); */
+  /*  self->error=MIPS_EC_INDEX; */
+  /*  return NULL; */
+  /* } */ 
   return memblk->mem + index;
 }
 

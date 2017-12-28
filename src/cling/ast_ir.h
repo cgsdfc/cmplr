@@ -72,18 +72,6 @@ enum {
 };
 
 /*
- * Holds global information
- * that ast_ir need to access.
- * Notes the symbol_table will
- * be reentered.
- */
-struct cling_ast_ir_global {
-  struct cling_symbol_table *symbol_table;
-  struct utillib_vector *instrs;
-  unsigned int temps;
-};
-
-/*
  * Opposed to __cdecl, MIPS requires the first argument be
  * accessed from the top of the stack and so on.
  * +---------+
@@ -273,6 +261,19 @@ struct cling_ast_ir {
 };
 
 /*
+ * Holds global information
+ * that ast_ir need to access.
+ * Notes the symbol_table will
+ * be reentered.
+ */
+struct cling_ast_ir_global {
+  struct cling_option const *option;
+  struct cling_symbol_table *symbol_table;
+  struct utillib_vector *instrs;
+  unsigned int temps;
+};
+
+/*
  * Holder of its own instrs.
  * Basic unit of code.
  */
@@ -297,6 +298,7 @@ void cling_ast_program_init(struct cling_ast_program *self);
 void cling_ast_program_destroy(struct cling_ast_program *self);
 
 void cling_ast_ir_emit_program(struct cling_ast_program *self,
+    struct cling_option const *option,
                                struct utillib_json_value const *object,
                                struct cling_symbol_table *symbol_table);
 

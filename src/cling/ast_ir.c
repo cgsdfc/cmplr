@@ -394,7 +394,6 @@ static int emit_rvalue(struct cling_ast_ir_global *self,
     case CL_CHAR:
       goto make_ldnam;
     default:
-      puts(cling_symbol_entry_kind_tostring(entry->kind));
       assert(false);
     }
   case SYM_STRING:
@@ -507,7 +506,6 @@ static int write_kind(struct cling_ast_ir_global const *self,
   switch(json->as_size_t) {
     case SYM_CHAR:
       return OP_WRCHR;
-    case SYM_UINT:
     case SYM_INTEGER:
       return OP_WRINT;
     case SYM_STRING:
@@ -605,8 +603,8 @@ static void emit_for_stmt(struct cling_ast_ir_global *self,
    * cond_test, which is also the beginning of
    * body.
    */
-  if (!global->option->no_tricky_jump) {
-    tricky_jump->jmp.addr = utillib_vector_size(instrs);
+  if (!self->option->no_tricky_jump) {
+    tricky_jump->jmp.addr = utillib_vector_size(self->instrs);
   }
 
   /*
@@ -1019,6 +1017,7 @@ ast_ir_emit_function(struct cling_ast_ir_global *global,
 }
 
 void cling_ast_ir_emit_program(struct cling_ast_program *self,
+    struct cling_option const *option,
                                struct utillib_json_value const *object,
                                struct cling_symbol_table *symbol_table) {
   struct cling_ast_ir_global global;
@@ -1027,6 +1026,8 @@ void cling_ast_ir_emit_program(struct cling_ast_program *self,
 
   global.symbol_table=symbol_table;
   global.instrs = &self->init_code;
+  global.option=option;
+
   maybe_emit_decls(&global, object);
   func_decls = utillib_json_object_at(object, "func_decls");
    
