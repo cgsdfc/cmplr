@@ -40,6 +40,7 @@ struct cling_lcse_optimizer {
   struct utillib_hashmap operations;
   struct utillib_hashmap names;
   struct utillib_hashmap values;
+  unsigned int variables_size;
   int *variables;
   unsigned int *address_map;
 };
@@ -50,21 +51,9 @@ struct cling_lcse_value {
 };
 
 enum {
-  /*
-   * We do not optimize call and index.
-   */
-  /*
-   * ldadr
-   */
-  LCSE_LOAD_LVALUE,
-  /*
-   * ldnam
-   */
-  LCSE_LOAD_RVALUE,
+  LCSE_LOAD_ADDR,
+  LCSE_LOAD_VALUE,
   LCSE_BINARY,
-  /*
-   * stnam, stadr, deref
-   */
   LCSE_STORE,
   LCSE_UNARY,
 };
@@ -82,11 +71,11 @@ struct cling_lcse_ir {
       char const *name;
       int scope;
       int address;
-    } load_lvalue;
+    } load_addr;
     struct {
       int value;
       int scope;
-    } load_rvalue;
+    } load_value;
     struct {
       int value;
       int address;

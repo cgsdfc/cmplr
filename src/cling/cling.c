@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
   cling_backend_init(&backend);
   cling_backend_codegen(&backend, &option, &frontend);
   cling_backend_optimize(&backend);
+  cling_backend_dump_ast_ir(&backend, stdout);
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
   return 0;

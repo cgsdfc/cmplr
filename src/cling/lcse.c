@@ -82,27 +82,27 @@ static int interchangable_compare(struct cling_lcse_ir const *lhs,
 }
 
 /*
- * load_lvalue: name scope
+ * load_addr: name scope
  */
-static int load_lvalue_compare(struct cling_lcse_ir const *lhs,
+static int load_addr_compare(struct cling_lcse_ir const *lhs,
                                struct cling_lcse_ir const *rhs) {
   if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
     return 1;
-  if (0 == strcmp(lhs->load_lvalue.name, rhs->load_lvalue.name) &&
-      lhs->load_lvalue.scope == rhs->load_lvalue.scope)
+  if (0 == strcmp(lhs->load_addr.name, rhs->load_addr.name) &&
+      lhs->load_addr.scope == rhs->load_addr.scope)
     return 0;
   return 1;
 }
 
 /*
- * load_rvalue: value scope
+ * load_value: value scope
  */
-static int load_rvalue_compare(struct cling_lcse_ir const *lhs,
+static int load_value_compare(struct cling_lcse_ir const *lhs,
                                struct cling_lcse_ir const *rhs) {
   if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
     return 1;
-  if (lhs->load_rvalue.value == rhs->load_rvalue.value && 
-      lhs->load_rvalue.scope == rhs->load_rvalue.scope)
+  if (lhs->load_value.value == rhs->load_value.value && 
+      lhs->load_value.scope == rhs->load_value.scope)
     return 0;
   return 1;
 }
@@ -151,10 +151,10 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
     }
   case LCSE_UNARY:
     return unary_compare(lhs, rhs);
-  case LCSE_LOAD_LVALUE:
-    return load_lvalue_compare(lhs, rhs);
-  case LCSE_LOAD_RVALUE:
-    return load_rvalue_compare(lhs, rhs);
+  case LCSE_LOAD_ADDR:
+    return load_addr_compare(lhs, rhs);
+  case LCSE_LOAD_VALUE:
+    return load_value_compare(lhs, rhs);
   case LCSE_STORE:
     return store_compare(lhs, rhs);
   default:
@@ -169,11 +169,11 @@ static size_t lcse_ir_hash(struct cling_lcse_ir const *self) {
     return hash + self->unary.operand;
   case LCSE_BINARY:
     return hash + self->binary.temp1 + self->binary.temp2;
-  case LCSE_LOAD_LVALUE:
-    return hash + self->load_lvalue.scope +
-           mysql_strhash(self->load_lvalue.name);
-  case LCSE_LOAD_RVALUE:
-    return hash + self->load_rvalue.value + self->load_rvalue.scope;
+  case LCSE_LOAD_ADDR:
+    return hash + self->load_addr.scope +
+           mysql_strhash(self->load_addr.name);
+  case LCSE_LOAD_VALUE:
+    return hash + self->load_value.value + self->load_value.scope;
   case LCSE_STORE:
     return hash + self->store.value + self->store.address;
   default:
@@ -188,7 +188,6 @@ static const struct utillib_hashmap_callback lcse_ir_callback = {
 /*
  * cling_lcse_value an address-value pair.
  */
-
 static struct cling_lcse_value *lcse_value_create(unsigned int address,
                                                   unsigned int value) {
   struct cling_lcse_value *self = malloc(sizeof *self);
@@ -263,6 +262,7 @@ static void update_value(struct cling_lcse_optimizer *self, unsigned int address
 
 static unsigned int lookup_variable(struct cling_lcse_optimizer *self,
                                     unsigned int temp) {
+  assert(temp < self->variables_size);
   int var = self->variables[temp];
   if (var != -1)
     return var;
@@ -307,14 +307,14 @@ static void translate(struct cling_lcse_optimizer *self,
     break;
   case OP_LDNAM:
       address = lookup_named_address(self, ast_ir->ldnam.name);
-      lcse_ir->load_rvalue.value = lookup_value(self, address);
-      lcse_ir->load_rvalue.scope=ast_ir->ldnam.scope;
-      lcse_ir->kind = LCSE_LOAD_RVALUE;
+      lcse_ir->load_value.value = lookup_value(self, address);
+      lcse_ir->load_value.scope=ast_ir->ldnam.scope;
+      lcse_ir->kind = LCSE_LOAD_VALUE;
       break;
   case OP_LDADR:
-      lcse_ir->load_lvalue.name = ast_ir->ldadr.name;
-      lcse_ir->load_lvalue.scope = ast_ir->ldadr.scope;
-      lcse_ir->kind = LCSE_LOAD_LVALUE;
+      lcse_ir->load_addr.name = ast_ir->ldadr.name;
+      lcse_ir->load_addr.scope = ast_ir->ldadr.scope;
+      lcse_ir->kind = LCSE_LOAD_ADDR;
     break;
   case OP_STNAM:
     lcse_ir->store.address=lookup_named_address(self, ast_ir->stnam.name);
@@ -343,6 +343,10 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
 
   new_ir = utillib_hashmap_find(&self->operations, lcse_ir);
   if (new_ir) {
+    /*
+     * If this new_ir already existed, map the temp in ast_ir
+     * to those in new_ir.
+     */
     switch (new_ir->kind) {
     case LCSE_UNARY:
       /*
@@ -353,11 +357,11 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
     case LCSE_BINARY:
       self->variables[ast_ir->binop.result] = new_ir->binary.result;
       break;
-    case LCSE_LOAD_LVALUE:
-      self->variables[ast_ir->ldadr.temp] = new_ir->load_lvalue.address;
+    case LCSE_LOAD_ADDR:
+      self->variables[ast_ir->ldadr.temp] = new_ir->load_addr.address;
       break;
-    case LCSE_LOAD_RVALUE:
-      self->variables[ast_ir->ldnam.temp] = new_ir->load_rvalue.value;
+    case LCSE_LOAD_VALUE:
+      self->variables[ast_ir->ldnam.temp] = new_ir->load_value.value;
       break;
     case LCSE_STORE:
       /*
@@ -369,8 +373,7 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
   }
 
   /*
-   * Lookup others part of a lcse_ir and fill the ast_ir based
-   * on lcse_ir.
+   * Ops, new stuff!
    */
   new_ir = malloc(sizeof *new_ir);
   memcpy(new_ir, lcse_ir, sizeof *new_ir);
@@ -378,18 +381,17 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
   case LCSE_UNARY:
     switch(new_ir->opcode) {
       case OP_LDIMM:
-        new_ir->unary.result=self->var_count++;
-        self->variables[ast_ir->ldimm.temp]=new_ir->unary.result;
-        ast_ir->ldimm.temp=new_ir->unary.result;
+        ast_ir->ldimm.temp=lookup_variable(self, ast_ir->ldimm.temp);
+        new_ir->unary.result=ast_ir->ldimm.temp;
         break;
       default: assert(false);
     }
     break;
   case LCSE_BINARY:
-    new_ir->binary.result =lookup_variable(self, ast_ir->binop.result); 
-    ast_ir->binop.result = new_ir->binary.result;
+    ast_ir->binop.result=lookup_variable(self, ast_ir->binop.result); 
     ast_ir->binop.temp1=new_ir->binary.temp1;
     ast_ir->binop.temp2=new_ir->binary.temp2;
+    new_ir->binary.result =ast_ir->binop.result;
     break;
   case LCSE_STORE:
     /*
@@ -410,13 +412,16 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
     default: assert(false);
     }
     break;
-  case LCSE_LOAD_LVALUE:
-    new_ir->load_lvalue.address =lookup_variable(self, ast_ir->ldadr.temp); 
-    ast_ir->ldadr.temp = new_ir->load_lvalue.address;
+  case LCSE_LOAD_ADDR:
+    ast_ir->ldadr.temp=lookup_variable(self, ast_ir->ldadr.temp);
+    new_ir->load_addr.address=ast_ir->ldadr.temp;
     break;
-  case LCSE_LOAD_RVALUE:
-    self->variables[ast_ir->ldnam.temp]=new_ir->load_rvalue.value;
-    ast_ir->ldnam.temp = new_ir->load_rvalue.value;
+  case LCSE_LOAD_VALUE:
+    /*
+     * Tricky HERE!
+     */
+    self->variables[ast_ir->ldnam.temp]=new_ir->load_value.value;
+    ast_ir->ldnam.temp = new_ir->load_value.value;
     break;
   default:
     assert(false);
@@ -431,7 +436,7 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
   bool add_instr;
   struct cling_ast_ir *ast_ir;
   struct cling_lcse_ir lcse_ir;
-  int value, temp;
+  int value, temp, argc;
 
   for (int i = block->begin; i < block->end; ++i) {
     add_instr = true;
@@ -477,6 +482,9 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
       }
       break;
     case OP_CAL:
+      for (argc=0; argc<ast_ir->call.argc; ++argc) {
+        ast_ir->call.argv[argc]=lookup_variable(self, ast_ir->call.argv[argc]);
+      }
       if (ast_ir->call.has_result) {
         value = lookup_variable(self, ast_ir->call.result);
         ast_ir->call.result = value;
@@ -489,13 +497,7 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
       ast_ir->read.temp = lookup_variable(self, ast_ir->read.temp);
       break;
     case OP_LDSTR:
-      /*
-       * We always use 0 to ldstr since string can only be printed
-       * and never produces new value.
-       */
-      temp = ast_ir->ldstr.temp;
-      self->variables[temp] = LCSE_TEMP_ZERO;
-      ast_ir->ldstr.temp = LCSE_TEMP_ZERO;
+      ast_ir->ldstr.temp = lookup_variable(self, ast_ir->ldstr.temp);
       break;
     case OP_WRITE:
       /*
@@ -518,9 +520,8 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
       puts(cling_ast_opcode_kind_tostring(ast_ir->opcode));
       assert(false);
     }
+    /* ast_ir_print(ast_ir, stdout); */
     if (add_instr) {
-      ast_ir_print(ast_ir, stdout);
-      puts("");
       utillib_vector_push_back(instrs, ast_ir);
     }
     else {
@@ -534,18 +535,12 @@ static void lcse_ir_destroy(struct cling_lcse_ir *self) { free(self); }
 void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
                                struct cling_ast_function const *ast_func) {
   size_t temp_size = ast_func->temps;
-  self->var_count = LCSE_TEMP_ZERO + 1;
+  self->var_count = 0;
   self->variables = malloc(sizeof self->variables[0] * temp_size);
-  /*
-   * Different basic_blocks do not share temps.
-   * So initialize it onece is OK.
-   */
   memset(self->variables, -1, sizeof self->variables[0] * temp_size);
+  self->variables_size=temp_size;
   self->address_map = malloc(sizeof self->address_map[0] *
                              utillib_vector_size(&ast_func->instrs));
-  /*
-   * Different basic_blocks can share address of names
-   */
   utillib_hashmap_init(&self->names, &mips_label_strcallback);
 }
 
