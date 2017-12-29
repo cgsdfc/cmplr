@@ -308,16 +308,11 @@ static void translate(struct cling_lcse_optimizer *self,
   case OP_LDNAM:
       address = lookup_named_address(self, ast_ir->ldnam.name);
       lcse_ir->load_rvalue.value = lookup_value(self, address);
-      self->variables[ast_ir->ldnam.temp]=lcse_ir->load_rvalue.value;
       lcse_ir->load_rvalue.scope=ast_ir->ldnam.scope;
       lcse_ir->kind = LCSE_LOAD_RVALUE;
+      break;
   case OP_LDADR:
-      /*
-       * scope and name
-       */
-      address=lookup_named_address(self, ast_ir->ldadr.name); 
       lcse_ir->load_lvalue.name = ast_ir->ldadr.name;
-      self->variables[ast_ir->ldadr.temp]=address;
       lcse_ir->load_lvalue.scope = ast_ir->ldadr.scope;
       lcse_ir->kind = LCSE_LOAD_LVALUE;
     break;
@@ -420,7 +415,8 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
     ast_ir->ldadr.temp = new_ir->load_lvalue.address;
     break;
   case LCSE_LOAD_RVALUE:
-    ast_ir->ldnam.temp = lookup_variable(self, ast_ir->ldnam.temp);
+    self->variables[ast_ir->ldnam.temp]=new_ir->load_rvalue.value;
+    ast_ir->ldnam.temp = new_ir->load_rvalue.value;
     break;
   default:
     assert(false);
