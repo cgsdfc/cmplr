@@ -66,6 +66,7 @@ enum {
    * stnam, stadr, deref
    */
   LCSE_STORE,
+  LCSE_UNARY,
 };
 
 struct cling_lcse_ir {
@@ -90,6 +91,10 @@ struct cling_lcse_ir {
       int value;
       int address;
     } store;
+    struct {
+      int result;
+      int operand;
+    } unary;
   };
 };
 

@@ -120,6 +120,13 @@ static int store_compare(struct cling_lcse_ir const *lhs,
   return 1;
 }
 
+static int unary_compare(struct cling_lcse_ir const *lhs,
+                         struct cling_lcse_ir const *rhs) {
+  if (lhs->opcode == rhs->opcode && lhs->unary.operand == rhs->unary.operand)
+    return 0;
+  return 1;
+}
+
 static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
                            struct cling_lcse_ir const *rhs) {
   switch (lhs->kind) {
@@ -142,6 +149,8 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
     default:
       assert(false);
     }
+  case LCSE_UNARY:
+    return unary_compare(lhs, rhs);
   case LCSE_LOAD_LVALUE:
     return load_lvalue_compare(lhs, rhs);
   case LCSE_LOAD_RVALUE:
@@ -156,6 +165,8 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
 static size_t lcse_ir_hash(struct cling_lcse_ir const *self) {
   size_t hash = self->opcode;
   switch (self->kind) {
+  case LCSE_UNARY:
+    return hash + self->unary.operand;
   case LCSE_BINARY:
     return hash + self->binary.temp1 + self->binary.temp2;
   case LCSE_LOAD_LVALUE:
@@ -290,6 +301,10 @@ static void translate(struct cling_lcse_optimizer *self,
     lcse_ir->binary.temp1 = lookup_variable(self, ast_ir->binop.temp1);
     lcse_ir->binary.temp2 = lookup_variable(self, ast_ir->binop.temp2);
     break;
+  case OP_LDIMM:
+    lcse_ir->kind=LCSE_UNARY;
+    lcse_ir->unary.operand=ast_ir->ldimm.value;
+    break;
   case OP_LDNAM:
       address = lookup_named_address(self, ast_ir->ldnam.name);
       lcse_ir->load_rvalue.value = lookup_value(self, address);
@@ -334,6 +349,12 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
   new_ir = utillib_hashmap_find(&self->operations, lcse_ir);
   if (new_ir) {
     switch (new_ir->kind) {
+    case LCSE_UNARY:
+      /*
+       * Currently only ldimm.
+       */
+      self->variables[ast_ir->ldimm.temp]=new_ir->unary.result;
+      break;
     case LCSE_BINARY:
       self->variables[ast_ir->binop.result] = new_ir->binary.result;
       break;
@@ -359,6 +380,16 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
   new_ir = malloc(sizeof *new_ir);
   memcpy(new_ir, lcse_ir, sizeof *new_ir);
   switch (new_ir->kind) {
+  case LCSE_UNARY:
+    switch(new_ir->opcode) {
+      case OP_LDIMM:
+        new_ir->unary.result=self->var_count++;
+        self->variables[ast_ir->ldimm.temp]=new_ir->unary.result;
+        ast_ir->ldimm.temp=new_ir->unary.result;
+        break;
+      default: assert(false);
+    }
+    break;
   case LCSE_BINARY:
     new_ir->binary.result =lookup_variable(self, ast_ir->binop.result); 
     ast_ir->binop.result = new_ir->binary.result;
@@ -398,13 +429,13 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
   return true;
 }
 
-static void optimize(struct cling_lcse_optimizer *self,
+static void lcse_optimize(struct cling_lcse_optimizer *self,
                      struct cling_basic_block const *block,
                      struct utillib_vector *instrs) {
   bool add_instr;
   struct cling_ast_ir *ast_ir;
   struct cling_lcse_ir lcse_ir;
-  int value, index, array, temp, result;
+  int value, temp;
 
   for (int i = block->begin; i < block->end; ++i) {
     add_instr = true;
@@ -423,6 +454,7 @@ static void optimize(struct cling_lcse_optimizer *self,
     /*
      * arithop
      */
+    case OP_INDEX:
     case OP_ADD:
     case OP_MUL:
     case OP_DIV:
@@ -435,6 +467,10 @@ static void optimize(struct cling_lcse_optimizer *self,
     case OP_DEREF:
     case OP_STADR:
     case OP_STNAM:
+      /*
+       * Unary
+       */
+    case OP_LDIMM:
       translate(self, ast_ir, &lcse_ir);
       add_instr = insert_operation(self, ast_ir, &lcse_ir);
       break;
@@ -450,29 +486,11 @@ static void optimize(struct cling_lcse_optimizer *self,
         ast_ir->call.result = value;
       }
       break;
-    case OP_INDEX:
-      /*
-       * We always do it no matter lvalue or rvalue.
-       */
-      array = lookup_variable(self, ast_ir->index.array_addr);
-      index = lookup_variable(self, ast_ir->index.index_result);
-      result = lookup_variable(self, ast_ir->index.result);
-      ast_ir->index.array_addr = array;
-      ast_ir->index.index_result = index;
-      ast_ir->index.result = result;
-      break;
     case OP_READ:
       /*
        * read always introduce new variables.
        */
       ast_ir->read.temp = lookup_variable(self, ast_ir->read.temp);
-      break;
-    case OP_LDIMM:
-      /*
-       * We also do not track ldimm since that's a matter of
-       * constant propergation. We assume every ldimm introduces new value.
-       */
-      ast_ir->ldimm.temp = lookup_variable(self, ast_ir->ldimm.temp);
       break;
     case OP_LDSTR:
       /*
@@ -505,8 +523,8 @@ static void optimize(struct cling_lcse_optimizer *self,
       assert(false);
     }
     if (add_instr) {
-      /* ast_ir_print(ast_ir, stdout); */
-      /* puts(""); */
+      ast_ir_print(ast_ir, stdout);
+      puts("");
       utillib_vector_push_back(instrs, ast_ir);
     }
     else {
@@ -549,7 +567,7 @@ void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
    */
   utillib_hashmap_init(&self->operations, &lcse_ir_callback);
   utillib_hashmap_init(&self->values, &lcse_value_intcallback);
-  optimize(self, block, instrs);
+  lcse_optimize(self, block, instrs);
   utillib_hashmap_destroy_owning(&self->operations, NULL, lcse_ir_destroy);
   utillib_hashmap_destroy_owning(&self->values, NULL, lcse_value_destroy);
 }
