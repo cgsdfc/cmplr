@@ -25,6 +25,7 @@
 #include "mips.h"
 #include "mips_interp.h"
 #include "option.h"
+#include "optimize.h"
 #include "rd_parser.h"
 #include "scanner.h"
 #include "symbol_table.h"
@@ -67,5 +68,6 @@ int cling_backend_interpret(struct cling_backend *self);
 void cling_backend_codegen(struct cling_backend *self,
                            struct cling_option const *option,
                            struct cling_frontend *frontend);
+void cling_backend_optimize(struct cling_backend *self);
 
 #endif /* CLING_CLING_CORE_H */

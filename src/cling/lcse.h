@@ -53,9 +53,18 @@ enum {
   /*
    * We do not optimize call and index.
    */
+  /*
+   * ldadr
+   */
   LCSE_LOAD_LVALUE,
+  /*
+   * ldnam
+   */
   LCSE_LOAD_RVALUE,
   LCSE_BINARY,
+  /*
+   * stnam, stadr, deref
+   */
   LCSE_STORE,
 };
 
@@ -75,6 +84,7 @@ struct cling_lcse_ir {
     } load_lvalue;
     struct {
       int value;
+      int scope;
     } load_rvalue;
     struct {
       int value;

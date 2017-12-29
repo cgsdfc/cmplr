@@ -95,13 +95,14 @@ static int load_lvalue_compare(struct cling_lcse_ir const *lhs,
 }
 
 /*
- * load_rvalue: value
+ * load_rvalue: value scope
  */
 static int load_rvalue_compare(struct cling_lcse_ir const *lhs,
                                struct cling_lcse_ir const *rhs) {
   if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
     return 1;
-  if (lhs->load_rvalue.value == rhs->load_rvalue.value)
+  if (lhs->load_rvalue.value == rhs->load_rvalue.value && 
+      lhs->load_rvalue.scope == rhs->load_rvalue.scope)
     return 0;
   return 1;
 }
@@ -161,7 +162,7 @@ static size_t lcse_ir_hash(struct cling_lcse_ir const *self) {
     return hash + self->load_lvalue.scope +
            mysql_strhash(self->load_lvalue.name);
   case LCSE_LOAD_RVALUE:
-    return hash + self->load_rvalue.value;
+    return hash + self->load_rvalue.value + self->load_rvalue.scope;
   case LCSE_STORE:
     return hash + self->store.value + self->store.address;
   default:
@@ -267,10 +268,7 @@ static unsigned int lookup_variable(struct cling_lcse_optimizer *self,
 static void translate(struct cling_lcse_optimizer *self,
                       struct cling_ast_ir *ast_ir,
                       struct cling_lcse_ir *lcse_ir) {
-  char const *name;
   unsigned int address;
-  unsigned int value;
-
   lcse_ir->opcode = ast_ir->opcode;
   switch (ast_ir->opcode) {
     case OP_INDEX:
@@ -292,33 +290,21 @@ static void translate(struct cling_lcse_optimizer *self,
     lcse_ir->binary.temp1 = lookup_variable(self, ast_ir->binop.temp1);
     lcse_ir->binary.temp2 = lookup_variable(self, ast_ir->binop.temp2);
     break;
-  case OP_LOAD:
-    name = ast_ir->load.name;
-    if (ast_ir->load.is_rvalue) {
-      /*
-       * rvalue is about value and its stealness.
-       */
-      address = lookup_named_address(self, name);
+  case OP_LDNAM:
+      address = lookup_named_address(self, ast_ir->ldnam.name);
       lcse_ir->load_rvalue.value = lookup_value(self, address);
-      self->variables[ast_ir->load.temp]=lcse_ir->load_rvalue.value;
+      self->variables[ast_ir->ldnam.temp]=lcse_ir->load_rvalue.value;
+      lcse_ir->load_rvalue.scope=ast_ir->ldnam.scope;
       lcse_ir->kind = LCSE_LOAD_RVALUE;
-    } else {
+  case OP_LDADR:
       /*
-       * lvalue is all about address.
+       * scope and name
        */
-      address=lookup_named_address(self, name); 
-      lcse_ir->load_lvalue.name = name;
-      self->variables[ast_ir->load.temp]=address;
-      lcse_ir->load_lvalue.scope = ast_ir->load.is_global;
+      address=lookup_named_address(self, ast_ir->ldadr.name); 
+      lcse_ir->load_lvalue.name = ast_ir->ldadr.name;
+      self->variables[ast_ir->ldadr.temp]=address;
+      lcse_ir->load_lvalue.scope = ast_ir->ldadr.scope;
       lcse_ir->kind = LCSE_LOAD_LVALUE;
-    }
-    break;
-  case OP_STORE:
-    address = lookup_variable(self, ast_ir->store.addr);
-    value = lookup_variable(self, ast_ir->store.value);
-    lcse_ir->store.address = address;
-    lcse_ir->store.value = value;
-    lcse_ir->kind = LCSE_STORE;
     break;
   case OP_STNAM:
     lcse_ir->store.address=lookup_named_address(self, ast_ir->stnam.name);
@@ -327,11 +313,14 @@ static void translate(struct cling_lcse_optimizer *self,
     break;
   case OP_STADR:
     lcse_ir->store.address=lookup_variable(self, ast_ir->stadr.addr);
-    lcse_ir->stadr.value=lookup_variable(self, 
+    lcse_ir->store.value=lookup_variable(self, ast_ir->stadr.value);
     lcse_ir->kind=LCSE_STORE;
-
-
-
+    break;
+  case OP_DEREF:
+    lcse_ir->kind=LCSE_STORE;
+    lcse_ir->store.address=lookup_variable(self, ast_ir->deref.addr);
+    lcse_ir->store.value=lookup_value(self, lcse_ir->store.address);
+    break;
   default:
     assert(false);
   }
@@ -349,10 +338,10 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
       self->variables[ast_ir->binop.result] = new_ir->binary.result;
       break;
     case LCSE_LOAD_LVALUE:
-      self->variables[ast_ir->load.temp] = new_ir->load_lvalue.address;
+      self->variables[ast_ir->ldadr.temp] = new_ir->load_lvalue.address;
       break;
     case LCSE_LOAD_RVALUE:
-      self->variables[ast_ir->load.temp] = new_ir->load_rvalue.value;
+      self->variables[ast_ir->ldnam.temp] = new_ir->load_rvalue.value;
       break;
     case LCSE_STORE:
       /*
@@ -381,15 +370,26 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
      * The value at address is updated.
      */
     update_value(self, new_ir->store.address, new_ir->store.value);
-    ast_ir->store.addr=new_ir->store.address;
-    ast_ir->store.value=new_ir->store.value;
+    switch(new_ir->opcode) {
+    case OP_STADR:
+      ast_ir->stadr.addr=new_ir->store.address;
+      ast_ir->stadr.value=new_ir->store.value;
+      break;
+    case OP_STNAM:
+      ast_ir->stnam.value=new_ir->store.value;
+      break;
+    case OP_DEREF:
+      ast_ir->deref.addr=new_ir->store.address;
+      break;
+    default: assert(false);
+    }
     break;
   case LCSE_LOAD_LVALUE:
-    new_ir->load_lvalue.address =lookup_variable(self,  ast_ir->load.temp); 
-    ast_ir->load.temp = new_ir->load_lvalue.address;
+    new_ir->load_lvalue.address =lookup_variable(self, ast_ir->ldadr.temp); 
+    ast_ir->ldadr.temp = new_ir->load_lvalue.address;
     break;
   case LCSE_LOAD_RVALUE:
-    ast_ir->load.temp = lookup_variable(self, ast_ir->load.temp);
+    ast_ir->ldnam.temp = lookup_variable(self, ast_ir->ldnam.temp);
     break;
   default:
     assert(false);
@@ -411,6 +411,9 @@ static void optimize(struct cling_lcse_optimizer *self,
     ast_ir = utillib_vector_at(block->instrs, i);
     self->address_map[i] = utillib_vector_size(instrs);
     switch (ast_ir->opcode) {
+    /*
+     * relop.
+     */
     case OP_LT:
     case OP_LE:
     case OP_GT:
@@ -418,26 +421,22 @@ static void optimize(struct cling_lcse_optimizer *self,
     case OP_EQ:
     case OP_NE:
     /*
-     * relop.
+     * arithop
      */
     case OP_ADD:
     case OP_MUL:
     case OP_DIV:
     case OP_SUB:
     /*
-     * arithop
+     * Load/Store
      */
-    case OP_LOAD:
-    case OP_STORE:
-      /*
-       * These are the subexpr we will handle.
-       */
+    case OP_LDADR:
+    case OP_LDNAM:
+    case OP_DEREF:
+    case OP_STADR:
+    case OP_STNAM:
       translate(self, ast_ir, &lcse_ir);
       add_instr = insert_operation(self, ast_ir, &lcse_ir);
-      break;
-    case OP_PUSH:
-      value = lookup_variable(self, ast_ir->push.temp);
-      ast_ir->push.temp = value;
       break;
     case OP_RET:
       if (ast_ir->ret.has_result) {
@@ -462,8 +461,7 @@ static void optimize(struct cling_lcse_optimizer *self,
       ast_ir->index.index_result = index;
       ast_ir->index.result = result;
       break;
-    case OP_RDCHR:
-    case OP_RDINT:
+    case OP_READ:
       /*
        * read always introduce new variables.
        */
@@ -485,9 +483,7 @@ static void optimize(struct cling_lcse_optimizer *self,
       self->variables[temp] = LCSE_TEMP_ZERO;
       ast_ir->ldstr.temp = LCSE_TEMP_ZERO;
       break;
-    case OP_WRCHR:
-    case OP_WRSTR:
-    case OP_WRINT:
+    case OP_WRITE:
       /*
        * write is just a read-only operation on value.
        */

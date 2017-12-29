@@ -131,3 +131,7 @@ int cling_backend_interpret(struct cling_backend *self)
   return 0;
 }
 
+void cling_backend_optimize(struct cling_backend *self)
+{
+  cling_optimize(&self->ast_program);
+}
