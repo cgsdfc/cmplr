@@ -264,13 +264,13 @@ static struct utillib_json_value *const_defs(struct cling_rd_parser *self,
     code = cling_scanner_lookahead(scanner);
     if (code != SYM_IDEN) {
       error = cling_expected_error(scanner, SYM_IDEN, context);
-      goto skip;
+      goto error;
     }
     object = utillib_json_object_create_empty();
     name = cling_scanner_semantic(scanner);
     if (cling_symbol_table_exist_name(self->symbol_table, name, scope_kind)) {
       error = cling_redefined_error(scanner, name, context);
-      goto skip;
+      goto error;
     }
 
     cling_symbol_table_reserve(self->symbol_table, name, scope_kind);
@@ -280,14 +280,14 @@ static struct utillib_json_value *const_defs(struct cling_rd_parser *self,
     code = cling_scanner_lookahead(scanner);
     if (code != SYM_EQ) {
       error = cling_expected_error(scanner, SYM_EQ, context);
-      goto skip;
+      goto error;
     }
     cling_scanner_shiftaway(scanner);
 
     code = cling_scanner_lookahead(scanner);
     if (code != expected_initializer) {
       error = cling_expected_error(scanner, expected_initializer, context);
-      goto skip;
+      goto error;
     }
 
     value = cling_ast_string(cling_scanner_semantic(scanner));
@@ -300,29 +300,22 @@ static struct utillib_json_value *const_defs(struct cling_rd_parser *self,
     switch (code) {
     case SYM_SEMI:
       goto return_array;
-    before_comma:
     case SYM_COMMA:
       cling_scanner_shiftaway(scanner);
       break;
     default:
       /* unexpected */
       error = cling_unexpected_error(scanner, context);
-      goto skip;
+      goto error;
     }
   }
 return_array:
   return array;
-
-skip:
-  utillib_json_value_destroy(object);
+error:
   rd_parser_error_push_back(self, error);
-  rd_parser_skip_init(self, SYM_COMMA, SYM_SEMI);
-  switch (rd_parser_skipto(self, scanner)) {
-  case SYM_COMMA:
-    goto before_comma;
-  case SYM_SEMI:
-    goto return_array;
-  }
+  utillib_json_value_destroy(array);
+  return NULL;
+
 }
 
 /**
@@ -333,7 +326,7 @@ static struct utillib_json_value *
 single_const_decl(struct cling_rd_parser *self, struct cling_scanner *scanner,
                   int scope_kind) {
   size_t code;
-  struct utillib_json_value *object;
+  struct utillib_json_value *object, *array;
   const size_t context = SYM_CONST_DECL;
 
   cling_scanner_shiftaway(scanner);
@@ -341,17 +334,17 @@ single_const_decl(struct cling_rd_parser *self, struct cling_scanner *scanner,
   code = cling_scanner_lookahead(scanner);
 
   if (code != SYM_KW_CHAR && code != SYM_KW_INT) {
-    /* This is a serious error: const without typename */
     rd_parser_error_push_back(
         self, cling_expected_error(scanner, SYM_TYPENAME, context));
     goto skip;
   }
   cling_ast_set_type(object, code);
   cling_scanner_shiftaway(scanner);
-  utillib_json_object_push_back(
-      object, "const_defs", /* expected_initializer */
-      const_defs(self, scanner, code == SYM_KW_INT ? SYM_INTEGER : SYM_CHAR,
-                 scope_kind));
+  array=const_defs(self, scanner, code == SYM_KW_INT ? SYM_INTEGER : SYM_CHAR, scope_kind);
+  if (array)
+    utillib_json_object_push_back(object, "const_defs", array);
+  else
+    goto return_null;
 
   code = cling_scanner_lookahead(scanner);
   if (code != SYM_SEMI) {
