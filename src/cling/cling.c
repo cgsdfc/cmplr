@@ -35,7 +35,18 @@ static struct cling_option option={
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 static FILE *source_file;
+static struct cling_data_flow data_flow;
 static char filename_buffer[100];
+
+static void build_all_data_flow(void)
+{
+  struct cling_ast_function const *ast_func;
+  UTILLIB_VECTOR_FOREACH(ast_func, &backend.ast_program.funcs) {
+    cling_data_flow_init(&data_flow, ast_func);
+    cling_data_flow_print(&data_flow, stdout);
+    cling_data_flow_destroy(&data_flow);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -51,8 +62,7 @@ int main(int argc, char *argv[])
   }
   cling_backend_init(&backend);
   cling_backend_codegen(&backend, &option, &frontend);
-  cling_backend_optimize(&backend);
-  cling_backend_dump_ast_ir(&backend, stdout);
+  build_all_data_flow();
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
   return 0;

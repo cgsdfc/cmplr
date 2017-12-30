@@ -43,10 +43,11 @@ struct cling_data_flow {
   struct utillib_vector * parents;
   struct utillib_vector * children;
   struct utillib_vector basic_blocks;
-  unsigned int blocks_size;
   struct utillib_vector const *instrs;
-  unsigned int instrs_size;
   unsigned int * block_map;
+  unsigned int blocks_size;
+  unsigned int instrs_size;
+  unsigned int temps_size;
 };
 
 enum {
@@ -67,22 +68,25 @@ struct defpoints {
   unsigned int def_id;
 };
 
-struct cling_definition {
+struct cling_block_data {
   unsigned int blocks_size; /* knows how to destroy three arrays */
-  struct utillib_bitset* reach_in;
-  struct utillib_bitset* reach_out;
+  struct utillib_bitset* flow_in;
+  struct utillib_bitset* flow_out;
   struct utillib_bitset* kill;
+};
+
+struct cling_reaching_definition {
+  struct cling_block_data block_data;
   struct utillib_vector points;
 };
 
 struct cling_live_variable {
-
+  struct cling_block_data block_data;
 };
 
 void cling_basic_block_construct(struct utillib_vector *blocks,
                                  struct utillib_vector const *instrs);
-void basic_block_display(struct utillib_vector const *basic_blocks);
-
+void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file);
 void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_function const *ast_func);
 void cling_data_flow_destroy(struct cling_data_flow *self);
 void cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
