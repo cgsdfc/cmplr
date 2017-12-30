@@ -49,13 +49,26 @@ struct cling_data_flow {
   unsigned int * block_map;
 };
 
+enum {
+  CLING_FORWARD,
+  CLING_BACKWARD,
+};
+
+struct cling_data_flow_callback {
+  int direction;
+  void (*init)(void *data, struct cling_data_flow const *data_flow);
+  bool (*join)(void *data, int block_1, int block_2);
+  void (*apply)(void *data, int block_id);
+};
+
 struct defpoints {
   unsigned int instr;
   unsigned int target;
+  unsigned int def_id;
 };
 
 struct cling_definition {
-  unsigned int blocks_size;
+  unsigned int blocks_size; /* knows how to destroy three arrays */
   struct utillib_bitset* reach_in;
   struct utillib_bitset* reach_out;
   struct utillib_bitset* kill;

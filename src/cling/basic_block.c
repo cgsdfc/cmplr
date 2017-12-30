@@ -233,30 +233,70 @@ static void definition_destroy(struct cling_definition *self)
   utillib_vector_destroy_owning(&self->points, free);
 }
 
-struct defpoints * defpoints_create(unsigned int instr, unsigned int target)
-{
+struct defpoints *defpoints_create(unsigned int instr, unsigned int target,
+                                   unsigned int def_id) {
   struct defpoints *self=malloc(sizeof *self);
   self->instr=instr;
   self->target=target;
+  self->def_id = def_id;
   return self;
 }
 
-static void definitions_initialize(struct cling_definition *self, struct cling_data_flow *data_flow)
-{
-  struct cling_basic_block const *block;
+static void definitions_initialize(struct cling_definition *self,
+                                   struct cling_data_flow const *data_flow) {
   struct cling_ast_ir const *ir;
-  unsigned int target;
+  unsigned int target, address, def_id;
+  struct utillib_bitset *reach_out;
+  struct defpoints *killed_point, *point;
 
-  UTILLIB_VECTOR_FOREACH(block, &data_flow->basic_blocks) {
-    for (int i=block->begin; i<block->end; ++i) {
-      ir=utillib_vector_at(data_flow->instrs, i);
-      target=ast_ir_get_assign_target(ir);
-      if (target < 0)
-        continue;
-      utillib_vector_push_back(&self->points, defpoints_create(i, target));
-      utillib_bitset_insert(&self->reach_out[block->block_id], utillib_vector_size(&self->points));
+  address = 0;
+  /*
+   * generate all the defpoints while filling the reach_out
+   */
+  UTILLIB_VECTOR_FOREACH(ir, data_flow->instrs) {
+    target = ast_ir_get_assign_target(ir);
+    if (target >= 0) {
+      def_id = utillib_vector_size(&self->points);
+      reach_out = &self->reach_out[data_flow->block_map[address]];
+      utillib_bitset_insert(reach_out, def_id);
+      utillib_vector_push_back(&self->points,
+                               defpoints_create(address, target, def_id));
+    }
+    ++address;
+  }
+  /*
+   * Fill the kill
+   */
+  for (int i = 0; i < data_flow->blocks_size; ++i) {
+    reach_out = &self->reach_out[i];
+    UTILLIB_BITSET_FOREACH(def_id, reach_out) {
+      point = utillib_vector_at(&self->points, def_id);
+      UTILLIB_VECTOR_FOREACH(killed_point, &self->points)
+      if (killed_point->target == point->target &&
+          /*
+           * One cannot kill himself
+           */
+          killed_point->def_id != point->def_id)
+        utillib_bitset_insert(&self->kill[i], killed_point->def_id);
     }
   }
+}
+
+/*
+ * Join the blocks on cur_blk
+ * return any change happened
+ */
+static bool data_flow_join(void *data,
+                           struct cling_data_flow_callback const *algorithm,
+                           struct cling_basic_block const *cur_blk,
+                           struct utillib_vector const *blocks) {
+  bool changed = false;
+  struct cling_basic_block const *block;
+
+  UTILLIB_VECTOR_FOREACH(block, blocks)
+  if (algorithm->join(data, cur_blk->block_id, block->block_id))
+    changed = true;
+  return changed;
 }
 
 /*
@@ -264,38 +304,59 @@ static void definitions_initialize(struct cling_definition *self, struct cling_d
  * reach_out = reach_in - kill
  * change = reach_in.new - reach_in.old
  */
-void cling_data_flow_reaching_definitions(struct cling_data_flow *self, struct cling_definition *definitions)
-{
+void cling_data_flow_analyze(struct cling_data_flow *self, void *data,
+                             struct cling_data_flow_callback const *algorithm) {
   struct utillib_list worklist;
   struct cling_basic_block const *head, *block;
-  struct utillib_vector *parents, *children;
-  struct utillib_bitset *input, *output, *kill;
-  bool changed;
+  struct utillib_vector const *join_blocks, *next_blocks;
 
   utillib_list_init(&worklist);
+  algorithm->init(data, self);
   UTILLIB_VECTOR_FOREACH(block, &self->basic_blocks)
     utillib_list_push_back(&worklist, block);
 
   while (!utillib_list_empty(&worklist)) {
     head=utillib_list_front(&worklist);
     utillib_list_pop_front(&worklist);
-    input=&definitions->reach_in[head->block_id];
-    output=&definitions->reach_out[head->block_id];
-    kill=&definitions->kill[head->block_id];
-    parents=&self->parents[head->block_id];
-    children=&self->children[head->block_id];
-    changed=false;
-    UTILLIB_VECTOR_FOREACH(block, parents)
-      if (utillib_bitset_union_updated(input, &definitions->reach_out[block->block_id]))
-        changed=true;
-    if (!changed)
-      continue;
-    utillib_bitset_union(output, input);
-    utillib_bitset_minus(output, kill);
-    UTILLIB_VECTOR_FOREACH(block, children) {
-      utillib_list_push_back(&worklist, block);
+    switch (algorithm->direction) {
+    case CLING_FORWARD:
+      join_blocks = &self->children[head->block_id];
+      next_blocks = &self->parents[head->block_id];
+      break;
+    case CLING_BACKWARD:
+      join_blocks = &self->parents[head->block_id];
+      next_blocks = &self->children[head->block_id];
+      break;
+    default:
+      assert(false);
     }
+    if (!data_flow_join(data, algorithm, head, join_blocks))
+      continue;
+    algorithm->apply(data, head->block_id);
+    UTILLIB_VECTOR_FOREACH(block, next_blocks)
+    utillib_list_push_back(&worklist, block);
   }
   utillib_list_destroy(&worklist);
 }
 
+static bool definition_join(struct cling_definition *self, int block_1,
+                            int block_2) {
+  return utillib_bitset_union_updated(&self->reach_in[block_1],
+                                      &self->reach_out[block_2]);
+}
+
+static void definition_apply(struct cling_definition *self, int block_id) {
+  struct utillib_bitset *output, *kill, *input;
+  output = &self->reach_out[block_id];
+  input = &self->reach_in[block_id];
+  kill = &self->kill[block_id];
+  utillib_bitset_union(output, input);
+  utillib_bitset_minus(output, kill);
+}
+
+static const struct cling_data_flow_callback definition_callback = {
+    .direction = CLING_FORWARD,
+    .init = definitions_initialize,
+    .join = definition_join,
+    .apply = definition_apply,
+};
