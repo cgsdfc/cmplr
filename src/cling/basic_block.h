@@ -28,35 +28,50 @@
  * Divide each function into a number of basic_blocks
  * for optimizer to run on.
  */
-
+struct cling_ast_function;
 struct cling_basic_block {
   int block_id;
   unsigned int begin;
   unsigned int end;
-  struct utillib_vector *instrs;
-};
-
-enum {
-  CL_DATAFLOW_IN, CL_DATAFLOW_OUT,
+  struct utillib_vector const *instrs;
 };
 
 /*
  * Data Flow Graph
  */
 struct cling_data_flow {
-  struct utillib_vector * neighbors;
+  struct utillib_vector * parents;
+  struct utillib_vector * children;
   struct utillib_vector basic_blocks;
   unsigned int blocks_size;
+  struct utillib_vector const *instrs;
+  unsigned int instrs_size;
   unsigned int * block_map;
-  int direction;
+};
+
+struct defpoints {
+  unsigned int instr;
+  unsigned int target;
+};
+
+struct cling_definition {
+  unsigned int blocks_size;
+  struct utillib_bitset* reach_in;
+  struct utillib_bitset* reach_out;
+  struct utillib_bitset* kill;
+  struct utillib_vector points;
+};
+
+struct cling_live_variable {
+
 };
 
 void cling_basic_block_construct(struct utillib_vector *blocks,
-                                 struct utillib_vector *instrs);
+                                 struct utillib_vector const *instrs);
 void basic_block_display(struct utillib_vector const *basic_blocks);
 
-void cling_data_flow_init(struct cling_data_flow *self, struct utillib_vector *instrs, int direction);
+void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_function const *ast_func);
 void cling_data_flow_destroy(struct cling_data_flow *self);
-void  cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
+void cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
 
 #endif /* CLING_BASIC_BLOCK */

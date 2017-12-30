@@ -53,6 +53,8 @@ void utillib_bitset_insert(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_remove(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_union(struct utillib_bitset *self,
                           struct utillib_bitset const *other);
+void utillib_bitset_minus(struct utillib_bitset *self,
+                          struct utillib_bitset const *other);
 
 bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t pos);
 bool utillib_bitset_remove_updated(struct utillib_bitset *self, size_t pos);

@@ -1105,3 +1105,40 @@ bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc) {
   int jump_addr=ast_ir_get_jump_address(ast_ir);
   return jump_addr==ast_pc+1;
 }
+
+int ast_ir_get_assign_target(struct cling_ast_ir const *ir)
+{
+  switch(ir->opcode) {
+    default: 
+      return -1;
+    case OP_ADD:
+    case OP_SUB:
+    case OP_DIV:
+    case OP_MUL:
+    case OP_EQ:
+    case OP_NE:
+    case OP_LT:
+    case OP_LE:
+    case OP_GT:
+    case OP_GE:
+      return ir->binop.result;
+    case OP_DEREF:
+      return ir->deref.addr;
+    case OP_LDADR:
+      return ir->ldadr.temp;
+    case OP_LDNAM:
+      return ir->ldnam.temp;
+    case OP_LDIMM:
+      return ir->ldimm.temp;
+    case OP_LDSTR:
+      return ir->ldstr.temp;
+    case OP_READ:
+      return ir->read.temp;
+    case OP_CAL:
+      if (ir->call.has_result)
+        return ir->call.result;
+      return -1;
+    case OP_INDEX:
+      return ir->index.result;
+  }
+}
