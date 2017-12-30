@@ -22,6 +22,7 @@
 #define CLING_BASIC_BLOCK
 
 #include <utillib/vector.h>
+#include <stdio.h>
 
 /*
  * Divide each function into a number of basic_blocks
@@ -35,8 +36,27 @@ struct cling_basic_block {
   struct utillib_vector *instrs;
 };
 
+enum {
+  CL_DATAFLOW_IN, CL_DATAFLOW_OUT,
+};
+
+/*
+ * Data Flow Graph
+ */
+struct cling_data_flow {
+  struct utillib_vector * neighbors;
+  struct utillib_vector basic_blocks;
+  unsigned int blocks_size;
+  unsigned int * block_map;
+  int direction;
+};
+
 void cling_basic_block_construct(struct utillib_vector *blocks,
                                  struct utillib_vector *instrs);
 void basic_block_display(struct utillib_vector const *basic_blocks);
+
+void cling_data_flow_init(struct cling_data_flow *self, struct utillib_vector *instrs, int direction);
+void cling_data_flow_destroy(struct cling_data_flow *self);
+void  cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
 
 #endif /* CLING_BASIC_BLOCK */
