@@ -63,7 +63,7 @@ struct cling_data_flow_callback {
 };
 
 struct defpoints {
-  unsigned int instr;
+  unsigned int address;
   unsigned int target;
   unsigned int def_id;
 };

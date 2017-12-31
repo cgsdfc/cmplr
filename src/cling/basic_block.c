@@ -21,7 +21,6 @@
 #include "basic_block.h"
 #include "ast_ir.h"
 #include <utillib/bitset.h>
-#include <utillib/list.h>
 #include <assert.h>
 #include <stdlib.h>
 
@@ -148,6 +147,13 @@ static unsigned int *create_block_map(struct utillib_vector const *basic_blocks,
   return block_map;
 }
 
+static void data_flow_add_link(struct cling_data_flow *self, struct cling_basic_block const *source_block,
+    struct cling_basic_block const *target_block)
+{
+  utillib_vector_push_back(&self->parents[target_block->block_id], source_block);
+  utillib_vector_push_back(&self->children[source_block->block_id], target_block);
+}
+
 /*
  * Fill the parents and children array in a bidirection fashion
  */
@@ -164,17 +170,31 @@ static void data_flow_bidirection(struct cling_data_flow *self)
       if (ast_ir_is_local_jump(ir)) {
         target_addr=ast_ir_get_jump_address(ir);
         target_block=utillib_vector_at(&self->basic_blocks, self->block_map[target_addr]);
-        utillib_vector_push_back(&self->parents[target_block->block_id], source_block);
-        utillib_vector_push_back(&self->children[source_block->block_id], target_block);
-      }
-      else if (i == source_block->end-1 && source_block->block_id != self->blocks_size-1) {
+        switch(ir->opcode) {
+          case OP_BEZ:
+          case OP_BNE:
+            data_flow_add_link(self, source_block, target_block);
+            /*
+             * those are 2 ways jumps
+             */ 
+            target_block=utillib_vector_at(&self->basic_blocks, source_block->block_id+1);
+            data_flow_add_link(self, source_block, target_block);
+            break;
+          case OP_RET:
+          case OP_JMP:
+            /*
+             * one way jumps
+             */
+            data_flow_add_link(self, source_block, target_block);
+            break;
+          default: assert(false);
+        }
+      } else if (i == source_block->end-1 && source_block->block_id != self->blocks_size-1) {
         /*
          * The last instr in a block fail through to the next
-         * if this is not the last block
          */
         target_block=utillib_vector_at(&self->basic_blocks, source_block->block_id+1);
-        utillib_vector_push_back(&self->parents[target_block->block_id], source_block);
-        utillib_vector_push_back(&self->children[source_block->block_id], target_block);
+        data_flow_add_link(self, source_block, target_block);
       }
       ++source_addr;
     }
@@ -246,15 +266,23 @@ void cling_data_flow_print(struct cling_data_flow const *self, FILE *file)
  */
 static bool data_flow_join(void *data,
                            struct cling_data_flow_callback const *algorithm,
-                           struct cling_basic_block const *cur_blk,
+                           int block_id,
                            struct utillib_vector const *blocks) {
   bool changed = false;
   struct cling_basic_block const *block;
 
   UTILLIB_VECTOR_FOREACH(block, blocks)
-  if (algorithm->join(data, cur_blk->block_id, block->block_id))
+  if (algorithm->join(data, block_id, block->block_id))
     changed = true;
   return changed;
+}
+
+static int find_block(bool *workset, unsigned int blocks_size)
+{
+  for (int i=0; i<blocks_size; ++i)
+    if (!workset[i])
+      return i;
+  return -1;
 }
 
 /*
@@ -262,38 +290,47 @@ static bool data_flow_join(void *data,
  */
 void cling_data_flow_analyze(struct cling_data_flow const *self, void *data,
                              struct cling_data_flow_callback const *algorithm) {
-  struct utillib_list worklist;
-  struct cling_basic_block const *head, *block;
+  /*
+   * true: _not_ in the workset
+   * false _in_ the workset
+   * Initial, all in the workset
+   */
+  bool *workset;
+  int head;
+  struct cling_basic_block const *block;
   struct utillib_vector const *join_blocks, *next_blocks;
 
-  utillib_list_init(&worklist);
+  workset=calloc(sizeof workset[0], self->blocks_size);
   algorithm->init(data, self);
-  UTILLIB_VECTOR_FOREACH(block, &self->basic_blocks)
-    utillib_list_push_back(&worklist, block);
 
-  while (!utillib_list_empty(&worklist)) {
-    head=utillib_list_front(&worklist);
-    utillib_list_pop_front(&worklist);
+  while (true) {
+    head=find_block(workset, self->blocks_size);
+    if (head < 0)
+      /*
+       * the workset becomes empty
+       */
+      break;
+    workset[head]=true;
     switch (algorithm->direction) {
     case CLING_FORWARD:
-      join_blocks = &self->children[head->block_id];
-      next_blocks = &self->parents[head->block_id];
+      join_blocks = &self->parents[head];
+      next_blocks = &self->children[head];
       break;
     case CLING_BACKWARD:
-      join_blocks = &self->parents[head->block_id];
-      next_blocks = &self->children[head->block_id];
+      join_blocks = &self->children[head];
+      next_blocks = &self->parents[head];
       break;
     default:
       assert(false);
     }
     if (!data_flow_join(data, algorithm, head, join_blocks))
       continue;
-    algorithm->apply(data, head->block_id);
+    algorithm->apply(data, head);
     UTILLIB_VECTOR_FOREACH(block, next_blocks) {
-      utillib_list_push_back(&worklist, block);
+      workset[block->block_id]=false;
     }
   }
-  utillib_list_destroy(&worklist);
+  free(workset);
 }
 
 /*
@@ -345,10 +382,10 @@ void reaching_definition_destroy(struct cling_reaching_definition *self)
   utillib_vector_destroy_owning(&self->points, free);
 }
 
-struct defpoints *defpoints_create(unsigned int instr, unsigned int target,
+struct defpoints *defpoints_create(unsigned int address, unsigned int target,
                                    unsigned int def_id) {
   struct defpoints *self=malloc(sizeof *self);
-  self->instr=instr;
+  self->address=address;
   self->target=target;
   self->def_id = def_id;
   return self;
@@ -357,7 +394,7 @@ struct defpoints *defpoints_create(unsigned int instr, unsigned int target,
 static void reaching_definitions_initialize(struct cling_reaching_definition *self,
                                    struct cling_data_flow const *data_flow) {
   struct cling_ast_ir const *ir;
-  unsigned int target, address, def_id;
+  int target, address, def_id;
   struct utillib_bitset *reach_out;
   struct defpoints *killed_point, *point;
 
@@ -437,6 +474,11 @@ static void block_data_print(struct cling_block_data const *self, FILE *file)
       fprintf(file, "%u ", id);
     }
     fputs("\n", file);
+    fputs("kill ", file);
+    UTILLIB_BITSET_FOREACH(id, &self->kill[i]) {
+      fprintf(file, "%u ", id);
+    }
+    fputs("\n", file);
   }
   fputs("\n", file);
 }
@@ -448,7 +490,7 @@ void cling_reaching_definition_print(struct cling_reaching_definition const *sel
   fprintf(file, "definition %p\n", self);
   fputs("defpoints\n", file);
   UTILLIB_VECTOR_FOREACH(point, &self->points) {
-    fprintf(file, "defpoint %u at address %u target is %u\n", point->def_id, point->instr, point->target);
+    fprintf(file, "defpoint %u at address %u target is t%u\n", point->def_id, point->address, point->target);
   }
   block_data_print(&self->block_data, file);
 }
@@ -466,25 +508,14 @@ inline void cling_reaching_definition_analyze(struct cling_reaching_definition *
 
 static void live_variable_fill(struct cling_live_variable *self, int block_id, int temp, int flag)
 {
-  switch(self->use_def_state[temp]) {
-    case UDS_INIT:
-      switch(flag) {
-        case UDS_USE:
-          /*
-           * Use before any assignment
-           */
-          utillib_bitset_insert(&self->block_data.flow_in[block_id], temp);
-          self->use_def_state[temp]=flag;
-          break;
-        case UDS_DEF:
-          /*
-           * Def before any use
-           */
-          utillib_bitset_insert(&self->block_data.kill[block_id], temp);
-          self->use_def_state[temp]=flag;
-          break;
-      }
-    default: break;
+  switch(flag) {
+    case UDS_USE:
+      utillib_bitset_insert(&self->block_data.flow_in[block_id], temp);
+      break;
+    case UDS_DEF:
+      utillib_bitset_insert(&self->block_data.kill[block_id], temp);
+      break;
+    default: assert(false);
   }
 }
 static void live_variable_init(struct cling_live_variable *self, struct cling_data_flow const *data_flow)
