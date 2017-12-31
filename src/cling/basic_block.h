@@ -80,15 +80,38 @@ struct cling_reaching_definition {
   struct utillib_vector points;
 };
 
+enum {
+  UDS_INIT=0,
+  UDS_USE,
+  UDS_DEF,
+};
+
+struct live_interval {
+  unsigned int temp;
+  unsigned int begin;
+  unsigned int end;
+};
+
 struct cling_live_variable {
   struct cling_block_data block_data;
+  unsigned int * use_def_state;
+  struct utillib_vector intervals;
 };
 
 void cling_basic_block_construct(struct utillib_vector *blocks,
                                  struct utillib_vector const *instrs);
 void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file);
+
 void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_function const *ast_func);
 void cling_data_flow_destroy(struct cling_data_flow *self);
 void cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
+
+void cling_reaching_definition_analyze(struct cling_reaching_definition *self, struct cling_data_flow const *data_flow);
+void reaching_definition_destroy(struct cling_reaching_definition *self);
+void cling_reaching_definition_print(struct cling_reaching_definition const *self, FILE *file);
+
+void cling_live_variable_print(struct cling_live_variable const *self, FILE *file);
+void live_variable_destroy(struct cling_live_variable *self);
+void cling_live_variable_analyze(struct cling_live_variable *self, struct cling_data_flow const *data_flow);
 
 #endif /* CLING_BASIC_BLOCK */

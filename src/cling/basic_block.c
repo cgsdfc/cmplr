@@ -260,7 +260,7 @@ static bool data_flow_join(void *data,
 /*
  * Use a worklist algorithm to run different data flow algorithm
  */
-void cling_data_flow_analyze(struct cling_data_flow *self, void *data,
+void cling_data_flow_analyze(struct cling_data_flow const *self, void *data,
                              struct cling_data_flow_callback const *algorithm) {
   struct utillib_list worklist;
   struct cling_basic_block const *head, *block;
@@ -339,7 +339,7 @@ static void reaching_definition_init(struct cling_reaching_definition *self, str
   reaching_definitions_initialize(self, data_flow);
 }
 
-static void reaching_definition_destroy(struct cling_reaching_definition *self)
+void reaching_definition_destroy(struct cling_reaching_definition *self)
 {
   block_data_destroy(&self->block_data);
   utillib_vector_destroy_owning(&self->points, free);
@@ -422,14 +422,167 @@ static const struct cling_data_flow_callback reaching_definition_callback = {
     .apply = reaching_definition_apply,
 };
 
+static void block_data_print(struct cling_block_data const *self, FILE *file)
+{
+  unsigned int id;
+  for (int i=0; i<self->blocks_size; ++i) {
+    fprintf(file, "block %d\n", i);
+    fputs("flow_in ", file);
+    UTILLIB_BITSET_FOREACH(id, &self->flow_in[i]) {
+      fprintf(file, "%u ", id);
+    }
+    fputs("\n", file);
+    fputs("flow_out ", file);
+    UTILLIB_BITSET_FOREACH(id, &self->flow_out[i]) {
+      fprintf(file, "%u ", id);
+    }
+    fputs("\n", file);
+  }
+  fputs("\n", file);
+}
+
+void cling_reaching_definition_print(struct cling_reaching_definition const *self, FILE *file)
+{
+  struct defpoints const * point;
+
+  fprintf(file, "definition %p\n", self);
+  fputs("defpoints\n", file);
+  UTILLIB_VECTOR_FOREACH(point, &self->points) {
+    fprintf(file, "defpoint %u at address %u target is %u\n", point->def_id, point->instr, point->target);
+  }
+  block_data_print(&self->block_data, file);
+}
+
+inline void cling_reaching_definition_analyze(struct cling_reaching_definition *self, struct cling_data_flow const *data_flow)
+{
+  cling_data_flow_analyze(data_flow, self, &reaching_definition_callback);
+}
+
 /*
  * Live Variable
  * in=out-kill
  * out=union(children of in)
  */
+
+static void live_variable_fill(struct cling_live_variable *self, int block_id, int temp, int flag)
+{
+  switch(self->use_def_state[temp]) {
+    case UDS_INIT:
+      switch(flag) {
+        case UDS_USE:
+          /*
+           * Use before any assignment
+           */
+          utillib_bitset_insert(&self->block_data.flow_in[block_id], temp);
+          self->use_def_state[temp]=flag;
+          break;
+        case UDS_DEF:
+          /*
+           * Def before any use
+           */
+          utillib_bitset_insert(&self->block_data.kill[block_id], temp);
+          self->use_def_state[temp]=flag;
+          break;
+      }
+    default: break;
+  }
+}
 static void live_variable_init(struct cling_live_variable *self, struct cling_data_flow const *data_flow)
 {
+  struct cling_ast_ir const *ir;
+  unsigned int address, block_id, argc;
+
+  address=0;
   block_data_init(&self->block_data, data_flow->blocks_size, data_flow->temps_size);
+  utillib_vector_init(&self->intervals);
+  self->use_def_state=calloc(sizeof self->use_def_state[0], data_flow->temps_size);
+  UTILLIB_VECTOR_FOREACH(ir, data_flow->instrs) {
+    block_id=data_flow->block_map[address];
+      switch(ir->opcode) {
+        case OP_RET:
+          if (ir->ret.has_result)
+            live_variable_fill(self, block_id, ir->ret.result, UDS_USE);
+          break;
+        case OP_ADD:
+        case OP_SUB:
+        case OP_DIV:
+        case OP_MUL:
+        case OP_EQ:
+        case OP_NE:
+        case OP_LT:
+        case OP_LE:
+        case OP_GT:
+        case OP_GE:
+          live_variable_fill(self, block_id, ir->binop.temp1, UDS_USE);
+          live_variable_fill(self, block_id, ir->binop.temp2, UDS_USE);
+          live_variable_fill(self, block_id, ir->binop.result, UDS_DEF);
+          break;
+        case OP_BEZ:
+          live_variable_fill(self, block_id, ir->bez.temp, UDS_USE);
+          break;
+        case OP_BNE:
+          live_variable_fill(self, block_id, ir->bne.temp1, UDS_USE);
+          live_variable_fill(self, block_id, ir->bne.temp2, UDS_USE);
+          break;
+        case OP_CAL:
+          for (argc=0; argc<ir->call.argc; ++argc)
+            live_variable_fill(self, block_id, ir->call.argv[argc], UDS_USE);
+          if (ir->call.has_result)
+            live_variable_fill(self, block_id, ir->call.result, UDS_DEF);
+          break;
+        case OP_INDEX:
+          live_variable_fill(self, block_id, ir->index.array_addr, UDS_USE);
+          live_variable_fill(self, block_id, ir->index.index_result, UDS_USE);
+          live_variable_fill(self, block_id, ir->index.result, UDS_DEF);
+          break;
+        case OP_LDIMM:
+          live_variable_fill(self, block_id, ir->ldimm.temp, UDS_DEF);
+          break;
+        case OP_LDSTR:
+          live_variable_fill(self, block_id, ir->ldstr.temp, UDS_DEF);
+          break;
+        case OP_DEREF:
+          live_variable_fill(self, block_id, ir->deref.addr, UDS_USE);
+          break;
+        case OP_LDADR:
+          live_variable_fill(self, block_id, ir->ldadr.temp, UDS_DEF);
+          break;
+        case OP_LDNAM:
+          live_variable_fill(self, block_id, ir->ldnam.temp, UDS_DEF);
+          break;
+        case OP_STADR:
+          live_variable_fill(self, block_id, ir->stadr.addr, UDS_USE);
+          live_variable_fill(self, block_id, ir->stadr.value, UDS_USE);
+          break;
+        case OP_STNAM:
+          live_variable_fill(self, block_id, ir->stnam.value, UDS_USE);
+          break;
+        case OP_READ:
+          live_variable_fill(self, block_id, ir->read.temp, UDS_DEF);
+          break;
+        case OP_WRITE:
+          live_variable_fill(self, block_id, ir->write.temp, UDS_USE);
+          break;
+        default: break;
+      }
+      ++address;
+  }
+}
+
+static struct live_interval * live_interval_create(unsigned int temp, unsigned int begin, unsigned int end)
+{
+  struct live_interval *self=malloc(sizeof *self);
+  self->temp=temp;
+  self->begin=begin;
+  self->end=end;
+  return self;
+}
+
+void live_variable_destroy(struct cling_live_variable *self)
+{
+  block_data_destroy(&self->block_data);
+  free(self->use_def_state);
+  utillib_vector_destroy_owning(&self->intervals, free);
 }
 
 static bool live_variable_join(struct cling_live_variable *self, int block_1, int block_2)
@@ -444,10 +597,20 @@ static void live_variable_apply(struct cling_live_variable *self, int block_id)
 }
 
 static const struct cling_data_flow_callback live_variable_callback = {
-    .direction = CLING_FORWARD,
+    .direction = CLING_BACKWARD,
     .init = live_variable_init,
     .join = live_variable_join,
     .apply = live_variable_apply,
 };
 
+void cling_live_variable_print(struct cling_live_variable const *self, FILE *file)
+{
+  unsigned int var;
+  fprintf(file, "cling_live_variable %p\n", self);
+  block_data_print(&self->block_data, file);
+}
 
+void cling_live_variable_analyze(struct cling_live_variable *self, struct cling_data_flow const *data_flow)
+{
+  cling_data_flow_analyze(data_flow, self, &live_variable_callback);
+}

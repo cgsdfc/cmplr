@@ -70,7 +70,10 @@ void utillib_list_push_front(struct utillib_list *self, void  const *value)
   new_node->value=value;
   new_node->next=self->head;
   new_node->prev=NULL;
-  self->head->prev=new_node;
+  if (self->head)
+    self->head->prev=new_node;
+  else
+    self->head=new_node;
   self->head=new_node;
   if (!self->tail)
     self->tail=new_node;
@@ -83,7 +86,10 @@ void utillib_list_push_back(struct utillib_list *self, void  const *value)
   new_node->value=value;
   new_node->next=NULL;
   new_node->prev=self->tail;
-  self->tail->next=new_node;
+  if (self->tail)
+    self->tail->next=new_node;
+  else
+    self->tail=new_node;
   self->tail=new_node;
   if (!self->head)
     self->head=new_node;
@@ -95,7 +101,8 @@ void utillib_list_pop_front(struct utillib_list *self)
   struct utillib_list_node * old_node;
   old_node=self->head;
   self->head=old_node->next;
-  self->head->prev=NULL;
+  if (self->head)
+    self->head->prev=NULL;
   free(old_node);
 }
 
@@ -105,7 +112,8 @@ void utillib_list_pop_back(struct utillib_list *self)
   struct utillib_list_node * old_node;
   old_node=self->tail;
   self->tail=old_node->prev;
-  self->tail->next=NULL;
+  if (self->tail)
+    self->tail->next=NULL;
   free(old_node);
 }
 

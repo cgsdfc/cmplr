@@ -36,6 +36,7 @@ static struct cling_frontend frontend;
 static struct cling_backend backend;
 static FILE *source_file;
 static struct cling_data_flow data_flow;
+static struct cling_reaching_definition definition;
 static char filename_buffer[100];
 
 static void build_all_data_flow(void)
@@ -43,7 +44,7 @@ static void build_all_data_flow(void)
   struct cling_ast_function const *ast_func;
   UTILLIB_VECTOR_FOREACH(ast_func, &backend.ast_program.funcs) {
     cling_data_flow_init(&data_flow, ast_func);
-    cling_data_flow_print(&data_flow, stdout);
+    cling_reaching_definition_analyze(&definition, &data_flow);
     cling_data_flow_destroy(&data_flow);
   }
 }
