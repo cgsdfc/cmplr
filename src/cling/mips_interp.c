@@ -124,6 +124,26 @@ static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_m
 }
 
 /*
+ * Print with '\n'
+ */
+static void print_string(char const *string) {
+  for (char const *p=string; *p; ++p) {
+    if (*p == '\\') {
+      switch(*++p) {
+        case 'n':
+          putchar('\n');
+          break;
+        default: 
+          fprintf(stderr, "warning: unsupported escaped char '%c'\n", *p);
+          break;
+      }
+    } else {
+      putchar(*p);
+    }
+  }
+}
+
+/*
  * Execution of different instructions.
  */
 static int mips_do_syscall(struct cling_mips_interp *self) {
@@ -137,7 +157,7 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
     break;
   case MIPS_PRINT_STRING:
     str_val = utillib_vector_at(&self->strings, self->regs[MIPS_A0]);
-    printf("%s", str_val);
+    print_string(str_val);
     break;
   case MIPS_PRINT_CHAR:
     printf("%c", (char)self->regs[MIPS_A0]);

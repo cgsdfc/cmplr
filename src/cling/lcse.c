@@ -515,6 +515,7 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
     case OP_JMP:
       break;
     case OP_NOP:
+    case OP_NL:
       break;
     default:
       puts(cling_ast_opcode_kind_tostring(ast_ir->opcode));

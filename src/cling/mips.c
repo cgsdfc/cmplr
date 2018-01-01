@@ -23,7 +23,6 @@
 #include "misc.h"
 #include "option.h"
 
-#include <utillib/strhash.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -913,7 +912,7 @@ mips_function_stack_layout(struct cling_mips_function *self,
     mips_function_args_layout(self, ast_func);
   }
   mips_function_save_registers(self, ast_func);
-  if (!is_leaf) {
+  if (!is_leaf || self->global->option->auto_newline) {
     mips_function_save_ra(self);
   }
   mips_function_local_layout(self, ast_func);
@@ -1661,6 +1660,7 @@ static void mips_global_init(struct cling_mips_global *self,
   self->label_count = 0;
   self->data = &program->data;
   self->labels = &program->labels;
+  self->option=program->option;
 }
 
 void cling_mips_program_init(struct cling_mips_program *self, struct cling_option const *option)

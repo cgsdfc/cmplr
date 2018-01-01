@@ -133,6 +133,7 @@ struct cling_mips_program {
 };
 
 struct cling_mips_global {
+  struct cling_option const *option;
   struct utillib_vector *data;
   struct utillib_hashmap *labels;
   int label_count;
