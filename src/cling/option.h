@@ -9,6 +9,7 @@
 struct cling_option {
   bool allow_comment;
   bool no_tricky_jump;
+  bool optimize_lcse;
 };
 
 #endif /* CLING_OPTION_H */
