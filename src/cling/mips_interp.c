@@ -442,8 +442,9 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
   printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
-void cling_mips_interp_init(struct cling_mips_interp *self)
+void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option const *option)
 {
+  self->option=option;
   self->error = 0;
   self->pc = 0;
   self->lo = 0;

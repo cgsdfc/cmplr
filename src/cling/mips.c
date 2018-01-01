@@ -21,6 +21,7 @@
 #include "mips.h"
 #include "ast_ir.h"
 #include "misc.h"
+#include "option.h"
 
 #include <utillib/strhash.h>
 #include <assert.h>
@@ -29,9 +30,13 @@
 #define MIPS_REGR_NULL 0
 
 /*
- * Double words align.
+ * The name of the procedurce that prints a single newline
  */
-#define MIPS_ALIGN (MIPS_WORD_SIZE << 1)
+#define MIPS_AUTO_NEWLINE "__auto_newline"
+/*
+ * The name of the newline string
+ */
+#define MIPS_NEWLINE "__newline"
 
 /*
  * Four MIPS_WORD s
@@ -1448,6 +1453,9 @@ static void mips_function_instrs(struct cling_mips_function *self,
     ast_ir = utillib_vector_at(&ast_func->instrs, ast_pc);
     self->address_map[ast_pc] = utillib_vector_size(self->instrs);
     switch (ast_ir->opcode) {
+      case OP_NL:
+        mips_function_push_back(self, mips_jal(MIPS_AUTO_NEWLINE));
+        break;
       case OP_NOP:
         break;
       case OP_SUB:
@@ -1601,6 +1609,9 @@ static void mips_program_emit_data(struct cling_mips_program *self,
   struct cling_ast_ir const *ast_ir;
   struct cling_mips_data *data;
 
+  if (self->option->auto_newline) {
+    utillib_vector_push_back(&self->data, mips_string_create(MIPS_NEWLINE, "\\n"));
+  }
   UTILLIB_VECTOR_FOREACH(ast_ir, &program->init_code) {
     switch (ast_ir->opcode) {
       case OP_DEFVAR:
@@ -1619,14 +1630,30 @@ static void mips_program_emit_data(struct cling_mips_program *self,
 }
 
 /*
+ * Write a little procedurce to print a newline
+ */
+static void mips_program_newline(struct cling_mips_program *self) {
+  struct cling_mips_label *label;
+  struct utillib_vector *text = &self->text;
+  label=mips_label_create(MIPS_AUTO_NEWLINE, utillib_vector_size(text));
+  utillib_hashmap_insert(&self->labels, label, label);
+  utillib_vector_push_back(text, mips_la(MIPS_A0, MIPS_NEWLINE));
+  utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_PRINT_STRING));
+  utillib_vector_push_back(text, &cling_mips_syscall);
+  utillib_vector_push_back(text, mips_jr(MIPS_RA));
+}
+
+/*
  * Write a few lines at the most front to jump to main
  * and then exit.
  */
 static void mips_program_setup(struct cling_mips_program *self) {
-   struct utillib_vector *text = &self->text;
-   utillib_vector_push_back(text, mips_jal("main"));
-   utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_EXIT));
-   utillib_vector_push_back(text, &cling_mips_syscall);
+  struct utillib_vector *text = &self->text;
+  utillib_vector_push_back(text, mips_jal("main"));
+  utillib_vector_push_back(text, mips_li(MIPS_V0, MIPS_EXIT));
+  utillib_vector_push_back(text, &cling_mips_syscall);
+  if (self->option->auto_newline)
+    mips_program_newline(self);
 }
 
 static void mips_global_init(struct cling_mips_global *self,
@@ -1636,8 +1663,9 @@ static void mips_global_init(struct cling_mips_global *self,
   self->labels = &program->labels;
 }
 
-void cling_mips_program_init(struct cling_mips_program *self)
+void cling_mips_program_init(struct cling_mips_program *self, struct cling_option const *option)
 {
+  self->option=option;
   utillib_vector_init(&self->text);
   utillib_vector_init(&self->data);
   utillib_hashmap_init(&self->labels, &mips_label_callback);

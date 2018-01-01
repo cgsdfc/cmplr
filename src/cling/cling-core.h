@@ -60,14 +60,12 @@ int cling_frontend_parse(struct cling_frontend *self);
 void cling_frontend_print_error(struct cling_frontend const *self);
 void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output);
 
-void cling_backend_init(struct cling_backend *self);
+void cling_backend_init(struct cling_backend *self, struct cling_option const *option);
 void cling_backend_destroy(struct cling_backend *self);
 void cling_backend_dump_mips(struct cling_backend const *self, FILE *output);
 void cling_backend_dump_ast_ir(struct cling_backend const *self, FILE *output);
 int cling_backend_interpret(struct cling_backend *self);
-void cling_backend_codegen(struct cling_backend *self,
-                           struct cling_option const *option,
-                           struct cling_frontend *frontend);
+void cling_backend_codegen(struct cling_backend *self, struct cling_frontend *frontend);
 void cling_backend_optimize(struct cling_backend *self);
 
 #endif /* CLING_CLING_CORE_H */

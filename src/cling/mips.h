@@ -129,6 +129,7 @@ struct cling_mips_program {
   struct utillib_vector text;
   struct utillib_vector data;
   struct utillib_hashmap labels;
+  struct cling_option const *option;
 };
 
 struct cling_mips_global {
@@ -214,11 +215,11 @@ struct cling_mips_ir {
     int16_t imme16;
     int32_t imme32;
     uint32_t uimme32;
-    char const *label;
+    char *label;
   } operands[CLING_MIPS_OPERAND_MAX];
 };
 
-void cling_mips_program_init(struct cling_mips_program *self);
+void cling_mips_program_init(struct cling_mips_program *self, struct cling_option const *option);
 void cling_mips_program_destroy(struct cling_mips_program *self);
 void cling_mips_program_emit(struct cling_mips_program *self,
                              struct cling_ast_program const *program);
