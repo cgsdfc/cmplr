@@ -58,14 +58,14 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
   assert(index < MIPS_MEM_ARRAY_MAX);
   memblk_array=self->memory[index];
   if (!memblk_array) {
-    memblk_array=calloc(sizeof memblk_array[0], MIPS_MEM_ARRAY_MAX);
+    memblk_array=calloc(MIPS_MEM_ARRAY_MAX,sizeof memblk_array[0]);
     self->memory[index]=memblk_array;
   }
   index=memindex_2(address);
   assert(index < MIPS_MEM_ARRAY_MAX);
   memblk=memblk_array[index];
   if (!memblk) {
-    memblk=calloc(sizeof *memblk, 1);
+    memblk=calloc( 1,sizeof *memblk);
     memblk_array[index]=memblk;
   }
   index=memoffset(address);
