@@ -72,7 +72,7 @@ static int emit_expr(struct cling_ast_ir_global *self,
                      struct utillib_json_value const *object);
 
 static struct cling_ast_ir *emit_ir(int opcode) {
-  struct cling_ast_ir *self = calloc(sizeof *self, 1);
+  struct cling_ast_ir *self = calloc(1, sizeof *self);
   self->opcode = opcode;
   return self;
 }

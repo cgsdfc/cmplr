@@ -181,7 +181,7 @@ static bool mips_is_saved_register(uint8_t regid) {
  * to C routines.
  */
 static struct cling_mips_ir *mips_ir_create(uint8_t opcode) {
-  struct cling_mips_ir *self = calloc(sizeof *self, 1);
+  struct cling_mips_ir *self = calloc(1, sizeof *self);
   self->opcode = opcode;
   return self;
 }
@@ -552,10 +552,10 @@ static void mips_function_init(struct cling_mips_function *self,
   self->frame_size = 0;
   self->para_size=0;
   self->instr_begin = utillib_vector_size(instrs);
-  self->reg_used = calloc(sizeof self->reg_used[0], CLING_MIPS_REG_MAX);
+  self->reg_used =calloc(CLING_MIPS_REG_MAX, sizeof self->reg_used[0]);
   self->address_map = malloc(sizeof self->address_map[0] *
                              utillib_vector_size(&ast_func->instrs));
-  self->temps = calloc(sizeof self->temps[0], ast_func->temps);
+  self->temps = calloc(ast_func->temps, sizeof self->temps[0]);
   utillib_hashmap_init(&self->names, &cling_string_hash);
   utillib_vector_init(&self->saved);
 }
