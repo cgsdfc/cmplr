@@ -21,6 +21,8 @@
 #ifndef CLING_SYMBOL_HXX
 #define CLING_SYMBOL_HXX
 
+char const *SymbolString(int symbol);
+
 enum {
   SYM_EOF,
   SYM_PROGRAM,

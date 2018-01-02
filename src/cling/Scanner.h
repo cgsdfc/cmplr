@@ -25,14 +25,17 @@ struct Scanner {
   Option const *option;
   EList *elist;
 
-  Scanner(Option const *option, FILE *file);
+  Scanner(Option const *option, FILE *file, EList *elist);
   int GetToken(void);
-  char const *GetString(void);
+  char const *GetString(void)const ;
   int ReadChar(void);
   int ReadString(void);
-  int ReadNumber(void);
-  void SkipComment(void);
-  bool IsValidChar(int ch);
+  int ReadNumber(int ch);
+  int ReadToken(void);
+  void SkipComment(int ch);
+  void SkipSpace(int ch);
+  bool IsValidCharInChar(int ch);
+  bool IsValidCharInString(int ch);
 };
 
 #endif

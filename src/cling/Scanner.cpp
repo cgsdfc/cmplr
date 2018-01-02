@@ -1,5 +1,20 @@
 #include "Scanner.h"
+#include "Utility.h"
+#include "Error.h"
 #include "Symbol.h"
+#include "Option.h"
+#include <stdio.h>
+
+#define CLING_KW_SIZE 14
+static const StringIntPair KeywordPairs [] = {
+    {"case", SYM_KW_CASE},     {"char", SYM_KW_CHAR},
+    {"const", SYM_KW_CONST},   {"default", SYM_KW_DEFAULT},
+    {"else", SYM_KW_ELSE},     {"for", SYM_KW_FOR},
+    {"if", SYM_KW_IF},         {"int", SYM_KW_INT},
+    {"main", SYM_KW_MAIN},     {"printf", SYM_KW_PRINTF},
+    {"return", SYM_KW_RETURN}, {"scanf", SYM_KW_SCANF},
+    {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
+};
 
 CharStream::CharStream(FILE *file):file(file), row(0), col(0){}
 
@@ -18,32 +33,41 @@ int CharStream::GetChar(void) {
   return ch;
 }
 
-bool ReachEOF(void) {
+bool CharStream::ReachEOF(void) {
   return feof(file);
 }
 
-Scanner::Scanner(Option const *option, FILE *file):option(option), buffer(file) {}
+Scanner::Scanner(Option const *option, FILE *file, EList *elist)
+  :option(option), input(file), elist(elist) {
+    this->ch=input.GetChar();
+  }
 
-char const* Scanner::GetString(void) {
+char const* Scanner::GetString(void) const {
   return buffer.CStr();
 }
 
-bool Scanner::IsValidChar(int ch) {
+bool Scanner::IsValidCharInChar(int ch) {
   return ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
       isalnum(ch);
 }
+
+bool Scanner::IsValidCharInString(int ch) {
+  return ch == 32 || ch == 33 || 35 <= ch && ch <= 126;
+}
+
 int Scanner::ReadChar(void) {
-  char ch;
-  ch = input.GetChar();
-  if (IsValidChar(ch))  {
+  int ch = input.GetChar();
+  if (IsValidCharInChar(ch))  {
     buffer.AppendChar(ch);
-    if ((ch=input.GetChar()) != '\'')
-      this->ch=ch;
-      return -CL_EUNTCHAR;
+    if ((ch=input.GetChar()) != '\'') {
+      elist->AddError(new InvalidCharError(this, SYM_CHAR));
+      return -1;
     }
+    this->ch=ch;
     return SYM_CHAR;
   }
-  return -CL_ECHRCHAR;
+  elist->AddError(new UnterminatedTokenError(this, SYM_CHAR));
+  return -1;
 }
 
 int Scanner::ReadNumber(int ch) {
@@ -56,17 +80,29 @@ int Scanner::ReadNumber(int ch) {
 }
 
 int Scanner::ReadString(void) {
-
-
-
+  int ch;
+  for (; (ch = input.GetChar()) != '\"';) {
+    if (ch == EOF) {
+      elist->AddError(new UnterminatedTokenError(this, SYM_STRING));
+      return -1;
+    }
+    if (IsValidCharInString(ch)) {
+      buffer.AppendChar(ch);
+      continue;
+    }
+    elist->AddError(new InvalidCharError(this, SYM_STRING));
+    return -1;
+  }
+  this->ch=ch;
+  return SYM_STRING;
 }
 
-int Scanner::GetToken(void) {
+int Scanner::ReadToken(void) {
   char ch=input.GetChar();
   int code = SYM_ERR;
   char const *keyword;
   int two_chars, one_char;
-  switch (ch) {
+  switch (this->ch) {
     /*
      * Level 1 dispatch: single char.
      */
@@ -127,7 +163,8 @@ int Scanner::GetToken(void) {
       goto level2;
     case '!':
       two_chars = SYM_NE;
-      one_char = -CL_EBADNEQ;
+      one_char = -1;
+      elist->AddError(new BadEqualError(this));
       goto level2;
     default:
       goto level3;
@@ -143,15 +180,17 @@ level3:
   /*
    * Level 3 : keyword and iden.
    */
-  if (IsIdenBegin(ch) {
-    utillib_token_scanner_collect_identifier(&self->input, &self->buffer);
-    keyword = utillib_string_c_str(&self->buffer);
-    code = utillib_keyword_bsearch(keyword, cling_keywords, CLING_KW_SIZE);
-    if (code != UT_SYM_NULL)
+  if (IsIdenBegin(ch)) {
+    while(ch == '_' || isalnum(ch)) {
+      buffer.AppendChar(ch);
+      ch=input.GetChar();
+    }
+    this->ch=ch;
+    code = KeywordBseach(KeywordPairs, CLING_KW_SIZE, buffer.CStr());
+    if (code > 0)
       return code;
     return SYM_IDEN;
   }
-
   /*
    * Level 4 : char, string and number
    */
@@ -159,12 +198,40 @@ level3:
     return ReadString();
   }
   if (ch == '\'') {
-    return read_char();
+    return ReadChar();
   }
   if (isdigit(ch) || ch == '+' || ch == '-')
     return ReadNumber(ch);
-  return -CL_EUNKNOWN;
+  elist->AddError(new UnknownTokenError(this));
+  return -1;
 }
 
+void Scanner::SkipComment(int ch) {
+  while (ch == '#') {
+    ch=input.GetChar();
+    while (ch != '\n')
+      ch=input.GetChar();
+  }
+  this->ch=ch;
+}
 
+void Scanner::SkipSpace(int ch) {
+  while (isspace(ch)) {
+    ch=input.GetChar();
+  }
+  this->ch=ch;
+}
+
+int Scanner::GetToken(void) {
+  SkipSpace(this->ch);
+  if (option->allow_comment)
+    SkipComment(this->ch);
+  if (this->ch == EOF)
+    return 0;
+  int code=ReadToken();
+  if (code < 0) {
+    return 0;
+  }
+  return code;
+}
 
