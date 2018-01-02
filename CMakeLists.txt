@@ -37,3 +37,14 @@ if (CMPLR_PLATFORM STREQUAL "LINUX")
   set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable")
 endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
+add_library(cling-core
+  ./src/cling/Error.cpp
+  ./src/cling/Symbol.cpp
+  ./src/cling/Utility.cpp
+  ./src/cling/Scanner.cpp
+  ./src/cling/Core.cpp
+)
+
+add_executable(cling ./src/cling/cling.cpp)
+target_link_libraries(cling cling-core)
+

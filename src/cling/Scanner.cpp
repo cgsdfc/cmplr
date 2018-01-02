@@ -63,7 +63,6 @@ int Scanner::ReadChar(void) {
       elist->AddError(new InvalidCharError(this, SYM_CHAR));
       return -1;
     }
-    this->ch=ch;
     return SYM_CHAR;
   }
   elist->AddError(new UnterminatedTokenError(this, SYM_CHAR));
@@ -93,19 +92,24 @@ int Scanner::ReadString(void) {
     elist->AddError(new InvalidCharError(this, SYM_STRING));
     return -1;
   }
-  this->ch=ch;
   return SYM_STRING;
 }
 
 int Scanner::ReadToken(void) {
-  char ch=input.GetChar();
+  char ch=this->ch;
   int code = SYM_ERR;
   char const *keyword;
   int two_chars, one_char;
-  switch (this->ch) {
+  switch (ch) {
     /*
      * Level 1 dispatch: single char.
      */
+    case '+':
+      code = SYM_ADD;
+      break;
+    case '-':
+      code=SYM_MINUS;
+      break;
     case '[':
       code = SYM_LK;
       break;
@@ -174,6 +178,7 @@ level2:
   if ((ch=input.GetChar()) == '=') {
     return two_chars;
   }
+  this->ch=ch;
   return one_char;
 
 level3:
@@ -202,6 +207,9 @@ level3:
   }
   if (isdigit(ch) || ch == '+' || ch == '-')
     return ReadNumber(ch);
+  /*
+   * Last straw
+   */
   elist->AddError(new UnknownTokenError(this));
   return -1;
 }
@@ -228,6 +236,7 @@ int Scanner::GetToken(void) {
     SkipComment(this->ch);
   if (this->ch == EOF)
     return 0;
+  buffer.Clear();
   int code=ReadToken();
   if (code < 0) {
     return 0;

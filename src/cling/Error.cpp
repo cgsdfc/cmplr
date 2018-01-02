@@ -16,11 +16,21 @@ void EList::AddError(Error *error) {
   elist.push_back(error);
 }
 
+bool EList::HasError(void) {
+  return !elist.empty();
+}
+
+void EList::Print(FILE *file) {
+  for (auto e:elist) {
+    e->print(file);
+  }
+  fprintf(file, "%lu errors generated\n", elist.size());
+}
+
 EList::~EList() {
   for (auto e: elist) {
     GenericDestroy(e);
   }
-  GenericDestroy(&elist);
 }
   
 NameError::NameError(Scanner const *scanner, int context, char const *name)

@@ -25,12 +25,14 @@ struct Error {
   char const *context;
   Error(Scanner const *scanner, int context);
   virtual void print(FILE *file);
-  virtual ~Error();
+  virtual ~Error(){}
 };
 
 struct EList {
   std::vector<Error*> elist;
   void AddError(Error *error);
+  bool HasError(void);
+  void Print(FILE *file);
   ~EList();
 };
 
