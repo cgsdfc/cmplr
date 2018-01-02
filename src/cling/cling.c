@@ -29,7 +29,8 @@ enum {
 };
 
 static struct cling_option option={
-  .auto_newline=true
+  .auto_newline=true,
+  .plain_return=true,
 };
 
 static struct cling_frontend frontend;
@@ -52,7 +53,6 @@ int main(int argc, char *argv[])
   cling_backend_init(&backend, &option);
   cling_backend_codegen(&backend, &frontend);
   cling_backend_dump_mips(&backend, stdout);
-  cling_backend_interpret(&backend);
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
   return 0;

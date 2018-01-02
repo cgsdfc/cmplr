@@ -28,6 +28,7 @@ struct cling_option {
   bool allow_comment;
   bool no_tricky_jump;
   bool auto_newline;
+  bool plain_return;
 };
 
 #endif /* CLING_OPTION_H */
