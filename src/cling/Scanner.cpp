@@ -289,6 +289,6 @@ TokenValue *Scanner::GetTokenValue(int type) {
       sscanf(GetString(), "%c", &charValue);
       return new CharLiteral(input.location, charValue);
     default:
-      UNREACHABLE(type);
+      return nullptr;
   }
 }

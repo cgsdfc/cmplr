@@ -20,11 +20,12 @@
 */
 #ifndef CLING_SYMBOL_HXX
 #define CLING_SYMBOL_HXX
-
+#include "Grammar.h"
 char const *SymbolString(int symbol);
+#define LEMON_SYM_MAX 18
 
 enum {
-  SYM_EOF,
+  SYM_EOF=LEMON_SYM_MAX,
   SYM_PROGRAM,
   SYM_ADD_OP,
   SYM_REL_OP,
@@ -57,14 +58,9 @@ enum {
   SYM_EXPR,
   SYM_CONDITION,
 
-  SYM_INTEGER,
   SYM_STRING,
-  SYM_CHAR,
 
-  SYM_KW_INT,
-  SYM_KW_CHAR,
   SYM_KW_VOID,
-  SYM_KW_CONST,
   SYM_KW_IF,
   SYM_KW_FOR,
   SYM_KW_SWITCH,
@@ -77,16 +73,8 @@ enum {
   SYM_KW_PRINTF,
 
   SYM_COLON,
-  SYM_LB,
-  SYM_RB,
-  SYM_SEMI,
 
-  SYM_ADD,
   SYM_MUL,
-  SYM_IDEN,
-  SYM_LK,
-  SYM_RK,
-  SYM_EQ,
   SYM_NE,
   SYM_DEQ,
   SYM_LT,
@@ -94,10 +82,6 @@ enum {
   SYM_GT,
   SYM_GE,
   SYM_DIV,
-  SYM_MINUS,
-  SYM_COMMA,
-  SYM_LP,
-  SYM_RP,
   SYM_ERR,
 };
 

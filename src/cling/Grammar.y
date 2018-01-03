@@ -12,6 +12,7 @@ POSITIVE, NEGATIVE,
 %token_type {TokenValue*}
 %token_destructor { delete $$; }
 %extra_argument { Parser *parser}
+
 /* stupid */
 %type program {Program*}
 program ::= const_decl_list(C) var_decl_list(V) function_decl_list(F). {
@@ -99,6 +100,9 @@ RHS->PushBack(P);
 LHS=RHS;
 }
 
+/*
+ * Almost the same as int version
+ */
 char_const_def_list ::= SYM_KW_CHAR iden_char_pair_list. {
 
 }

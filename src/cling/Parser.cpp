@@ -10,8 +10,9 @@ extern "C" {
 }
 
 Parser::Parser(Option const *option, ErrorManager *errorManager)
-  :option(option), errorManager(errorManager) {
+  :option(option), errorManager(errorManager), program(nullptr) {
   lemonImpl=ParseAlloc(malloc);
+  ParseTrace(stderr, "(Lemon) ");
 }
 
 int Parser::ParseAll(Scanner * scanner) {

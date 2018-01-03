@@ -31,11 +31,11 @@ int main(int argc, char *argv[])
   Option option;
   option.allowComment = true;
   char filename_buffer[1024];
-  /* FILE *source_file=fopen(argv[1], "r"); */
-  /* if (!source_file) { */
-  /*   fprintf(stderr, "%s cannot be opened\n", filename_buffer); */
-  /*   exit(1); */
-  /* } */
-  return InteractiveTokenize(&option);
-  /* fclose(source_file); */
+  FILE *source_file=fopen(argv[1], "r");
+  if (!source_file) {
+    fprintf(stderr, "%s cannot be opened\n", filename_buffer);
+    exit(1);
+  }
+  Frontend frontend(&option, source_file);
+  return frontend.Parse();
 }

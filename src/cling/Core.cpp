@@ -35,3 +35,8 @@ int InteractiveTokenize(Option const *option) {
   Frontend frontend(option, stdin);
   return frontend.Tokenize(stdout);
 }
+
+int Frontend::Parse(void) {
+  return parser.ParseAll(&scanner);
+}
+
