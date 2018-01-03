@@ -266,9 +266,35 @@ if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement.{
 }
 
 
-expression::=SYM_IDEN . {
+expression::=SYM_IDEN . { }
+expression::=SYM_CHAR.{}
+expression::=SYM_INTEGER.{}
+expression::=SYM_STRING.{}
+
+expression::=SYM_LP expression SYM_RP. {
 
 }
+
+expression::=expression SYM_ADD expression. { }
+expression::=expression SYM_MINUS expression. { }
+expression::=expression SYM_GE expression. { }
+expression::=expression SYM_DIV expression. { }
+expression::=expression SYM_MUL expression. { }
+expression::=expression SYM_DEQ expression. { }
+expression::=expression SYM_EQ expression. { }
+expression::=expression SYM_LE expression. { }
+expression::=expression SYM_LT expression. { }
+expression::=expression SYM_NE expression. { }
+
+expression::=SYM_MINUS. [SYM_RIGHT_UNARY] {}
+expression::=SYM_ADD. [SYM_RIGHT_UNARY] {}
+
+%nonassoc SYM_EQ.
+%left SYM_DEQ SYM_LT SYM_LE SYM_GE SYM_GT SYM_NE.
+%left SYM_ADD SYM_MINUS.
+%left SYM_DIV SYM_MUL.
+/* This is for unary operator */
+%right SYM_RIGHT_UNARY .
 
 maybe_expression::=.{
 

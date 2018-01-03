@@ -21,3 +21,13 @@
 #define SYM_KW_SWITCH                   21
 #define SYM_KW_IF                       22
 #define SYM_KW_ELSE                     23
+#define SYM_STRING                      24
+#define SYM_GE                          25
+#define SYM_DIV                         26
+#define SYM_MUL                         27
+#define SYM_DEQ                         28
+#define SYM_LE                          29
+#define SYM_LT                          30
+#define SYM_NE                          31
+#define SYM_RIGHT_UNARY                 32
+#define SYM_GT                          33
