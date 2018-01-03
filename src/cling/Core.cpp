@@ -24,8 +24,8 @@ int Frontend::Tokenize(FILE *output) {
         break;
     }
   }
-  if (elist.HasError()) {
-    elist.Print(stderr);
+  if (errorManager.HasError()) {
+    errorManager.Print(stderr);
     return -1;
   }
   return 0;

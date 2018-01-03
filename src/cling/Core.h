@@ -6,10 +6,10 @@
 
 struct Frontend {
   Scanner scanner;
-  EList elist;
+  ErrorManager errorManager;
 
   Frontend(Option const *option, FILE *file)
-    :scanner(option, file, &elist) {}
+    :scanner(option, file, &errorManager) {}
   int Tokenize(FILE *output);
 };
 

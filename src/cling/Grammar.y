@@ -1,14 +1,10 @@
-%include {
-#include "Symbol.h"
-#include "Scanner.h"
-}
 %type program {Program*}
 %type const_decl_list {GenericVector<ConstDecl>*}
 %type function {Function*}
 %token_type {TokenValue*}
 %token_destructor { delete $$; }
 %extra_argument { Parser *parser}
-
+/* stupid */
 program ::= const_decl_list var_decl_list function_decl_list. {
   
 }

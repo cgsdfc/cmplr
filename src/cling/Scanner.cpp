@@ -52,8 +52,8 @@ IntegerToken::IntegerToken(Location const& location, int intValue)
   :TokenValue(location), intValue(intValue) {}
 
 
-Scanner::Scanner(Option const *option, FILE *file, EList *elist)
-  :option(option), input(file), elist(elist) {
+Scanner::Scanner(Option const *option, FILE *file, ErrorManager *errorManager)
+  :option(option), input(file), errorManager(errorManager) {
     this->next_char=input.GetChar();
   }
 
@@ -74,14 +74,14 @@ int Scanner::ReadChar(void) {
   int ch = input.GetChar();
   buffer.AppendChar(ch);
   if (!IsValidCharInChar(ch))  {
-    elist->AddError(new InvalidCharError(this, SYM_CHAR));
+    errorManager->AddError(new InvalidCharError(this, SYM_CHAR));
     return -1;
   }
   if ((ch=input.GetChar()) == '\'') {
     this->next_char=input.GetChar();
     return SYM_CHAR;
   }
-  elist->AddError(new UnterminatedTokenError(this, SYM_CHAR));
+  errorManager->AddError(new UnterminatedTokenError(this, SYM_CHAR));
   return -1;
 }
 
@@ -102,14 +102,14 @@ int Scanner::ReadString(void) {
   int ch;
   for (; (ch = input.GetChar()) != '\"';) {
     if (IsStringBreaker(ch)) {
-      elist->AddError(new UnterminatedTokenError(this, SYM_STRING));
+      errorManager->AddError(new UnterminatedTokenError(this, SYM_STRING));
       return -1;
     }
     buffer.AppendChar(ch);
     if (IsValidCharInString(ch)) {
       continue;
     }
-    elist->AddError(new InvalidCharError(this, SYM_STRING));
+    errorManager->AddError(new InvalidCharError(this, SYM_STRING));
     return -1;
   }
   this->next_char=input.GetChar();
@@ -202,7 +202,7 @@ level2:
   }
   this->next_char=ch;
   if (one_char < 0)
-    elist->AddError(new BadEqualError(this));
+    errorManager->AddError(new BadEqualError(this));
   return one_char;
 
 level3:
@@ -235,7 +235,7 @@ level3:
    * Last straw
    */
   buffer.AppendChar(ch);
-  elist->AddError(new UnknownTokenError(this));
+  errorManager->AddError(new UnknownTokenError(this));
   return -1;
 }
 

@@ -11,19 +11,25 @@ void Error::print(FILE *file) {
   fprintf(file, "ERROR at %u:%u in %s: ", location.row, location.col, context);
 }
 
-void EList::AddError(Error *error) {
-  GenericVector::PushBack(error);
+void ErrorManager::AddError(Error *error) {
+  errors.push_back(error);
 }
 
-bool EList::HasError(void) {
-  return !elements.empty();
+bool ErrorManager::HasError(void) {
+  return !errors.empty();
 }
 
-void EList::Print(FILE *file) {
-  for (auto e:elements) {
+void ErrorManager::Print(FILE *file) {
+  for (auto e: errors) {
     e->print(file);
   }
-  fprintf(file, "%lu errors generated\n", size());
+  fprintf(file, "%lu errors generated\n", errors.size());
+}
+
+ErrorManager::~ErrorManager() {
+  for (auto e:errors) {
+    e->~Error();
+  }
 }
 
 NameError::NameError(Scanner const *scanner, int context, char const *name)

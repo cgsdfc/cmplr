@@ -7,7 +7,7 @@
  * Use plain old C as a whole.
  */
 struct Option;
-struct EList;
+struct ErrorManager;
 
 struct CharStream {
   FILE *file;
@@ -56,9 +56,9 @@ struct Scanner {
   String buffer;
   CharStream input;
   Option const *option;
-  EList *elist;
+  ErrorManager *errorManager;
 
-  Scanner(Option const *option, FILE *file, EList *elist);
+  Scanner(Option const *option, FILE *file, ErrorManager *errorManager);
   int GetToken(void);
   char const *GetString(void)const ;
   TokenValue *GetTokenValue(int type);

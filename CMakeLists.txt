@@ -37,12 +37,6 @@ if (CMPLR_PLATFORM STREQUAL "LINUX")
   set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable")
 endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
-set(LEMON_GRAMMAR ${CMAKE_SOURCE_DIR}/src/cling/Grammar.y)
-add_custom_target(LEMON_PARSER
-  COMMAND lemon ${LEMON_GRAMMAR}
-  DEPENDS ${LEMON_GRAMMAR}
-)
-
 add_library(cling-core
   ./src/cling/Error.cpp
   ./src/cling/Symbol.cpp
@@ -51,7 +45,32 @@ add_library(cling-core
   ./src/cling/Core.cpp
   ./src/cling/Parser.cpp
 )
-add_dependencies(cling-core LEMON_PARSER)
+# this can generate file with dep but
+# cannot be depended on by top-target
+# in fact it can but in another signature
+# You Know CMake always put different commands
+# into the same name but different _signature_
+# As if Overload happens. But this overload asks
+# us to put the $OUTPUT into top-target's file list
+# which cause us compile Grammar.c with other cpp files.
+# We don't want that happens so we _combine_ 2 commands
+# to both generate a file and get the top-target depend
+# on that file.
+
+set(LEMON_GRAMMAR ${CMAKE_SOURCE_DIR}/src/cling/Grammar.y)
+set(LEMON_PARSER ${CMAKE_SOURCE_DIR}/src/cling/Grammar.c)
+
+# let parser depend on grammar
+# generate parser impl
+add_custom_command(OUTPUT ${LEMON_PARSER}
+  DEPENDS ${LEMON_GRAMMAR}
+  COMMAND lemon ${LEMON_GRAMMAR})
+# let library depend on parser
+add_custom_target(BUILD_LEMON_PARSER
+  DEPENDS ${LEMON_PARSER})
+add_dependencies(cling-core BUILD_LEMON_PARSER)
+# End handling lemon
+
 add_executable(cling ./src/cling/cling.cpp)
 target_link_libraries(cling cling-core)
 

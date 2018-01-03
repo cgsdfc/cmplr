@@ -60,6 +60,13 @@ void GenericDestroy(T *object) {
   object->~T();
 }
 
+template<class T>
+void GenericDestroy(std::vector<T*> * vector) {
+  for(auto e:vector)
+    GenericDestroy(e);
+  GenericDestroy(vector);
+}
+
 int KeywordBseach(StringIntPair const *array, unsigned int len, char const *key);
 int StringIntPairCompareOnString(void const *lhs, void const *rhs);
 
