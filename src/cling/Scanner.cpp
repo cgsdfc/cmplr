@@ -4,6 +4,7 @@
 #include "Symbol.h"
 #include "Option.h"
 #include <stdio.h>
+#include <string.h>
 
 #define CLING_KW_SIZE 14
 static const StringIntPair KeywordPairs [] = {
@@ -37,6 +38,19 @@ int CharStream::GetChar(void) {
 bool CharStream::ReachEOF(void) {
   return feof(file);
 }
+
+void TokenValue::print(FILE *file) {
+  fprintf(file, "TokenValue(location(%u, %u))\n", location.row, location.col);
+}
+
+StringToken::StringToken(Location const& location, char const *string)
+  :TokenValue(location), string(strdup(string)) {}
+
+StringToken::~StringToken() { free(string); }
+
+IntegerToken::IntegerToken(Location const& location, int intValue)
+  :TokenValue(location), intValue(intValue) {}
+
 
 Scanner::Scanner(Option const *option, FILE *file, EList *elist)
   :option(option), input(file), elist(elist) {
@@ -260,3 +274,21 @@ int Scanner::GetToken(void) {
   return code;
 }
 
+TokenValue *Scanner::GetTokenValue(int type) {
+  int intValue;
+  char charValue;
+  switch(type) {
+    case SYM_IDEN:
+      return new Identifier(input.location, GetString());
+    case SYM_STRING:
+      return new StringLiteral(input.location, GetString());
+    case SYM_INTEGER:
+      sscanf(GetString(), "%d", &intValue);
+      return new IntegerLiteral(input.location, intValue);
+    case SYM_CHAR:
+      sscanf(GetString(), "%c", &charValue);
+      return new CharLiteral(input.location, charValue);
+    default:
+      UNREACHABLE(type);
+  }
+}

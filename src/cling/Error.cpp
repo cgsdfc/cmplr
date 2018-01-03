@@ -12,26 +12,20 @@ void Error::print(FILE *file) {
 }
 
 void EList::AddError(Error *error) {
-  elist.push_back(error);
+  GenericVector::PushBack(error);
 }
 
 bool EList::HasError(void) {
-  return !elist.empty();
+  return !elements.empty();
 }
 
 void EList::Print(FILE *file) {
-  for (auto e:elist) {
+  for (auto e:elements) {
     e->print(file);
   }
-  fprintf(file, "%lu errors generated\n", elist.size());
+  fprintf(file, "%lu errors generated\n", size());
 }
 
-EList::~EList() {
-  for (auto e: elist) {
-    GenericDestroy(e);
-  }
-}
-  
 NameError::NameError(Scanner const *scanner, int context, char const *name)
   : Error(scanner, context), name(strdup(name)) {}
 

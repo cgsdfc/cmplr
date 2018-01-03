@@ -13,12 +13,10 @@ struct Error {
   virtual ~Error(){}
 };
 
-struct EList {
-  std::vector<Error*> elist;
+struct EList: public GenericVector<Error> {
   void AddError(Error *error);
   bool HasError(void);
   void Print(FILE *file);
-  ~EList();
 };
 
 struct NameError: public Error {

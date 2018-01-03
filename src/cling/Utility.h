@@ -3,6 +3,7 @@
 #define positive_number(X) ((X) ? (X) : 1)
 
 #include <assert.h>
+#include <vector>
 #include <string>
 #include <stdio.h>
 
@@ -33,6 +34,25 @@ struct Location {
   unsigned int col;
   Location():row(0), col(0){}
   Location(Location const& other):row(other.row), col(other.col){}
+};
+
+template<class T>
+struct GenericVector {
+  std::vector<T*> elements;
+  void PushBack(T* elem) {
+    elements.push_back(elem);
+  }
+  size_t size() const {
+    return elements.size();
+  }
+  bool empty() const {
+    return elements.empty();
+  }
+  ~GenericVector() {
+    for (auto e:elements) {
+      GenericDestroy(e);
+    }
+  }
 };
 
 template<class T>
