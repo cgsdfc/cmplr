@@ -218,6 +218,62 @@ statement_list::=statement_list statement. {
 
 }
 
-statement ::= SYM_IDEN SYM_SEMI. {
+statement ::= return_statement. {
 
 }
+statement::=expression_statement.{
+
+}
+statement::=for_statement.{
+
+}
+statement::=switch_statement.{
+
+}
+statement::=if_statement.{
+
+}
+return_statement::= SYM_KW_RETURN maybe_expression SYM_SEMI. {
+
+}
+
+expression_statement::=maybe_expression SYM_SEMI. {
+
+}
+
+for_statement::=SYM_KW_FOR SYM_LP maybe_expression SYM_SEMI maybe_expression SYM_SEMI maybe_expression SYM_RP statement. {
+
+}
+
+switch_statement::=SYM_KW_SWITCH SYM_LP expression SYM_RP statement. {
+
+}
+
+/* The precedence of the shorter form is determined by 
+ * the first terminal of that rule
+ */
+%nonassoc SYM_KW_IF.
+/* The precedence of the token to shift is itself
+ */
+%nonassoc SYM_KW_ELSE.
+
+if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement SYM_KW_ELSE statement.{
+
+}
+
+if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement.{
+
+}
+
+
+expression::=SYM_IDEN . {
+
+}
+
+maybe_expression::=.{
+
+}
+maybe_expression::=expression.{
+
+}
+

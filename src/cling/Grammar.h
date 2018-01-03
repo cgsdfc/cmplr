@@ -16,3 +16,8 @@
 #define SYM_RP                          16
 #define SYM_LB                          17
 #define SYM_RB                          18
+#define SYM_KW_RETURN                   19
+#define SYM_KW_FOR                      20
+#define SYM_KW_SWITCH                   21
+#define SYM_KW_IF                       22
+#define SYM_KW_ELSE                     23

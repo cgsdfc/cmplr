@@ -22,7 +22,7 @@
 #define CLING_SYMBOL_HXX
 #include "Grammar.h"
 char const *SymbolString(int symbol);
-#define LEMON_SYM_MAX 18
+#define LEMON_SYM_MAX 24
 
 enum {
   SYM_EOF=LEMON_SYM_MAX,
@@ -59,14 +59,9 @@ enum {
   SYM_CONDITION,
 
   SYM_STRING,
-  SYM_KW_IF,
-  SYM_KW_FOR,
-  SYM_KW_SWITCH,
   SYM_KW_MAIN,
-  SYM_KW_ELSE,
   SYM_KW_CASE,
   SYM_KW_DEFAULT,
-  SYM_KW_RETURN,
   SYM_KW_SCANF,
   SYM_KW_PRINTF,
 
