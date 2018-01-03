@@ -28,5 +28,6 @@ int Parser::ParseAll(Scanner * scanner) {
 }
 
 Parser::~Parser() {
+  delete program;
   ParseFree(lemonImpl, free);
 }

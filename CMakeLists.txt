@@ -44,6 +44,7 @@ add_library(cling-core
   ./src/cling/Scanner.cpp
   ./src/cling/Core.cpp
   ./src/cling/Parser.cpp
+  ./src/cling/AST.cpp
 )
 # this can generate file with dep but
 # cannot be depended on by top-target

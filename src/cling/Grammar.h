@@ -1,0 +1,17 @@
+#define SYM_IDEN                         1
+#define SYM_KW_CONST                     2
+#define SYM_SEMI                         3
+#define SYM_KW_INT                       4
+#define SYM_ADD                          5
+#define SYM_INTEGER                      6
+#define SYM_MINUS                        7
+#define SYM_EQ                           8
+#define SYM_COMMA                        9
+#define SYM_KW_CHAR                     10
+#define SYM_CHAR                        11
+#define SYM_LK                          12
+#define SYM_RK                          13
+#define SYM_LP                          14
+#define SYM_RP                          15
+#define SYM_LB                          16
+#define SYM_RB                          17
