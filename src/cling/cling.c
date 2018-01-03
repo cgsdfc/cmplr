@@ -29,21 +29,28 @@ enum {
 };
 
 static struct cling_option option={
-  .auto_newline=true,
-  .plain_return=true,
 };
 
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 static FILE *source_file;
+static FILE *mips_file;
 static char filename_buffer[100];
 
-int main(int argc, char *argv[])
+static void die_of_fopen(char const *filename)
 {
-  source_file=fopen(argv[1], "r");
+  fprintf(stderr, "%s cannot be opened\n", filename_buffer);
+  exit(EFOPEN);
+}
+
+int main(void)
+{
+  printf("please input a file\n");
+  fgets(filename_buffer, sizeof filename_buffer, stdin);
+  filename_buffer[strlen(filename_buffer)-1]='\0';
+  source_file=fopen(filename_buffer, "r");
   if (!source_file) {
-    fprintf(stderr, "%s cannot be opened\n", filename_buffer);
-    exit(EFOPEN);
+    die_of_fopen(filename_buffer);
   }
   cling_frontend_init(&frontend, &option, source_file);
   if (0 != cling_frontend_parse(&frontend)) {
@@ -52,7 +59,14 @@ int main(int argc, char *argv[])
   }
   cling_backend_init(&backend, &option);
   cling_backend_codegen(&backend, &frontend);
-  cling_backend_dump_mips(&backend, stdout);
+  strncat(filename_buffer, ".s", sizeof filename_buffer);
+  mips_file=fopen(filename_buffer, "w");
+  if (!mips_file) {
+    die_of_fopen(filename_buffer);
+  }
+  cling_backend_dump_mips(&backend, mips_file);
+  fclose(mips_file);
+  printf("Assembly has been written to %s\n", filename_buffer);
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
   return 0;
