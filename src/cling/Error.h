@@ -2,26 +2,11 @@
 #define CLING_ERROR_HXX
 #include <stdio.h>
 #include <vector>
-
+#include "Utility.h"
 struct Scanner;
-enum {
-  CL_EEXPECT = 1,
-  CL_EUNEXPECTED,
-  CL_EREDEFINED,
-  CL_EINCTYPE,
-  CL_EUNDEFINED,
-  CL_ENOTLVALUE,
-  CL_EINCARG,
-  CL_EARGCUNMAT,
-  CL_EDUPCASE,
-  CL_EBADCASE,
-  CL_EINVEXPR,
-  CL_EBADTOKEN,
-};
 
 struct Error {
-  unsigned int row;
-  unsigned int col;
+  Location location;
   char const *context;
   Error(Scanner const *scanner, int context);
   virtual void print(FILE *file);
@@ -48,28 +33,32 @@ struct SyntaxError: public Error {
 
 struct TokenError: public Error {
   char *tokenString;
-  char const *tokenType;
-  TokenError(Scanner const *scanner, int tokenType);
+  TokenError(Scanner const *scanner);
   virtual ~TokenError();
 };
 
+struct TypedTokenError: public TokenError {
+  char const *tokenTypeName;
+  TypedTokenError(Scanner const* scanner, int tokenType);
+};
+
+struct UnterminatedTokenError: public TypedTokenError {
+  UnterminatedTokenError(Scanner const *scanner, int tokenType):TypedTokenError(scanner, tokenType){}
+  void print(FILE *file) override;
+};
+
+struct InvalidCharError: public TypedTokenError {
+  InvalidCharError(Scanner const *scanner, int tokenType):TypedTokenError(scanner, tokenType){}
+  void print(FILE *file) override;
+};
+
 struct UnknownTokenError: public TokenError {
-  UnknownTokenError(Scanner const *scanner):TokenError(scanner, 0){}
-  void print(FILE *file) override;
-};
-
-struct UnterminatedTokenError: public TokenError {
-  UnterminatedTokenError(Scanner const *scanner, int tokenType):TokenError(scanner, tokenType){}
-  void print(FILE *file) override;
-};
-
-struct InvalidCharError: public TokenError {
-  InvalidCharError(Scanner const *scanner, int tokenType):TokenError(scanner, tokenType){}
+  UnknownTokenError(Scanner const *scanner):TokenError(scanner){}
   void print(FILE *file) override;
 };
 
 struct BadEqualError: public TokenError {
-  BadEqualError(Scanner const *scanner):TokenError(scanner, 0){}
+  BadEqualError(Scanner const *scanner):TokenError(scanner){}
   void print(FILE *file) override;
 };
 

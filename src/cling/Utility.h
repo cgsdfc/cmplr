@@ -28,12 +28,18 @@ struct StringIntPair {
     :string(string), value(value){}
 };
 
+struct Location {
+  unsigned int row;
+  unsigned int col;
+  Location():row(0), col(0){}
+  Location(Location const& other):row(other.row), col(other.col){}
+};
+
 template<class T>
 void GenericDestroy(T *object) {
   object->~T();
 }
 
-bool IsIdenBegin(char ch);
 int KeywordBseach(StringIntPair const *array, unsigned int len, char const *key);
 int StringIntPairCompareOnString(void const *lhs, void const *rhs);
 

@@ -22,10 +22,10 @@
 #define CLING_OPTION_HXX
 
 struct Option {
-  bool allow_comment;
-  bool no_tricky_jump;
-  bool auto_newline;
-  bool plain_return;
+  bool allowComment;
+  bool noTrickyJump;
+  bool autoNewline;
+  bool plainReturn;
 
 };
 

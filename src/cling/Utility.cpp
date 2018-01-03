@@ -11,9 +11,6 @@ void String::Clear(void) {
 char const *String::CStr(void) const {
   return buffer.c_str();
 }
-bool IsIdenBegin(char ch) {
-  return ch == '_' || isalpha(ch);
-}
 /*
  * void *bsearch(const void *key, const void *base,
                      size_t nmemb, size_t size,

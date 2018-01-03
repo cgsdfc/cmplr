@@ -30,11 +30,12 @@ int main(int argc, char *argv[])
 {
   Option option;
   char filename_buffer[1024];
-  FILE *source_file=fopen(argv[1], "r");
-  if (!source_file) {
-    fprintf(stderr, "%s cannot be opened\n", filename_buffer);
-    exit(1);
-  }
-  Frontend frontend(&option, source_file);
-  return frontend.Tokenize(stdout);
+  /* FILE *source_file=fopen(argv[1], "r"); */
+  /* if (!source_file) { */
+  /*   fprintf(stderr, "%s cannot be opened\n", filename_buffer); */
+  /*   exit(1); */
+  /* } */
+  Frontend frontend(&option, stdin);
+  frontend.Tokenize(stdout);
+  /* fclose(source_file); */
 }

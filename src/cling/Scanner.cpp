@@ -16,18 +16,19 @@ static const StringIntPair KeywordPairs [] = {
     {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-CharStream::CharStream(FILE *file):file(file), row(0), col(0){}
+CharStream::CharStream(FILE *file):file(file), location(){} 
 
 int CharStream::GetChar(void) {
   int ch=fgetc(file);
   switch(ch) {
     case '\n':
-      ++row;
+      ++location.row;
+      location.col=0;
       break;
     case EOF:
       return EOF;
     default:
-      ++col;
+      ++location.col;
       break;
   }
   return ch;
@@ -39,7 +40,7 @@ bool CharStream::ReachEOF(void) {
 
 Scanner::Scanner(Option const *option, FILE *file, EList *elist)
   :option(option), input(file), elist(elist) {
-    this->ch=input.GetChar();
+    this->next_char=input.GetChar();
   }
 
 char const* Scanner::GetString(void) const {
@@ -57,12 +58,13 @@ bool Scanner::IsValidCharInString(int ch) {
 
 int Scanner::ReadChar(void) {
   int ch = input.GetChar();
-  if (IsValidCharInChar(ch))  {
-    buffer.AppendChar(ch);
-    if ((ch=input.GetChar()) != '\'') {
-      elist->AddError(new InvalidCharError(this, SYM_CHAR));
-      return -1;
-    }
+  buffer.AppendChar(ch);
+  if (!IsValidCharInChar(ch))  {
+    elist->AddError(new InvalidCharError(this, SYM_CHAR));
+    return -1;
+  }
+  if ((ch=input.GetChar()) == '\'') {
+    this->next_char=input.GetChar();
     return SYM_CHAR;
   }
   elist->AddError(new UnterminatedTokenError(this, SYM_CHAR));
@@ -74,29 +76,34 @@ int Scanner::ReadNumber(int ch) {
     buffer.AppendChar(ch);
     ch=input.GetChar();
   }
-  this->ch=ch;
+  this->next_char=ch;
   return SYM_INTEGER;
+}
+
+bool Scanner::IsStringBreaker(int ch) {
+  return ch == EOF || ch == '\r' || ch == '\n';
 }
 
 int Scanner::ReadString(void) {
   int ch;
   for (; (ch = input.GetChar()) != '\"';) {
-    if (ch == EOF) {
+    if (IsStringBreaker(ch)) {
       elist->AddError(new UnterminatedTokenError(this, SYM_STRING));
       return -1;
     }
+    buffer.AppendChar(ch);
     if (IsValidCharInString(ch)) {
-      buffer.AppendChar(ch);
       continue;
     }
     elist->AddError(new InvalidCharError(this, SYM_STRING));
     return -1;
   }
+  this->next_char=input.GetChar();
   return SYM_STRING;
 }
 
 int Scanner::ReadToken(void) {
-  char ch=this->ch;
+  char ch=this->next_char;
   int code = SYM_ERR;
   char const *keyword;
   int two_chars, one_char;
@@ -147,6 +154,7 @@ int Scanner::ReadToken(void) {
       break;
   }
   if (code != SYM_ERR) {
+    this->next_char=input.GetChar();
     return code;
   }
   switch (ch) {
@@ -168,7 +176,6 @@ int Scanner::ReadToken(void) {
     case '!':
       two_chars = SYM_NE;
       one_char = -1;
-      elist->AddError(new BadEqualError(this));
       goto level2;
     default:
       goto level3;
@@ -176,9 +183,12 @@ int Scanner::ReadToken(void) {
 
 level2:
   if ((ch=input.GetChar()) == '=') {
+    this->next_char=input.GetChar();
     return two_chars;
   }
-  this->ch=ch;
+  this->next_char=ch;
+  if (one_char < 0)
+    elist->AddError(new BadEqualError(this));
   return one_char;
 
 level3:
@@ -190,7 +200,7 @@ level3:
       buffer.AppendChar(ch);
       ch=input.GetChar();
     }
-    this->ch=ch;
+    this->next_char=ch;
     code = KeywordBseach(KeywordPairs, CLING_KW_SIZE, buffer.CStr());
     if (code > 0)
       return code;
@@ -210,31 +220,35 @@ level3:
   /*
    * Last straw
    */
+  buffer.AppendChar(ch);
   elist->AddError(new UnknownTokenError(this));
   return -1;
 }
 
+bool Scanner::IsIdenBegin(int ch) {
+  return ch == '_' || isalpha(ch);
+}
 void Scanner::SkipComment(int ch) {
   while (ch == '#') {
     ch=input.GetChar();
     while (ch != '\n')
       ch=input.GetChar();
   }
-  this->ch=ch;
+  this->next_char=ch;
 }
 
 void Scanner::SkipSpace(int ch) {
   while (isspace(ch)) {
     ch=input.GetChar();
   }
-  this->ch=ch;
+  this->next_char=ch;
 }
 
 int Scanner::GetToken(void) {
-  SkipSpace(this->ch);
-  if (option->allow_comment)
-    SkipComment(this->ch);
-  if (this->ch == EOF)
+  SkipSpace(this->next_char);
+  if (option->allowComment)
+    SkipComment(this->next_char);
+  if (this->next_char == EOF)
     return 0;
   buffer.Clear();
   int code=ReadToken();

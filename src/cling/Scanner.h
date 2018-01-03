@@ -11,15 +11,14 @@ struct EList;
 
 struct CharStream {
   FILE *file;
-  unsigned int row;
-  unsigned int col;
+  Location location;
   CharStream(FILE *file);
   int GetChar(void);
   bool ReachEOF(void);
 };
 
 struct Scanner {
-  int ch;
+  int next_char;
   String buffer;
   CharStream input;
   Option const *option;
@@ -34,6 +33,8 @@ struct Scanner {
   int ReadToken(void);
   void SkipComment(int ch);
   void SkipSpace(int ch);
+  bool IsIdenBegin(int ch);
+  bool IsStringBreaker(int ch);
   bool IsValidCharInChar(int ch);
   bool IsValidCharInString(int ch);
 };

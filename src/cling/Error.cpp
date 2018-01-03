@@ -5,11 +5,10 @@
 #include <string.h>
 
 Error::Error(Scanner const *scanner, int context)
-  :row(scanner->input.row), col(scanner->input.col), context(SymbolString(context)){}
+  :location(scanner->input.location), context(SymbolString(context)){}
 
 void Error::print(FILE *file) {
-  fprintf(file, "ERROR at %u:%u in %s: ", positive_number(row),
-          positive_number(col), context);
+  fprintf(file, "ERROR at %u:%u in %s: ", location.row, location.col, context);
 }
 
 void EList::AddError(Error *error) {
@@ -64,16 +63,18 @@ void UnexpectedError::print(FILE *file) {
   fprintf(file, "unexpected toke '%s'\n", unexpected);
 }
 
-TokenError::TokenError(Scanner const *scanner, int tokenType)
-  :Error(scanner, SYM_PROGRAM), tokenType(SymbolString(tokenType)) {
-  tokenString=strdup(scanner->GetString());
-}
+TokenError::TokenError(Scanner const *scanner)
+  :Error(scanner, SYM_PROGRAM), 
+  tokenString(strdup(scanner->GetString())){}
 
 TokenError::~TokenError() { free(tokenString); }
 
+TypedTokenError::TypedTokenError(Scanner const* scanner, int tokenType)
+    :TokenError(scanner), tokenTypeName(SymbolString(tokenType)) {}
+
 void UnterminatedTokenError::print(FILE *file) {
   TokenError::print(file);
-  fprintf(file, "unterminated %s '%s'\n", tokenType, tokenString);
+  fprintf(file, "unterminated %s '%s'\n", tokenTypeName, tokenString);
 }
 void UnknownTokenError::print(FILE *file) {
   TokenError::print(file);
@@ -81,7 +82,7 @@ void UnknownTokenError::print(FILE *file) {
 }
 void InvalidCharError::print(FILE *file) {
   TokenError::print(file);
-  fprintf(file, "invalid char '%s' in %s\n", tokenString, tokenType);
+  fprintf(file, "invalid char '%s' in %s\n", tokenString, tokenTypeName);
 }
 void BadEqualError::print(FILE *file) {
   TokenError::print(file);
