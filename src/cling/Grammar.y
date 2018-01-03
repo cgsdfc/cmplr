@@ -12,6 +12,18 @@ POSITIVE, NEGATIVE,
 %token_type {TokenValue*}
 %token_destructor { delete $$; }
 %extra_argument { Parser *parser}
+%start_symbol program
+
+maybe_decl_list::= const_decl_list var_decl_list. {
+
+}
+maybe_decl_list::=var_decl_list.{
+
+}
+maybe_decl_list::=.{
+
+
+}
 
 /* stupid */
 %type program {Program*}
@@ -120,6 +132,12 @@ iden_char_pair::= SYM_IDEN SYM_EQ SYM_CHAR . {
 type_specifier::= SYM_KW_INT. {
 
 }
+type_specifier::=SYM_KW_CHAR. {
+
+}
+type_specifier::=SYM_KW_VOID. {
+
+}
 
 /*
  * VarDecl
@@ -148,6 +166,7 @@ var_def::= SYM_IDEN. {
  */
 var_def::= SYM_IDEN SYM_LK SYM_INTEGER SYM_RK. {
 
+
 }
 
 var_def_list ::= var_def. {
@@ -161,10 +180,13 @@ var_def_list ::= var_def_list SYM_COMMA var_def. {
 /*
  * FunctionDecl
  */
-function_decl::= typed_iden SYM_LP formal_arglist SYM_RP SYM_LB const_decl_list var_decl_list statement_list SYM_RB. {
+%type function_decl_list {GenericVector<FunctionDecl>*}
+function_prototype::=typed_iden SYM_LP formal_arglist SYM_RP .{
 
 }
-%type function_decl_list {GenericVector<FunctionDecl>*}
+function_decl::= function_prototype SYM_LB maybe_decl_list statement_list SYM_RB. {
+
+}
 function_decl_list::=function_decl.  {
 
 }

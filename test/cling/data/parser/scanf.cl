@@ -9,7 +9,7 @@ void test_global() {
   printf(global_char);
 }
 
-void main() {
+void main_() {
   int i;
   for (i=0; i<=0; i=i-1) {
     printf("test_global ");

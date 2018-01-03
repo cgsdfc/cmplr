@@ -9,9 +9,10 @@
 #define SYM_COMMA                        9
 #define SYM_KW_CHAR                     10
 #define SYM_CHAR                        11
-#define SYM_LK                          12
-#define SYM_RK                          13
-#define SYM_LP                          14
-#define SYM_RP                          15
-#define SYM_LB                          16
-#define SYM_RB                          17
+#define SYM_KW_VOID                     12
+#define SYM_LK                          13
+#define SYM_RK                          14
+#define SYM_LP                          15
+#define SYM_RP                          16
+#define SYM_LB                          17
+#define SYM_RB                          18

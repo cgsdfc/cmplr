@@ -65,7 +65,7 @@ set(LEMON_PARSER ${CMAKE_SOURCE_DIR}/src/cling/Grammar.c)
 # generate parser impl
 add_custom_command(OUTPUT ${LEMON_PARSER}
   DEPENDS ${LEMON_GRAMMAR}
-  COMMAND lemon -m ${LEMON_GRAMMAR})
+  COMMAND lemon  ${LEMON_GRAMMAR})
 # let library depend on parser
 add_custom_target(BUILD_LEMON_PARSER
   DEPENDS ${LEMON_PARSER})

@@ -59,8 +59,6 @@ enum {
   SYM_CONDITION,
 
   SYM_STRING,
-
-  SYM_KW_VOID,
   SYM_KW_IF,
   SYM_KW_FOR,
   SYM_KW_SWITCH,
