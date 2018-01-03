@@ -7,9 +7,10 @@ struct VarDecl;
 struct Function;
 struct Type;
 struct Program {
-  GenericVector<ConstDecl> constDecls;
-  GenericVector<VarDecl> varDecls;
-  GenericVector<Function> funcDecls;
+  GenericVector<ConstDecl> *constDecls;
+  GenericVector<VarDecl> *varDecls;
+  GenericVector<Function> *funcDecls;
+  Program(): constDecls(nullptr), varDecls(nullptr), funcDecls(nullptr){}
 };
 
 struct ConstDecl {
