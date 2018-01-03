@@ -13,4 +13,5 @@ struct Frontend {
   int Tokenize(FILE *output);
 };
 
+int InteractiveTokenize(Option const *option);
 #endif

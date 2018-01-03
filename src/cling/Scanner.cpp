@@ -53,7 +53,7 @@ bool Scanner::IsValidCharInChar(int ch) {
 }
 
 bool Scanner::IsValidCharInString(int ch) {
-  return ch == 32 || ch == 33 || 35 <= ch && ch <= 126;
+  return ch == 32 || ch == 33 || (35 <= ch && ch <= 126);
 }
 
 int Scanner::ReadChar(void) {
@@ -233,6 +233,8 @@ void Scanner::SkipComment(int ch) {
     ch=input.GetChar();
     while (ch != '\n')
       ch=input.GetChar();
+    while (isspace(ch))
+      ch = input.GetChar();
   }
   this->next_char=ch;
 }

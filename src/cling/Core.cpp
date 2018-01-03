@@ -3,7 +3,7 @@
 
 int Frontend::Tokenize(FILE *output) {
   int code;
-  while (code=scanner.GetToken()) {
+  while ((code=scanner.GetToken())) {
     char const *string=scanner.GetString();
     assert(code);
     char const *name = SymbolString(code);
@@ -29,4 +29,9 @@ int Frontend::Tokenize(FILE *output) {
     return -1;
   }
   return 0;
+}
+
+int InteractiveTokenize(Option const *option) {
+  Frontend frontend(option, stdin);
+  return frontend.Tokenize(stdout);
 }
