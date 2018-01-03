@@ -6,6 +6,9 @@ struct ConstDecl;
 struct VarDecl;
 struct Function;
 struct Type;
+struct ConstDef;
+struct VarDef;
+
 struct Program {
   GenericVector<ConstDecl> *constDecls;
   GenericVector<VarDecl> *varDecls;

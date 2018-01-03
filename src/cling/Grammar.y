@@ -9,19 +9,15 @@
 %token_destructor { delete $$; }
 %extra_argument { Parser *parser}
 
-program ::= const_decl_list var_decl_list func_decl_list. {
+program ::= const_decl_list var_decl_list function_decl_list. {
   
 }
 
 /* 
  * ConstDecl
  */
-const_decl ::= SYM_KW_CONST SYM_KW_INT SYM_IDEN SYM_EQ SYM_INTEGER SYM_SEMI . {
- 
 
-}
-
-const_decl_list ::= . { 
+typed_iden::=type_specifier SYM_IDEN.{
 
 }
 const_decl_list ::= const_decl . {
@@ -83,18 +79,9 @@ type_specifier::= SYM_KW_INT. {
 
 }
 
-type_specifier::= SYM_KW_CHAR. {
-
-}
-type_specifier::=SYM_KW_VOID. {
-
-}
 /*
  * VarDecl
  */
-var_decl_list::=.{
-
-}
 var_decl_list::=var_decl.{
 
 }
@@ -131,11 +118,16 @@ var_def_list ::= var_def_list SYM_COMMA var_def. {
 /*
  * FunctionDecl
  */
-func_decl_list ::= type_specifier SYM_IDEN SYM_LP formal_arglist SYM_RP SYM_LB const_decl_list var_decl_list statement_list SYM_RB.
+function_decl::= typed_iden SYM_LP formal_arglist SYM_RP SYM_LB const_decl_list var_decl_list statement_list SYM_RB. {
+
+}
+function_decl_list::=function_decl.
 {
     
 }
+function_decl_list::=function_decl_list function_decl. {
 
+}
 formal_arglist::=.{
 
 }
@@ -145,7 +137,7 @@ formal_arglist::=formal_arg.{
 formal_arglist::=formal_arglist SYM_COMMA formal_arg. {
 
 }
-formal_arg::=type_specifier SYM_IDEN. {
+formal_arg::=typed_iden.{
 
 
 }
@@ -153,8 +145,6 @@ formal_arg::=type_specifier SYM_IDEN. {
 /*
  * Statement
  */
-statement_list::=.{}
-
 statement_list::=statement.{
 
 }
@@ -163,6 +153,6 @@ statement_list::=statement_list statement. {
 
 }
 
-statement ::= SYM_SEMI. {
+statement ::= SYM_IDEN SYM_SEMI. {
 
 }

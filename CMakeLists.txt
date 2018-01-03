@@ -37,14 +37,21 @@ if (CMPLR_PLATFORM STREQUAL "LINUX")
   set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable")
 endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
+set(LEMON_GRAMMAR ${CMAKE_SOURCE_DIR}/src/cling/Grammar.y)
+add_custom_target(LEMON_PARSER
+  COMMAND lemon ${LEMON_GRAMMAR}
+  DEPENDS ${LEMON_GRAMMAR}
+)
+
 add_library(cling-core
   ./src/cling/Error.cpp
   ./src/cling/Symbol.cpp
   ./src/cling/Utility.cpp
   ./src/cling/Scanner.cpp
   ./src/cling/Core.cpp
+  ./src/cling/Parser.cpp
 )
-
+add_dependencies(cling-core LEMON_PARSER)
 add_executable(cling ./src/cling/cling.cpp)
 target_link_libraries(cling cling-core)
 
