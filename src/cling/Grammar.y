@@ -232,59 +232,54 @@ statement_list::=statement_list statement. {
 
 }
 
-statement ::= return_statement. {
+statement(S) ::= return_statement(R). { S=R; }
+statement(S) ::=expression_statement(E) .{ S=E; }
+statement(S) ::=for_statement(F).{ S=F; }
+statement(S) ::=switch_statement(W) .{ S=W; }
+statement(S) ::=if_statement(I) .{ S=I; }
+statement(S) ::=SYM_LB statement_list(L) SYM_RB. { S=new CompStatement(L); }
+statement(S)::=SYM_LB SYM_RB.{ S=nullptr; }
 
-}
-statement::=expression_statement.{
-
-}
-statement::=for_statement.{
-
-}
-statement::=switch_statement.{
-
-}
-statement::=if_statement.{
-
-}
-statement::=SYM_LB statement_list SYM_RB. {
-
-}
-statement::=SYM_LB SYM_RB.{
-
-}
-return_statement::= SYM_KW_RETURN maybe_expression SYM_SEMI. {
-
+%type return_statement {ReturnStatement*}
+return_statement(R) ::= SYM_KW_RETURN maybe_expression(E) SYM_SEMI. {
+R=new ReturnStatement(E);
 }
 
-expression_statement::=maybe_expression SYM_SEMI. {
+expression_statement(S)::=maybe_expression(E) SYM_SEMI. { S=E; }
 
+for_statement(F) ::=SYM_KW_FOR SYM_LP maybe_expression(Init) SYM_SEMI maybe_expression(Cond) SYM_SEMI maybe_expression(Step) SYM_RP statement(Clause). {
+F=new ForStatement(Init, Cond, Step, Clause);
 }
 
-for_statement::=SYM_KW_FOR SYM_LP maybe_expression SYM_SEMI maybe_expression SYM_SEMI maybe_expression SYM_RP statement. {
+%type default_clause {Statement*}
+%type case_clause_list {GenericVector<CaseStatement> *}
 
+switch_statement(S) ::=SYM_KW_SWITCH SYM_LP expression(Expr) SYM_RP 
+                      SYM_LB case_clause_list(Cases) default_clause(Default) SYM_RB.{
+S=new SwitchStatement(Expr, Cases, Default);
 }
 
-switch_statement::=SYM_KW_SWITCH SYM_LP expression SYM_RP SYM_LB case_clause_list default_clause SYM_RB.{
-
+%type case_clause { CaseStatement*}
+case_clause_list(L) ::=case_clause(C) .{
+  L=new GenericVector<CaseStatement> ();
+  L->PushBack(C);                
 }
 
-case_clause_list::=case_clause.{}
-
-case_clause_list::=case_clause case_clause_list.{
-
+case_clause_list(L) ::= case_clause_list(R) case_clause(C) .{
+R->PushBack(C);
+L=R;
 }
-case_clause::=SYM_KW_CASE constant SYM_COLON statement.{
-
+case_clause(Case) ::=SYM_KW_CASE constant(C) SYM_COLON statement(S) .{
+Case=new CaseStatement(C, S);
 }
-default_clause::=SYM_KW_DEFAULT SYM_COLON statement.{
-
+default_clause(D) ::=SYM_KW_DEFAULT SYM_COLON statement(S) .{
+D=S;
 }
-constant::=SYM_INTEGER.{
-
+constant(C) ::=SYM_INTEGER(V) .{
+C=V;
 }
-constant::=SYM_CHAR.{
-
+constant(C) ::=SYM_CHAR(V) .{
+C=V;
 }
 /* The precedence of the shorter form is determined by 
  * the first terminal of that rule
@@ -294,12 +289,12 @@ constant::=SYM_CHAR.{
  */
 %nonassoc SYM_KW_ELSE.
 
-if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement SYM_KW_ELSE statement.{
-
+if_statement(S) ::=SYM_KW_IF SYM_LP expression(Cond) SYM_RP statement(Then) SYM_KW_ELSE statement(Else) .{
+S=new IfStatement(Cond, Then, Else);
 }
 
-if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement.{
-
+if_statement(S) ::=SYM_KW_IF SYM_LP expression(Cond) SYM_RP statement(Then) .{
+S=new IfStatement(Cond, Then, nullptr);
 }
 
 %type expression {ExpressionStatement*}
@@ -314,28 +309,43 @@ expression::=SYM_LP expression SYM_RP. {
 
 }
 
-expression::=expression SYM_ADD expression. { }
-          expression::=expression SYM_MINUS expression. { }
-expression::=expression SYM_GE expression. { }
-          expression::=expression SYM_DIV expression. { }
-expression::=expression SYM_MUL expression. { }
-          expression::=expression SYM_DEQ expression. { }
-expression::=expression SYM_EQ expression. { }
-          expression::=expression SYM_LE expression. { }
-expression::=expression SYM_LT expression. { }
-          expression::=expression SYM_NE expression. { }
+expression(E) ::=expression(L) SYM_ADD expression(R). { E=new BinaryExpression(nullptr, L, R); }
+expression(E)::=expression(L) SYM_MINUS expression(R). {E=new BinaryExpression(nullptr, L, R); }
+expression(E) ::=expression(L) SYM_GE expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E)::=expression(L) SYM_DIV expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E) ::=expression(L) SYM_MUL expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E)::=expression(L) SYM_DEQ expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E) ::=expression(L) SYM_EQ expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E)::=expression(L) SYM_LE expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E) ::=expression(L) SYM_LT expression(R). { E=new BinaryExpression(nullptr, L, R);}
+expression(E)::=expression(L) SYM_NE expression(R). { E=new BinaryExpression(nullptr, L, R);}
 
-expression::=SYM_IDEN SYM_LP actual_arglist SYM_RP. {}
 
-actual_arglist::=.{}
+expression(E) ::=SYM_IDEN(Callee) SYM_LP actual_arglist(Args) SYM_RP. {
+  E=new CallExpression(Callee, Args);
+}
 
-actual_arglist::=expression.{}
+actual_arglist(L)::=.{L=nullptr;}
 
-actual_arglist::=actual_arglist SYM_COMMA expression.{}
+actual_arglist(L) ::=expression(E) .{
+  L=new GenericVector<ExpressionStatement> ();
+L->PushBack(E);              
+}
 
-expression::=SYM_IDEN SYM_LK expression SYM_RK.{}
-expression::=SYM_MINUS expression. [SYM_RIGHT_UNARY] {}
-          expression::=SYM_ADD expression. [SYM_RIGHT_UNARY] {}
+actual_arglist(L) ::=actual_arglist(R) SYM_COMMA expression(E) .{
+  R->PushBack(E);
+L=R;              
+}
+
+expression(E) ::=SYM_IDEN(A) SYM_LK expression(I) SYM_RK.{
+          E=new IndexExpression(A, I);
+}
+expression(E) ::=SYM_MINUS expression(O) . [SYM_RIGHT_UNARY] {
+E=new UnaryExpression(nullptr, O);
+}
+expression(E) ::=SYM_ADD expression(O) . [SYM_RIGHT_UNARY] {
+E=new UnaryExpression(nullptr, O);
+}
 
 %nonassoc SYM_EQ.
 %left SYM_DEQ SYM_LT SYM_LE SYM_GE SYM_GT SYM_NE.

@@ -125,3 +125,9 @@ SwitchStatement::~SwitchStatement() {
   delete defaultClause;
 }
 
+ReturnStatement::~ReturnStatement() { delete returnExpression; }
+
+IndexExpression::~IndexExpression() {
+  delete array;
+  delete index;
+}

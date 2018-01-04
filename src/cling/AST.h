@@ -172,8 +172,8 @@ struct Statement {
 };
 
 struct CompStatement: public Statement {
-  GenericVector<Statement> statements;
-  CompStatement()=default;
+  GenericVector<Statement> *statements;
+  template <class S> CompStatement(S s) : statements(s) {}
   ~CompStatement()=default;
 };
 
@@ -185,6 +185,8 @@ struct JumpStatement: public Statement {};
 
 struct ReturnStatement: public JumpStatement {
   ExpressionStatement *returnExpression;
+  ReturnStatement(ExpressionStatement *expr) : returnExpression(expr) {}
+  ~ReturnStatement();
 };
 
 struct CaseStatement: public Statement {
@@ -270,12 +272,20 @@ struct CallExpression: public ExpressionStatement {
   Identifier *callee;
   GenericVector<ExpressionStatement> *args;
 
-  template<class C, class A>
-    CallExpression(C callee, A args):callee(callee), args(args){}
+  template <class C, class A>
+  CallExpression(C callee, A args)
+      : callee(static_cast<Identifier *>(callee)), args(args) {}
   ~CallExpression();
+};
 
+struct IndexExpression : public ExpressionStatement {
+  Identifier *array;
+  ExpressionStatement *index;
 
-  
+  template <class A, class I>
+  IndexExpression(A array, I index)
+      : array(static_cast<Identifier *>(array)), index(index) {}
+  ~IndexExpression();
 };
 
 struct AtomicExpression: public ExpressionStatement {
