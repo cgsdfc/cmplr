@@ -16,7 +16,7 @@
  * start_symbol program
  */
 %type program {Program*}
-program ::= maybe_const_decl_list(C) maybe_var_decl_list(V) maybe_function_decl_list(F). {
+program ::= const_decl_list(C) var_decl_list(V) function_decl_list(F). {
         parser->program=new Program(C, V, F);
 }
 
@@ -31,11 +31,9 @@ program ::= maybe_const_decl_list(C) maybe_var_decl_list(V) maybe_function_decl_
 
 maybe_const_decl_list(L)::=.{L=nullptr;}
 maybe_var_decl_list(L)::=.{L=nullptr;}
-maybe_function_decl_list(L)::=.{L=nullptr;}
 maybe_statement_list(L)::=.{L=nullptr;}
 maybe_const_decl_list(L)::=const_decl_list(R).{L=R;}
 maybe_var_decl_list(L)::=var_decl_list(R).{L=R;}
-maybe_function_decl_list(L)::=function_decl_list(R).{L=R;}
 maybe_statement_list(L)::=statement_list(R).{L=R;}
 maybe_expression(E)::=.{E=nullptr;}
 maybe_expression(L)::=expression(R).{L=R;}
@@ -146,12 +144,32 @@ var_decl ::= type_specifier var_def_list SYM_SEMI. {
 
 }
 
+
 /*
  * Single Variable
  */
 var_def::= SYM_IDEN. {
 
 }
+
+
+/*
+ * Array
+ */
+var_def::= SYM_IDEN SYM_LK SYM_INTEGER SYM_RK. {
+
+
+}
+
+var_def_list ::= var_def. {
+
+}
+
+var_def_list ::= var_def_list SYM_COMMA var_def. {
+
+}
+
+
 
 /*
  * FunctionDecl
@@ -166,19 +184,7 @@ function_decl::= type_specifier SYM_IDEN SYM_LP formal_arglist SYM_RP
 function_decl_list::=function_decl_list function_decl. {
 
 }
-/*
- * Array
- */
-var_def::= SYM_IDEN SYM_LK SYM_INTEGER SYM_RK. {
-
-
-}
-
-var_def_list ::= var_def. {
-
-}
-
-var_def_list ::= var_def_list SYM_COMMA var_def. {
+function_decl_list::=function_decl.{
 
 }
 
