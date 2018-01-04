@@ -64,7 +64,7 @@ void UnexpectedError::print(FILE *file) {
 }
 
 TokenError::TokenError(Scanner const *scanner)
-  :Error(scanner, SYM_PROGRAM), 
+  :Error(scanner, 0), 
   tokenString(strdup(scanner->GetString())){}
 
 TokenError::~TokenError() { free(tokenString); }

@@ -2,51 +2,43 @@
  * Although the parser is a c file, we compile
  * it as cpp so all cpp construct can be use
  */
-%include {
 
-enum {
-POSITIVE, NEGATIVE,
-};
-}
-
+/*
+ * Base class for all the token
+ */
 %token_type {TokenValue*}
 %token_destructor { delete $$; }
 %extra_argument { Parser *parser}
 %start_symbol program
 
-maybe_decl_list::= const_decl_list var_decl_list. {
 
-}
-maybe_decl_list::=var_decl_list.{
-
-}
-maybe_decl_list::=.{
-
-
-}
-
-/* stupid */
+/*
+ * start_symbol program
+ */
 %type program {Program*}
-program ::= const_decl_list(C) var_decl_list(V) function_decl_list(F). {
+program ::= maybe_const_decl_list(C) maybe_var_decl_list(V) maybe_function_decl_list(F). {
         parser->program=new Program(C, V, F);
 }
 
-program::=.{parser->program=nullptr;}
-
-program::=var_decl_list(V) function_decl_list(F). {
-       parser->program=new Program(nullptr, V, F);
-}
-
-program::=function_decl_list(F).{
-       parser->program=new Program(nullptr, nullptr, F);
-}
-
 /*
- * This is needed to fix 2 lookaheads
+ * All the optional things
  */
-typed_iden::=type_specifier SYM_IDEN.{
+%type maybe_const_decl_list {GenericVector<ConstDecl>*}
+%type maybe_var_decl_list {GenericVector<VarDecl>*}
+%type maybe_function_decl_list {GenericVector<FunctionDecl>*}
+%type maybe_statement_list {GenericVector<Statement>*}
+%type maybe_expression {ExpressionStatement*}
 
-}
+maybe_const_decl_list(L)::=.{L=nullptr;}
+maybe_var_decl_list(L)::=.{L=nullptr;}
+maybe_function_decl_list(L)::=.{L=nullptr;}
+maybe_statement_list(L)::=.{L=nullptr;}
+maybe_const_decl_list(L)::=const_decl_list(R).{L=R;}
+maybe_var_decl_list(L)::=var_decl_list(R).{L=R;}
+maybe_function_decl_list(L)::=function_decl_list(R).{L=R;}
+maybe_statement_list(L)::=statement_list(R).{L=R;}
+maybe_expression(E)::=.{E=nullptr;}
+maybe_expression(L)::=expression(R).{L=R;}
 
 /* 
  * ConstDecl
@@ -63,7 +55,7 @@ typed_iden::=type_specifier SYM_IDEN.{
 
 const_decl_list(L) ::= const_decl(C) . {
                 L=new GenericVector<ConstDecl>();
-L->PushBack(C);
+                L->PushBack(C);
 
 }
 /*
@@ -162,6 +154,19 @@ var_def::= SYM_IDEN. {
 }
 
 /*
+ * FunctionDecl
+ */
+
+%type function_decl {FunctionDecl*}
+%type function_decl_list {GenericVector<FunctionDecl>*}
+function_decl::= type_specifier SYM_IDEN SYM_LP formal_arglist SYM_RP 
+             SYM_LB maybe_const_decl_list maybe_var_decl_list maybe_statement_list SYM_RB. {
+
+}
+function_decl_list::=function_decl_list function_decl. {
+
+}
+/*
  * Array
  */
 var_def::= SYM_IDEN SYM_LK SYM_INTEGER SYM_RK. {
@@ -177,22 +182,6 @@ var_def_list ::= var_def_list SYM_COMMA var_def. {
 
 }
 
-/*
- * FunctionDecl
- */
-%type function_decl_list {GenericVector<FunctionDecl>*}
-function_prototype::=typed_iden SYM_LP formal_arglist SYM_RP .{
-
-}
-function_decl::= function_prototype SYM_LB maybe_decl_list statement_list SYM_RB. {
-
-}
-function_decl_list::=function_decl.  {
-
-}
-function_decl_list::=function_decl_list function_decl. {
-
-}
 formal_arglist::=.{
 
 }
@@ -202,7 +191,7 @@ formal_arglist::=formal_arg.{
 formal_arglist::=formal_arglist SYM_COMMA formal_arg. {
 
 }
-formal_arg::=typed_iden.{
+formal_arg::=type_specifier SYM_IDEN.{
 
 
 }
@@ -210,6 +199,13 @@ formal_arg::=typed_iden.{
 /*
  * Statement
  */
+%type statement {Statement*}
+%type statement_list {GenericVector<Statement>*}
+%type for_statement {Statement*}
+%type if_statement {Statement*}
+%type switch_statement {Statement*}
+%type expression_statement {Statement*}
+
 statement_list::=statement.{
 
 }
@@ -245,10 +241,27 @@ for_statement::=SYM_KW_FOR SYM_LP maybe_expression SYM_SEMI maybe_expression SYM
 
 }
 
-switch_statement::=SYM_KW_SWITCH SYM_LP expression SYM_RP statement. {
+switch_statement::=SYM_KW_SWITCH SYM_LP expression SYM_RP SYM_LB case_clause_list default_clause SYM_RB.{
 
 }
 
+case_clause_list::=case_clause.{}
+
+case_clause_list::=case_clause case_clause_list.{
+
+}
+case_clause::=SYM_KW_CASE constant SYM_COLON statement.{
+
+}
+default_clause::=SYM_KW_DEFAULT SYM_COLON statement.{
+
+}
+constant::=SYM_INTEGER.{
+
+}
+constant::=SYM_CHAR.{
+
+}
 /* The precedence of the shorter form is determined by 
  * the first terminal of that rule
  */
@@ -265,29 +278,40 @@ if_statement::=SYM_KW_IF SYM_LP expression SYM_RP statement.{
 
 }
 
+%type expression {ExpressionStatement*}
+%type actual_arglist {GenericVector<ExpressionStatement>*}
 
 expression::=SYM_IDEN . { }
-expression::=SYM_CHAR.{}
+          expression::=SYM_CHAR.{}
 expression::=SYM_INTEGER.{}
-expression::=SYM_STRING.{}
+          expression::=SYM_STRING.{}
 
 expression::=SYM_LP expression SYM_RP. {
 
 }
 
 expression::=expression SYM_ADD expression. { }
-expression::=expression SYM_MINUS expression. { }
+          expression::=expression SYM_MINUS expression. { }
 expression::=expression SYM_GE expression. { }
-expression::=expression SYM_DIV expression. { }
+          expression::=expression SYM_DIV expression. { }
 expression::=expression SYM_MUL expression. { }
-expression::=expression SYM_DEQ expression. { }
+          expression::=expression SYM_DEQ expression. { }
 expression::=expression SYM_EQ expression. { }
-expression::=expression SYM_LE expression. { }
+          expression::=expression SYM_LE expression. { }
 expression::=expression SYM_LT expression. { }
-expression::=expression SYM_NE expression. { }
+          expression::=expression SYM_NE expression. { }
 
-expression::=SYM_MINUS. [SYM_RIGHT_UNARY] {}
-expression::=SYM_ADD. [SYM_RIGHT_UNARY] {}
+expression::=SYM_IDEN SYM_LP actual_arglist SYM_RP. {}
+
+actual_arglist::=.{}
+
+actual_arglist::=expression.{}
+
+actual_arglist::=actual_arglist SYM_COMMA expression.{}
+
+
+expression::=SYM_MINUS expression. [SYM_RIGHT_UNARY] {}
+          expression::=SYM_ADD expression. [SYM_RIGHT_UNARY] {}
 
 %nonassoc SYM_EQ.
 %left SYM_DEQ SYM_LT SYM_LE SYM_GE SYM_GT SYM_NE.
@@ -296,10 +320,4 @@ expression::=SYM_ADD. [SYM_RIGHT_UNARY] {}
 /* This is for unary operator */
 %right SYM_RIGHT_UNARY .
 
-maybe_expression::=.{
-
-}
-maybe_expression::=expression.{
-
-}
 

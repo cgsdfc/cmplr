@@ -13,6 +13,7 @@ struct ConstType;
 struct VarType;
 struct ConstDef;
 struct VarDef;
+struct Statement;
 
 struct TokenValue;
 struct Program {
@@ -56,6 +57,7 @@ struct ConstDef {
 struct FunctionDecl {
   FunctionType *type;
   TokenValue *iden;
+  GenericVector<Statement> *statements;
 };
 
 struct Type {
@@ -86,5 +88,56 @@ struct FunctionType: public ImmutableType {
 struct VarType: public MutableType {
 
 };
+
+struct ExpressionStatement;
+struct Statement {
+
+};
+
+struct IterativeStatement: public Statement {};
+
+struct SelectiveStatement: public Statement {};
+
+struct JumpStatement: public Statement {};
+
+struct ReturnStatement: public JumpStatement {
+  ExpressionStatement *returnExpression;
+};
+
+struct SwitchStatement: public SelectiveStatement {
+  ExpressionStatement *selectiveExpression;
+
+};
+
+struct IfStatement: public SelectiveStatement {};
+
+struct ForStatement: public IterativeStatement {
+  ExpressionStatement *initialExpression;
+  ExpressionStatement *conditionExpression;
+  ExpressionStatement *stepExpression;
+  Statement *clauseStatement;
+};
+
+
+struct ExpressionStatement: public Statement {};
+
+struct BinaryExpression: public ExpressionStatement {
+  int operation;
+  ExpressionStatement *leftOperand;
+  ExpressionStatement *rightOperand;
+};
+
+struct UnaryExpression: public ExpressionStatement {
+  int operation;
+  ExpressionStatement *operand;
+};
+
+struct CallExpression: public ExpressionStatement {
+  
+};
+
+struct AtomicExpression: public ExpressionStatement {};
+
+struct ExpressionInParethesis: public ExpressionStatement {};
 
 #endif

@@ -12,8 +12,7 @@ static const StringIntPair KeywordPairs [] = {
     {"const", SYM_KW_CONST},   {"default", SYM_KW_DEFAULT},
     {"else", SYM_KW_ELSE},     {"for", SYM_KW_FOR},
     {"if", SYM_KW_IF},         {"int", SYM_KW_INT},
-    {"main", SYM_KW_MAIN},     {"printf", SYM_KW_PRINTF},
-    {"return", SYM_KW_RETURN}, {"scanf", SYM_KW_SCANF},
+    {"return", SYM_KW_RETURN}, 
     {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
@@ -118,7 +117,7 @@ int Scanner::ReadString(void) {
 
 int Scanner::ReadToken(void) {
   char ch=this->next_char;
-  int code = SYM_ERR;
+  int code = 0;
   char const *keyword;
   int two_chars, one_char;
   switch (ch) {
@@ -167,7 +166,7 @@ int Scanner::ReadToken(void) {
     default:
       break;
   }
-  if (code != SYM_ERR) {
+  if (code) {
     this->next_char=input.GetChar();
     return code;
   }
