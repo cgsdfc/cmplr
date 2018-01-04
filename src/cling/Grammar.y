@@ -7,7 +7,7 @@
  * Base class for all the token
  */
 %token_type {TokenValue*}
-%token_destructor { delete $$; }
+/* %token_destructor { delete $$; } */
 %extra_argument { Parser *parser}
 %start_symbol program
 
@@ -18,6 +18,18 @@
 %type program {Program*}
 program ::= const_decl_list(C) var_decl_list(V) function_decl_list(F). {
         parser->program=new Program(C, V, F);
+}
+program::=var_decl_list(V) function_decl_list(F).{
+       parser->program=new Program(nullptr, V, F);
+}
+program::=const_decl_list(C) function_decl_list(F). {
+       parser->program=new Program(C, nullptr, F);
+}
+program::=function_decl_list(F).{
+       parser->program=new Program(nullptr, nullptr, F);
+}
+program::=.{
+       parser->program=nullptr;
 }
 
 /*
@@ -235,6 +247,12 @@ statement::=switch_statement.{
 statement::=if_statement.{
 
 }
+statement::=SYM_LB statement_list SYM_RB. {
+
+}
+statement::=SYM_LB SYM_RB.{
+
+}
 return_statement::= SYM_KW_RETURN maybe_expression SYM_SEMI. {
 
 }
@@ -315,7 +333,7 @@ actual_arglist::=expression.{}
 
 actual_arglist::=actual_arglist SYM_COMMA expression.{}
 
-
+expression::=SYM_IDEN SYM_LK expression SYM_RK.{}
 expression::=SYM_MINUS expression. [SYM_RIGHT_UNARY] {}
           expression::=SYM_ADD expression. [SYM_RIGHT_UNARY] {}
 

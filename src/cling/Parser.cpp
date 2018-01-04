@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "Token.h"
 #include "Scanner.h"
 #include "Symbol.h"
 #include "AST.h"

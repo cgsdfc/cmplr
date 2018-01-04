@@ -8,6 +8,7 @@
  */
 struct Option;
 struct ErrorManager;
+struct TokenValue;
 
 struct CharStream {
   FILE *file;
@@ -15,40 +16,6 @@ struct CharStream {
   CharStream(FILE *file);
   int GetChar(void);
   bool ReachEOF(void);
-};
-
-struct TokenValue {
-  Location location;
-  TokenValue(Location const& location):location(location){}
-  virtual ~TokenValue(){}
-  virtual void print(FILE *file);
-};
-
-struct StringToken: public TokenValue {
-  char *string;
-  StringToken(Location const& location, char const *string);
-  virtual ~StringToken();
-};
-
-struct IntegerToken: public TokenValue {
-  int intValue;
-  IntegerToken(Location const& location, int val);
-};
-
-struct Identifier: public StringToken {
-  Identifier(Location const& location, char const* iden): StringToken(location, iden){}
-};
-
-struct StringLiteral: public StringToken {
-  StringLiteral(Location const& location, char const *string): StringToken(location, string){}
-};
-
-struct CharLiteral: public IntegerToken {
-  CharLiteral(Location const& location, int ch): IntegerToken(location, ch){}
-};
-
-struct IntegerLiteral: public IntegerToken {
-  IntegerLiteral(Location const& location, int intValue): IntegerToken(location, intValue) {}
 };
 
 struct Scanner {

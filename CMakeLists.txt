@@ -42,6 +42,7 @@ add_library(cling-core
   ./src/cling/Symbol.cpp
   ./src/cling/Utility.cpp
   ./src/cling/Scanner.cpp
+  ./src/cling/Token.cpp
   ./src/cling/Core.cpp
   ./src/cling/Parser.cpp
   ./src/cling/AST.cpp

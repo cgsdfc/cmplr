@@ -3,6 +3,7 @@
 #include "Error.h"
 #include "Symbol.h"
 #include "Option.h"
+#include "Token.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -37,19 +38,6 @@ int CharStream::GetChar(void) {
 bool CharStream::ReachEOF(void) {
   return feof(file);
 }
-
-void TokenValue::print(FILE *file) {
-  fprintf(file, "TokenValue(location(%u, %u))\n", location.row, location.col);
-}
-
-StringToken::StringToken(Location const& location, char const *string)
-  :TokenValue(location), string(strdup(string)) {}
-
-StringToken::~StringToken() { free(string); }
-
-IntegerToken::IntegerToken(Location const& location, int intValue)
-  :TokenValue(location), intValue(intValue) {}
-
 
 Scanner::Scanner(Option const *option, FILE *file, ErrorManager *errorManager)
   :option(option), input(file), errorManager(errorManager) {

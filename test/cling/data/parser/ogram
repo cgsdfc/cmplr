@@ -1,0 +1,12 @@
+
+int int_function(int int_arg_1)
+{
+  int local_int_1;
+  char local_char_1;
+
+  local_int_1=2;
+  local_char_1='b';
+  return (local_int_1 + 1);
+}
+
+void main() {}
