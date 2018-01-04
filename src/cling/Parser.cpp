@@ -21,6 +21,10 @@ int Parser::ParseAll(Scanner * scanner) {
   TokenValue *tokenValue;
   while ((token=scanner->GetToken())) {
     tokenValue=scanner->GetTokenValue(token);
+    if (tokenValue) {
+      tokenValue->Print(stderr);
+      fputs("\n", stderr);
+    }
     Parse(lemonImpl, token, tokenValue, this);
   }
   Parse(lemonImpl, 0, nullptr, this);

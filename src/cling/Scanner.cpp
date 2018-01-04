@@ -275,6 +275,17 @@ TokenValue *Scanner::GetTokenValue(int type) {
     case SYM_CHAR:
       sscanf(GetString(), "%c", &charValue);
       return new CharLiteral(input.location, charValue);
+    case SYM_KW_CONST:
+    case SYM_KW_CHAR:
+    case SYM_KW_VOID:
+    case SYM_KW_RETURN:
+    case SYM_KW_FOR:
+    case SYM_KW_DEFAULT:
+    case SYM_KW_IF:
+    case SYM_KW_ELSE:
+    case SYM_KW_SWITCH:
+    case SYM_KW_CASE:
+      return new KeywordToken(input.location, type);
     default:
       return nullptr;
   }

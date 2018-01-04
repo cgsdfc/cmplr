@@ -5,7 +5,6 @@ int Frontend::Tokenize(FILE *output) {
   int code;
   while ((code=scanner.GetToken())) {
     char const *string=scanner.GetString();
-    assert(code);
     char const *name = SymbolString(code);
     fprintf(output, "'%s'\t", name);
     switch (code) {
