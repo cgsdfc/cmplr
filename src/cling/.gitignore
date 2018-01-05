@@ -4,3 +4,4 @@ test/
 *.orig
 expr.c
 expr.h
+Grammar.*
