@@ -42,9 +42,9 @@ struct VarDecl {
 };
 
 struct VarDef {
-  Identifier *name;
   Type *type;
-  VarDef(TokenValue *name, Type *type);
+  Identifier *name;
+  VarDef(Type *type,TokenValue *name );
   ~VarDef();
 };
 
@@ -101,18 +101,61 @@ struct CallOperation: public Operation {
   }
 };
 
+/*
+ * Virtual Base Type
+ */
 struct Type {
-  virtual char *GetTypeName()=0;
+  virtual char const *GetTypeName()=0;
+  /*
+   * This has a default impl which always return 0
+   */
   virtual unsigned int GetStorageSize()=0;
   virtual ~Type(){}
 
   /*
-   * This has a default impl which always return 0
+   * This has a default impl that always return false
    */
   virtual bool SupportOperation(Operation const *operation)=0;
 
 };
 
+struct IntType: public Type {
+  IntType()=default;
+  ~IntType()=default;
+  char const *GetTypeName() override {
+    return "int";
+  }
+  unsigned int GetStorageSize()override {
+    return sizeof (int);
+  }
+  bool SupportOperation(Operation const *operation) override ;
+};
+    
+struct CharType: public Type {
+  CharType()=default;
+  ~CharType()=default;
+  char const *GetTypeName() override {
+    return "char";
+  }
+  unsigned int GetStorageSize()override{
+    return sizeof (char);
+  }
+  bool SupportOperation(Operation const *operation) override ;
+};
+
+struct VoidType: public Type {
+  VoidType()=default;
+  ~VoidType()=default;
+  char const *GetTypeName() override {
+    return "void";
+  }
+  unsigned int GetStorageSize()override{
+    return Type::GetStorageSize();
+  }
+  bool SupportOperation(Operation const *operation) override {
+    return Type::SupportOperation(operation);
+  }
+};
 
 struct ConstType: public Type {
   Type *baseType;
@@ -174,7 +217,9 @@ struct Statement {
 struct CompStatement: public Statement {
   GenericVector<Statement> *statements;
   template <class S> CompStatement(S s) : statements(s) {}
-  ~CompStatement()=default;
+  ~CompStatement() {
+    delete statements;
+  }
 };
 
 struct IterativeStatement: public Statement {};
@@ -296,6 +341,12 @@ struct AtomicExpression: public ExpressionStatement {
   }
 };
 
-struct ExpressionInParethesis: public ExpressionStatement { };
+struct ExpressionInParethesis: public ExpressionStatement {
+  ExpressionStatement *expression;
+  ExpressionInParethesis(ExpressionStatement *expr):expression(expr){}
+  ~ExpressionInParethesis() {
+    delete expression;
+  }
+};
 
 #endif

@@ -20,7 +20,7 @@ ConstDef::~ConstDef() {
   delete value;
 }
 
-VarDef::VarDef(TokenValue *name, Type *type)
+VarDef::VarDef(Type *type,TokenValue *name )
   :name(static_cast<Identifier*> (name)),
   type(type){}
 
@@ -43,6 +43,10 @@ FunctionDecl::~FunctionDecl() {
 FunctionType::~FunctionType() {
   delete returnType;
   delete argvTypes;
+}
+
+bool Type::SupportOperation(Operation const *operation) {
+  return false;
 }
 
 unsigned int Type::GetStorageSize() {
@@ -75,6 +79,24 @@ bool ConstType::SupportOperation(Operation const *operation) {
 bool ArrayType::SupportOperation(Operation const *operation) {
   switch(operation->GetKind()) {
     case OperationKind::INDEX:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool IntType::SupportOperation(Operation const *operation) {
+  switch(operation->GetKind()) {
+    case OperationKind::ARITH:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool CharType::SupportOperation(Operation const *operation) {
+  switch(operation->GetKind()) {
+    case OperationKind::ARITH:
       return true;
     default:
       return false;

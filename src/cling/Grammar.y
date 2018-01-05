@@ -56,7 +56,6 @@ maybe_expression(L)::=expression(R).{L=R;}
 %type const_decl {ConstDecl*}
 %type const_decl_list {GenericVector<ConstDecl>*}
 %type const_def_list {GenericVector<ConstDef>*}
-%type int_const_def_list {GenericVector<ConstDef>*}
 %type iden_int_pair_list {GenericVector<ConstDef>*}
 %type maybe_signed_int {IntegerLiteral*}
 %type char_const_def_list {GenericVector<ConstDef>*}
@@ -79,15 +78,11 @@ const_decl(C) ::= SYM_KW_CONST const_def_list(L) SYM_SEMI. {
 C=new ConstDecl(nullptr, L);
 }
 
-const_def_list(L) ::= int_const_def_list(I). {
+const_def_list(L) ::= SYM_KW_CHAR iden_char_pair_list(I) . {
 L=I;
 }
-const_def_list(L)  ::= char_const_def_list(C). {
+const_def_list(L)  ::= SYM_KW_INT iden_int_pair_list(C). {
 L=C;
-}
-
-int_const_def_list(LHS) ::= SYM_KW_INT iden_int_pair_list(RHS) . {
-LHS=RHS;
 }
 
 maybe_signed_int(M)::=SYM_ADD SYM_INTEGER(I).{
@@ -117,70 +112,78 @@ LHS=RHS;
 /*
  * Almost the same as int version
  */
-char_const_def_list ::= SYM_KW_CHAR iden_char_pair_list. {
 
+%type iden_char_pair_list { GenericVector<ConstDef> *}
+
+iden_char_pair_list(L) ::= iden_char_pair(C) . {
+L=new GenericVector<ConstDef> ();
+L->PushBack(C);
+}
+iden_char_pair_list(L) ::= iden_char_pair_list(R) SYM_COMMA iden_char_pair(C) .{
+R->PushBack(C);
+L=R;
+}
+iden_char_pair(C) ::= SYM_IDEN(ID) SYM_EQ SYM_CHAR(CHAR) . {
+C=new ConstDef(ID, CHAR);
 }
 
-iden_char_pair_list ::= iden_char_pair. {
-
+%type type_specifier {Type*}
+type_specifier(T) ::= SYM_KW_INT. {
+T=new IntType();
 }
-iden_char_pair_list::= iden_char_pair_list SYM_COMMA iden_char_pair.{
-
+type_specifier(T) ::=SYM_KW_CHAR. {
+T=new CharType();
 }
-iden_char_pair::= SYM_IDEN SYM_EQ SYM_CHAR . {
-
-}
-
-type_specifier::= SYM_KW_INT. {
-
-}
-type_specifier::=SYM_KW_CHAR. {
-
-}
-type_specifier::=SYM_KW_VOID. {
-
+type_specifier(T) ::=SYM_KW_VOID. {
+T=new VoidType();
 }
 
 /*
  * VarDecl
  */
 %type var_decl_list {GenericVector<VarDecl>*}
-var_decl_list::=var_decl.{
+%type var_decl {VarDecl*}
+%type var_def {VarDef*}
+%type var_def_list {GenericVector<VarDef>*}
 
+var_decl_list(L) ::=var_decl(V) .{
+L=new GenericVector<VarDecl>();
+L->PushBack(V);
 }
-var_decl_list::=var_decl_list var_decl. {
-
+var_decl_list(L) ::=var_decl_list(R) var_decl(V) . {
+R->PushBack(V);
+L=R;
 }
 
-var_decl ::= type_specifier var_def_list SYM_SEMI. {
-
+var_decl(VD) ::= type_specifier(T) var_def_list(VF) SYM_SEMI. {
+VD=new VarDecl(T, VF);
 }
 
 
 /*
  * Single Variable
  */
-var_def::= SYM_IDEN. {
-
+var_def(V) ::= SYM_IDEN(I) . {
+V=new VarDef(nullptr, I);
 }
 
 
 /*
  * Array
  */
-var_def::= SYM_IDEN SYM_LK SYM_INTEGER SYM_RK. {
-
-
+var_def(V) ::= SYM_IDEN(I) SYM_LK SYM_INTEGER SYM_RK. {
+V=new VarDef(nullptr, I);
 }
 
-var_def_list ::= var_def. {
-
+var_def_list(L) ::= var_def(V) . {
+L=new GenericVector<VarDef> ();
+L->PushBack(V);
 }
 
-var_def_list ::= var_def_list SYM_COMMA var_def. {
-
+var_def_list(L) ::= var_def_list(R) SYM_COMMA var_def(V) . {
+R->PushBack(V);
+L=R;
 }
-
 
 
 /*
@@ -193,26 +196,28 @@ function_decl::= type_specifier SYM_IDEN SYM_LP formal_arglist SYM_RP
              SYM_LB maybe_const_decl_list maybe_var_decl_list maybe_statement_list SYM_RB. {
 
 }
-function_decl_list::=function_decl_list function_decl. {
-
+function_decl_list(L) ::=function_decl_list(R) function_decl(F) . {
+R->PushBack(F);
+L=R;
 }
-function_decl_list::=function_decl.{
-
+function_decl_list(L) ::=function_decl(F) .{
+L=new GenericVector<FunctionDecl> ();
+L->PushBack(F);
 }
 
-formal_arglist::=.{
+%type formal_arglist {GenericVector<Type> *}
+%type formal_arg {Type*}
 
+formal_arglist(L) ::=.{ L=nullptr; }
+formal_arglist(L) ::=formal_arg(A) .{
+L=new GenericVector<Type> ();
+L->PushBack(A);
 }
-formal_arglist::=formal_arg.{
-
+formal_arglist(L) ::=formal_arglist(R) SYM_COMMA formal_arg(A) . {
+R->PushBack(A);
+L=R;
 }
-formal_arglist::=formal_arglist SYM_COMMA formal_arg. {
-
-}
-formal_arg::=type_specifier SYM_IDEN.{
-
-
-}
+formal_arg(A) ::=type_specifier(T) SYM_IDEN.{ A=T; }
 
 /*
  * Statement
@@ -224,12 +229,14 @@ formal_arg::=type_specifier SYM_IDEN.{
 %type switch_statement {Statement*}
 %type expression_statement {Statement*}
 
-statement_list::=statement.{
-
+statement_list(L) ::=statement(S) .{
+L=new GenericVector<Statement> ();
+L->PushBack(S);
 }
 
-statement_list::=statement_list statement. {
-
+statement_list(L) ::=statement_list(R)  statement(S) . {
+R->PushBack(S);
+L=R;
 }
 
 statement(S) ::= return_statement(R). { S=R; }
@@ -300,13 +307,12 @@ S=new IfStatement(Cond, Then, nullptr);
 %type expression {ExpressionStatement*}
 %type actual_arglist {GenericVector<ExpressionStatement>*}
 
-expression::=SYM_IDEN . { }
-          expression::=SYM_CHAR.{}
-expression::=SYM_INTEGER.{}
-          expression::=SYM_STRING.{}
-
-expression::=SYM_LP expression SYM_RP. {
-
+expression(E) ::=SYM_IDEN(T) . { E=new AtomicExpression(T); }
+expression(E) ::=SYM_CHAR(T).{ E=new AtomicExpression(T);}
+expression(E) ::=SYM_INTEGER(T).{ E=new AtomicExpression(T);}
+expression(E) ::=SYM_STRING(T).{ E=new AtomicExpression(T);}
+expression(E) ::=SYM_LP expression(P) SYM_RP. {
+ E=new ExpressionInParethesis(P);
 }
 
 expression(E) ::=expression(L) SYM_ADD expression(R). { E=new BinaryExpression(nullptr, L, R); }

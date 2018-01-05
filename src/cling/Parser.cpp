@@ -10,10 +10,12 @@ extern "C" {
 #include "Grammar.c"
 }
 
+static char TracePrompt[]= "(Lemon) ";
+
 Parser::Parser(Option const *option, ErrorManager *errorManager)
   :option(option), errorManager(errorManager), program(nullptr) {
   lemonImpl=ParseAlloc(malloc);
-  ParseTrace(stderr, "(Lemon) ");
+  ParseTrace(stderr, TracePrompt);
 }
 
 int Parser::ParseAll(Scanner * scanner) {
@@ -21,10 +23,6 @@ int Parser::ParseAll(Scanner * scanner) {
   TokenValue *tokenValue;
   while ((token=scanner->GetToken())) {
     tokenValue=scanner->GetTokenValue(token);
-    if (tokenValue) {
-      tokenValue->Print(stderr);
-      fputs("\n", stderr);
-    }
     Parse(lemonImpl, token, tokenValue, this);
   }
   Parse(lemonImpl, 0, nullptr, this);
