@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define AST_IR_TEMP_ZERO 0
 
 UTILLIB_ETAB_BEGIN(cling_ast_opcode_kind)
 UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
@@ -45,6 +44,7 @@ UTILLIB_ETAB_ELEM_INIT(OP_GE, ">=")
 UTILLIB_ETAB_END(cling_ast_opcode_kind);
 
 static const struct cling_ast_ir cling_ast_ir_nop = {.opcode = OP_NOP};
+static const struct cling_ast_ir cling_ast_ir_newline = {.opcode=OP_NL};
 
 static void emit_composite(struct cling_ast_ir_global *self,
                            struct utillib_json_value const *object);
@@ -54,7 +54,7 @@ static int emit_expr(struct cling_ast_ir_global *self,
                      struct utillib_json_value const *object);
 
 static struct cling_ast_ir *emit_ir(int opcode) {
-  struct cling_ast_ir *self = calloc(sizeof *self, 1);
+  struct cling_ast_ir *self = calloc(1, sizeof *self);
   self->opcode = opcode;
   return self;
 }
@@ -62,6 +62,7 @@ static struct cling_ast_ir *emit_ir(int opcode) {
 void cling_ast_ir_destroy(struct cling_ast_ir *self) {
   switch(self->opcode) {
     case OP_NOP:
+    case OP_NL:
       return;
     case OP_CAL:
       free(self->call.argv);
@@ -177,6 +178,9 @@ void ast_ir_print(struct cling_ast_ir const *self, FILE *file) {
   case OP_GE:
     fprintf(file, "t%d = t%d %s t%d\n", self->binop.result, self->binop.temp1,
             opstr, self->binop.temp2);
+    break;
+  case OP_NL:
+    fputs("newline\n", file);
     break;
   default:
     assert(false);
@@ -522,6 +526,9 @@ static void emit_printf_stmt(struct cling_ast_ir_global *self,
     ir->write.temp = emit_expr(self, arg);
     ir->write.kind = write_kind(self, arg);
     utillib_vector_push_back(self->instrs, ir);
+  }
+  if (self->option->auto_newline) {
+    utillib_vector_push_back(self->instrs, &cling_ast_ir_newline);
   }
 }
 
@@ -906,7 +913,9 @@ static void ast_function_destroy(struct cling_ast_function *self) {
   free(self);
 }
 
-void cling_ast_program_init(struct cling_ast_program *self) {
+void cling_ast_program_init(struct cling_ast_program *self, struct cling_option const *option)
+{
+  self->option=option;
   utillib_vector_init(&self->init_code);
   utillib_vector_init(&self->funcs);
 }
@@ -999,7 +1008,6 @@ ast_ir_emit_function(struct cling_ast_ir_global *global,
 }
 
 void cling_ast_ir_emit_program(struct cling_ast_program *self,
-    struct cling_option const *option,
                                struct utillib_json_value const *object,
                                struct cling_symbol_table *symbol_table) {
   struct cling_ast_ir_global global;
@@ -1008,7 +1016,7 @@ void cling_ast_ir_emit_program(struct cling_ast_program *self,
 
   global.symbol_table=symbol_table;
   global.instrs = &self->init_code;
-  global.option=option;
+  global.option=self->option;
 
   maybe_emit_decls(&global, object);
   func_decls = utillib_json_object_at(object, "func_decls");

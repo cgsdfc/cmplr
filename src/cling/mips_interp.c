@@ -58,14 +58,14 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
   assert(index < MIPS_MEM_ARRAY_MAX);
   memblk_array=self->memory[index];
   if (!memblk_array) {
-    memblk_array=calloc(sizeof memblk_array[0], MIPS_MEM_ARRAY_MAX);
+    memblk_array=calloc(MIPS_MEM_ARRAY_MAX,sizeof memblk_array[0]);
     self->memory[index]=memblk_array;
   }
   index=memindex_2(address);
   assert(index < MIPS_MEM_ARRAY_MAX);
   memblk=memblk_array[index];
   if (!memblk) {
-    memblk=calloc(sizeof *memblk, 1);
+    memblk=calloc( 1,sizeof *memblk);
     memblk_array[index]=memblk;
   }
   index=memoffset(address);
@@ -124,6 +124,26 @@ static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_m
 }
 
 /*
+ * Print with '\n'
+ */
+static void print_string(char const *string) {
+  for (char const *p=string; *p; ++p) {
+    if (*p == '\\') {
+      switch(*++p) {
+        case 'n':
+          putchar('\n');
+          break;
+        default: 
+          fprintf(stderr, "warning: unsupported escaped char '%c'\n", *p);
+          break;
+      }
+    } else {
+      putchar(*p);
+    }
+  }
+}
+
+/*
  * Execution of different instructions.
  */
 static int mips_do_syscall(struct cling_mips_interp *self) {
@@ -137,7 +157,7 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
     break;
   case MIPS_PRINT_STRING:
     str_val = utillib_vector_at(&self->strings, self->regs[MIPS_A0]);
-    printf("%s", str_val);
+    print_string(str_val);
     break;
   case MIPS_PRINT_CHAR:
     printf("%c", (char)self->regs[MIPS_A0]);
@@ -442,8 +462,9 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
   printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
-void cling_mips_interp_init(struct cling_mips_interp *self)
+void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option const *option)
 {
+  self->option=option;
   self->error = 0;
   self->pc = 0;
   self->lo = 0;

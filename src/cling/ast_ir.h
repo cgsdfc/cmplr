@@ -60,6 +60,7 @@ UTILLIB_ENUM_ELEM(OP_STADR)
 UTILLIB_ENUM_ELEM(OP_STNAM)
 UTILLIB_ENUM_ELEM(OP_READ)
 UTILLIB_ENUM_ELEM(OP_WRITE)
+UTILLIB_ENUM_ELEM(OP_NL)
 UTILLIB_ENUM_END(cling_ast_opcode_kind);
 
 enum { CL_LVALUE, CL_RVALUE, };
@@ -289,16 +290,16 @@ struct cling_ast_function {
  * and some global init code.
  */
 struct cling_ast_program {
+  struct cling_option const *option;
   struct utillib_vector init_code;
   struct utillib_vector funcs;
 };
 
-void cling_ast_program_init(struct cling_ast_program *self);
+void cling_ast_program_init(struct cling_ast_program *self, struct cling_option const *option);
 
 void cling_ast_program_destroy(struct cling_ast_program *self);
 
 void cling_ast_ir_emit_program(struct cling_ast_program *self,
-    struct cling_option const *option,
                                struct utillib_json_value const *object,
                                struct cling_symbol_table *symbol_table);
 

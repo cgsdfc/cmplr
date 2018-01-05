@@ -29,7 +29,8 @@ enum {
 };
 
 static struct cling_option option={
-  .allow_comment=true,
+  .auto_newline=true,
+  .plain_return=true,
 };
 
 static struct cling_frontend frontend;

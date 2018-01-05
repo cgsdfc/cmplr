@@ -86,11 +86,11 @@ inline void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *out
   utillib_json_pretty_fprint(self->parser.root, output);
 }
 
-void cling_backend_init(struct cling_backend *self)
+void cling_backend_init(struct cling_backend *self, struct cling_option const *option)
 {
-  cling_ast_program_init(&self->ast_program);
-  cling_mips_program_init(&self->mips_program);
-  cling_mips_interp_init(&self->mips_interp);
+  cling_ast_program_init(&self->ast_program, option);
+  cling_mips_program_init(&self->mips_program, option);
+  cling_mips_interp_init(&self->mips_interp, option);
 }
 
 
@@ -102,10 +102,8 @@ void cling_backend_destroy(struct cling_backend *self)
 }
 
 void cling_backend_codegen(struct cling_backend *self,
-                           struct cling_option const *option,
                            struct cling_frontend *frontend) {
   cling_ast_ir_emit_program(&self->ast_program,
-      option,
       frontend->parser.root,
       &frontend->symbol_table);
   cling_mips_program_emit(&self->mips_program, &self->ast_program);
