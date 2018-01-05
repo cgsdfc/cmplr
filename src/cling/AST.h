@@ -56,7 +56,7 @@ struct ConstDef {
 };
 
 struct FunctionDecl {
-  FunctionType *signature;
+  Type *signature;
   TokenValue *name;
   GenericVector<Statement> *statements;
   template<class Sig, class Nn, class Sta>
@@ -193,6 +193,7 @@ struct FunctionType: public Type {
   unsigned int GetStorageSize() {
     return Type::GetStorageSize();
   }
+  char const *GetTypeName() override;
 };
 
 struct VarType: public Type {

@@ -45,6 +45,10 @@ FunctionType::~FunctionType() {
   delete argvTypes;
 }
 
+char const *FunctionType::GetTypeName(){
+  return "";
+}
+
 bool Type::SupportOperation(Operation const *operation) {
   return false;
 }

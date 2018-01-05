@@ -7,7 +7,7 @@
  * Base class for all the token
  */
 %token_type {TokenValue*}
-/* %token_destructor { delete $$; } */
+%token_destructor { delete $$; }
 %extra_argument { Parser *parser}
 %start_symbol program
 
@@ -16,6 +16,8 @@
  * start_symbol program
  */
 %type program {Program*}
+%destructor program { delete $$; }
+
 program ::= const_decl_list(C) var_decl_list(V) function_decl_list(F). {
         parser->program=new Program(C, V, F);
 }
@@ -41,6 +43,12 @@ program::=.{
 %type maybe_statement_list {GenericVector<Statement>*}
 %type maybe_expression {ExpressionStatement*}
 
+%destructor maybe_const_decl_list { delete $$; }
+%destructor maybe_var_decl_list { delete $$; }
+%destructor maybe_function_decl_list { delete $$; }
+%destructor maybe_statement_list { delete $$; }
+%destructor maybe_expression { delete $$; }
+
 maybe_const_decl_list(L)::=.{L=nullptr;}
 maybe_var_decl_list(L)::=.{L=nullptr;}
 maybe_statement_list(L)::=.{L=nullptr;}
@@ -53,6 +61,7 @@ maybe_expression(L)::=expression(R).{L=R;}
 /* 
  * ConstDecl
  */
+
 %type const_decl {ConstDecl*}
 %type const_decl_list {GenericVector<ConstDecl>*}
 %type const_def_list {GenericVector<ConstDef>*}
@@ -61,6 +70,15 @@ maybe_expression(L)::=expression(R).{L=R;}
 %type char_const_def_list {GenericVector<ConstDef>*}
 %type iden_int_pair {ConstDef*}
 %type iden_char_pair {ConstDef*}
+
+%destructor const_decl { delete $$; }
+%destructor const_decl_list { delete $$; }
+%destructor const_def_list { delete $$; }
+%destructor iden_int_pair_list { delete $$; }
+%destructor maybe_signed_int { delete $$; }
+%destructor char_const_def_list { delete $$; }
+%destructor iden_int_pair { delete $$; }
+%destructor iden_char_pair { delete $$; }
 
 const_decl_list(L) ::= const_decl(C) . {
                 L=new GenericVector<ConstDecl>();
@@ -114,6 +132,7 @@ LHS=RHS;
  */
 
 %type iden_char_pair_list { GenericVector<ConstDef> *}
+%destructor iden_char_pair_list { delete $$; }
 
 iden_char_pair_list(L) ::= iden_char_pair(C) . {
 L=new GenericVector<ConstDef> ();
@@ -145,6 +164,11 @@ T=new VoidType();
 %type var_decl {VarDecl*}
 %type var_def {VarDef*}
 %type var_def_list {GenericVector<VarDef>*}
+
+%destructor var_decl_list { delete $$; }
+%destructor var_def { delete $$;}
+%destructor var_decl {delete $$;}
+%destructor var_def_list { delete $$;}
 
 var_decl_list(L) ::=var_decl(V) .{
 L=new GenericVector<VarDecl>();
@@ -192,9 +216,14 @@ L=R;
 
 %type function_decl {FunctionDecl*}
 %type function_decl_list {GenericVector<FunctionDecl>*}
-function_decl::= type_specifier SYM_IDEN SYM_LP formal_arglist SYM_RP 
-             SYM_LB maybe_const_decl_list maybe_var_decl_list maybe_statement_list SYM_RB. {
 
+%destructor function_decl { delete $$; }
+%destructor function_decl_list { delete $$; }
+
+function_decl(F) ::= type_specifier(Ret) SYM_IDEN(Name) SYM_LP formal_arglist(Args) SYM_RP 
+             SYM_LB maybe_const_decl_list maybe_var_decl_list maybe_statement_list(Statements) SYM_RB. {
+Type *signature=new FunctionType(Ret, Args);
+F=new FunctionDecl(signature, Name, Statements);
 }
 function_decl_list(L) ::=function_decl_list(R) function_decl(F) . {
 R->PushBack(F);
@@ -207,6 +236,9 @@ L->PushBack(F);
 
 %type formal_arglist {GenericVector<Type> *}
 %type formal_arg {Type*}
+
+%destructor formal_arglist { delete $$; }
+%destructor formal_arg { delete $$; }
 
 formal_arglist(L) ::=.{ L=nullptr; }
 formal_arglist(L) ::=formal_arg(A) .{
@@ -222,12 +254,22 @@ formal_arg(A) ::=type_specifier(T) SYM_IDEN.{ A=T; }
 /*
  * Statement
  */
+
 %type statement {Statement*}
 %type statement_list {GenericVector<Statement>*}
 %type for_statement {Statement*}
 %type if_statement {Statement*}
 %type switch_statement {Statement*}
+%type return_statement {ReturnStatement*}
 %type expression_statement {Statement*}
+
+%destructor statement { delete $$; }
+%destructor statement_list { delete $$; }
+%destructor for_statement { delete $$; }
+%destructor if_statement { delete $$; }
+%destructor switch_statement { delete $$; }
+%destructor return_statement { delete $$; }
+%destructor expression_statement { delete $$; }
 
 statement_list(L) ::=statement(S) .{
 L=new GenericVector<Statement> ();
@@ -247,7 +289,6 @@ statement(S) ::=if_statement(I) .{ S=I; }
 statement(S) ::=SYM_LB statement_list(L) SYM_RB. { S=new CompStatement(L); }
 statement(S)::=SYM_LB SYM_RB.{ S=nullptr; }
 
-%type return_statement {ReturnStatement*}
 return_statement(R) ::= SYM_KW_RETURN maybe_expression(E) SYM_SEMI. {
 R=new ReturnStatement(E);
 }
@@ -258,6 +299,9 @@ for_statement(F) ::=SYM_KW_FOR SYM_LP maybe_expression(Init) SYM_SEMI maybe_expr
 F=new ForStatement(Init, Cond, Step, Clause);
 }
 
+%destructor default_clause { delete $$; }
+%destructor case_clause_list { delete $$; }
+
 %type default_clause {Statement*}
 %type case_clause_list {GenericVector<CaseStatement> *}
 
@@ -267,6 +311,7 @@ S=new SwitchStatement(Expr, Cases, Default);
 }
 
 %type case_clause { CaseStatement*}
+%destructor case_clause { delete $$; }
 case_clause_list(L) ::=case_clause(C) .{
   L=new GenericVector<CaseStatement> ();
   L->PushBack(C);                
@@ -306,6 +351,9 @@ S=new IfStatement(Cond, Then, nullptr);
 
 %type expression {ExpressionStatement*}
 %type actual_arglist {GenericVector<ExpressionStatement>*}
+
+%destructor expression { delete $$; }
+%destructor actual_arglist { delete $$; }
 
 expression(E) ::=SYM_IDEN(T) . { E=new AtomicExpression(T); }
 expression(E) ::=SYM_CHAR(T).{ E=new AtomicExpression(T);}
