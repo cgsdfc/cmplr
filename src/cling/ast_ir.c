@@ -31,16 +31,8 @@
 #include <string.h>
 
 UTILLIB_ETAB_BEGIN(cling_ast_opcode_kind)
-UTILLIB_ETAB_ELEM_INIT(OP_DEFVAR, "var")
-UTILLIB_ETAB_ELEM(OP_DEFUNC)
-UTILLIB_ETAB_ELEM(OP_DEFARR)
-UTILLIB_ETAB_ELEM_INIT(OP_DEFCON, "const")
-UTILLIB_ETAB_ELEM_INIT(OP_PARA, "para")
-UTILLIB_ETAB_ELEM_INIT(OP_RET, "ret")
 UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
 UTILLIB_ETAB_ELEM_INIT(OP_SUB, "-")
-UTILLIB_ETAB_ELEM_INIT(OP_INDEX, "index")
-UTILLIB_ETAB_ELEM_INIT(OP_CAL, "call")
 UTILLIB_ETAB_ELEM_INIT(OP_DIV, "/")
 UTILLIB_ETAB_ELEM_INIT(OP_MUL, "*")
 UTILLIB_ETAB_ELEM_INIT(OP_EQ, "==")
@@ -49,16 +41,6 @@ UTILLIB_ETAB_ELEM_INIT(OP_LT, "<")
 UTILLIB_ETAB_ELEM_INIT(OP_LE, "<=")
 UTILLIB_ETAB_ELEM_INIT(OP_GT, ">")
 UTILLIB_ETAB_ELEM_INIT(OP_GE, ">=")
-UTILLIB_ETAB_ELEM_INIT(OP_BEZ, "bez")
-UTILLIB_ETAB_ELEM_INIT(OP_BNE, "bne")
-UTILLIB_ETAB_ELEM_INIT(OP_JMP, "jmp")
-UTILLIB_ETAB_ELEM_INIT(OP_LDIMM, "ldimm")
-UTILLIB_ETAB_ELEM_INIT(OP_LDSTR, "ldstr")
-UTILLIB_ETAB_ELEM_INIT(OP_WRINT, "write-int")
-UTILLIB_ETAB_ELEM_INIT(OP_WRSTR, "write-str")
-UTILLIB_ETAB_ELEM_INIT(OP_WRCHR, "write-chr")
-UTILLIB_ETAB_ELEM_INIT(OP_RDINT, "read-int")
-UTILLIB_ETAB_ELEM_INIT(OP_RDCHR, "read-chr")
 UTILLIB_ETAB_END(cling_ast_opcode_kind);
 
 static const struct cling_ast_ir cling_ast_ir_nop = {.opcode = OP_NOP};
@@ -1112,4 +1094,41 @@ int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir) {
 bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc) {
   int jump_addr=ast_ir_get_jump_address(ast_ir);
   return jump_addr==ast_pc+1;
+}
+
+int ast_ir_get_assign_target(struct cling_ast_ir const *ir)
+{
+  switch(ir->opcode) {
+    default: 
+      return -1;
+    case OP_ADD:
+    case OP_SUB:
+    case OP_DIV:
+    case OP_MUL:
+    case OP_EQ:
+    case OP_NE:
+    case OP_LT:
+    case OP_LE:
+    case OP_GT:
+    case OP_GE:
+      return ir->binop.result;
+    case OP_DEREF:
+      return ir->deref.addr;
+    case OP_LDADR:
+      return ir->ldadr.temp;
+    case OP_LDNAM:
+      return ir->ldnam.temp;
+    case OP_LDIMM:
+      return ir->ldimm.temp;
+    case OP_LDSTR:
+      return ir->ldstr.temp;
+    case OP_READ:
+      return ir->read.temp;
+    case OP_CAL:
+      if (ir->call.has_result)
+        return ir->call.result;
+      return -1;
+    case OP_INDEX:
+      return ir->index.result;
+  }
 }

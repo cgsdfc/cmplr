@@ -28,23 +28,22 @@ enum {
   ENOINPUT=1, EFOPEN, ESYNTAX
 };
 
-static struct cling_option option={
-};
-
+static struct cling_option option;
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 static FILE *source_file;
 static FILE *mips_file;
 static char filename_buffer[100];
 
-static void die_of_fopen(char const *filename)
-{
+static void die_of_fopen(char const *filename){
   fprintf(stderr, "%s cannot be opened\n", filename_buffer);
   exit(EFOPEN);
 }
 
+
 int main(void)
 {
+  char optch;
   printf("please input a file\n");
   fgets(filename_buffer, sizeof filename_buffer, stdin);
   filename_buffer[strlen(filename_buffer)-1]='\0';
@@ -52,6 +51,20 @@ int main(void)
   if (!source_file) {
     die_of_fopen(filename_buffer);
   }
+  printf("please tell me whether to do optimization(Y/n)");
+  optch=getchar();
+  switch(optch) {
+    case 'Y': case 'y':
+      option.optimize_lcse=true;
+      break;
+    case 'N': case 'n':
+      option.optimize_lcse=false;
+      break;
+    default:
+      puts("say Y or n, please");
+      exit(1);
+  }
+  
   cling_frontend_init(&frontend, &option, source_file);
   if (0 != cling_frontend_parse(&frontend)) {
     cling_frontend_destroy(&frontend);

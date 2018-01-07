@@ -20,47 +20,55 @@
 */
 #ifndef CLING_LCSE_H
 #define CLING_LCSE_H
-#include <utillib/hashmap.h>
+#include <utillib/hashmap.h> /* Record the history instructions */
 #include <utillib/vector.h>
-
-#define LCSE_TEMP_ZERO 0
 
 /*
  * Local Common Subexpr Elimination
  * Applies only to a basic_block.
  */
 
+/*
+ * Forward decl
+ */
 struct cling_ast_function;
 struct cling_ast_program;
 struct cling_ast_ir;
 struct cling_basic_block;
 
 struct cling_lcse_optimizer {
-  unsigned int var_count;
-  struct utillib_hashmap operations;
-  struct utillib_hashmap names;
-  struct utillib_hashmap values;
-  unsigned int variables_size;
-  int *variables;
-  unsigned int *address_map;
+  unsigned int var_count; /* Rename the temps in ast_func */
+  struct utillib_hashmap operations; /* Effective operations done in the past */
+  struct utillib_hashmap names; /* Map name to their address counted by var_count */
+  struct utillib_hashmap values; /* Map address to value again counted by var_count */
+  unsigned int variables_size; /* number of renamed variables, the length of variables */
+  int *variables; /* Map the old names to new names (variables are named in 1 2 3...) */
+  unsigned int *address_map; /* Since some of the instructions are deleted, map old jump
+                                address to the new ones */
 };
 
+/*
+ * Used in values
+ */
 struct cling_lcse_value {
   unsigned int address;
   unsigned int value;
 };
 
+/*
+ * Opcode that participates in lcse
+ */
 enum {
-  LCSE_LOAD_ADDR,
-  LCSE_LOAD_VALUE,
-  LCSE_BINARY,
-  LCSE_STORE,
+  LCSE_LOAD_ADDR, /* ldadr */
+  LCSE_LOAD_VALUE, /* ldnam */
+  LCSE_BINARY, /* binop */
+  LCSE_STORE, /* stadr, stnam */
   LCSE_UNARY,
 };
 
 struct cling_lcse_ir {
-  int opcode;
-  int kind;
+  int opcode; /* Original ast_ir opcode */
+  int kind; /* LCSE_ see above */
   union {
     struct {
       int result;
@@ -90,10 +98,9 @@ struct cling_lcse_ir {
 void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
                                struct cling_ast_function const *ast_func);
 void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self);
-void cling_lcse_optimizer_fix_address(struct cling_lcse_optimizer const *self,
-                                      struct utillib_vector *instrs);
+
 void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
-                               struct cling_basic_block const *block,
-                               struct utillib_vector *instrs);
+                               struct utillib_vector const *basic_blocks,
+                               struct cling_ast_function *ast_func);
 
 #endif /* CLING_LCSE_H */

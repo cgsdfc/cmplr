@@ -20,39 +20,28 @@
 */
 #include "optimize.h"
 #include "ast_ir.h"
-#include "basic_block.h"
-#include "lcse.h"
+#include "option.h"
 #include <assert.h>
 #include <stdlib.h>
 
-void cling_lcse_optimize(struct cling_ast_function *ast_func) {
-  struct cling_lcse_optimizer optimizer;
-  struct utillib_vector instrs;
-  struct utillib_vector basic_blocks;
-  struct cling_basic_block *block;
 
-  utillib_vector_init(&instrs);
-  utillib_vector_init(&basic_blocks);
-  cling_basic_block_construct(&basic_blocks, &ast_func->instrs);
-
-  /* ast_ir_vector_print(&ast_func->instrs, stdout); */
-  cling_lcse_optimizer_init(&optimizer, ast_func);
-  UTILLIB_VECTOR_FOREACH(block, &basic_blocks) {
-    cling_lcse_optimizer_emit(&optimizer, block, &instrs);
-  }
-  ast_ir_fix_address(&instrs, optimizer.address_map);
-  /* ast_ir_vector_print(&instrs, stdout); */
-
-  utillib_vector_clear(&ast_func->instrs);
-  utillib_vector_append(&ast_func->instrs, &instrs);
-  cling_lcse_optimizer_destroy(&optimizer);
-  utillib_vector_destroy(&instrs);
-  utillib_vector_destroy_owning(&basic_blocks, free);
+void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option,
+    struct cling_ast_function const *ast_func)
+{
+  self->option=option;
+  utillib_vector_init(&self->basic_blocks);
+  cling_lcse_optimizer_init(&self->lcse, ast_func);
 }
 
-void cling_optimize(struct cling_ast_program *ast_program) {
-  struct cling_ast_function *ast_func;
-  UTILLIB_VECTOR_FOREACH(ast_func, &ast_program->funcs) {
-    cling_lcse_optimize(ast_func);
-  }
+void cling_optimizer_destroy(struct cling_optimizer *self)
+{
+  utillib_vector_destroy_owning(&self->basic_blocks, basic_block_destroy);
+  cling_lcse_optimizer_destroy(&self->lcse);
+}
+
+void cling_optimizer_optimize(struct cling_optimizer *self, struct cling_ast_function *ast_func)
+{
+  cling_basic_block_construct(&self->basic_blocks, &ast_func->instrs);
+  if (self->option->optimize_lcse)
+    cling_lcse_optimizer_emit(&self->lcse, &self->basic_blocks, ast_func);
 }
