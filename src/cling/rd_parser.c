@@ -28,7 +28,7 @@
 #include "scanner.h"
 #include "symbol_table.h"
 #include "symbols.h"
-
+#include "option.h"
 #include <utillib/hashmap.h>
 
 #include <assert.h>
@@ -839,6 +839,7 @@ static struct utillib_json_value *return_stmt(struct cling_rd_parser *self,
     void_flag = true;
     goto check_return;
   case SYM_LP:
+parse_expr:
     expr = cling_opg_parser_parse(&opg_parser, scanner);
     if (expr == NULL) {
       /*
@@ -852,6 +853,9 @@ static struct utillib_json_value *return_stmt(struct cling_rd_parser *self,
     void_flag = false;
     goto check_return;
   default:
+    if (self->option->plain_return) {
+      goto parse_expr;
+    }
     rd_parser_error_push_back(self, cling_unexpected_error(scanner, context));
     goto skip;
   }

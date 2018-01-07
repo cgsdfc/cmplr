@@ -52,9 +52,10 @@ struct cling_mips_interp {
   struct utillib_vector const *instrs;
   struct utillib_vector strings;
   struct utillib_hashmap labels;
+  struct cling_option const *option;
 };
 
-void cling_mips_interp_init(struct cling_mips_interp *self);
+void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option const *option);
 
 void cling_mips_interp_load(struct cling_mips_interp *self,
                             struct cling_mips_program const *program);

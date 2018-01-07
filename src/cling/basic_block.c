@@ -48,7 +48,7 @@ void cling_basic_block_construct(struct utillib_vector *blocks,
   const size_t instrs_size = utillib_vector_size(instrs);
   int block_id = 0, state = 0;
 
-  leaders = calloc(sizeof leaders[0], instrs_size);
+  leaders = calloc(instrs_size,sizeof leaders[0] );
   /*
    * Set the first and last instr as leader.
    */

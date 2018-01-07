@@ -192,6 +192,12 @@ void cling_error_print(struct cling_error const *self) {
       fprintf(stderr, "leading zero (%s) in unsigned integer is not allowed\n",
               self->badtoken.evidence);
       break;
+    case CL_EUNTCHAR:
+      fprintf(stderr, "unterminated char constant '%s'\n", self->badtoken.evidence);
+      break;
+    case CL_EUNTSTR:
+      fprintf(stderr, "unterminated string constant '%s'\n", self->badtoken.evidence);
+      break;
     default:
       assert(false);
     }
