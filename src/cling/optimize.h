@@ -21,15 +21,24 @@
 #ifndef CLING_OPTIMIZE_H
 #define CLING_OPTIMIZE_H
 #include <utillib/vector.h>
+#include "basic_block.h"
+#include "lcse.h"
 
+struct cling_option;
+struct cling_ast_function;
 /*
  * High level modules that controls
  * optizization.
  */
+struct cling_optimizer {
+  struct cling_option const *option;
+  struct utillib_vector basic_blocks;
+  struct cling_lcse_optimizer lcse;
+};
 
-struct cling_ast_function;
-struct cling_ast_program;
-void cling_lcse_optimize(struct cling_ast_function *ast_func);
-void cling_optimize(struct cling_ast_program *ast_program);
+void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option);
+void cling_optimizer_destroy(struct cling_optimizer *self);
+void cling_optimizer_optimize(struct cling_optimizer *self,
+    struct cling_ast_function *ast_func);
 
 #endif /* CLING_OPTIMIZE_H */

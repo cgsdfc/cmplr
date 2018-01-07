@@ -126,3 +126,6 @@ void basic_block_display(struct utillib_vector const *basic_blocks) {
     puts("");
   }
 }
+
+void basic_block_destroy(struct cling_basic_block *self) { free(self); }
+

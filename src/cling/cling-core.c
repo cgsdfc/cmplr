@@ -131,5 +131,11 @@ int cling_backend_interpret(struct cling_backend *self)
 
 void cling_backend_optimize(struct cling_backend *self)
 {
-  cling_optimize(&self->ast_program);
+  struct cling_optimizer optimizer;
+  struct cling_ast_function *ast_func;
+  UTILLIB_VECTOR_FOREACH(ast_func, &self->ast_program.funcs) {
+    cling_optimizer_init(&optimizer, self->ast_program.option);
+    cling_optimizer_optimize(&optimizer, ast_func);
+    cling_optimizer_destroy(&optimizer);
+  }
 }
