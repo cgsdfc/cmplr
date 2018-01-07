@@ -134,7 +134,7 @@ void cling_backend_optimize(struct cling_backend *self)
   struct cling_optimizer optimizer;
   struct cling_ast_function *ast_func;
   UTILLIB_VECTOR_FOREACH(ast_func, &self->ast_program.funcs) {
-    cling_optimizer_init(&optimizer, self->ast_program.option);
+    cling_optimizer_init(&optimizer, self->ast_program.option, ast_func);
     cling_optimizer_optimize(&optimizer, ast_func);
     cling_optimizer_destroy(&optimizer);
   }

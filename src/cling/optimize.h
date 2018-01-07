@@ -36,7 +36,8 @@ struct cling_optimizer {
   struct cling_lcse_optimizer lcse;
 };
 
-void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option);
+void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option,
+    struct cling_ast_function const *ast_func);
 void cling_optimizer_destroy(struct cling_optimizer *self);
 void cling_optimizer_optimize(struct cling_optimizer *self,
     struct cling_ast_function *ast_func);

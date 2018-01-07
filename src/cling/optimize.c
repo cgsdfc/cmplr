@@ -25,11 +25,12 @@
 #include <stdlib.h>
 
 
-void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option)
+void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option,
+    struct cling_ast_function const *ast_func)
 {
   self->option=option;
   utillib_vector_init(&self->basic_blocks);
-  cling_lcse_optimizer_destroy(&self->lcse);
+  cling_lcse_optimizer_init(&self->lcse, ast_func);
 }
 
 void cling_optimizer_destroy(struct cling_optimizer *self)
