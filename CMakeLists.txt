@@ -40,6 +40,7 @@ endif(CMPLR_PLATFORM STREQUAL "LINUX")
 ## Utillib
 
 add_library(utillib
+  ./src/utillib/list.c 
   ./src/utillib/hashmap.c
   ./src/utillib/graph.c
   ./src/utillib/strhash.c

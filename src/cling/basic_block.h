@@ -22,22 +22,97 @@
 #define CLING_BASIC_BLOCK
 
 #include <utillib/vector.h>
+#include <stdio.h>
 
 /*
  * Divide each function into a number of basic_blocks
  * for optimizer to run on.
  */
-
+struct cling_ast_function;
 struct cling_basic_block {
   int block_id;
   unsigned int begin;
   unsigned int end;
-  struct utillib_vector *instrs;
+  struct utillib_vector const *instrs;
+};
+
+/*
+ * Data Flow Graph
+ */
+struct cling_data_flow {
+  struct utillib_vector * parents;
+  struct utillib_vector * children;
+  struct utillib_vector basic_blocks;
+  struct utillib_vector const *instrs;
+  unsigned int * block_map;
+  unsigned int blocks_size;
+  unsigned int instrs_size;
+  unsigned int temps_size;
+};
+
+enum {
+  CLING_FORWARD,
+  CLING_BACKWARD,
+};
+
+struct cling_data_flow_callback {
+  int direction;
+  void (*init)(void *data, struct cling_data_flow const *data_flow);
+  bool (*join)(void *data, int block_1, int block_2);
+  void (*apply)(void *data, int block_id);
+};
+
+struct defpoints {
+  unsigned int address;
+  unsigned int target;
+  unsigned int def_id;
+};
+
+struct cling_block_data {
+  unsigned int blocks_size; /* knows how to destroy three arrays */
+  struct utillib_bitset* flow_in;
+  struct utillib_bitset* flow_out;
+  struct utillib_bitset* kill;
+};
+
+struct cling_reaching_definition {
+  struct cling_block_data block_data;
+  struct utillib_vector points;
+};
+
+enum {
+  UDS_INIT=0,
+  UDS_USE,
+  UDS_DEF,
+};
+
+struct live_interval {
+  unsigned int temp;
+  unsigned int begin;
+  unsigned int end;
+};
+
+struct cling_live_variable {
+  struct cling_block_data block_data;
+  unsigned int * use_def_state;
+  struct utillib_vector intervals;
 };
 
 void cling_basic_block_construct(struct utillib_vector *blocks,
-                                 struct utillib_vector *instrs);
+                                 struct utillib_vector const *instrs);
 void basic_block_destroy(struct cling_basic_block *self);
-void basic_block_display(struct utillib_vector const *basic_blocks);
+void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file);
+
+void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_function const *ast_func);
+void cling_data_flow_destroy(struct cling_data_flow *self);
+void cling_data_flow_print(struct cling_data_flow const *self, FILE *file);
+
+void cling_reaching_definition_analyze(struct cling_reaching_definition *self, struct cling_data_flow const *data_flow);
+void reaching_definition_destroy(struct cling_reaching_definition *self);
+void cling_reaching_definition_print(struct cling_reaching_definition const *self, FILE *file);
+
+void cling_live_variable_print(struct cling_live_variable const *self, FILE *file);
+void live_variable_destroy(struct cling_live_variable *self);
+void cling_live_variable_analyze(struct cling_live_variable *self, struct cling_data_flow const *data_flow);
 
 #endif /* CLING_BASIC_BLOCK */

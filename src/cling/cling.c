@@ -36,7 +36,36 @@ static struct cling_option option={
 static struct cling_frontend frontend;
 static struct cling_backend backend;
 static FILE *source_file;
+static struct cling_data_flow data_flow;
+static struct cling_reaching_definition definition;
+static struct cling_live_variable live_variable;
 static char filename_buffer[100];
+
+static void do_definition(void)
+{
+  struct cling_ast_function const *ast_func;
+  UTILLIB_VECTOR_FOREACH(ast_func, &backend.ast_program.funcs) {
+    cling_data_flow_init(&data_flow, ast_func);
+    cling_data_flow_print(&data_flow, stdout);
+    cling_reaching_definition_analyze(&definition, &data_flow);
+    cling_reaching_definition_print(&definition, stdout);
+    reaching_definition_destroy(&definition);
+    cling_data_flow_destroy(&data_flow);
+  }
+}
+
+static void do_live_variable(void)
+{
+  struct cling_ast_function const *ast_func;
+  UTILLIB_VECTOR_FOREACH(ast_func, &backend.ast_program.funcs) {
+    cling_data_flow_init(&data_flow, ast_func);
+    cling_data_flow_print(&data_flow, stdout);
+    cling_live_variable_analyze(&live_variable, &data_flow);
+    cling_live_variable_print(&live_variable, stdout);
+    live_variable_destroy(&live_variable);
+    cling_data_flow_destroy(&data_flow);
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -52,7 +81,7 @@ int main(int argc, char *argv[])
   }
   cling_backend_init(&backend, &option);
   cling_backend_codegen(&backend, &frontend);
-  cling_backend_dump_mips(&backend, stdout);
+  do_live_variable();
   cling_frontend_destroy(&frontend);
   cling_backend_destroy(&backend);
   return 0;

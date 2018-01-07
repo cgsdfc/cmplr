@@ -26,6 +26,7 @@
 #include "mips_interp.h"
 #include "option.h"
 #include "optimize.h"
+#include "basic_block.h"
 #include "rd_parser.h"
 #include "scanner.h"
 #include "symbol_table.h"

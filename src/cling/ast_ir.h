@@ -316,5 +316,6 @@ void ast_ir_vector_print(struct utillib_vector const *instrs,
 int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir);
  
 bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc);
+int ast_ir_get_assign_target(struct cling_ast_ir const *ir);
 
 #endif /* CLING_AST_IR_H */

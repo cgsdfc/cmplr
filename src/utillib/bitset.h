@@ -26,6 +26,10 @@
 #include <stddef.h> /* size_t */
 #define utillib_bitset_N(self) ((self)->N)
 
+#define UTILLIB_BITSET_FOREACH(X, BITSET)                                      \
+  for ((X) = 0; (X) < (BITSET)->N; ++(X))                                      \
+    if (utillib_bitset_contains((BITSET), (X)))
+
 /**
  * \struct utillib_bitset
  * A bitset implementation using dynamic memory.
@@ -52,6 +56,8 @@ bool utillib_bitset_contains(struct utillib_bitset const *self, size_t pos);
 void utillib_bitset_insert(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_remove(struct utillib_bitset *self, size_t pos);
 void utillib_bitset_union(struct utillib_bitset *self,
+                          struct utillib_bitset const *other);
+void utillib_bitset_minus(struct utillib_bitset *self,
                           struct utillib_bitset const *other);
 
 bool utillib_bitset_insert_updated(struct utillib_bitset *self, size_t pos);

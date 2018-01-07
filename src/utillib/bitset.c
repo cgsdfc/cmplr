@@ -91,6 +91,14 @@ void utillib_bitset_union(struct utillib_bitset *self,
   }
 }
 
+void utillib_bitset_minus(struct utillib_bitset *self,
+                          struct utillib_bitset const *other)
+{
+  for (int i = 0; i < self->size; ++i) {
+    self->bits[i] &= ~other->bits[i];
+  }
+}
+
 /*
  * The following interfaces with `_updated' as postfix
  * do the same thing as their counterparts except that
