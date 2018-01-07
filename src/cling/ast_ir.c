@@ -1042,6 +1042,8 @@ void cling_ast_program_print(struct cling_ast_program const *self, FILE *file) {
 
 /*
  * Fixup address from old to new in one pass
+ * FIXME: jump address code spreads 3 places which
+ * result in error easily. use a better ast_ir structure?
  */
 void ast_ir_fix_address(struct utillib_vector *instrs,
                         unsigned int const *address_map) {
@@ -1062,6 +1064,12 @@ void ast_ir_fix_address(struct utillib_vector *instrs,
       old_address = ast_ir->jmp.addr;
       ast_ir->jmp.addr = address_map[old_address];
       break;
+    case OP_RET:
+      old_address=ast_ir->ret.addr;
+      ast_ir->ret.addr=address_map[old_address];
+      break;
+    default:
+      assert(!ast_ir_is_local_jump(ast_ir));
     }
   }
 }
@@ -1087,7 +1095,8 @@ int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir) {
       return ast_ir->jmp.addr;
     case OP_RET:
       return ast_ir->ret.addr;
-    default: assert(false);
+    default:
+      assert(!ast_ir_is_local_jump(ast_ir));
   }
 }
 

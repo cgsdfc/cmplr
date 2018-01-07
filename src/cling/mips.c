@@ -549,12 +549,12 @@ static void mips_function_init(struct cling_mips_function *self,
   self->global = global;
   self->instrs = instrs;
   self->temp_size = ast_func->temps;
+  self->ast_instrs_size=utillib_vector_size(&ast_func->instrs);
   self->frame_size = 0;
   self->para_size=0;
   self->instr_begin = utillib_vector_size(instrs);
   self->reg_used =calloc(CLING_MIPS_REG_MAX, sizeof self->reg_used[0]);
-  self->address_map = malloc(sizeof self->address_map[0] *
-                             utillib_vector_size(&ast_func->instrs));
+  self->address_map = malloc(sizeof self->address_map[0] * self->ast_instrs_size);
   self->temps = calloc(ast_func->temps, sizeof self->temps[0]);
   utillib_hashmap_init(&self->names, &cling_string_hash);
   utillib_vector_init(&self->saved);
@@ -587,14 +587,22 @@ static bool mips_function_is_leaf(struct cling_ast_function const *ast_func) {
  * Fix all the address of jump/branch in range of
  * [self->instr_begin, utillib_vector_size(self->instrs)).
  */
-static void mips_function_fix_address(struct cling_mips_function *self) {
+static void mips_function_fix_address(struct cling_mips_function *self)
+{
   struct cling_mips_ir *mips_ir;
   int instr_end = utillib_vector_size(self->instrs);
   int ast_ir_addr;
   uint32_t mips_ir_addr;
 
-#define mips_branch_offset(self, ast_ir_addr, mips_pc)                         \
-  ((self)->address_map[(ast_ir_addr)] - (mips_pc)-1)
+#define mips_getaddr_safe(self, ast_ir_addr) \
+  ({\
+   if ((ast_ir_addr) >= (self->ast_instrs_size)) {\
+      printf("ast_ir_addr %d ast_instrs_size %d\n", ast_ir_addr, self->ast_instrs_size);\
+   }\
+   assert((ast_ir_addr) < (self->ast_instrs_size));\
+   self->address_map[ast_ir_addr];\
+   })
+
   for (int mips_pc = self->instr_begin; mips_pc < instr_end; ++mips_pc) {
     mips_ir = utillib_vector_at(self->instrs, mips_pc);
     switch (mips_ir->opcode) {
@@ -603,7 +611,7 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
        * Lonely J needs a label to jump to!
        */
       ast_ir_addr = mips_ir->operands[0].address;
-      mips_ir_addr = self->address_map[ast_ir_addr];
+      mips_ir_addr = mips_getaddr_safe(self, ast_ir_addr);
       mips_ir->operands[0].label =
           mips_global_label(self->global, mips_ir_addr);
       break;
@@ -616,7 +624,7 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
        * since only 3 fields are available.
        */
       ast_ir_addr = mips_ir->operands[2].offset;
-      mips_ir_addr = self->address_map[ast_ir_addr];
+      mips_ir_addr = mips_getaddr_safe(self, ast_ir_addr);
       mips_ir->operands[2].label =
           mips_global_label(self->global, mips_ir_addr);
       break;
@@ -625,7 +633,7 @@ static void mips_function_fix_address(struct cling_mips_function *self) {
     case MIPS_BLEZ:
     case MIPS_BLTZ:
       ast_ir_addr = mips_ir->operands[1].offset;
-      mips_ir_addr = self->address_map[ast_ir_addr];
+      mips_ir_addr = mips_getaddr_safe(self, ast_ir_addr);
       mips_ir->operands[1].label =
           mips_global_label(self->global, mips_ir_addr);
       break;
@@ -1061,20 +1069,6 @@ static void mips_emit_ternary_calc(struct cling_mips_function *self,
 }
 
 /*
- * Optionally move temp to $v0.
- * Jump to epilogue.
- */
-static void mips_emit_ret(struct cling_mips_function *self,
-    struct cling_ast_ir const *ast_ir) {
-  uint8_t regid;
-  if (ast_ir->ret.has_result) {
-    regid = mips_function_read(self, ast_ir->ret.result);
-    mips_function_push_back(self, mips_move(MIPS_V0, regid));
-  }
-  mips_function_push_back(self, mips_j(ast_ir->ret.addr));
-}
-
-/*
  * Calculation that takes 2 operands in mips but 3 operands
  * in ast_ir.
  * like, div $t1, $t2, mflo $t3
@@ -1477,7 +1471,12 @@ static void mips_function_instrs(struct cling_mips_function *self,
         relop = ast_ir;
         break;
       case OP_RET:
-        mips_emit_ret(self, ast_ir);
+        if (ast_ir->ret.has_result) {
+          uint8_t regid = mips_function_read(self, ast_ir->ret.result);
+          mips_function_push_back(self, mips_move(MIPS_V0, regid));
+        }
+        if (!ast_ir_useless_jump(ast_ir, ast_pc))
+          mips_function_push_back(self, mips_j(ast_ir->ret.addr));
         break;
       case OP_BEZ:
         if (ast_ir_useless_jump(ast_ir, ast_pc))

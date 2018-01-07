@@ -569,9 +569,6 @@ void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
                                struct utillib_vector const *basic_blocks,
                                struct cling_ast_function *ast_func)
 {
-  /*
-   * Different basic_blocks should not share operations and values.
-   */
   struct utillib_vector output_instrs;
   struct cling_basic_block const *block;
   utillib_vector_init(&output_instrs);
@@ -583,6 +580,7 @@ void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
     utillib_hashmap_destroy_owning(&self->operations, NULL, lcse_ir_destroy);
     utillib_hashmap_destroy_owning(&self->values, NULL, lcse_value_destroy);
   }
+  ast_func->temps=self->var_count;
   ast_ir_fix_address(&output_instrs, self->address_map);
   utillib_vector_clear(&ast_func->instrs);
   utillib_vector_append(&ast_func->instrs, &output_instrs);

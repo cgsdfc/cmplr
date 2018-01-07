@@ -184,6 +184,7 @@ struct cling_mips_function {
   int last_temp;
   int temp_size;
   int para_size;
+  int ast_instrs_size;
   struct cling_mips_temp *temps;
 
   bool *reg_used;

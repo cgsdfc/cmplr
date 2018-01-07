@@ -108,6 +108,7 @@ void cling_backend_codegen(struct cling_backend *self,
   cling_ast_ir_emit_program(&self->ast_program,
       frontend->parser.root,
       &frontend->symbol_table);
+  backend_optimize(self);
   cling_mips_program_emit(&self->mips_program, &self->ast_program);
 }
 
