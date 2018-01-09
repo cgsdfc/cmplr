@@ -34,7 +34,7 @@ else(MSVC OR WIN32)
 endif(MSVC OR WIN32)
 
 if (CMPLR_PLATFORM STREQUAL "LINUX")
-  set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable")
+  set(CMAKE_C_FLAGS "-g3 -std=c99 -Wunused-variable -Wno-incompatible-pointer-types -Wno-discarded-qualifiers")
 endif(CMPLR_PLATFORM STREQUAL "LINUX")
 
 ## Utillib

@@ -23,7 +23,7 @@
 #include "ast_build.h"
 #include "scanner.h"
 #include "symbols.h"
-
+#include <stdint.h>
 #include <assert.h>
 #include <stdlib.h>
 /*
@@ -52,7 +52,7 @@ static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
         self->eof_symbol = eof_symbol;
         utillib_vector_init(&self->stack);
         utillib_vector_init(&self->opstack);
-        utillib_vector_push_back(&self->opstack, self->eof_symbol);
+        utillib_vector_push_back(&self->opstack, (void*) self->eof_symbol);
 }
 
 /**
@@ -169,7 +169,7 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
         struct utillib_vector *stack = &self->stack;
         struct utillib_vector *opstack = &self->opstack;
         struct utillib_vector argstack;
-        size_t stacktop = utillib_vector_back(opstack);
+        size_t stacktop = (uintptr_t) utillib_vector_back(opstack);
         size_t op = stacktop;
 
         /*
@@ -197,7 +197,7 @@ static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
                         utillib_vector_pop_back(opstack);
                         if (utillib_vector_size(opstack) < 1)
                                 return 0;
-                        stacktop = utillib_vector_back(opstack);
+                        stacktop = (uintptr_t) utillib_vector_back(opstack);
                         if (stacktop != SYM_IDEN)
                                 return 0;
                         /*
@@ -242,7 +242,7 @@ make_arglist:
          */
         utillib_vector_init(&argstack);
         while (true) {
-                stacktop = utillib_vector_back(opstack);
+                stacktop =(uintptr_t)  utillib_vector_back(opstack);
                 if (stacktop != SYM_LP && stacktop != SYM_COMMA)
                         goto error;
                 if (utillib_vector_size(stack) < 1)
@@ -371,7 +371,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
                         return val;
                 }
 
-                stacktop = utillib_vector_back(opstack);
+                stacktop =(uintptr_t)  utillib_vector_back(opstack);
                 if (lookahead == SYM_IDEN || lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
                         utillib_vector_push_back(
                                         stack, cling_ast_factor(lookahead, cling_scanner_semantic(scanner)));
@@ -380,7 +380,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
                                  * SYM_IDEN matters in call_expr
                                  * so pushes it.
                                  */
-                                utillib_vector_push_back(opstack, lookahead);
+                                utillib_vector_push_back(opstack, (void*) lookahead);
                         cling_scanner_shiftaway(scanner);
                         continue;
                 }
@@ -398,7 +398,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
                 switch (cmp) {
                         case OPG_SHIFTIN:
 shiftin:
-                                utillib_vector_push_back(opstack, lookahead);
+                                utillib_vector_push_back(opstack, (void*) lookahead);
                                 cling_scanner_shiftaway(scanner);
                                 break;
                         case OPG_REDUCE:
