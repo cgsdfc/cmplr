@@ -25,7 +25,7 @@
 #include <string.h>
 
 enum {
-  ENOINPUT=1, EFOPEN, ESYNTAX
+        ENOINPUT=1, EFOPEN, ESYNTAX
 };
 
 static struct cling_option option;
@@ -36,51 +36,51 @@ static FILE *mips_file;
 static char filename_buffer[100];
 
 static void die_of_fopen(char const *filename){
-  fprintf(stderr, "%s cannot be opened\n", filename_buffer);
-  exit(EFOPEN);
+        fprintf(stderr, "%s cannot be opened\n", filename_buffer);
+        exit(EFOPEN);
 }
 
 
 int main(void)
 {
-  char optch;
-  printf("please input a file\n");
-  fgets(filename_buffer, sizeof filename_buffer, stdin);
-  filename_buffer[strlen(filename_buffer)-1]='\0';
-  source_file=fopen(filename_buffer, "r");
-  if (!source_file) {
-    die_of_fopen(filename_buffer);
-  }
-  printf("please tell me whether to do optimization(Y/n)");
-  optch=getchar();
-  switch(optch) {
-    case 'Y': case 'y':
-      option.optimize_lcse=true;
-      break;
-    case 'N': case 'n':
-      option.optimize_lcse=false;
-      break;
-    default:
-      puts("say Y or n, please");
-      exit(1);
-  }
-  
-  cling_frontend_init(&frontend, &option, source_file);
-  if (0 != cling_frontend_parse(&frontend)) {
-    cling_frontend_destroy(&frontend);
-    return ESYNTAX;
-  }
-  cling_backend_init(&backend, &option);
-  cling_backend_codegen(&backend, &frontend);
-  strncat(filename_buffer, ".s", sizeof filename_buffer);
-  mips_file=fopen(filename_buffer, "w");
-  if (!mips_file) {
-    die_of_fopen(filename_buffer);
-  }
-  cling_backend_dump_mips(&backend, mips_file);
-  fclose(mips_file);
-  printf("Assembly has been written to %s\n", filename_buffer);
-  cling_frontend_destroy(&frontend);
-  cling_backend_destroy(&backend);
-  return 0;
+        char optch;
+        printf("please input a file\n");
+        fgets(filename_buffer, sizeof filename_buffer, stdin);
+        filename_buffer[strlen(filename_buffer)-1]='\0';
+        source_file=fopen(filename_buffer, "r");
+        if (!source_file) {
+                die_of_fopen(filename_buffer);
+        }
+        printf("please tell me whether to do optimization(Y/n)");
+        optch=getchar();
+        switch(optch) {
+                case 'Y': case 'y':
+                        option.optimize_lcse=true;
+                        break;
+                case 'N': case 'n':
+                        option.optimize_lcse=false;
+                        break;
+                default:
+                        puts("say Y or n, please");
+                        exit(1);
+        }
+
+        cling_frontend_init(&frontend, &option, source_file);
+        if (0 != cling_frontend_parse(&frontend)) {
+                cling_frontend_destroy(&frontend);
+                return ESYNTAX;
+        }
+        cling_backend_init(&backend, &option);
+        cling_backend_codegen(&backend, &frontend);
+        strncat(filename_buffer, ".s", sizeof filename_buffer);
+        mips_file=fopen(filename_buffer, "w");
+        if (!mips_file) {
+                die_of_fopen(filename_buffer);
+        }
+        cling_backend_dump_mips(&backend, mips_file);
+        fclose(mips_file);
+        printf("Assembly has been written to %s\n", filename_buffer);
+        cling_frontend_destroy(&frontend);
+        cling_backend_destroy(&backend);
+        return 0;
 }

@@ -41,9 +41,9 @@ struct cling_scanner;
  * That is not const, array and function
  */
 int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
-                                    struct cling_rd_parser *parser,
-                                    struct cling_scanner const *scanner,
-                                    size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 
 /*
  * Excluding assign_expr and boolean_expr.
@@ -52,9 +52,9 @@ int cling_ast_check_iden_assignable(struct utillib_json_value const *self,
  * is closed here although in parsing, it was opened.
  */
 int cling_ast_check_expression(struct utillib_json_value const *self,
-                               struct cling_rd_parser *parser,
-                               struct cling_scanner const *scanner,
-                               size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 
 /*
  * Since the grammar only permits limited kinds
@@ -62,18 +62,18 @@ int cling_ast_check_expression(struct utillib_json_value const *self,
  * we provide special check for that.
  */
 int cling_ast_check_expr_stmt(struct utillib_json_value const *self,
-                              struct cling_rd_parser *parser,
-                              struct cling_scanner const *scanner,
-                              size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 
 /*
  * Check whether the type of the return expr match the one declared
  * in the function prototype.
  */
 int cling_ast_check_returnness(struct utillib_json_value const *self,
-                               struct cling_rd_parser *parser,
-                               struct cling_scanner const *scanner,
-                               size_t context, bool void_flag);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context, bool void_flag);
 /*
  * The following functions are due to grammar limitness.
  * That is the grammar forbits certain kinds of contructs
@@ -84,24 +84,24 @@ int cling_ast_check_returnness(struct utillib_json_value const *self,
  * That all we can do in `for' the initial part.
  */
 int cling_ast_check_for_init(struct utillib_json_value const *self,
-                             struct cling_rd_parser *parser,
-                             struct cling_scanner const *scanner,
-                             size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 /*
  * condition ::= expr relop expr
  */
 int cling_ast_check_condition(struct utillib_json_value const *self,
-                              struct cling_rd_parser *parser,
-                              struct cling_scanner const *scanner,
-                              size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 
 /*
  * iden = iden (+|-) non-zero integer
  * That is for `for' step part.
  */
 int cling_ast_check_for_step(struct utillib_json_value const *self,
-                             struct cling_rd_parser *parser,
-                             struct cling_scanner const *scanner,
-                             size_t context);
+                struct cling_rd_parser *parser,
+                struct cling_scanner const *scanner,
+                size_t context);
 
 #endif /* CLING_AST_CHECK_H */

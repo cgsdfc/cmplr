@@ -29,36 +29,36 @@
 #define MIPS_MEM_ARRAY_MAX 8
 #define MIPS_MEM_MAX (MIPS_MEMBLK_SIZE * MIPS_MEM_ARRAY_MAX * MIPS_MEM_ARRAY_MAX)
 
-UTILLIB_ENUM_BEGIN(cling_mips_ecode)
-UTILLIB_ENUM_ELEM(MIPS_EC_OK)
-UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
-UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
-UTILLIB_ENUM_ELEM(MIPS_EC_NULL)
-UTILLIB_ENUM_ELEM(MIPS_EC_NOMEM)
+        UTILLIB_ENUM_BEGIN(cling_mips_ecode)
+        UTILLIB_ENUM_ELEM(MIPS_EC_OK)
+        UTILLIB_ENUM_ELEM(MIPS_EC_EXIT)
+        UTILLIB_ENUM_ELEM(MIPS_EC_ALIGN)
+        UTILLIB_ENUM_ELEM(MIPS_EC_NULL)
+        UTILLIB_ENUM_ELEM(MIPS_EC_NOMEM)
 UTILLIB_ENUM_ELEM(MIPS_EC_INDEX)
-UTILLIB_ENUM_END(cling_mips_ecode);
+        UTILLIB_ENUM_END(cling_mips_ecode);
 
 
-struct cling_mips_memblk {
-  uint8_t mem[MIPS_MEMBLK_SIZE];
-};
+        struct cling_mips_memblk {
+                uint8_t mem[MIPS_MEMBLK_SIZE];
+        };
 
 struct cling_mips_interp {
-  int error;
-  uint32_t regs[CLING_MIPS_REG_MAX];
-  uint32_t lo;
-  uint32_t pc;
-  struct cling_mips_memblk ** memory[MIPS_MEM_ARRAY_MAX];
-  struct utillib_vector const *instrs;
-  struct utillib_vector strings;
-  struct utillib_hashmap labels;
-  struct cling_option const *option;
+        int error;
+        uint32_t regs[CLING_MIPS_REG_MAX];
+        uint32_t lo;
+        uint32_t pc;
+        struct cling_mips_memblk ** memory[MIPS_MEM_ARRAY_MAX];
+        struct utillib_vector const *instrs;
+        struct utillib_vector strings;
+        struct utillib_hashmap labels;
+        struct cling_option const *option;
 };
 
 void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option const *option);
 
 void cling_mips_interp_load(struct cling_mips_interp *self,
-                            struct cling_mips_program const *program);
+                struct cling_mips_program const *program);
 void cling_mips_interp_unload(struct cling_mips_interp *self);
 
 int cling_mips_interp_exec(struct cling_mips_interp *self);

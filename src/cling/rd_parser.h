@@ -36,26 +36,26 @@ struct cling_scanner;
 struct cling_option;
 
 struct cling_rd_parser {
-  jmp_buf fatal_saver;
-  struct utillib_vector elist;
-  char const *curfunc;             /* used to check returnness */
-  int tars[RD_PARSER_SKIP_MAX];    /* used to skip to a list of targets */
-  struct utillib_json_value *root; /* the root of AST */
-  struct cling_symbol_table *symbol_table;
-  struct cling_option const *option;
+        jmp_buf fatal_saver;
+        struct utillib_vector elist;
+        char const *curfunc;             /* used to check returnness */
+        int tars[RD_PARSER_SKIP_MAX];    /* used to skip to a list of targets */
+        struct utillib_json_value *root; /* the root of AST */
+        struct cling_symbol_table *symbol_table;
+        struct cling_option const *option;
 };
 
 void cling_rd_parser_init(struct cling_rd_parser *self,
-                          struct cling_option const *option,
-                          struct cling_symbol_table *symbol_table);
+                struct cling_option const *option,
+                struct cling_symbol_table *symbol_table);
 
 void cling_rd_parser_destroy(struct cling_rd_parser *self);
 
 int cling_rd_parser_parse(struct cling_rd_parser *self,
-                                                 struct cling_scanner *scanner);
+                struct cling_scanner *scanner);
 
 void cling_rd_parser_print_error(struct cling_rd_parser const *self);
 
 void rd_parser_error_push_back(struct cling_rd_parser *self,
-                               struct cling_error *error);
+                struct cling_error *error);
 #endif /* CLING_RD_PARSER_H */

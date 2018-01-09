@@ -40,13 +40,13 @@ void cling_ast_set_op(struct utillib_json_value *self, size_t op);
 void cling_ast_set_opstr(struct utillib_json_value *self, size_t op);
 
 void cling_ast_set_extend(struct utillib_json_value *self,
-                          struct utillib_json_value *extend);
+                struct utillib_json_value *extend);
 
 void cling_ast_set_lhs(struct utillib_json_value *self,
-                       struct utillib_json_value *lhs);
+                struct utillib_json_value *lhs);
 
 void cling_ast_set_rhs(struct utillib_json_value *self,
-                       struct utillib_json_value *rhs);
+                struct utillib_json_value *rhs);
 
 struct utillib_json_value *cling_ast_statement(size_t type);
 

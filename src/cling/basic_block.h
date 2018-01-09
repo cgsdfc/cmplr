@@ -29,77 +29,81 @@
  * for optimizer to run on.
  */
 struct cling_ast_function;
-struct cling_basic_block {
-  int block_id;
-  unsigned int begin;
-  unsigned int end;
-  struct utillib_vector const *instrs;
+struct cling_basic_block
+{
+        int block_id;
+        unsigned int begin;
+        unsigned int end;
+        struct utillib_vector const *instrs;
 };
 
 /*
  * Data Flow Graph
  */
-struct cling_data_flow {
-  struct utillib_vector * parents;
-  struct utillib_vector * children;
-  struct utillib_vector basic_blocks;
-  struct utillib_vector const *instrs;
-  unsigned int * block_map;
-  unsigned int blocks_size;
-  unsigned int instrs_size;
-  unsigned int temps_size;
+struct cling_data_flow 
+{
+        struct utillib_vector * parents;
+        struct utillib_vector * children;
+        struct utillib_vector basic_blocks;
+        struct utillib_vector const *instrs;
+        unsigned int * block_map;
+        unsigned int blocks_size;
+        unsigned int instrs_size;
+        unsigned int temps_size;
 };
 
 enum {
-  CLING_FORWARD,
-  CLING_BACKWARD,
+        CLING_FORWARD,
+        CLING_BACKWARD,
 };
 
-struct cling_data_flow_callback {
-  int direction;
-  void (*init)(void *data, struct cling_data_flow const *data_flow);
-  bool (*join)(void *data, int block_1, int block_2);
-  void (*apply)(void *data, int block_id);
+struct cling_data_flow_callback 
+{
+        int direction;
+        void (*init)(void *data, struct cling_data_flow const *data_flow);
+        bool (*join)(void *data, int block_1, int block_2);
+        void (*apply)(void *data, int block_id);
 };
 
 struct defpoints {
-  unsigned int address;
-  unsigned int target;
-  unsigned int def_id;
+        unsigned int address;
+        unsigned int target;
+        unsigned int def_id;
 };
 
-struct cling_block_data {
-  unsigned int blocks_size; /* knows how to destroy three arrays */
-  struct utillib_bitset* flow_in;
-  struct utillib_bitset* flow_out;
-  struct utillib_bitset* kill;
+struct cling_block_data
+{
+        unsigned int blocks_size; /* knows how to destroy three arrays */
+        struct utillib_bitset* flow_in;
+        struct utillib_bitset* flow_out;
+        struct utillib_bitset* kill;
 };
 
 struct cling_reaching_definition {
-  struct cling_block_data block_data;
-  struct utillib_vector points;
+        struct cling_block_data block_data;
+        struct utillib_vector points;
 };
 
 enum {
-  UDS_INIT=0,
-  UDS_USE,
-  UDS_DEF,
+        UDS_INIT=0,
+        UDS_USE,
+        UDS_DEF,
 };
 
 struct live_interval {
-  unsigned int temp;
-  unsigned int begin;
-  unsigned int end;
+        unsigned int temp;
+        unsigned int begin;
+        unsigned int end;
 };
 
 struct cling_live_variable {
-  struct cling_block_data block_data;
-  unsigned int * use_def_state;
-  struct utillib_vector intervals;
+        struct cling_block_data block_data;
+        unsigned int * use_def_state;
+        struct utillib_vector intervals;
 };
 
 void cling_basic_block_construct(struct utillib_vector *blocks,
-                                 struct utillib_vector const *instrs);
+                struct utillib_vector const *instrs);
 void basic_block_destroy(struct cling_basic_block *self);
 void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file);
 

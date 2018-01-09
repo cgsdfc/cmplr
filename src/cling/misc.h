@@ -30,8 +30,8 @@
 #define quoted_string(X) "'%s'"
 
 struct cling_mips_label {
-  char *label;
-  uint32_t address;
+        char *label;
+        uint32_t address;
 };
 
 /*

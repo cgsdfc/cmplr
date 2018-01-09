@@ -30,169 +30,169 @@
 #include <utillib/strhash.h>
 
 int cling_symbol_to_type(int symbol) {
-  switch (symbol) {
-  case SYM_INTEGER:
-  case SYM_KW_INT:
-    return CL_INT;
-  case SYM_CHAR:
-  case SYM_KW_CHAR:
-    return CL_CHAR;
-  case SYM_KW_VOID:
-    return CL_VOID;
-  default:
-    assert(false);
-  }
+        switch (symbol) {
+                case SYM_INTEGER:
+                case SYM_KW_INT:
+                        return CL_INT;
+                case SYM_CHAR:
+                case SYM_KW_CHAR:
+                        return CL_CHAR;
+                case SYM_KW_VOID:
+                        return CL_VOID;
+                default:
+                        assert(false);
+        }
 }
 
 /*
  * I know these converter is ugly, but what else?
  */
 int symbol_to_ast_opcode(size_t symbol) {
-  int opcode;
-  switch (symbol) {
-  case SYM_ADD:
-    opcode = OP_ADD;
-    break;
-  case SYM_MINUS:
-    opcode = OP_SUB;
-    break;
-  case SYM_MUL:
-    opcode = OP_MUL;
-    break;
-  case SYM_DIV:
-    opcode = OP_DIV;
-    break;
-  case SYM_DEQ:
-    opcode = OP_EQ;
-    break;
-  case SYM_NE:
-    opcode = OP_NE;
-    break;
-  case SYM_LT:
-    opcode = OP_LT;
-    break;
-  case SYM_LE:
-    opcode = OP_LE;
-    break;
-  case SYM_GT:
-    opcode = OP_GT;
-    break;
-  case SYM_GE:
-    opcode = OP_GE;
-    break;
-  default:
-    assert(false);
-  }
-  return opcode;
+        int opcode;
+        switch (symbol) {
+                case SYM_ADD:
+                        opcode = OP_ADD;
+                        break;
+                case SYM_MINUS:
+                        opcode = OP_SUB;
+                        break;
+                case SYM_MUL:
+                        opcode = OP_MUL;
+                        break;
+                case SYM_DIV:
+                        opcode = OP_DIV;
+                        break;
+                case SYM_DEQ:
+                        opcode = OP_EQ;
+                        break;
+                case SYM_NE:
+                        opcode = OP_NE;
+                        break;
+                case SYM_LT:
+                        opcode = OP_LT;
+                        break;
+                case SYM_LE:
+                        opcode = OP_LE;
+                        break;
+                case SYM_GT:
+                        opcode = OP_GT;
+                        break;
+                case SYM_GE:
+                        opcode = OP_GE;
+                        break;
+                default:
+                        assert(false);
+        }
+        return opcode;
 }
 
 char const *size_tostring(int size) {
-  switch (size) {
-  case MIPS_WORD_SIZE:
-    return "int";
-  case MIPS_BYTE_SIZE:
-    return "char";
-  default:
-    return "void";
-  }
+        switch (size) {
+                case MIPS_WORD_SIZE:
+                        return "int";
+                case MIPS_BYTE_SIZE:
+                        return "char";
+                default:
+                        return "void";
+        }
 }
 
 int cling_symbol_to_size(int symbol) {
-  switch (symbol) {
-  case SYM_INTEGER:
-    return MIPS_WORD_SIZE;
-  case SYM_CHAR:
-    return MIPS_BYTE_SIZE;
-  default:
-    assert(false);
-  }
+        switch (symbol) {
+                case SYM_INTEGER:
+                        return MIPS_WORD_SIZE;
+                case SYM_CHAR:
+                        return MIPS_BYTE_SIZE;
+                default:
+                        assert(false);
+        }
 }
 int cling_type_to_size(int type) {
-  switch (type) {
-  case CL_INT:
-    return MIPS_WORD_SIZE;
-  case CL_CHAR:
-    return MIPS_BYTE_SIZE;
-  case CL_VOID:
-    return 0;
-  default:
-    assert(false);
-  }
+        switch (type) {
+                case CL_INT:
+                        return MIPS_WORD_SIZE;
+                case CL_CHAR:
+                        return MIPS_BYTE_SIZE;
+                case CL_VOID:
+                        return 0;
+                default:
+                        assert(false);
+        }
 }
 
 int cling_symbol_to_immediate(int symbol, char const *string) {
-  int int_val;
-  char char_val;
-  switch (symbol) {
-  case SYM_CHAR:
-  case SYM_KW_CHAR:
-    sscanf(string, "%c", &char_val);
-    return char_val;
-  case SYM_INTEGER:
-  case SYM_KW_INT:
-    sscanf(string, "%d", &int_val);
-    return int_val;
-  default:
-    assert(false);
-  }
+        int int_val;
+        char char_val;
+        switch (symbol) {
+                case SYM_CHAR:
+                case SYM_KW_CHAR:
+                        sscanf(string, "%c", &char_val);
+                        return char_val;
+                case SYM_INTEGER:
+                case SYM_KW_INT:
+                        sscanf(string, "%d", &int_val);
+                        return int_val;
+                default:
+                        assert(false);
+        }
 }
 
 int cling_type_to_immediate(int type, char const *string) {
-  int int_val;
-  char char_val;
-  switch (type) {
-  case CL_CHAR:
-    sscanf(string, "%c", &char_val);
-    return char_val;
-  case CL_INT:
-    sscanf(string, "%d", &int_val);
-    return int_val;
-  default:
-    assert(false);
-  }
+        int int_val;
+        char char_val;
+        switch (type) {
+                case CL_CHAR:
+                        sscanf(string, "%c", &char_val);
+                        return char_val;
+                case CL_INT:
+                        sscanf(string, "%d", &int_val);
+                        return int_val;
+                default:
+                        assert(false);
+        }
 }
 
 const struct utillib_hashmap_callback cling_string_hash = {
-    .hash_handler = mysql_strhash, .compare_handler = strcmp,
+        .hash_handler = mysql_strhash, .compare_handler = strcmp,
 };
 
 int cling_ast_opcode_to_syscall(int opcode) {
-  switch (opcode) {
-  case OP_RDCHR:
-    return MIPS_READ_CHAR;
-  case OP_RDINT:
-    return MIPS_READ_INT;
-  case OP_WRCHR:
-    return MIPS_PRINT_CHAR;
-  case OP_WRSTR:
-    return MIPS_PRINT_STRING;
-  case OP_WRINT:
-    return MIPS_PRINT_INT;
-  default:
-    assert(false);
-  }
+        switch (opcode) {
+                case OP_RDCHR:
+                        return MIPS_READ_CHAR;
+                case OP_RDINT:
+                        return MIPS_READ_INT;
+                case OP_WRCHR:
+                        return MIPS_PRINT_CHAR;
+                case OP_WRSTR:
+                        return MIPS_PRINT_STRING;
+                case OP_WRINT:
+                        return MIPS_PRINT_INT;
+                default:
+                        assert(false);
+        }
 }
 
 int cling_type_to_read(int type) {
-  switch (type) {
-  case CL_CHAR:
-    return OP_RDCHR;
-  case CL_INT:
-    return OP_RDINT;
-  default:
-    assert(false);
-  }
+        switch (type) {
+                case CL_CHAR:
+                        return OP_RDCHR;
+                case CL_INT:
+                        return OP_RDINT;
+                default:
+                        assert(false);
+        }
 }
 
 int cling_size_to_write(int size) {
-  switch (size) {
-  case MIPS_WORD_SIZE:
-    return OP_WRINT;
-  case MIPS_BYTE_SIZE:
-    return OP_WRCHR;
-  default:
-    assert(false);
-  }
+        switch (size) {
+                case MIPS_WORD_SIZE:
+                        return OP_WRINT;
+                case MIPS_BYTE_SIZE:
+                        return OP_WRCHR;
+                default:
+                        assert(false);
+        }
 }
 
 /*
@@ -200,57 +200,57 @@ int cling_size_to_write(int size) {
  */
 
 struct cling_mips_label *mips_label_create(char const *label,
-                                           uint32_t address) {
-  struct cling_mips_label *self = malloc(sizeof *self);
-  self->label = strdup(label);
-  self->address = address;
-  return self;
+                uint32_t address) {
+        struct cling_mips_label *self = malloc(sizeof *self);
+        self->label = strdup(label);
+        self->address = address;
+        return self;
 }
 
 void mips_label_destroy(struct cling_mips_label *self) {
-  free(self->label);
-  free(self);
+        free(self->label);
+        free(self);
 }
 
 /*
  * Address as key.
  */
 static int mips_label_compare(struct cling_mips_label const *lhs,
-                              struct cling_mips_label const *rhs) {
-  return lhs->address - rhs->address;
+                struct cling_mips_label const *rhs) {
+        return lhs->address - rhs->address;
 }
 
 static size_t mips_label_hash(struct cling_mips_label const *self) {
-  return self->address;
+        return self->address;
 }
 
 const struct utillib_hashmap_callback mips_label_callback = {
-    .compare_handler = mips_label_compare, .hash_handler = mips_label_hash,
+        .compare_handler = mips_label_compare, .hash_handler = mips_label_hash,
 };
 
 struct cling_mips_label *
 mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
-  struct cling_mips_label key;
-  key.address = address;
-  return utillib_hashmap_find(self, &key);
+        struct cling_mips_label key;
+        key.address = address;
+        return utillib_hashmap_find(self, &key);
 }
 
 struct cling_mips_label *
 mips_label_name_find(struct utillib_hashmap const *self, char const *name) {
-  struct cling_mips_label key;
-  key.label = name;
-  return utillib_hashmap_find(self, &key);
+        struct cling_mips_label key;
+        key.label = name;
+        return utillib_hashmap_find(self, &key);
 }
 
 static int mips_label_strcmp(struct cling_mips_label const *lhs,
-    struct cling_mips_label const *rhs) {
-  return strcmp(lhs->label, rhs->label);
+                struct cling_mips_label const *rhs) {
+        return strcmp(lhs->label, rhs->label);
 }
 
 static size_t mips_label_strhash(struct cling_mips_label const *self) {
-  return mysql_strhash(self->label);
+        return mysql_strhash(self->label);
 }
 
 const struct utillib_hashmap_callback mips_label_strcallback = {
-  .hash_handler = mips_label_strhash, .compare_handler = mips_label_strcmp,
+        .hash_handler = mips_label_strhash, .compare_handler = mips_label_strcmp,
 };

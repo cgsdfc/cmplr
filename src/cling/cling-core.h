@@ -36,25 +36,25 @@
  * Main cling driver
  */
 enum {
-  CL_INTERP_ERROR=1,
-  CL_SYNTAX_ERROR,
-  CL_FILE_ERROR,
+        CL_INTERP_ERROR=1,
+        CL_SYNTAX_ERROR,
+        CL_FILE_ERROR,
 };
 
 struct cling_frontend {
-  struct cling_scanner scanner;
-  struct cling_rd_parser parser;
-  struct cling_symbol_table symbol_table;
+        struct cling_scanner scanner;
+        struct cling_rd_parser parser;
+        struct cling_symbol_table symbol_table;
 };
 
 struct cling_backend {
-  struct cling_ast_program ast_program;
-  struct cling_mips_program mips_program;
-  struct cling_mips_interp mips_interp;
+        struct cling_ast_program ast_program;
+        struct cling_mips_program mips_program;
+        struct cling_mips_interp mips_interp;
 };
 
 void cling_frontend_init(struct cling_frontend *self,
-                         struct cling_option const *option, FILE *file);
+                struct cling_option const *option, FILE *file);
 void cling_frontend_destroy(struct cling_frontend *self);
 int cling_frontend_tokenize(struct cling_frontend *self, FILE *output);
 int cling_frontend_parse(struct cling_frontend *self);

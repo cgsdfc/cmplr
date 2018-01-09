@@ -34,199 +34,202 @@
 #include <inttypes.h>
 #define CLING_MIPS_REG_MAX 32
 
-UTILLIB_ENUM_BEGIN(cling_mips_opcode_kind)
-UTILLIB_ENUM_ELEM(MIPS_NOP)
-UTILLIB_ENUM_ELEM(MIPS_SYSCALL)
-UTILLIB_ENUM_ELEM(MIPS_MOVE)
-UTILLIB_ENUM_ELEM(MIPS_ADDI)
-UTILLIB_ENUM_ELEM(MIPS_MFLO)
-UTILLIB_ENUM_ELEM(MIPS_ADDU)
-UTILLIB_ENUM_ELEM(MIPS_SUB)
-UTILLIB_ENUM_ELEM(MIPS_SUBU)
-UTILLIB_ENUM_ELEM(MIPS_JAL)
-UTILLIB_ENUM_ELEM(MIPS_DIV)
-UTILLIB_ENUM_ELEM(MIPS_MULT)
-UTILLIB_ENUM_ELEM(MIPS_ADD)
-UTILLIB_ENUM_ELEM(MIPS_J)
-UTILLIB_ENUM_ELEM(MIPS_JR)
-UTILLIB_ENUM_ELEM(MIPS_BNE)
-UTILLIB_ENUM_ELEM(MIPS_BEQ)
-UTILLIB_ENUM_ELEM(MIPS_BGEZ)
-UTILLIB_ENUM_ELEM(MIPS_BGTZ)
-UTILLIB_ENUM_ELEM(MIPS_BLEZ)
-UTILLIB_ENUM_ELEM(MIPS_BLTZ)
-UTILLIB_ENUM_ELEM(MIPS_LW)
-UTILLIB_ENUM_ELEM(MIPS_SW)
-UTILLIB_ENUM_ELEM(MIPS_LB)
-UTILLIB_ENUM_ELEM(MIPS_SB)
-UTILLIB_ENUM_ELEM(MIPS_LA)
-UTILLIB_ENUM_ELEM(MIPS_LI)
+        UTILLIB_ENUM_BEGIN(cling_mips_opcode_kind)
+        UTILLIB_ENUM_ELEM(MIPS_NOP)
+        UTILLIB_ENUM_ELEM(MIPS_SYSCALL)
+        UTILLIB_ENUM_ELEM(MIPS_MOVE)
+        UTILLIB_ENUM_ELEM(MIPS_ADDI)
+        UTILLIB_ENUM_ELEM(MIPS_MFLO)
+        UTILLIB_ENUM_ELEM(MIPS_ADDU)
+        UTILLIB_ENUM_ELEM(MIPS_SUB)
+        UTILLIB_ENUM_ELEM(MIPS_SUBU)
+        UTILLIB_ENUM_ELEM(MIPS_JAL)
+        UTILLIB_ENUM_ELEM(MIPS_DIV)
+        UTILLIB_ENUM_ELEM(MIPS_MULT)
+        UTILLIB_ENUM_ELEM(MIPS_ADD)
+        UTILLIB_ENUM_ELEM(MIPS_J)
+        UTILLIB_ENUM_ELEM(MIPS_JR)
+        UTILLIB_ENUM_ELEM(MIPS_BNE)
+        UTILLIB_ENUM_ELEM(MIPS_BEQ)
+        UTILLIB_ENUM_ELEM(MIPS_BGEZ)
+        UTILLIB_ENUM_ELEM(MIPS_BGTZ)
+        UTILLIB_ENUM_ELEM(MIPS_BLEZ)
+        UTILLIB_ENUM_ELEM(MIPS_BLTZ)
+        UTILLIB_ENUM_ELEM(MIPS_LW)
+        UTILLIB_ENUM_ELEM(MIPS_SW)
+        UTILLIB_ENUM_ELEM(MIPS_LB)
+        UTILLIB_ENUM_ELEM(MIPS_SB)
+        UTILLIB_ENUM_ELEM(MIPS_LA)
+        UTILLIB_ENUM_ELEM(MIPS_LI)
 UTILLIB_ENUM_ELEM(MIPS_LABEL)
-UTILLIB_ENUM_END(cling_mips_opcode_kind);
+        UTILLIB_ENUM_END(cling_mips_opcode_kind);
 
-UTILLIB_ENUM_BEGIN(cling_mips_regster)
-UTILLIB_ENUM_ELEM(MIPS_ZERO)
-UTILLIB_ENUM_ELEM(MIPS_AT)
-UTILLIB_ENUM_ELEM(MIPS_V0)
-UTILLIB_ENUM_ELEM(MIPS_V1)
-UTILLIB_ENUM_ELEM(MIPS_A0)
-UTILLIB_ENUM_ELEM(MIPS_A1)
-UTILLIB_ENUM_ELEM(MIPS_A2)
-UTILLIB_ENUM_ELEM(MIPS_A3)
-UTILLIB_ENUM_ELEM(MIPS_T0)
-UTILLIB_ENUM_ELEM(MIPS_T1)
-UTILLIB_ENUM_ELEM(MIPS_T2)
-UTILLIB_ENUM_ELEM(MIPS_T3)
-UTILLIB_ENUM_ELEM(MIPS_T4)
-UTILLIB_ENUM_ELEM(MIPS_T5)
-UTILLIB_ENUM_ELEM(MIPS_T6)
-UTILLIB_ENUM_ELEM(MIPS_T7)
-UTILLIB_ENUM_ELEM(MIPS_S0)
-UTILLIB_ENUM_ELEM(MIPS_S1)
-UTILLIB_ENUM_ELEM(MIPS_S2)
-UTILLIB_ENUM_ELEM(MIPS_S3)
-UTILLIB_ENUM_ELEM(MIPS_S4)
-UTILLIB_ENUM_ELEM(MIPS_S5)
-UTILLIB_ENUM_ELEM(MIPS_S6)
-UTILLIB_ENUM_ELEM(MIPS_S7)
-UTILLIB_ENUM_ELEM(MIPS_T8)
-UTILLIB_ENUM_ELEM(MIPS_T9)
-UTILLIB_ENUM_ELEM(MIPS_K0)
-UTILLIB_ENUM_ELEM(MIPS_K1)
-UTILLIB_ENUM_ELEM(MIPS_GP)
-UTILLIB_ENUM_ELEM(MIPS_SP)
+        UTILLIB_ENUM_BEGIN(cling_mips_regster)
+        UTILLIB_ENUM_ELEM(MIPS_ZERO)
+        UTILLIB_ENUM_ELEM(MIPS_AT)
+        UTILLIB_ENUM_ELEM(MIPS_V0)
+        UTILLIB_ENUM_ELEM(MIPS_V1)
+        UTILLIB_ENUM_ELEM(MIPS_A0)
+        UTILLIB_ENUM_ELEM(MIPS_A1)
+        UTILLIB_ENUM_ELEM(MIPS_A2)
+        UTILLIB_ENUM_ELEM(MIPS_A3)
+        UTILLIB_ENUM_ELEM(MIPS_T0)
+        UTILLIB_ENUM_ELEM(MIPS_T1)
+        UTILLIB_ENUM_ELEM(MIPS_T2)
+        UTILLIB_ENUM_ELEM(MIPS_T3)
+        UTILLIB_ENUM_ELEM(MIPS_T4)
+        UTILLIB_ENUM_ELEM(MIPS_T5)
+        UTILLIB_ENUM_ELEM(MIPS_T6)
+        UTILLIB_ENUM_ELEM(MIPS_T7)
+        UTILLIB_ENUM_ELEM(MIPS_S0)
+        UTILLIB_ENUM_ELEM(MIPS_S1)
+        UTILLIB_ENUM_ELEM(MIPS_S2)
+        UTILLIB_ENUM_ELEM(MIPS_S3)
+        UTILLIB_ENUM_ELEM(MIPS_S4)
+        UTILLIB_ENUM_ELEM(MIPS_S5)
+        UTILLIB_ENUM_ELEM(MIPS_S6)
+        UTILLIB_ENUM_ELEM(MIPS_S7)
+        UTILLIB_ENUM_ELEM(MIPS_T8)
+        UTILLIB_ENUM_ELEM(MIPS_T9)
+        UTILLIB_ENUM_ELEM(MIPS_K0)
+        UTILLIB_ENUM_ELEM(MIPS_K1)
+        UTILLIB_ENUM_ELEM(MIPS_GP)
+        UTILLIB_ENUM_ELEM(MIPS_SP)
 UTILLIB_ENUM_ELEM(MIPS_RA)
-UTILLIB_ENUM_END(cling_mips_regster);
+        UTILLIB_ENUM_END(cling_mips_regster);
 
-UTILLIB_ENUM_BEGIN(cling_mips_syscall_kind)
-UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_INT, 1)
-UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_STRING, 4)
-UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_CHAR, 11)
-UTILLIB_ENUM_ELEM_INIT(MIPS_READ_INT, 5)
-UTILLIB_ENUM_ELEM_INIT(MIPS_READ_STRING, 8)
-UTILLIB_ENUM_ELEM_INIT(MIPS_READ_CHAR, 12)
+        UTILLIB_ENUM_BEGIN(cling_mips_syscall_kind)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_INT, 1)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_STRING, 4)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_PRINT_CHAR, 11)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_READ_INT, 5)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_READ_STRING, 8)
+        UTILLIB_ENUM_ELEM_INIT(MIPS_READ_CHAR, 12)
 UTILLIB_ENUM_ELEM_INIT(MIPS_EXIT, 10)
-UTILLIB_ENUM_END(cling_mips_syscall_kind);
+        UTILLIB_ENUM_END(cling_mips_syscall_kind);
 
-/*
- * These are in fact assembler directives.
- * But all we concern about is the part used
- * to define global data such as .asciiz, .byte
- * and .word, so as the name of it.
- */
-UTILLIB_ENUM_BEGIN(cling_mips_data_kind)
-UTILLIB_ENUM_ELEM(MIPS_ASCIIZ)
-UTILLIB_ENUM_ELEM(MIPS_SPACE)
-UTILLIB_ENUM_ELEM(MIPS_WORD)
+        /*
+         * These are in fact assembler directives.
+         * But all we concern about is the part used
+         * to define global data such as .asciiz, .byte
+         * and .word, so as the name of it.
+         */
+        UTILLIB_ENUM_BEGIN(cling_mips_data_kind)
+        UTILLIB_ENUM_ELEM(MIPS_ASCIIZ)
+        UTILLIB_ENUM_ELEM(MIPS_SPACE)
+        UTILLIB_ENUM_ELEM(MIPS_WORD)
 UTILLIB_ENUM_ELEM(MIPS_BYTE)
-UTILLIB_ENUM_END(cling_mips_data_kind);
+        UTILLIB_ENUM_END(cling_mips_data_kind);
 
-struct cling_ast_ir;
-struct cling_ast_function;
-struct cling_ast_program;
+        struct cling_ast_ir;
+        struct cling_ast_function;
+        struct cling_ast_program;
 
-struct cling_mips_program {
-  struct utillib_vector text;
-  struct utillib_vector data;
-  struct utillib_hashmap labels;
-  struct cling_option const *option;
-};
+        struct cling_mips_program {
+                struct utillib_vector text;
+                struct utillib_vector data;
+                struct utillib_hashmap labels;
+                struct cling_option const *option;
+        };
 
 struct cling_mips_global {
-  struct cling_option const *option;
-  struct utillib_vector *data;
-  struct utillib_hashmap *labels;
-  int label_count;
+        struct cling_option const *option;
+        struct utillib_vector *data;
+        struct utillib_hashmap *labels;
+        int label_count;
 };
 
 struct cling_mips_temp {
-  int kind;
-  int state;
-  uint8_t regid;
-  uint32_t offset;
+        int kind;
+        int state;
+        uint8_t regid;
+        uint32_t offset;
 };
 
 struct cling_mips_name {
-  int kind;
-  uint8_t regid;
-  uint32_t offset;
+        int kind;
+        uint8_t regid;
+        uint32_t offset;
 };
 
 /*
  * For temp.state.
  */
 enum {
-  MIPS_LOCKED,
-  MIPS_HAS_REG,
-  MIPS_NO_REG,
+        MIPS_LOCKED,
+        MIPS_HAS_REG,
+        MIPS_NO_REG,
 };
 
 /*
  * For temp.kind.
  */
 enum {
-  MIPS_SAVED,
-  MIPS_UNSAVED,
-  MIPS_ARGREG,
-  MIPS_ARGMEM,
-  MIPS_TEMP,
+        MIPS_SAVED,
+        MIPS_UNSAVED,
+        MIPS_ARGREG,
+        MIPS_ARGMEM,
+        MIPS_TEMP,
 };
 
 /*
  * For function argument flags
  */
 enum {
-  MIPS_SAVE, MIPS_LOAD,
-  MIPS_READ, MIPS_WRITE,
+        MIPS_SAVE, MIPS_LOAD,
+        MIPS_READ, MIPS_WRITE,
 };
 
-struct cling_mips_function {
-  int last_temp;
-  int temp_size;
-  int para_size;
-  int ast_instrs_size;
-  struct cling_mips_temp *temps;
+struct cling_mips_function
+{
+        int last_temp;
+        int temp_size;
+        int para_size;
+        int ast_instrs_size;
+        struct cling_mips_temp *temps;
 
-  bool *reg_used;
-  struct utillib_hashmap names;
-  struct utillib_vector saved;
+        bool *reg_used;
+        struct utillib_hashmap names;
+        struct utillib_vector saved;
 
-  uint32_t frame_size;
-  uint32_t *address_map;
-  struct cling_mips_global *global;
-  struct utillib_vector *instrs;
-  size_t instr_begin;
+        uint32_t frame_size;
+        uint32_t *address_map;
+        struct cling_mips_global *global;
+        struct utillib_vector *instrs;
+        size_t instr_begin;
 };
 
-struct cling_mips_data {
-  uint8_t type;
-  char *label;
-  union {
-    char *string;
-    size_t extend;
-  };
+struct cling_mips_data 
+{
+        uint8_t type;
+        char *label;
+        union {
+                char *string;
+                size_t extend;
+        };
 };
 
-struct cling_mips_ir {
+struct cling_mips_ir 
+{
 #define CLING_MIPS_OPERAND_MAX 3
-  uint8_t opcode;
-  union {
-    uint8_t regid;
-    int16_t offset;
-    uint32_t address;
-    int16_t imme16;
-    int32_t imme32;
-    uint32_t uimme32;
-    char *label;
-  } operands[CLING_MIPS_OPERAND_MAX];
+        uint8_t opcode;
+        union {
+                uint8_t regid;
+                int16_t offset;
+                uint32_t address;
+                int16_t imme16;
+                int32_t imme32;
+                uint32_t uimme32;
+                char *label;
+        } operands[CLING_MIPS_OPERAND_MAX];
 };
 
 void cling_mips_program_init(struct cling_mips_program *self, struct cling_option const *option);
 void cling_mips_program_destroy(struct cling_mips_program *self);
 void cling_mips_program_emit(struct cling_mips_program *self,
-                             struct cling_ast_program const *program);
+                struct cling_ast_program const *program);
 void cling_mips_program_print(struct cling_mips_program const *self,
-                              FILE *file);
+                FILE *file);
 void mips_ir_fprint(struct cling_mips_ir const *self, FILE *file);
 void mips_ir_print(struct cling_mips_ir const *self);
 

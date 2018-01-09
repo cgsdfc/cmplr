@@ -25,13 +25,14 @@
 struct cling_option;
 struct cling_rd_parser;
 
-struct cling_scanner {
-  struct utillib_char_scanner input;
-  struct utillib_string buffer;
-  struct cling_rd_parser *parser;
-  struct cling_option const *option;
-  size_t context;
-  size_t lookahead;
+struct cling_scanner 
+{
+        struct utillib_char_scanner input;
+        struct utillib_string buffer;
+        struct cling_rd_parser *parser;
+        struct cling_option const *option;
+        size_t context;
+        size_t lookahead;
 };
 
 /* ＜字符串＞ ::=  "｛十进制编码为32,33,35-126的ASCII字符｝" */
@@ -40,8 +41,8 @@ struct cling_scanner {
 /* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
 void cling_scanner_init(struct cling_scanner *self,
-                        struct cling_option const *option,
-                        struct cling_rd_parser *parser, FILE *file);
+                struct cling_option const *option,
+                struct cling_rd_parser *parser, FILE *file);
 void cling_scanner_destroy(struct cling_scanner *self);
 size_t cling_scanner_lookahead(struct cling_scanner const *self);
 void cling_scanner_shiftaway(struct cling_scanner *self);
