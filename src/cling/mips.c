@@ -555,7 +555,7 @@ static void mips_function_init(struct cling_mips_function *self,
         self->instr_begin = utillib_vector_size(instrs);
         self->reg_used =calloc(CLING_MIPS_REG_MAX, sizeof self->reg_used[0]);
         self->address_map = malloc(sizeof self->address_map[0] * self->ast_instrs_size);
-        self->temps = calloc(ast_func->temps, sizeof self->temps[0]);
+        self->temps = calloc(self->temp_size, sizeof self->temps[0]);
         utillib_hashmap_init(&self->names, &cling_string_hash);
         utillib_vector_init(&self->saved);
 }
@@ -565,7 +565,7 @@ static void mips_function_destroy(struct cling_mips_function *self) {
         free(self->address_map);
         free(self->temps);
         utillib_vector_destroy_owning(&self->saved, free);
-        utillib_hashmap_destroy_owning(&self->names, free, free);
+        utillib_hashmap_destroy_owning(&self->names, NULL, free);
 }
 
 
@@ -758,7 +758,7 @@ static void mips_function_memmap(struct cling_mips_function *self,
         }
         entry=malloc(sizeof *entry);
         entry->offset=offset;
-        utillib_hashmap_insert(&self->names, strdup(name), entry);
+        utillib_hashmap_insert(&self->names, name, entry);
 }
 
 static void mips_function_temp_layout(struct cling_mips_function *self,
@@ -819,7 +819,7 @@ static void mips_function_regmap(struct cling_mips_function *self,
         entry = malloc(sizeof *entry);
         entry->kind=kind;
         entry->regid=regid;
-        utillib_hashmap_insert(&self->names, strdup(name), entry);
+        utillib_hashmap_insert(&self->names, name, entry);
 }
 
 static void
@@ -975,6 +975,7 @@ static uint8_t mips_function_temp_map(struct cling_mips_function *self,
 {
         struct cling_mips_temp *temp_var;
         uint8_t regid;
+        assert(temp < self->temp_size);
 
         temp_var = &self->temps[temp];
         if (temp_var->kind == MIPS_SAVED ||
@@ -1570,14 +1571,12 @@ static struct cling_mips_data *mips_array_create(char const *label,
 static struct cling_mips_data *mips_string_create(char const *label,
                 char const *string) {
         struct cling_mips_data *self = mips_data_create(MIPS_ASCIIZ, label);
-        self->string = strdup(string);
+        self->string = string;
         return self;
 }
 
 static void mips_data_destroy(struct cling_mips_data *self) {
         free(self->label);
-        if (self->type == MIPS_ASCIIZ)
-                free(self->string);
         free(self);
 }
 

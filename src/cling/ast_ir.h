@@ -208,7 +208,6 @@ struct cling_ast_ir {
                          */
                         int result;
                         int base_size;
-                        bool is_rvalue;
                         int array_addr;
                         int index_result;
                 } index;
