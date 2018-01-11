@@ -293,7 +293,7 @@ static void translate(struct cling_lcse_optimizer *self,
         switch (ast_ir->opcode) {
         case OP_INDEX:
                 /*
-                 * index has a different format from thoer binop
+                 * index has a different format from other binop
                  */
                 lcse_ir->kind=LCSE_BINARY;
                 lcse_ir->binary.temp1=lookup_variable(self, ast_ir->index.array_addr);
@@ -371,7 +371,10 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
                                 self->variables[ast_ir->ldimm.temp]=new_ir->unary.result;
                                 break;
                         case LCSE_BINARY:
-                                self->variables[ast_ir->binop.result] = new_ir->binary.result;
+                                if (new_ir->opcode == OP_INDEX)
+                                        self->variables[ast_ir->index.result]=new_ir->binary.result;
+                                else
+                                        self->variables[ast_ir->binop.result] = new_ir->binary.result;
                                 break;
                         case LCSE_LOAD_ADDR:
                                 self->variables[ast_ir->ldadr.temp] = new_ir->load_addr.address;
@@ -404,10 +407,17 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
                         }
                         break;
                 case LCSE_BINARY:
-                        ast_ir->binop.result=lookup_variable(self, ast_ir->binop.result); 
-                        ast_ir->binop.temp1=new_ir->binary.temp1;
-                        ast_ir->binop.temp2=new_ir->binary.temp2;
-                        new_ir->binary.result =ast_ir->binop.result;
+                        if (new_ir->opcode == OP_INDEX) {
+                                ast_ir->index.result=lookup_variable(self, ast_ir->index.result);
+                                ast_ir->index.array_addr=new_ir->binary.temp1;
+                                ast_ir->index.index_result=new_ir->binary.temp2;
+                                new_ir->binary.result=ast_ir->index.result;
+                        } else {
+                                ast_ir->binop.result=lookup_variable(self, ast_ir->binop.result); 
+                                ast_ir->binop.temp1=new_ir->binary.temp1;
+                                ast_ir->binop.temp2=new_ir->binary.temp2;
+                                new_ir->binary.result =ast_ir->binop.result;
+                        }
                         break;
                 case LCSE_STORE:
                         /*
@@ -557,13 +567,11 @@ void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
         self->variables_size=temp_size;
         self->address_map = malloc(sizeof self->address_map[0] *
                         utillib_vector_size(&ast_func->instrs));
-        utillib_hashmap_init(&self->names, &mips_label_strcallback);
 }
 
 void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self) {
         free(self->address_map);
         free(self->variables);
-        utillib_hashmap_destroy_owning(&self->names, NULL, mips_label_destroy);
 }
 
 void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
@@ -575,11 +583,13 @@ void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
         utillib_vector_init(&output_instrs);
 
         UTILLIB_VECTOR_FOREACH(block, basic_blocks) {
+                utillib_hashmap_init(&self->names, &mips_label_strcallback);
                 utillib_hashmap_init(&self->operations, &lcse_ir_callback);
                 utillib_hashmap_init(&self->values, &lcse_value_intcallback);
                 lcse_optimize(self, block, &output_instrs);
                 utillib_hashmap_destroy_owning(&self->operations, NULL, lcse_ir_destroy);
                 utillib_hashmap_destroy_owning(&self->values, NULL, lcse_value_destroy);
+                utillib_hashmap_destroy_owning(&self->names, NULL, mips_label_destroy);
         }
         ast_func->temps=self->var_count;
         ast_ir_fix_address(&output_instrs, self->address_map);

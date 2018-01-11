@@ -32,7 +32,7 @@ void utillib_hashmap_init(struct utillib_hashmap *self,
                           struct utillib_hashmap_callback const *callback) {
   self->callback = callback;
   self->buckets_size = UTILLIB_HASHMAP_DEFAULT_BUCKETS_SIZE;
-  self->buckets = calloc(sizeof self->buckets[0], self->buckets_size);
+  self->buckets = calloc(self->buckets_size,sizeof self->buckets[0] );
 }
 
 /* We are not owning elements */
@@ -111,7 +111,7 @@ void utillib_hashmap_rehash(struct utillib_hashmap *self) {
   size_t new_buckets_size = self->buckets_size << 1;
   struct utillib_hashmap_callback const *callback = self->callback;
 
-  new_buckets = calloc(sizeof new_buckets[0], new_buckets_size);
+  new_buckets = calloc( new_buckets_size,sizeof new_buckets[0]);
   for (int i = 0; i < self->buckets_size; ++i) {
     struct utillib_slist *old_bucket = &self->buckets[i];
     UTILLIB_SLIST_FOREACH(pair, old_bucket) {

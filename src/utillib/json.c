@@ -303,7 +303,7 @@ static void json_value_tostring(struct utillib_json_value const *self,
     utillib_string_append(string, "null");
     return;
   case UT_JSON_STRING:
-    str = utillib_static_sprintf("\"%s\"", self->as_ptr);
+    str = utillib_static_sprintf("\"%s\"", (char*) self->as_ptr);
     utillib_string_append(string, str);
     return;
   case UT_JSON_ARRAY:
