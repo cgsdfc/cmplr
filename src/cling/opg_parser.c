@@ -54,7 +54,7 @@ enum { OPG_REDUCE, OPG_SHIFTIN, OPG_ERROR };
  * the code can be less and cleaner.
  * What's worse, the order within the same group (lhs==..., rhs==...) matters.
  */
-static size_t opg_parser_compare(struct opg_parser *self, size_t lhs,
+static size_t precedence_compare(struct opg_parser *self, size_t lhs,
                 size_t rhs) {
         const size_t eof_symbol = self->eof_symbol;
         const bool lhs_is_relop = opg_parser_is_relop(lhs);
@@ -125,7 +125,7 @@ static size_t opg_parser_compare(struct opg_parser *self, size_t lhs,
 /*
  * debugging functions.
  */
-static void opg_parser_show_opstack(struct opg_parser const *self) {
+static void show_opstack(struct opg_parser const *self) {
         void *op;
         UTILLIB_VECTOR_FOREACH(op, &self->opstack) {
                 printf("%s ", symbol_kind_tostring((uintptr_t)op));
@@ -133,15 +133,9 @@ static void opg_parser_show_opstack(struct opg_parser const *self) {
         puts("");
 }
 
-static void opg_parser_show_stack(struct opg_parser const *self) {
+static void show_stack(struct opg_parser const *self) {
         struct utillib_json_value *val;
-
         UTILLIB_VECTOR_FOREACH(val, &self->stack) { utillib_json_pretty_print(val); }
-}
-
-static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {
-        printf("stacktop %s\n", symbol_kind_tostring(stacktop));
-        printf("lookahead %s\n", symbol_kind_tostring(lookahead));
 }
 
 /*
@@ -150,7 +144,7 @@ static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {
  * Specially, subscription is `SYM_RK'.
  * And call is `SYM_RP'.
  */
-static int opg_parser_reduce(struct opg_parser *self, size_t lookahead) {
+static int do_reduce(struct opg_parser *self, size_t lookahead) {
         struct utillib_json_value *lhs;
         struct utillib_json_value *rhs;
         struct utillib_json_value *object;
@@ -351,7 +345,7 @@ opg_parser_parse(struct opg_parser *self,
                          * since the success condition is correct and thus have higher
                          * priority.
                          * I don't know what will happen if 2 SYM_RP mix together in
-                         * opg_parser_compare.
+                         * precedence_compare.
                          */
                         if (utillib_vector_size(stack) != 1)
                                 goto error;
@@ -390,7 +384,7 @@ opg_parser_parse(struct opg_parser *self,
                         utillib_vector_push_back(stack, utillib_json_array_create_empty());
                         goto shiftin;
                 }
-                cmp = opg_parser_compare(self, stacktop, lookahead);
+                cmp = precedence_compare(self, stacktop, lookahead);
                 switch (cmp) {
                         case OPG_SHIFTIN:
 shiftin:
@@ -398,7 +392,7 @@ shiftin:
                                 scanner_shiftaway(scanner);
                                 break;
                         case OPG_REDUCE:
-                                if (0 != opg_parser_reduce(self, lookahead)) {
+                                if (0 != do_reduce(self, lookahead)) {
                                         goto error;
                                 }
                                 break;

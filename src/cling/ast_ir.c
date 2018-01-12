@@ -31,19 +31,19 @@
 #include <string.h>
 
 UTILLIB_ETAB_BEGIN(ast_opcode_kind)
-        UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
-        UTILLIB_ETAB_ELEM_INIT(OP_SUB, "-")
-        UTILLIB_ETAB_ELEM_INIT(OP_DIV, "/")
-        UTILLIB_ETAB_ELEM_INIT(OP_MUL, "*")
-        UTILLIB_ETAB_ELEM_INIT(OP_EQ, "==")
-        UTILLIB_ETAB_ELEM_INIT(OP_NE, "!=")
-        UTILLIB_ETAB_ELEM_INIT(OP_LT, "<")
-        UTILLIB_ETAB_ELEM_INIT(OP_LE, "<=")
-        UTILLIB_ETAB_ELEM_INIT(OP_GT, ">")
-        UTILLIB_ETAB_ELEM_INIT(OP_GE, ">=")
-        UTILLIB_ETAB_END(ast_opcode_kind);
+UTILLIB_ETAB_ELEM_INIT(OP_ADD, "+")
+UTILLIB_ETAB_ELEM_INIT(OP_SUB, "-")
+UTILLIB_ETAB_ELEM_INIT(OP_DIV, "/")
+UTILLIB_ETAB_ELEM_INIT(OP_MUL, "*")
+UTILLIB_ETAB_ELEM_INIT(OP_EQ, "==")
+UTILLIB_ETAB_ELEM_INIT(OP_NE, "!=")
+UTILLIB_ETAB_ELEM_INIT(OP_LT, "<")
+UTILLIB_ETAB_ELEM_INIT(OP_LE, "<=")
+UTILLIB_ETAB_ELEM_INIT(OP_GT, ">")
+UTILLIB_ETAB_ELEM_INIT(OP_GE, ">=")
+UTILLIB_ETAB_END(ast_opcode_kind);
 
-        static const struct ast_ir ast_ir_nop = {.opcode = OP_NOP};
+static const struct ast_ir ast_ir_nop = {.opcode = OP_NOP};
 static const struct ast_ir ast_ir_newline = {.opcode=OP_NL};
 
 static void emit_composite(struct ast_ir_global *self,
@@ -53,7 +53,7 @@ static void emit_statement(struct ast_ir_global *self,
 static int emit_expr(struct ast_ir_global *self,
                 struct utillib_json_value const *object);
 
-static struct ast_ir *emit_ir(int opcode) {
+static struct ast_ir *create_ir(int opcode) {
         struct ast_ir *self = calloc(1, sizeof *self);
         self->opcode = opcode;
         return self;
@@ -76,114 +76,114 @@ void ast_ir_print(struct ast_ir const *self, FILE *file) {
         char const *size_name;
 
         switch (self->opcode) {
-                case OP_NOP:
-                        fputs("nop\n", file);
-                        break;
-                case OP_DEFCON:
-                        size_name = size_tostring(self->defcon.size);
-                        if (self->defcon.size == MIPS_WORD_SIZE) {
-                                fprintf(file, "const %s %s = %d\n", self->defcon.name, size_name,
-                                                self->defcon.value);
-                        } else {
-                                fprintf(file, "const %s %s = '%c'\n", self->defcon.name, size_name,
-                                                (char)self->defcon.value);
-                        }
-                        break;
-                case OP_PARA:
-                        size_name = size_tostring(self->para.size);
-                        fprintf(file, "para %s %s\n", size_name, self->para.name);
-                        break;
-                case OP_DEFVAR:
-                        size_name = size_tostring(self->defvar.size);
-                        fprintf(file, "var %s %s\n", size_name, self->defvar.name);
-                        break;
-                case OP_DEFUNC:
-                        size_name = size_tostring(self->defunc.return_size);
-                        fprintf(file, "%s %s()\n", size_name, self->defunc.name);
-                        break;
-                case OP_DEFARR:
-                        size_name = size_tostring(self->defarr.base_size);
-                        fprintf(file, "var %s %s[%lu]\n", size_name, self->defarr.name,
-                                        self->defarr.extend);
-                        break;
-                case OP_CAL:
-                        for (int i=0; i<self->call.argc; ++i) {
-                                fprintf(file, "push t%d; ", self->call.argv[i]);
-                        }
-                        if (self->call.has_result)
-                                fprintf(file, "t%d = call %s\n", self->call.result, self->call.name);
-                        else
-                                fprintf(file, "call %s\n", self->call.name);
-                        break;
-                case OP_INDEX:
-                        fprintf(file, "t%d = t%d [t%d]\n", self->index.result,
-                                        self->index.array_addr, self->index.index_result);
-                        break;
-                case OP_BEZ:
-                        fprintf(file, "bez t%d (addr=%d)\n", self->bez.temp, self->bez.addr);
-                        break;
-                case OP_BNE:
-                        fprintf(file, "bne t%d t%d (addr=%d)\n", self->bne.temp1, self->bne.temp2,
-                                        self->bne.addr);
-                        break;
-                case OP_JMP:
-                        fprintf(file, "jmp %d\n", self->jmp.addr);
-                        break;
-                case OP_RET:
-                        if (self->ret.has_result)
-                                fprintf(file, "ret (addr=%d) t%d\n", self->ret.addr, self->ret.result);
-                        else
-                                fprintf(file, "ret (addr=%d)\n", self->ret.addr);
-                        break;
-                case OP_READ:
-                        fprintf(file, "read t%d (kind=%d)\n", self->read.temp, self->read.kind);
-                        break;
-                case OP_WRITE:
-                        fprintf(file, "write t%d (kind=%d)\n", self->write.temp, self->write.kind);
-                        break;
-                case OP_LDSTR:
-                        fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
-                        break;
-                case OP_LDIMM:
-                        if (self->ldimm.size == MIPS_WORD_SIZE)
-                                fprintf(file, "ldimm t%d %d\n", self->ldimm.temp, self->ldimm.value);
-                        else
-                                fprintf(file, "ldimm t%d '%c'\n", self->ldimm.temp,
-                                                (char)self->ldimm.value);
-                        break;
-                case OP_LDADR:
-                        fprintf(file, "ldadr t%d %s (scope=%d)\n", self->ldadr.temp, self->ldadr.name, self->ldadr.scope);
-                        break;
-                case OP_DEREF:
-                        fprintf(file, "deref t%d (size=%d)\n", self->deref.addr, self->deref.size);
-                        break;
-                case OP_LDNAM:
-                        fprintf(file, "ldnam t%d %s (scope=%d) (size=%d)\n", self->ldnam.temp, self->ldnam.name, self->ldnam.scope, self->ldnam.size);
-                        break;
-                case OP_STADR:
-                        fprintf(file, "stadr t%d t%d (size=%d)\n", self->stadr.addr, self->stadr.value, self->stadr.size);
-                        break;
-                case OP_STNAM:
-                        fprintf(file, "stnam %s t%d (size=%d)\n", self->stnam.name, self->stnam.value, self->stnam.size);
-                        break;
-                case OP_ADD:
-                case OP_SUB:
-                case OP_DIV:
-                case OP_MUL:
-                case OP_EQ:
-                case OP_NE:
-                case OP_LT:
-                case OP_LE:
-                case OP_GT:
-                case OP_GE:
-                        fprintf(file, "t%d = t%d %s t%d\n", self->binop.result, self->binop.temp1,
-                                        opstr, self->binop.temp2);
-                        break;
-                case OP_NL:
-                        fputs("newline\n", file);
-                        break;
-                default:
-                        assert(false);
+        case OP_NOP:
+                fputs("nop\n", file);
+                break;
+        case OP_DEFCON:
+                size_name = size_tostring(self->defcon.size);
+                if (self->defcon.size == MIPS_WORD_SIZE) {
+                        fprintf(file, "const %s %s = %d\n", self->defcon.name, size_name,
+                                        self->defcon.value);
+                } else {
+                        fprintf(file, "const %s %s = '%c'\n", self->defcon.name, size_name,
+                                        (char)self->defcon.value);
+                }
+                break;
+        case OP_PARA:
+                size_name = size_tostring(self->para.size);
+                fprintf(file, "para %s %s\n", size_name, self->para.name);
+                break;
+        case OP_DEFVAR:
+                size_name = size_tostring(self->defvar.size);
+                fprintf(file, "var %s %s\n", size_name, self->defvar.name);
+                break;
+        case OP_DEFUNC:
+                size_name = size_tostring(self->defunc.return_size);
+                fprintf(file, "%s %s()\n", size_name, self->defunc.name);
+                break;
+        case OP_DEFARR:
+                size_name = size_tostring(self->defarr.base_size);
+                fprintf(file, "var %s %s[%lu]\n", size_name, self->defarr.name,
+                                self->defarr.extend);
+                break;
+        case OP_CAL:
+                for (int i=0; i<self->call.argc; ++i) {
+                        fprintf(file, "push t%d; ", self->call.argv[i]);
+                }
+                if (self->call.has_result)
+                        fprintf(file, "t%d = call %s\n", self->call.result, self->call.name);
+                else
+                        fprintf(file, "call %s\n", self->call.name);
+                break;
+        case OP_INDEX:
+                fprintf(file, "t%d = t%d [t%d]\n", self->index.result,
+                                self->index.array_addr, self->index.index_result);
+                break;
+        case OP_BEZ:
+                fprintf(file, "bez t%d (addr=%d)\n", self->bez.temp, self->bez.addr);
+                break;
+        case OP_BNE:
+                fprintf(file, "bne t%d t%d (addr=%d)\n", self->bne.temp1, self->bne.temp2,
+                                self->bne.addr);
+                break;
+        case OP_JMP:
+                fprintf(file, "jmp %d\n", self->jmp.addr);
+                break;
+        case OP_RET:
+                if (self->ret.has_result)
+                        fprintf(file, "ret (addr=%d) t%d\n", self->ret.addr, self->ret.result);
+                else
+                        fprintf(file, "ret (addr=%d)\n", self->ret.addr);
+                break;
+        case OP_READ:
+                fprintf(file, "read t%d (kind=%d)\n", self->read.temp, self->read.kind);
+                break;
+        case OP_WRITE:
+                fprintf(file, "write t%d (kind=%d)\n", self->write.temp, self->write.kind);
+                break;
+        case OP_LDSTR:
+                fprintf(file, "ldstr t%d \"%s\"\n", self->ldstr.temp, self->ldstr.string);
+                break;
+        case OP_LDIMM:
+                if (self->ldimm.size == MIPS_WORD_SIZE)
+                        fprintf(file, "ldimm t%d %d\n", self->ldimm.temp, self->ldimm.value);
+                else
+                        fprintf(file, "ldimm t%d '%c'\n", self->ldimm.temp,
+                                        (char)self->ldimm.value);
+                break;
+        case OP_LDADR:
+                fprintf(file, "ldadr t%d %s (scope=%d)\n", self->ldadr.temp, self->ldadr.name, self->ldadr.scope);
+                break;
+        case OP_DEREF:
+                fprintf(file, "deref t%d (size=%d)\n", self->deref.addr, self->deref.size);
+                break;
+        case OP_LDNAM:
+                fprintf(file, "ldnam t%d %s (scope=%d) (size=%d)\n", self->ldnam.temp, self->ldnam.name, self->ldnam.scope, self->ldnam.size);
+                break;
+        case OP_STADR:
+                fprintf(file, "stadr t%d t%d (size=%d)\n", self->stadr.addr, self->stadr.value, self->stadr.size);
+                break;
+        case OP_STNAM:
+                fprintf(file, "stnam %s t%d (size=%d)\n", self->stnam.name, self->stnam.value, self->stnam.size);
+                break;
+        case OP_ADD:
+        case OP_SUB:
+        case OP_DIV:
+        case OP_MUL:
+        case OP_EQ:
+        case OP_NE:
+        case OP_LT:
+        case OP_LE:
+        case OP_GT:
+        case OP_GE:
+                fprintf(file, "t%d = t%d %s t%d\n", self->binop.result, self->binop.temp1,
+                                opstr, self->binop.temp2);
+                break;
+        case OP_NL:
+                fputs("newline\n", file);
+                break;
+        default:
+                assert(false);
         }
 }
 
@@ -217,7 +217,7 @@ static int load_array(struct ast_ir_global *self, char const *name, int *base_si
         struct ast_ir *ir;
 
         entry=find_name(self, name);
-        ir=emit_ir(OP_LDADR);
+        ir=create_ir(OP_LDADR);
         ir->ldadr.temp=make_temp(self);
         ir->ldadr.name=name;
         ir->ldadr.scope=entry->scope;
@@ -238,7 +238,7 @@ static int emit_index(struct ast_ir_global *self,
         lhs=utillib_json_object_at(object, "lhs"); 
         rhs=utillib_json_object_at(object, "rhs");
         value=utillib_json_object_at(lhs, "value");
-        ir = emit_ir(OP_INDEX);
+        ir = create_ir(OP_INDEX);
         ir->index.array_addr=load_array(self, value->as_ptr, base_size);
         ir->index.base_size=*base_size;
         ir->index.index_result=emit_expr(self, rhs);
@@ -246,7 +246,7 @@ static int emit_index(struct ast_ir_global *self,
         utillib_vector_push_back(self->instrs, ir);
 
         if (vflag == CL_RVALUE) {
-                ir=emit_ir(OP_DEREF);
+                ir=create_ir(OP_DEREF);
                 ir->deref.addr=last_temp(self);
                 ir->deref.size=*base_size;
                 utillib_vector_push_back(self->instrs, ir);
@@ -267,7 +267,7 @@ static int emit_call(struct ast_ir_global *self, struct utillib_json_value const
         rhs=utillib_json_object_at(object, "rhs");
         value = utillib_json_object_at(lhs, "value");
         entry = symbol_table_find(self->symbol_table, value->as_ptr, CL_GLOBAL);
-        ir = emit_ir(OP_CAL);
+        ir = create_ir(OP_CAL);
         ir->call.name = value->as_ptr;
         ir->call.argc=entry->function.argc;
         ir->call.argv=malloc(sizeof ir->call.argv[0] * ir->call.argc);
@@ -292,7 +292,7 @@ static int emit_binary(struct ast_ir_global *self, size_t op, struct utillib_jso
         struct utillib_json_value const *lhs, *rhs;
         struct ast_ir *ir;
 
-        ir = emit_ir(symbol_to_ast_opcode(op));
+        ir = create_ir(symbol_to_ast_opcode(op));
         lhs=utillib_json_object_at(object, "lhs");
         rhs=utillib_json_object_at(object, "rhs");
         ir->binop.temp1 = emit_expr(self, lhs);
@@ -322,12 +322,12 @@ static void emit_assign(struct ast_ir_global *self, struct utillib_json_value co
                         /*
                          * Global Variable
                          */
-                        ir=emit_ir(OP_LDADR);
+                        ir=create_ir(OP_LDADR);
                         ir->ldadr.scope=0;
                         ir->ldadr.name=value->as_ptr;
                         ir->ldadr.temp=make_temp(self);
                         utillib_vector_push_back(self->instrs, ir);
-                        ir=emit_ir(OP_STADR);
+                        ir=create_ir(OP_STADR);
                         ir->stadr.addr=last_temp(self);
                         ir->stadr.value=rhs_value;
                         ir->stadr.size=type_to_size(entry->kind);
@@ -337,7 +337,7 @@ static void emit_assign(struct ast_ir_global *self, struct utillib_json_value co
                 /*
                  * Local Variable
                  */
-                ir=emit_ir(OP_STNAM);
+                ir=create_ir(OP_STNAM);
                 ir->stnam.name=value->as_ptr;
                 ir->stnam.size=type_to_size(entry->kind);
                 ir->stnam.value=rhs_value;
@@ -347,7 +347,7 @@ static void emit_assign(struct ast_ir_global *self, struct utillib_json_value co
         /*
          * Array.
          */
-        ir=emit_ir(OP_STADR);
+        ir=create_ir(OP_STADR);
         ir->stadr.value=rhs_value;
         ir->stadr.addr=emit_index(self, lhs, &ir->stadr.size, CL_LVALUE);
         utillib_vector_push_back(self->instrs, ir);
@@ -366,35 +366,34 @@ static int emit_rvalue(struct ast_ir_global *self,
         name = utillib_json_object_at(object, "value");
         type = utillib_json_object_at(object, "type");
         switch (type->as_size_t) {
-                case SYM_IDEN:
-                        entry = symbol_table_find(self->symbol_table, name->as_ptr, CL_LEXICAL);
-                        switch (entry->kind) {
-                                case CL_CONST:
-                                        size = type_to_size(entry->constant.type);
-                                        value = entry->constant.value;
-                                        goto make_ldimm;
-                                case CL_ARRAY:
-                                case CL_FUNC:
-                                        goto make_ldadr;
-                                case CL_INT:
-                                case CL_CHAR:
-                                        goto make_ldnam;
-                                default:
-                                        assert(false);
-                        }
-                case SYM_STRING:
-                        goto make_ldstr;
-                case SYM_CHAR:
-                case SYM_INTEGER:
-                        size = symbol_to_size(type->as_size_t);
-                        value = symbol_to_immediate(type->as_size_t, name->as_ptr);
+        case SYM_IDEN:
+                entry = symbol_table_find(self->symbol_table, name->as_ptr, CL_LEXICAL);
+                switch (entry->kind) {
+                case CL_CONST:
+                        size = type_to_size(entry->constant.type);
+                        value = entry->constant.value;
                         goto make_ldimm;
+                case CL_ARRAY:
+                case CL_FUNC:
+                        goto make_ldadr;
+                case CL_INT:
+                case CL_CHAR:
+                        goto make_ldnam;
                 default:
-                        puts(symbol_kind_tostring(type->as_size_t));
                         assert(false);
+                }
+        case SYM_STRING:
+                goto make_ldstr;
+        case SYM_CHAR:
+        case SYM_INTEGER:
+                size = symbol_to_size(type->as_size_t);
+                value = symbol_to_immediate(type->as_size_t, name->as_ptr);
+                goto make_ldimm;
+        default:
+                assert(false);
         }
 make_ldadr:
-        ir=emit_ir(OP_LDADR);
+        ir=create_ir(OP_LDADR);
         ir->ldadr.scope=entry->scope;
         ir->ldadr.name=name->as_ptr;
         ir->ldadr.temp=make_temp(self);
@@ -402,7 +401,7 @@ make_ldadr:
         goto done;
 
 make_ldnam:
-        ir=emit_ir(OP_LDNAM);
+        ir=create_ir(OP_LDNAM);
         ir->ldnam.size=type_to_size(entry->kind);
         ir->ldnam.scope=entry->scope;
         ir->ldnam.name=name->as_ptr;
@@ -411,7 +410,7 @@ make_ldnam:
         goto done;
 
 make_ldimm:
-        ir = emit_ir(OP_LDIMM);
+        ir = create_ir(OP_LDIMM);
         ir->ldimm.size = size;
         ir->ldimm.value = value;
         ir->ldimm.temp=make_temp(self);
@@ -419,7 +418,7 @@ make_ldimm:
         goto done;
 
 make_ldstr:
-        ir = emit_ir(OP_LDSTR);
+        ir = create_ir(OP_LDSTR);
         ir->ldstr.string = name->as_ptr;
         ir->ldstr.temp = make_temp(self);
         temp=ir->ldstr.temp;
@@ -442,19 +441,19 @@ static int emit_expr(struct ast_ir_global *self, struct utillib_json_value const
                 return emit_rvalue(self, object);
         }
         switch(op->as_size_t) {
-                case SYM_RK:
-                        /*
-                         * true for is_rvalue, emit_expr always
-                         * gets called at rhs
-                         */
-                        return emit_index(self, object, &base_size, CL_RVALUE);
-                case SYM_RP:
-                        return emit_call(self, object);
-                case SYM_EQ:
-                        emit_assign(self, object);
-                        return 0;
-                default:
-                        return emit_binary(self, op->as_size_t, object);
+        case SYM_RK:
+                /*
+                 * true for is_rvalue, emit_expr always
+                 * gets called at rhs
+                 */
+                return emit_index(self, object, &base_size, CL_RVALUE);
+        case SYM_RP:
+                return emit_call(self, object);
+        case SYM_EQ:
+                emit_assign(self, object);
+                return 0;
+        default:
+                return emit_binary(self, op->as_size_t, object);
         }
 }
 
@@ -469,12 +468,12 @@ static void emit_scanf_stmt(struct ast_ir_global *self,
         UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
                 name = utillib_json_object_at(arg, "value");
                 entry = find_name(self, name->as_ptr);
-                ir=emit_ir(OP_LDADR);
+                ir=create_ir(OP_LDADR);
                 ir->ldadr.scope=entry->scope;
                 ir->ldadr.name=name->as_ptr;
                 ir->ldadr.temp = make_temp(self);
                 utillib_vector_push_back(self->instrs, ir);
-                ir = emit_ir(OP_READ);
+                ir = create_ir(OP_READ);
                 ir->read.temp = last_temp(self);
                 ir->read.kind=type_to_read(entry->kind);
                 utillib_vector_push_back(self->instrs, ir);
@@ -490,27 +489,25 @@ static int write_kind(struct ast_ir_global const *self,
         if (json) { return OP_WRINT; }
         json = utillib_json_object_at(object, "type");
         switch(json->as_size_t) {
-                case SYM_CHAR:
-                        return OP_WRCHR;
-                case SYM_INTEGER:
+        case SYM_CHAR:
+                return OP_WRCHR;
+        case SYM_INTEGER:
+                return OP_WRINT;
+        case SYM_STRING:
+                return OP_WRSTR;
+        case SYM_IDEN:
+                json = utillib_json_object_at(object, "value");
+                entry = find_name(self, json->as_ptr);
+                switch(entry->kind) {
+                case CL_INT:
                         return OP_WRINT;
-                case SYM_STRING:
-                        return OP_WRSTR;
-                case SYM_IDEN:
-                        json = utillib_json_object_at(object, "value");
-                        entry = find_name(self, json->as_ptr);
-                        switch(entry->kind) {
-                                case CL_INT:
-                                        return OP_WRINT;
-                                case CL_CHAR:
-                                        return OP_WRCHR;
-                                default:
-                                        /*
-                                         * TODO: OP_WRADR
-                                         */
-                                        return OP_WRINT;
-                        }
-                default: assert(false);
+                case CL_CHAR:
+                        return OP_WRCHR;
+                default:
+                        return OP_WRINT;
+                }
+        default: 
+                assert(false);
         }
 }
 
@@ -522,7 +519,7 @@ static void emit_printf_stmt(struct ast_ir_global *self,
         arglist = utillib_json_object_at(object, "arglist");
 
         UTILLIB_JSON_ARRAY_FOREACH(arg, arglist) {
-                ir = emit_ir(OP_WRITE);
+                ir = create_ir(OP_WRITE);
                 ir->write.temp = emit_expr(self, arg);
                 ir->write.kind = write_kind(self, arg);
                 utillib_vector_push_back(self->instrs, ir);
@@ -569,7 +566,7 @@ static void emit_for_stmt(struct ast_ir_global *self,
         stmt = utillib_json_object_at(object, "stmt");
 
         emit_expr(self, init);
-        tricky_jump = emit_ir(OP_JMP);
+        tricky_jump = create_ir(OP_JMP);
         utillib_vector_push_back(self->instrs, tricky_jump);
         /*
          * The JTA of loop_jump
@@ -581,7 +578,7 @@ static void emit_for_stmt(struct ast_ir_global *self,
         /*
          * cond.
          */
-        cond_test = emit_ir(OP_BEZ);
+        cond_test = create_ir(OP_BEZ);
         /*
          * The result of cond is the judgement of cond_test.
          */
@@ -609,7 +606,7 @@ static void emit_for_stmt(struct ast_ir_global *self,
          * The JTA of cond_test is the next instr
          * of loop_jump.
          */
-        loop_jump = emit_ir(OP_JMP);
+        loop_jump = create_ir(OP_JMP);
         loop_jump->jmp.addr = loop_jump_jta;
         utillib_vector_push_back(self->instrs, loop_jump);
         cond_test->bez.addr = utillib_vector_size(self->instrs);
@@ -667,7 +664,7 @@ static void emit_switch_stmt(struct ast_ir_global *self,
                         /*
                          * Load label constant.
                          */
-                        load_label = emit_ir(OP_LDIMM);
+                        load_label = create_ir(OP_LDIMM);
                         loaded_const = make_temp(self);
                         load_label->ldimm.temp = loaded_const;
                         load_label->ldimm.value =
@@ -678,7 +675,7 @@ static void emit_switch_stmt(struct ast_ir_global *self,
                         /*
                          * Case gaurd.
                          */
-                        case_gaurd = emit_ir(OP_BNE);
+                        case_gaurd = create_ir(OP_BNE);
                         case_gaurd->bne.temp1 = loaded_const;
                         case_gaurd->bne.temp2 = emit_expr(self, expr);
                         utillib_vector_push_back(self->instrs, case_gaurd);
@@ -687,7 +684,7 @@ static void emit_switch_stmt(struct ast_ir_global *self,
                          * Statement.
                          */
                         emit_statement(self, stmt);
-                        break_jump = emit_ir(OP_JMP);
+                        break_jump = create_ir(OP_JMP);
                         utillib_vector_push_back(self->instrs, break_jump);
                         utillib_vector_push_back(&break_jumps, break_jump);
                         /*
@@ -726,7 +723,7 @@ static void emit_return_stmt(struct ast_ir_global *self,
         struct ast_ir *ir;
 
         expr = utillib_json_object_at(object, "expr");
-        ir = emit_ir(OP_RET);
+        ir = create_ir(OP_RET);
         if (expr) {
                 ir->ret.has_result = true;
                 ir->ret.result = emit_expr(self, expr);
@@ -743,14 +740,14 @@ static void emit_if_stmt(struct ast_ir_global *self,
 
         expr = utillib_json_object_at(object, "expr");
         then_clause = utillib_json_object_at(object, "then");
-        skip_branch = emit_ir(OP_BEZ);
+        skip_branch = create_ir(OP_BEZ);
         skip_branch->bez.temp = emit_expr(self, expr);
         utillib_vector_push_back(self->instrs, skip_branch);
 
         emit_statement(self, then_clause);
         else_clause = utillib_json_object_at(object, "else");
         if (else_clause) {
-                jump = emit_ir(OP_JMP);
+                jump = create_ir(OP_JMP);
                 utillib_vector_push_back(self->instrs, jump);
                 skip_branch->bez.addr = utillib_vector_size(self->instrs);
                 emit_statement(self, else_clause);
@@ -767,32 +764,32 @@ static void emit_statement(struct ast_ir_global *self,
         struct utillib_json_value const *type =
                 utillib_json_object_at(object, "type");
         switch (type->as_size_t) {
-                case SYM_PRINTF_STMT:
-                        emit_printf_stmt(self, object);
-                        return;
-                case SYM_SCANF_STMT:
-                        emit_scanf_stmt(self, object);
-                        return;
-                case SYM_FOR_STMT:
-                        emit_for_stmt(self, object);
-                        return;
-                case SYM_IF_STMT:
-                        emit_if_stmt(self, object);
-                        return;
-                case SYM_SWITCH_STMT:
-                        emit_switch_stmt(self, object);
-                        return;
-                case SYM_RETURN_STMT:
-                        emit_return_stmt(self, object);
-                        return;
-                case SYM_EXPR_STMT:
-                        emit_expr_stmt(self, object);
-                        return;
-                case SYM_COMP_STMT:
-                        emit_composite(self, object);
-                        return;
-                default:
-                        assert(false);
+        case SYM_PRINTF_STMT:
+                emit_printf_stmt(self, object);
+                return;
+        case SYM_SCANF_STMT:
+                emit_scanf_stmt(self, object);
+                return;
+        case SYM_FOR_STMT:
+                emit_for_stmt(self, object);
+                return;
+        case SYM_IF_STMT:
+                emit_if_stmt(self, object);
+                return;
+        case SYM_SWITCH_STMT:
+                emit_switch_stmt(self, object);
+                return;
+        case SYM_RETURN_STMT:
+                emit_return_stmt(self, object);
+                return;
+        case SYM_EXPR_STMT:
+                emit_expr_stmt(self, object);
+                return;
+        case SYM_COMP_STMT:
+                emit_composite(self, object);
+                return;
+        default:
+                assert(false);
         }
 }
 
@@ -813,12 +810,12 @@ static void emit_var_defs(struct ast_ir_global *self,
                 entry =
                         symbol_table_find(self->symbol_table, name->as_ptr, CL_LEXICAL);
                 if (entry->kind == CL_ARRAY) {
-                        ir = emit_ir(OP_DEFARR);
+                        ir = create_ir(OP_DEFARR);
                         ir->defarr.name = name->as_ptr;
                         ir->defarr.extend = entry->array.extend;
                         ir->defarr.base_size = type_to_size(entry->array.base_type);
                 } else {
-                        ir = emit_ir(OP_DEFVAR);
+                        ir = create_ir(OP_DEFVAR);
                         ir->defvar.name = name->as_ptr;
                         ir->defvar.size = type_to_size(entry->kind);
                 }
@@ -838,7 +835,7 @@ static void emit_const_defs(struct ast_ir_global *self,
                 name = utillib_json_object_at(decl, "name");
                 entry =
                         symbol_table_find(self->symbol_table, name->as_ptr, CL_LEXICAL);
-                ir = emit_ir(OP_DEFCON);
+                ir = create_ir(OP_DEFCON);
                 ir->defcon.name = name->as_ptr;
                 ir->defcon.size = type_to_size(entry->constant.type);
                 ir->defcon.value = entry->constant.value;
@@ -925,7 +922,7 @@ void ast_program_destroy(struct ast_program *self) {
         utillib_vector_destroy_owning(&self->init_code, ast_ir_destroy);
 }
 
-static void emit_return_address(struct utillib_vector *instrs) {
+static void emit_ret_addr(struct utillib_vector *instrs) {
         int addr;
         struct ast_ir *ir;
 
@@ -976,7 +973,7 @@ ast_ir_emit_function(struct ast_ir_global *global,
          * var...
          */
         self = ast_function_create(name->as_ptr);
-        ir = emit_ir(OP_DEFUNC);
+        ir = create_ir(OP_DEFUNC);
         ir->defunc.name = name->as_ptr;
         /*
          * FIXME: unify the type and size with type-system so all the convertor
@@ -988,7 +985,7 @@ ast_ir_emit_function(struct ast_ir_global *global,
                 name = utillib_json_object_at(arg, "name");
                 entry =
                         symbol_table_find(global->symbol_table, name->as_ptr, CL_LOCAL);
-                ir = emit_ir(OP_PARA);
+                ir = create_ir(OP_PARA);
                 ir->para.name = name->as_ptr;
                 ir->para.size = type_to_size(entry->kind);
                 utillib_vector_push_back(&self->init_code, ir);
@@ -1002,7 +999,7 @@ ast_ir_emit_function(struct ast_ir_global *global,
         global->instrs=&self->instrs;
         global->temps=0;
         emit_composite(global, comp);
-        emit_return_address(&self->instrs);
+        emit_ret_addr(&self->instrs);
         self->temps=global->temps;
         return self;
 }
@@ -1052,51 +1049,52 @@ void ast_ir_fix_address(struct utillib_vector *instrs,
 
         UTILLIB_VECTOR_FOREACH(ast_ir, instrs) {
                 switch (ast_ir->opcode) {
-                        case OP_BEZ:
-                                old_address = ast_ir->bez.addr;
-                                ast_ir->bez.addr = address_map[old_address];
-                                break;
-                        case OP_BNE:
-                                old_address = ast_ir->bne.addr;
-                                ast_ir->bne.addr = address_map[old_address];
-                                break;
-                        case OP_JMP:
-                                old_address = ast_ir->jmp.addr;
-                                ast_ir->jmp.addr = address_map[old_address];
-                                break;
-                        case OP_RET:
-                                old_address=ast_ir->ret.addr;
-                                ast_ir->ret.addr=address_map[old_address];
-                                break;
-                        default:
-                                assert(!ast_ir_is_local_jump(ast_ir));
+                case OP_BEZ:
+                        old_address = ast_ir->bez.addr;
+                        ast_ir->bez.addr = address_map[old_address];
+                        break;
+                case OP_BNE:
+                        old_address = ast_ir->bne.addr;
+                        ast_ir->bne.addr = address_map[old_address];
+                        break;
+                case OP_JMP:
+                        old_address = ast_ir->jmp.addr;
+                        ast_ir->jmp.addr = address_map[old_address];
+                        break;
+                case OP_RET:
+                        old_address=ast_ir->ret.addr;
+                        ast_ir->ret.addr=address_map[old_address];
+                        break;
+                default:
+                        assert(!ast_ir_is_local_jump(ast_ir));
                 }
         }
 }
 
 bool ast_ir_is_local_jump(struct ast_ir const *ast_ir) {
         switch(ast_ir->opcode) {
-                case OP_BEZ:
-                case OP_BNE:
-                case OP_JMP:
-                case OP_RET:
-                        return true;
-                default: return false;
+        case OP_BEZ:
+        case OP_BNE:
+        case OP_JMP:
+        case OP_RET:
+                return true;
+        default:
+                return false;
         }
 }
 
 int ast_ir_get_jump_address(struct ast_ir const *ast_ir) {
         switch(ast_ir->opcode) {
-                case OP_BEZ:
-                        return ast_ir->bez.addr;
-                case OP_BNE:
-                        return ast_ir->bne.addr;
-                case OP_JMP:
-                        return ast_ir->jmp.addr;
-                case OP_RET:
-                        return ast_ir->ret.addr;
-                default:
-                        assert(!ast_ir_is_local_jump(ast_ir));
+        case OP_BEZ:
+                return ast_ir->bez.addr;
+        case OP_BNE:
+                return ast_ir->bne.addr;
+        case OP_JMP:
+                return ast_ir->jmp.addr;
+        case OP_RET:
+                return ast_ir->ret.addr;
+        default:
+                assert(!ast_ir_is_local_jump(ast_ir));
         }
 }
 
