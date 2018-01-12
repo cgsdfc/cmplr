@@ -24,13 +24,13 @@
 #include <utillib/enum.h>
 #include <utillib/hashmap.h>
 
-struct cling_symbol_table {
+struct symbol_table {
   struct utillib_hashmap global;
   struct utillib_hashmap local;
   unsigned int scope;
 };
 
-struct cling_symbol_entry {
+struct symbol_entry {
   int kind;
   int scope;
   union {
@@ -58,13 +58,13 @@ struct cling_symbol_entry {
  * When checking declaring a name, we declare it in the current scope.
  */
 
-UTILLIB_ENUM_BEGIN(cling_symbol_table_scope_kind)
+UTILLIB_ENUM_BEGIN(symbol_table_scope_kind)
 UTILLIB_ENUM_ELEM(CL_GLOBAL)
 UTILLIB_ENUM_ELEM(CL_LOCAL)
 UTILLIB_ENUM_ELEM(CL_LEXICAL)
-UTILLIB_ENUM_END(cling_symbol_table_scope_kind);
+UTILLIB_ENUM_END(symbol_table_scope_kind);
 
-UTILLIB_ENUM_BEGIN(cling_type)
+UTILLIB_ENUM_BEGIN(type)
 UTILLIB_ENUM_ELEM(CL_UNDEF)
 UTILLIB_ENUM_ELEM(CL_INT)
 UTILLIB_ENUM_ELEM(CL_CHAR)
@@ -72,22 +72,22 @@ UTILLIB_ENUM_ELEM(CL_VOID)
 UTILLIB_ENUM_ELEM(CL_CONST)
 UTILLIB_ENUM_ELEM(CL_ARRAY)
 UTILLIB_ENUM_ELEM(CL_FUNC)
-UTILLIB_ENUM_END(cling_type);
+UTILLIB_ENUM_END(type);
 
-void cling_symbol_table_init(struct cling_symbol_table *self);
-void cling_symbol_table_destroy(struct cling_symbol_table *self);
+void symbol_table_init(struct symbol_table *self);
+void symbol_table_destroy(struct symbol_table *self);
 
 /**
  * Init the local scope and increases the scope counter.
  * This means the following insertions will be done in the local scope.
  */
-void cling_symbol_table_enter_scope(struct cling_symbol_table *self);
+void symbol_table_enter_scope(struct symbol_table *self);
 
 /**
  * Clear the local scope.
  * All the symbols of it are lost.
  */
-void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
+void symbol_table_leave_scope(struct symbol_table *self);
 
 /**
  * Finds the entry for symbol `name' in the scope
@@ -95,8 +95,8 @@ void cling_symbol_table_leave_scope(struct cling_symbol_table *self);
  * If the symbol is not found, NULL, or else the entry
  * of it.
  */
-struct cling_symbol_entry *
-cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
+struct symbol_entry *
+symbol_table_find(struct symbol_table const *self, char const *name,
                         int scope_kind);
 
 /**
@@ -106,27 +106,27 @@ cling_symbol_table_find(struct cling_symbol_table const *self, char const *name,
  * Notes the `name' will be strdup.
  * Notes `scope_kind' cannot be CL_LEXICAL.
  */
-void cling_symbol_table_reserve(struct cling_symbol_table *self,
+void symbol_table_reserve(struct symbol_table *self,
                                 char const *name, int scope_kind);
 
 /**
- * Parallel with `cling_symbol_table_find', but only answers
+ * Parallel with `symbol_table_find', but only answers
  * whether the name exists regardless of its entry.
  */
-bool cling_symbol_table_exist_name(struct cling_symbol_table const *self,
+bool symbol_table_exist_name(struct symbol_table const *self,
                                    char const *name, int scope_kind);
 
-void cling_symbol_table_insert_const(
-    struct cling_symbol_table *self,
+void symbol_table_insert_const(
+    struct symbol_table *self,
     struct utillib_json_value const *const_decl);
 
-void cling_symbol_table_insert_arglist(
-    struct cling_symbol_table *self, struct utillib_json_value const *arglist);
+void symbol_table_insert_arglist(
+    struct symbol_table *self, struct utillib_json_value const *arglist);
 
-void cling_symbol_table_insert_function(
-    struct cling_symbol_table *self, struct utillib_json_value const *function);
+void symbol_table_insert_function(
+    struct symbol_table *self, struct utillib_json_value const *function);
 
-void cling_symbol_table_insert_variable(
-    struct cling_symbol_table *self, struct utillib_json_value const *variable);
+void symbol_table_insert_variable(
+    struct symbol_table *self, struct utillib_json_value const *variable);
 
 #endif /* CLING_SYMBOL_TABLE_H */

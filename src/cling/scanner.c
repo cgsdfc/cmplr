@@ -27,7 +27,7 @@
 #include <ctype.h>
 #define CLING_KW_SIZE 14
 
-static const struct utillib_keyword_pair cling_keywords[] = 
+static const struct utillib_keyword_pair keywords[] = 
 {
         {"case", SYM_KW_CASE},     {"char", SYM_KW_CHAR},
         {"const", SYM_KW_CONST},   {"default", SYM_KW_DEFAULT},
@@ -38,7 +38,7 @@ static const struct utillib_keyword_pair cling_keywords[] =
         {"switch", SYM_KW_SWITCH}, {"void", SYM_KW_VOID},
 };
 
-static int read_char(struct cling_scanner *self) {
+static int read_char(struct scanner *self) {
         char ch;
         ch = utillib_char_scanner_lookahead(&self->input);
         if (ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '_' ||
@@ -54,7 +54,7 @@ static int read_char(struct cling_scanner *self) {
         return -CL_ECHRCHAR;
 }
 
-static int read_string(struct cling_scanner *self) {
+static int read_string(struct scanner *self) {
         char ch;
         for (; (ch = utillib_char_scanner_lookahead(&self->input)) != '\"';
                         utillib_char_scanner_shiftaway(&self->input)) {
@@ -70,7 +70,7 @@ static int read_string(struct cling_scanner *self) {
         return SYM_STRING;
 }
 
-static int read_number(struct cling_scanner *self, char ch) {
+static int read_number(struct scanner *self, char ch) {
         char next_char;
         switch (ch) {
                 case '+':
@@ -96,7 +96,7 @@ match_op:
         return ch == '+' ? SYM_ADD : SYM_MINUS;
 }
 
-static int read_dispatch(struct cling_scanner *self) {
+static int read_dispatch(struct scanner *self) {
         char ch=utillib_char_scanner_lookahead(&self->input);
         int code = UT_SYM_NULL;
         char const *keyword;
@@ -184,7 +184,7 @@ level3:
         if (utillib_token_scanner_isidbegin(ch)) {
                 utillib_token_scanner_collect_identifier(&self->input, &self->buffer);
                 keyword = utillib_string_c_str(&self->buffer);
-                code = utillib_keyword_bsearch(keyword, cling_keywords, CLING_KW_SIZE);
+                code = utillib_keyword_bsearch(keyword, keywords, CLING_KW_SIZE);
                 if (code != UT_SYM_NULL)
                         return code;
                 return SYM_IDEN;
@@ -206,32 +206,32 @@ level3:
         return -CL_EUNKNOWN;
 }
 
-void cling_scanner_init(struct cling_scanner *self,
-                struct cling_option const *option,
-                struct cling_rd_parser *parser, FILE *file) 
+void scanner_init(struct scanner *self,
+                struct option const *option,
+                struct rd_parser *parser, FILE *file) 
 {
         self->option = option;
         self->parser = parser;
         self->context = SYM_PROGRAM;
         utillib_char_scanner_init(&self->input, file);
         utillib_string_init(&self->buffer);
-        cling_scanner_shiftaway(self);
+        scanner_shiftaway(self);
 }
 
-void cling_scanner_destroy(struct cling_scanner *self) {
+void scanner_destroy(struct scanner *self) {
         utillib_string_destroy(&self->buffer);
         utillib_char_scanner_destroy(&self->input);
 }
 
-inline void cling_scanner_context(struct cling_scanner *self, size_t context) {
+inline void scanner_context(struct scanner *self, size_t context) {
         self->context = context;
 }
 
-inline size_t cling_scanner_lookahead(struct cling_scanner const *self) {
+inline size_t scanner_lookahead(struct scanner const *self) {
         return self->lookahead;
 }
 
-static void skipcomment(struct cling_scanner *self) {
+static void skipcomment(struct scanner *self) {
         char ch;
         while ((ch = utillib_char_scanner_lookahead(&self->input)) == '#') {
                 while ((ch = utillib_char_scanner_lookahead(&self->input)) != '\n')
@@ -240,7 +240,7 @@ static void skipcomment(struct cling_scanner *self) {
         }
 }
 
-void cling_scanner_shiftaway(struct cling_scanner *self) {
+void scanner_shiftaway(struct scanner *self) {
         int code;
         utillib_token_scanner_skipspace(&self->input);
         if (self->option->allow_comment)
@@ -254,13 +254,13 @@ void cling_scanner_shiftaway(struct cling_scanner *self) {
         if (code < 0) {
                 rd_parser_error_push_back(
                                 self->parser,
-                                cling_badtoken_error(self, -code, utillib_string_c_str(&self->buffer),
+                                badtoken_error(self, -code, utillib_string_c_str(&self->buffer),
                                         self->context));
                 code=UT_SYM_ERR;
         }
         self->lookahead = code;
 }
 
-inline char const *cling_scanner_semantic(struct cling_scanner const *self) {
+inline char const *scanner_semantic(struct scanner const *self) {
         return utillib_string_c_str(&self->buffer);
 }

@@ -27,8 +27,8 @@
  * again with certain pretifying.
  */
 
-char *cling_ast_pretty_expr(struct utillib_json_value const *self);
+char *ast_pretty_expr(struct utillib_json_value const *self);
 
-char *cling_ast_pretty_program(struct utillib_json_value const *self);
+char *ast_pretty_program(struct utillib_json_value const *self);
 
 #endif /* CLING_AST_PRETTY_H */

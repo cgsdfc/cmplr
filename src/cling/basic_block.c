@@ -31,25 +31,25 @@
         } while (0)
 
 
-static void reaching_definitions_initialize(struct cling_reaching_definition *self,
-                struct cling_data_flow const *data_flow);
+static void reaching_definitions_initialize(struct reaching_definition *self,
+                struct data_flow const *data_flow);
 
-static struct cling_basic_block *
+static struct basic_block *
 basic_block_create(int block_id, struct utillib_vector const *instrs,
                 unsigned int begin) {
-        struct cling_basic_block *self = malloc(sizeof *self);
+        struct basic_block *self = malloc(sizeof *self);
         self->begin = begin;
         self->instrs = instrs;
         self->block_id = block_id;
         return self;
 }
 
-void cling_basic_block_construct(struct utillib_vector *blocks,
+void basic_block_construct(struct utillib_vector *blocks,
                 struct utillib_vector const *instrs) {
 
         bool *leaders;
-        struct cling_ast_ir const *ir;
-        struct cling_basic_block *cur_blk;
+        struct ast_ir const *ir;
+        struct basic_block *cur_blk;
         const size_t instrs_size = utillib_vector_size(instrs);
         int block_id = 0, state = 0;
 
@@ -119,7 +119,7 @@ void cling_basic_block_construct(struct utillib_vector *blocks,
 }
 
 void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file) {
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
         int line = 0;
         UTILLIB_VECTOR_FOREACH(block, basic_blocks) {
                 fprintf(file, "Block %d\n", block->block_id);
@@ -131,14 +131,14 @@ void basic_block_display(struct utillib_vector const *basic_blocks, FILE *file) 
         }
 }
 
-void basic_block_destroy(struct cling_basic_block *self) { free(self); }
+void basic_block_destroy(struct basic_block *self) { free(self); }
 
 /*
  * Create a mapping from each instr id to block_id
  */
 static unsigned int *create_block_map(struct utillib_vector const *basic_blocks, unsigned int instrs_size) {
         unsigned int * block_map;
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
 
         block_map=malloc(sizeof block_map[0] * instrs_size);
         UTILLIB_VECTOR_FOREACH(block, basic_blocks) {
@@ -149,8 +149,8 @@ static unsigned int *create_block_map(struct utillib_vector const *basic_blocks,
         return block_map;
 }
 
-static void data_flow_add_link(struct cling_data_flow *self, struct cling_basic_block const *source_block,
-                struct cling_basic_block const *target_block)
+static void data_flow_add_link(struct data_flow *self, struct basic_block const *source_block,
+                struct basic_block const *target_block)
 {
         utillib_vector_push_back(&self->parents[target_block->block_id], source_block);
         utillib_vector_push_back(&self->children[source_block->block_id], target_block);
@@ -159,11 +159,11 @@ static void data_flow_add_link(struct cling_data_flow *self, struct cling_basic_
 /*
  * Fill the parents and children array in a bidirection fashion
  */
-static void data_flow_bidirection(struct cling_data_flow *self)
+static void data_flow_bidirection(struct data_flow *self)
 {
-        struct cling_ast_ir const *ir;
+        struct ast_ir const *ir;
         unsigned int target_addr, source_addr;
-        struct cling_basic_block const *source_block, *target_block;
+        struct basic_block const *source_block, *target_block;
 
         source_addr=0;
         UTILLIB_VECTOR_FOREACH(source_block, &self->basic_blocks) {
@@ -206,13 +206,13 @@ static void data_flow_bidirection(struct cling_data_flow *self)
 /*
  * Initialize the data flow graph. All necessary info contained
  */
-void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_function const *ast_func)
+void data_flow_init(struct data_flow *self, struct ast_function const *ast_func)
 {
         self->instrs=&ast_func->instrs;
         self->instrs_size=utillib_vector_size(self->instrs);
         self->temps_size=ast_func->temps;
         utillib_vector_init(&self->basic_blocks);
-        cling_basic_block_construct(&self->basic_blocks, self->instrs);
+        basic_block_construct(&self->basic_blocks, self->instrs);
         self->blocks_size=utillib_vector_size(&self->basic_blocks);
         self->parents=malloc(sizeof self->parents[0] * self->blocks_size);
         self->children=malloc(sizeof self->children[0] * self->blocks_size);
@@ -224,7 +224,7 @@ void cling_data_flow_init(struct cling_data_flow *self, struct cling_ast_functio
         data_flow_bidirection(self);
 }
 
-void cling_data_flow_destroy(struct cling_data_flow *self)
+void data_flow_destroy(struct data_flow *self)
 {
         utillib_vector_destroy_owning(&self->basic_blocks, free);
         for (int i=0; i<self->blocks_size; ++i) {
@@ -236,9 +236,9 @@ void cling_data_flow_destroy(struct cling_data_flow *self)
         free(self->block_map);
 }
 
-void cling_data_flow_print(struct cling_data_flow const *self, FILE *file)
+void data_flow_print(struct data_flow const *self, FILE *file)
 {
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
         fprintf(file, "data_flow of %p\n", self);
         fprintf(file, "blocks_size %u\n", self->blocks_size);
         fprintf(file, "temps_size %u\n", self->temps_size);
@@ -267,11 +267,11 @@ void cling_data_flow_print(struct cling_data_flow const *self, FILE *file)
  * return any change happened
  */
 static bool data_flow_join(void *data,
-                struct cling_data_flow_callback const *algorithm,
+                struct data_flow_callback const *algorithm,
                 int block_id,
                 struct utillib_vector const *blocks) {
         bool changed = false;
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
 
         UTILLIB_VECTOR_FOREACH(block, blocks)
                 if (algorithm->join(data, block_id, block->block_id))
@@ -290,8 +290,8 @@ static int find_block(bool *workset, unsigned int blocks_size)
 /*
  * Use a worklist algorithm to run different data flow algorithm
  */
-void cling_data_flow_analyze(struct cling_data_flow const *self, void *data,
-                struct cling_data_flow_callback const *algorithm) {
+void data_flow_analyze(struct data_flow const *self, void *data,
+                struct data_flow_callback const *algorithm) {
         /*
          * true: _not_ in the workset
          * false _in_ the workset
@@ -299,7 +299,7 @@ void cling_data_flow_analyze(struct cling_data_flow const *self, void *data,
          */
         bool *workset;
         int head;
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
         struct utillib_vector const *join_blocks, *next_blocks;
 
         workset=calloc(sizeof workset[0], self->blocks_size);
@@ -338,7 +338,7 @@ void cling_data_flow_analyze(struct cling_data_flow const *self, void *data,
 /*
  * Put those mallocs in one place
  */
-static void block_data_init(struct cling_block_data *self, unsigned int blocks_size, unsigned int bitset_N)
+static void block_data_init(struct block_data *self, unsigned int blocks_size, unsigned int bitset_N)
 {
         size_t size;
         self->blocks_size=blocks_size;
@@ -353,7 +353,7 @@ static void block_data_init(struct cling_block_data *self, unsigned int blocks_s
         }
 }
 
-static void block_data_destroy(struct cling_block_data *self)
+static void block_data_destroy(struct block_data *self)
 {
         for (int i=0; i<self->blocks_size; ++i) {
                 utillib_bitset_destroy(&self->flow_in[i]);
@@ -371,14 +371,14 @@ static void block_data_destroy(struct cling_block_data *self)
  * reach_out = reach_in - kill
  * change = reach_in.new - reach_in.old
  */
-static void reaching_definition_init(struct cling_reaching_definition *self, struct cling_data_flow const *data_flow)
+static void reaching_definition_init(struct reaching_definition *self, struct data_flow const *data_flow)
 {
         block_data_init(&self->block_data, data_flow->blocks_size, data_flow->instrs_size); 
         utillib_vector_init(&self->points);
         reaching_definitions_initialize(self, data_flow);
 }
 
-void reaching_definition_destroy(struct cling_reaching_definition *self)
+void reaching_definition_destroy(struct reaching_definition *self)
 {
         block_data_destroy(&self->block_data);
         utillib_vector_destroy_owning(&self->points, free);
@@ -393,9 +393,9 @@ struct defpoints *defpoints_create(unsigned int address, unsigned int target,
         return self;
 }
 
-static void reaching_definitions_initialize(struct cling_reaching_definition *self,
-                struct cling_data_flow const *data_flow) {
-        struct cling_ast_ir const *ir;
+static void reaching_definitions_initialize(struct reaching_definition *self,
+                struct data_flow const *data_flow) {
+        struct ast_ir const *ir;
         int target, address, def_id;
         struct utillib_bitset *reach_out;
         struct defpoints *killed_point, *point;
@@ -438,7 +438,7 @@ static void reaching_definitions_initialize(struct cling_reaching_definition *se
 /*
  * Join: in=union(out of parents) 
  */
-static bool reaching_definition_join(struct cling_reaching_definition *self, int block_1,
+static bool reaching_definition_join(struct reaching_definition *self, int block_1,
                 int block_2) {
         return utillib_bitset_union_updated(&self->block_data.flow_in[block_1],
                         &self->block_data.flow_out[block_2]);
@@ -447,21 +447,21 @@ static bool reaching_definition_join(struct cling_reaching_definition *self, int
 /*
  * Apply the data_flow operator out=in-kill
  */
-static void reaching_definition_apply(struct cling_reaching_definition *self, int block_id) {
+static void reaching_definition_apply(struct reaching_definition *self, int block_id) {
         struct utillib_bitset *output;
         output = &self->block_data.flow_out[block_id];
         utillib_bitset_union(output, &self->block_data.flow_in[block_id]);
         utillib_bitset_minus(output, &self->block_data.kill[block_id]);
 }
 
-static const struct cling_data_flow_callback reaching_definition_callback = {
+static const struct data_flow_callback reaching_definition_callback = {
         .direction = CLING_FORWARD,
         .init = reaching_definition_init,
         .join = reaching_definition_join,
         .apply = reaching_definition_apply,
 };
 
-static void block_data_print(struct cling_block_data const *self, FILE *file)
+static void block_data_print(struct block_data const *self, FILE *file)
 {
         unsigned int id;
         for (int i=0; i<self->blocks_size; ++i) {
@@ -485,7 +485,7 @@ static void block_data_print(struct cling_block_data const *self, FILE *file)
         fputs("\n", file);
 }
 
-void cling_reaching_definition_print(struct cling_reaching_definition const *self, FILE *file)
+void reaching_definition_print(struct reaching_definition const *self, FILE *file)
 {
         struct defpoints const * point;
 
@@ -497,9 +497,9 @@ void cling_reaching_definition_print(struct cling_reaching_definition const *sel
         block_data_print(&self->block_data, file);
 }
 
-inline void cling_reaching_definition_analyze(struct cling_reaching_definition *self, struct cling_data_flow const *data_flow)
+inline void reaching_definition_analyze(struct reaching_definition *self, struct data_flow const *data_flow)
 {
-        cling_data_flow_analyze(data_flow, self, &reaching_definition_callback);
+        data_flow_analyze(data_flow, self, &reaching_definition_callback);
 }
 
 /*
@@ -508,7 +508,7 @@ inline void cling_reaching_definition_analyze(struct cling_reaching_definition *
  * out=union(children of in)
  */
 
-static void live_variable_fill(struct cling_live_variable *self, int block_id, int temp, int flag)
+static void live_variable_fill(struct live_variable *self, int block_id, int temp, int flag)
 {
         switch(flag) {
                 case UDS_USE:
@@ -520,9 +520,9 @@ static void live_variable_fill(struct cling_live_variable *self, int block_id, i
                 default: assert(false);
         }
 }
-static void live_variable_init(struct cling_live_variable *self, struct cling_data_flow const *data_flow)
+static void live_variable_init(struct live_variable *self, struct data_flow const *data_flow)
 {
-        struct cling_ast_ir const *ir;
+        struct ast_ir const *ir;
         unsigned int address, block_id, argc;
 
         address=0;
@@ -611,38 +611,38 @@ static struct live_interval * live_interval_create(unsigned int temp, unsigned i
         return self;
 }
 
-void live_variable_destroy(struct cling_live_variable *self)
+void live_variable_destroy(struct live_variable *self)
 {
         block_data_destroy(&self->block_data);
         free(self->use_def_state);
         utillib_vector_destroy_owning(&self->intervals, free);
 }
 
-static bool live_variable_join(struct cling_live_variable *self, int block_1, int block_2)
+static bool live_variable_join(struct live_variable *self, int block_1, int block_2)
 {
         return utillib_bitset_union_updated(&self->block_data.flow_out[block_1], &self->block_data.flow_in[block_2]);
 }
 
-static void live_variable_apply(struct cling_live_variable *self, int block_id)
+static void live_variable_apply(struct live_variable *self, int block_id)
 {
         utillib_bitset_union(&self->block_data.flow_in[block_id], &self->block_data.flow_out[block_id]);
         utillib_bitset_minus(&self->block_data.flow_in[block_id], &self->block_data.kill[block_id]);
 }
 
-static const struct cling_data_flow_callback live_variable_callback = {
+static const struct data_flow_callback live_variable_callback = {
         .direction = CLING_BACKWARD,
         .init = live_variable_init,
         .join = live_variable_join,
         .apply = live_variable_apply,
 };
 
-void cling_live_variable_print(struct cling_live_variable const *self, FILE *file)
+void live_variable_print(struct live_variable const *self, FILE *file)
 {
-        fprintf(file, "cling_live_variable %p\n", self);
+        fprintf(file, "live_variable %p\n", self);
         block_data_print(&self->block_data, file);
 }
 
-void cling_live_variable_analyze(struct cling_live_variable *self, struct cling_data_flow const *data_flow)
+void live_variable_analyze(struct live_variable *self, struct data_flow const *data_flow)
 {
-        cling_data_flow_analyze(data_flow, self, &live_variable_callback);
+        data_flow_analyze(data_flow, self, &live_variable_callback);
 }

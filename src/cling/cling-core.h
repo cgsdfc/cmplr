@@ -35,37 +35,31 @@
 /*
  * Main cling driver
  */
-enum {
-        CL_INTERP_ERROR=1,
-        CL_SYNTAX_ERROR,
-        CL_FILE_ERROR,
+struct frontend {
+        struct scanner scanner;
+        struct rd_parser parser;
+        struct symbol_table symbol_table;
 };
 
-struct cling_frontend {
-        struct cling_scanner scanner;
-        struct cling_rd_parser parser;
-        struct cling_symbol_table symbol_table;
+struct backend {
+        struct ast_program ast_program;
+        struct mips_program mips_program;
+        struct mips_interp mips_interp;
 };
 
-struct cling_backend {
-        struct cling_ast_program ast_program;
-        struct cling_mips_program mips_program;
-        struct cling_mips_interp mips_interp;
-};
+void frontend_init(struct frontend *self,
+                struct option const *option, FILE *file);
+void frontend_destroy(struct frontend *self);
+int frontend_tokenize(struct frontend *self, FILE *output);
+int frontend_parse(struct frontend *self);
+void frontend_print_error(struct frontend const *self);
+void frontend_dump_ast(struct frontend const *self, FILE *output);
 
-void cling_frontend_init(struct cling_frontend *self,
-                struct cling_option const *option, FILE *file);
-void cling_frontend_destroy(struct cling_frontend *self);
-int cling_frontend_tokenize(struct cling_frontend *self, FILE *output);
-int cling_frontend_parse(struct cling_frontend *self);
-void cling_frontend_print_error(struct cling_frontend const *self);
-void cling_frontend_dump_ast(struct cling_frontend const *self, FILE *output);
-
-void cling_backend_init(struct cling_backend *self, struct cling_option const *option);
-void cling_backend_destroy(struct cling_backend *self);
-void cling_backend_dump_mips(struct cling_backend const *self, FILE *output);
-void cling_backend_dump_ast_ir(struct cling_backend const *self, FILE *output);
-int cling_backend_interpret(struct cling_backend *self);
-void cling_backend_codegen(struct cling_backend *self, struct cling_frontend *frontend);
+void backend_init(struct backend *self, struct option const *option);
+void backend_destroy(struct backend *self);
+void backend_dump_mips(struct backend const *self, FILE *output);
+void backend_dump_ast_ir(struct backend const *self, FILE *output);
+int backend_interpret(struct backend *self);
+void backend_codegen(struct backend *self, struct frontend *frontend);
 
 #endif /* CLING_CLING_CORE_H */

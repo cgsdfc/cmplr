@@ -24,7 +24,7 @@
 /*
  * As we may have non-standard extensions
  */
-struct cling_option 
+struct option 
 {
         bool allow_comment;
         bool no_tricky_jump;

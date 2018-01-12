@@ -29,97 +29,97 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define cling_symbol_cast(code)                                                \
-        ((code) == UT_SYM_EOF ? "end-of-input" : cling_symbol_kind_tostring((code)))
+#define symbol_cast(code)                                                \
+        ((code) == UT_SYM_EOF ? "end-of-input" : symbol_kind_tostring((code)))
 
-static struct cling_error * error_create(int kind, struct cling_scanner const *scanner, size_t context) {
+static struct error * error_create(int kind, struct scanner const *scanner, size_t context) {
 
-        struct cling_error *self = malloc(sizeof *self);
+        struct error *self = malloc(sizeof *self);
         self->kind = kind;
         self->row = scanner->input.row;
         self->col = scanner->input.col;
-        self->context = cling_symbol_cast(context);
+        self->context = symbol_cast(context);
         return self;
 }
 
-struct cling_error *cling_expected_error(struct cling_scanner const *scanner, size_t expected, size_t context) 
+struct error *expected_error(struct scanner const *scanner, size_t expected, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EEXPECT, scanner, context);
-        self->expected.expected = cling_symbol_cast(expected);
-        self->expected.actual = cling_symbol_cast(cling_scanner_lookahead(scanner));
+        struct error *self = error_create(CL_EEXPECT, scanner, context);
+        self->expected.expected = symbol_cast(expected);
+        self->expected.actual = symbol_cast(scanner_lookahead(scanner));
         return self;
 }
 
-struct cling_error *cling_unexpected_error(struct cling_scanner const *scanner, size_t context) 
+struct error *unexpected_error(struct scanner const *scanner, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EUNEXPECTED, scanner, context);
+        struct error *self = error_create(CL_EUNEXPECTED, scanner, context);
         self->unexpected.unexpected =
-                cling_symbol_cast(cling_scanner_lookahead(scanner));
+                symbol_cast(scanner_lookahead(scanner));
         return self;
 }
 
-struct cling_error *cling_redefined_error(struct cling_scanner const *scanner, char const *name, size_t context) 
+struct error *redefined_error(struct scanner const *scanner, char const *name, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EREDEFINED, scanner, context);
+        struct error *self = error_create(CL_EREDEFINED, scanner, context);
         self->redefined.name = strdup(name);
         return self;
 }
 
-struct cling_error * cling_undefined_name_error(struct cling_scanner const *scanner, char const *name, size_t context) 
+struct error * undefined_name_error(struct scanner const *scanner, char const *name, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EUNDEFINED, scanner, context);
+        struct error *self = error_create(CL_EUNDEFINED, scanner, context);
         self->undefined.name = strdup(name);
         return self;
 }
 
-struct cling_error * cling_not_lvalue_error(struct cling_scanner const *scanner, struct utillib_json_value const *value, size_t context) 
+struct error * not_lvalue_error(struct scanner const *scanner, struct utillib_json_value const *value, size_t context) 
 {
-        struct cling_error *self = error_create(CL_ENOTLVALUE, scanner, context);
-        self->not_lvalue.value = cling_ast_pretty_expr(value);
+        struct error *self = error_create(CL_ENOTLVALUE, scanner, context);
+        self->not_lvalue.value = ast_pretty_expr(value);
         return self;
 }
 
-struct cling_error * cling_incompatible_type_error(struct cling_scanner const *scanner, int actual_type, int expected_type, size_t context) 
+struct error * incompatible_type_error(struct scanner const *scanner, int actual_type, int expected_type, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EINCTYPE, scanner, context);
-        self->inctype.expected = cling_type_tostring(expected_type);
-        self->inctype.actual = cling_type_tostring(actual_type);
+        struct error *self = error_create(CL_EINCTYPE, scanner, context);
+        self->inctype.expected = type_tostring(expected_type);
+        self->inctype.actual = type_tostring(actual_type);
         return self;
 }
 
-struct cling_error * cling_argc_unmatched_error(struct cling_scanner const *scanner, char const *func_name, unsigned int actual_argc, unsigned int expected_argc, size_t context) 
+struct error * argc_unmatched_error(struct scanner const *scanner, char const *func_name, unsigned int actual_argc, unsigned int expected_argc, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EARGCUNMAT, scanner, context);
+        struct error *self = error_create(CL_EARGCUNMAT, scanner, context);
         self->argc_unmat.expected = expected_argc;
         self->argc_unmat.actual = actual_argc;
         self->argc_unmat.func_name = strdup(func_name);
         return self;
 }
 
-struct cling_error * cling_invalid_expr_error(struct cling_scanner const *scanner, struct utillib_json_value const *value, size_t context) 
+struct error * invalid_expr_error(struct scanner const *scanner, struct utillib_json_value const *value, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EINVEXPR, scanner, context);
-        self->invexpr.expr = cling_ast_pretty_expr(value);
+        struct error *self = error_create(CL_EINVEXPR, scanner, context);
+        self->invexpr.expr = ast_pretty_expr(value);
         return self;
 }
 
-struct cling_error *cling_dupcase_error(struct cling_scanner const *scanner, int case_type, char const *label, size_t context) 
+struct error *dupcase_error(struct scanner const *scanner, int case_type, char const *label, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EDUPCASE, scanner, context);
+        struct error *self = error_create(CL_EDUPCASE, scanner, context);
         self->dupcase.case_type=case_type;
         self->dupcase.label = strdup(label);
         return self;
 }
 
-struct cling_error *cling_badtoken_error(struct cling_scanner const *scanner, int type, char const *evidence, size_t context) 
+struct error *badtoken_error(struct scanner const *scanner, int type, char const *evidence, size_t context) 
 {
-        struct cling_error *self = error_create(CL_EBADTOKEN, scanner, context);
+        struct error *self = error_create(CL_EBADTOKEN, scanner, context);
         self->badtoken.type = type;
         self->badtoken.evidence = strdup(evidence);
         return self;
 }
 
-void cling_error_print(struct cling_error const *self) 
+void error_print(struct error const *self) 
 {
 
         fprintf(stderr, "ERROR at %lu:%lu in %s: ", positive_number(self->row),
@@ -159,7 +159,7 @@ void cling_error_print(struct cling_error const *self)
                         break;
                 case CL_EDUPCASE:
                         fprintf(stderr, "duplicated case label '%s' of type '%s'\n", self->dupcase.label,
-                                        cling_symbol_kind_tostring(self->dupcase.case_type));
+                                        symbol_kind_tostring(self->dupcase.case_type));
                         break;
                 case CL_EBADTOKEN:
                         switch (self->badtoken.type) {
@@ -198,7 +198,7 @@ void cling_error_print(struct cling_error const *self)
         }
 }
 
-void cling_error_destroy(struct cling_error *self) 
+void error_destroy(struct error *self) 
 {
         switch (self->kind) {
                 case CL_EREDEFINED:
