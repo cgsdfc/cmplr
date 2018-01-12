@@ -2,12 +2,12 @@
 
 int main(int argc, char argv[])
 {
-  struct cling_frontend frontend;
-  struct cling_data_flow data_flow;
+  struct frontend frontend;
+  struct data_flow data_flow;
 
-  cling_frontend_init(&frontend, fopen(argv[1], "r"));
-  cling_frontend_parse(&frontend);
-  cling_backend
+  frontend_init(&frontend, fopen(argv[1], "r"));
+  frontend_parse(&frontend);
+  backend
 
 
 

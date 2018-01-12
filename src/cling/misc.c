@@ -29,7 +29,7 @@
 #include <string.h>
 #include <utillib/strhash.h>
 
-int cling_symbol_to_type(int symbol) {
+int symbol_to_type(int symbol) {
         switch (symbol) {
                 case SYM_INTEGER:
                 case SYM_KW_INT:
@@ -97,7 +97,7 @@ char const *size_tostring(int size) {
         }
 }
 
-int cling_symbol_to_size(int symbol) {
+int symbol_to_size(int symbol) {
         switch (symbol) {
                 case SYM_INTEGER:
                         return MIPS_WORD_SIZE;
@@ -107,7 +107,7 @@ int cling_symbol_to_size(int symbol) {
                         assert(false);
         }
 }
-int cling_type_to_size(int type) {
+int type_to_size(int type) {
         switch (type) {
                 case CL_INT:
                         return MIPS_WORD_SIZE;
@@ -120,7 +120,7 @@ int cling_type_to_size(int type) {
         }
 }
 
-int cling_symbol_to_immediate(int symbol, char const *string) {
+int symbol_to_immediate(int symbol, char const *string) {
         int int_val;
         char char_val;
         switch (symbol) {
@@ -137,7 +137,7 @@ int cling_symbol_to_immediate(int symbol, char const *string) {
         }
 }
 
-int cling_type_to_immediate(int type, char const *string) {
+int type_to_immediate(int type, char const *string) {
         int int_val;
         char char_val;
         switch (type) {
@@ -152,11 +152,11 @@ int cling_type_to_immediate(int type, char const *string) {
         }
 }
 
-const struct utillib_hashmap_callback cling_string_hash = {
+const struct utillib_hashmap_callback string_hash = {
         .hash_handler = mysql_strhash, .compare_handler = strcmp,
 };
 
-int cling_ast_opcode_to_syscall(int opcode) {
+int ast_opcode_to_syscall(int opcode) {
         switch (opcode) {
                 case OP_RDCHR:
                         return MIPS_READ_CHAR;
@@ -173,7 +173,7 @@ int cling_ast_opcode_to_syscall(int opcode) {
         }
 }
 
-int cling_type_to_read(int type) {
+int type_to_read(int type) {
         switch (type) {
                 case CL_CHAR:
                         return OP_RDCHR;
@@ -184,7 +184,7 @@ int cling_type_to_read(int type) {
         }
 }
 
-int cling_size_to_write(int size) {
+int size_to_write(int size) {
         switch (size) {
                 case MIPS_WORD_SIZE:
                         return OP_WRINT;
@@ -199,15 +199,15 @@ int cling_size_to_write(int size) {
  * Label Management.
  */
 
-struct cling_mips_label *mips_label_create(char const *label,
+struct mips_label *mips_label_create(char const *label,
                 uint32_t address) {
-        struct cling_mips_label *self = malloc(sizeof *self);
+        struct mips_label *self = malloc(sizeof *self);
         self->label = strdup(label);
         self->address = address;
         return self;
 }
 
-void mips_label_destroy(struct cling_mips_label *self) {
+void mips_label_destroy(struct mips_label *self) {
         free(self->label);
         free(self);
 }
@@ -215,12 +215,12 @@ void mips_label_destroy(struct cling_mips_label *self) {
 /*
  * Address as key.
  */
-static int mips_label_compare(struct cling_mips_label const *lhs,
-                struct cling_mips_label const *rhs) {
+static int mips_label_compare(struct mips_label const *lhs,
+                struct mips_label const *rhs) {
         return lhs->address - rhs->address;
 }
 
-static size_t mips_label_hash(struct cling_mips_label const *self) {
+static size_t mips_label_hash(struct mips_label const *self) {
         return self->address;
 }
 
@@ -228,26 +228,26 @@ const struct utillib_hashmap_callback mips_label_callback = {
         .compare_handler = mips_label_compare, .hash_handler = mips_label_hash,
 };
 
-struct cling_mips_label *
+struct mips_label *
 mips_label_find(struct utillib_hashmap const *self, uint32_t address) {
-        struct cling_mips_label key;
+        struct mips_label key;
         key.address = address;
         return utillib_hashmap_find(self, &key);
 }
 
-struct cling_mips_label *
+struct mips_label *
 mips_label_name_find(struct utillib_hashmap const *self, char const *name) {
-        struct cling_mips_label key;
+        struct mips_label key;
         key.label = name;
         return utillib_hashmap_find(self, &key);
 }
 
-static int mips_label_strcmp(struct cling_mips_label const *lhs,
-                struct cling_mips_label const *rhs) {
+static int mips_label_strcmp(struct mips_label const *lhs,
+                struct mips_label const *rhs) {
         return strcmp(lhs->label, rhs->label);
 }
 
-static size_t mips_label_strhash(struct cling_mips_label const *self) {
+static size_t mips_label_strhash(struct mips_label const *self) {
         return mysql_strhash(self->label);
 }
 

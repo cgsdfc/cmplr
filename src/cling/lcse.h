@@ -31,12 +31,12 @@
 /*
  * Forward decl
  */
-struct cling_ast_function;
-struct cling_ast_program;
-struct cling_ast_ir;
-struct cling_basic_block;
+struct ast_function;
+struct ast_program;
+struct ast_ir;
+struct basic_block;
 
-struct cling_lcse_optimizer {
+struct lcse_optimizer {
         unsigned int var_count; /* Rename the temps in ast_func */
         struct utillib_hashmap operations; /* Effective operations done in the past */
         struct utillib_hashmap names; /* Map name to their address counted by var_count */
@@ -50,7 +50,7 @@ struct cling_lcse_optimizer {
 /*
  * Used in values
  */
-struct cling_lcse_value {
+struct lcse_value {
         unsigned int address;
         unsigned int value;
 };
@@ -66,7 +66,7 @@ enum {
         LCSE_UNARY,
 };
 
-struct cling_lcse_ir {
+struct lcse_ir {
         int opcode; /* Original ast_ir opcode */
         int kind; /* LCSE_ see above */
         union {
@@ -95,12 +95,12 @@ struct cling_lcse_ir {
         };
 };
 
-void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
-                struct cling_ast_function const *ast_func);
-void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self);
+void lcse_optimizer_init(struct lcse_optimizer *self,
+                struct ast_function const *ast_func);
+void lcse_optimizer_destroy(struct lcse_optimizer *self);
 
-void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
+void lcse_optimizer_emit(struct lcse_optimizer *self,
                 struct utillib_vector const *basic_blocks,
-                struct cling_ast_function *ast_func);
+                struct ast_function *ast_func);
 
 #endif /* CLING_LCSE_H */

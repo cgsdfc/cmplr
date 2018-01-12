@@ -21,7 +21,7 @@
 */
 #include "symbols.h"
 
-UTILLIB_ETAB_BEGIN(cling_symbol_kind)
+UTILLIB_ETAB_BEGIN(symbol_kind)
 
 UTILLIB_ETAB_ELEM_INIT(SYM_PROGRAM, "program")
 UTILLIB_ETAB_ELEM_INIT(SYM_ADD_OP, "additive operator")
@@ -95,7 +95,7 @@ UTILLIB_ETAB_ELEM_INIT(SYM_COMMA, ",")
 UTILLIB_ETAB_ELEM_INIT(SYM_LP, "(")
 UTILLIB_ETAB_ELEM_INIT(SYM_RP, ")")
 
-UTILLIB_ETAB_END(cling_symbol_kind);
+UTILLIB_ETAB_END(symbol_kind);
 
 bool opg_parser_is_relop(unsigned op) {
   return op == SYM_NE || op == SYM_DEQ || op == SYM_LT || op == SYM_LE ||

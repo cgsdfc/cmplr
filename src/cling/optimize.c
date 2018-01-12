@@ -25,23 +25,23 @@
 #include <stdlib.h>
 
 
-void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option,
-                struct cling_ast_function const *ast_func)
+void optimizer_init(struct optimizer *self, struct option const *option,
+                struct ast_function const *ast_func)
 {
         self->option=option;
         utillib_vector_init(&self->basic_blocks);
-        cling_lcse_optimizer_init(&self->lcse, ast_func);
+        lcse_optimizer_init(&self->lcse, ast_func);
 }
 
-void cling_optimizer_destroy(struct cling_optimizer *self)
+void optimizer_destroy(struct optimizer *self)
 {
         utillib_vector_destroy_owning(&self->basic_blocks, basic_block_destroy);
-        cling_lcse_optimizer_destroy(&self->lcse);
+        lcse_optimizer_destroy(&self->lcse);
 }
 
-void cling_optimizer_optimize(struct cling_optimizer *self, struct cling_ast_function *ast_func)
+void optimizer_optimize(struct optimizer *self, struct ast_function *ast_func)
 {
-        cling_basic_block_construct(&self->basic_blocks, &ast_func->instrs);
+        basic_block_construct(&self->basic_blocks, &ast_func->instrs);
         if (self->option->optimize_lcse)
-                cling_lcse_optimizer_emit(&self->lcse, &self->basic_blocks, ast_func);
+                lcse_optimizer_emit(&self->lcse, &self->basic_blocks, ast_func);
 }

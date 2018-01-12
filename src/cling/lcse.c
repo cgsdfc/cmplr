@@ -28,29 +28,29 @@
 #include <utillib/strhash.h>
 
 /*
- * cling_lcse_ir hash and compare
+ * lcse_ir hash and compare
  * How one instruction is considered computed is based
  * on the following functions
  */
 
-static int operand_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int operand_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->binary.temp1 == rhs->binary.temp1 &&
                         lhs->binary.temp2 == rhs->binary.temp2)
                 return 0;
         return 1;
 }
 
-static int reversed_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int reversed_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->binary.temp1 == rhs->binary.temp2 &&
                         lhs->binary.temp2 == rhs->binary.temp1)
                 return 0;
         return 1;
 }
 
-static int binary_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int binary_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode != rhs->opcode)
                 return 1;
         return operand_compare(lhs, rhs);
@@ -59,8 +59,8 @@ static int binary_compare(struct cling_lcse_ir const *lhs,
 /*
  * A communicative_compare means A + B == B + A
  */
-static int communicative_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int communicative_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode != rhs->opcode)
                 return 1;
         if (0 == operand_compare(lhs, rhs))
@@ -74,8 +74,8 @@ static int communicative_compare(struct cling_lcse_ir const *lhs,
  * A interchange of operands and opcode will match if their
  * outputs are the same. Instances are a <= b means b > a.
  */
-static int interchangable_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int interchangable_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode == rhs->opcode)
                 return operand_compare(lhs, rhs);
         if (lhs->opcode == OP_GE && rhs->opcode == OP_LT ||
@@ -89,8 +89,8 @@ static int interchangable_compare(struct cling_lcse_ir const *lhs,
 /*
  * load_addr: name scope
  */
-static int load_addr_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int load_addr_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
                 return 1;
         if (0 == strcmp(lhs->load_addr.name, rhs->load_addr.name) &&
@@ -102,8 +102,8 @@ static int load_addr_compare(struct cling_lcse_ir const *lhs,
 /*
  * load_value: value scope
  */
-static int load_value_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int load_value_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode != rhs->opcode || lhs->kind != rhs->kind)
                 return 1;
         if (lhs->load_value.value == rhs->load_value.value && 
@@ -115,8 +115,8 @@ static int load_value_compare(struct cling_lcse_ir const *lhs,
 /*
  * store the same thing to the save location
  */
-static int store_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int store_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode != rhs->opcode)
                 return 1;
         if (lhs->store.value == rhs->store.value &&
@@ -125,15 +125,15 @@ static int store_compare(struct cling_lcse_ir const *lhs,
         return 1;
 }
 
-static int unary_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int unary_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         if (lhs->opcode == rhs->opcode && lhs->unary.operand == rhs->unary.operand)
                 return 0;
         return 1;
 }
 
-static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
-                struct cling_lcse_ir const *rhs) {
+static int lcse_ir_compare(struct lcse_ir const *lhs,
+                struct lcse_ir const *rhs) {
         switch (lhs->kind) {
                 case LCSE_BINARY:
                         switch (lhs->opcode) {
@@ -167,7 +167,7 @@ static int lcse_ir_compare(struct cling_lcse_ir const *lhs,
         }
 }
 
-static size_t lcse_ir_hash(struct cling_lcse_ir const *self) {
+static size_t lcse_ir_hash(struct lcse_ir const *self) {
         size_t hash = self->opcode;
         switch (self->kind) {
                 case LCSE_UNARY:
@@ -192,24 +192,24 @@ static const struct utillib_hashmap_callback lcse_ir_callback = {
 };
 
 /*
- * cling_lcse_value an address-value pair.
+ * lcse_value an address-value pair.
  */
-static struct cling_lcse_value *lcse_value_create(unsigned int address,
+static struct lcse_value *lcse_value_create(unsigned int address,
                 unsigned int value) {
-        struct cling_lcse_value *self = malloc(sizeof *self);
+        struct lcse_value *self = malloc(sizeof *self);
         self->address = address;
         self->value = value;
         return self;
 }
 
-static void lcse_value_destroy(struct cling_lcse_value *self) { free(self); }
+static void lcse_value_destroy(struct lcse_value *self) { free(self); }
 
-static int lcse_value_compare(struct cling_lcse_value const *lhs,
-                struct cling_lcse_value const *rhs) {
+static int lcse_value_compare(struct lcse_value const *lhs,
+                struct lcse_value const *rhs) {
         return lhs->address - rhs->address;
 }
 
-static size_t lcse_value_hash(struct cling_lcse_value const *self) {
+static size_t lcse_value_hash(struct lcse_value const *self) {
         return self->address;
 }
 
@@ -221,9 +221,9 @@ static const struct utillib_hashmap_callback lcse_value_intcallback = {
  * Lookup the address of this name. Address is just variable counted by
  * var_count.
  */
-static unsigned int lookup_named_address(struct cling_lcse_optimizer *self,
+static unsigned int lookup_named_address(struct lcse_optimizer *self,
                 char const *name) {
-        struct cling_mips_label *label;
+        struct mips_label *label;
         label = mips_label_name_find(&self->names, name);
         if (label) {
                 return label->address;
@@ -237,9 +237,9 @@ static unsigned int lookup_named_address(struct cling_lcse_optimizer *self,
 /*
  * Lookup the value at address. If not found, allocate a new one from var_count.
  */
-static unsigned int lookup_value(struct cling_lcse_optimizer *self,
+static unsigned int lookup_value(struct lcse_optimizer *self,
                 unsigned int address) {
-        struct cling_lcse_value *val, v;
+        struct lcse_value *val, v;
         v.address = address;
         val = utillib_hashmap_find(&self->values, &v);
         if (val) {
@@ -254,8 +254,8 @@ static unsigned int lookup_value(struct cling_lcse_optimizer *self,
 /*
  * Update the value at address (force insertion)
  */
-static void update_value(struct cling_lcse_optimizer *self, unsigned int address, unsigned int value) {
-        struct cling_lcse_value *val, v;
+static void update_value(struct lcse_optimizer *self, unsigned int address, unsigned int value) {
+        struct lcse_value *val, v;
         v.address=address;
         val=utillib_hashmap_find(&self->values, &v);
         if (val) {
@@ -269,7 +269,7 @@ static void update_value(struct cling_lcse_optimizer *self, unsigned int address
 /*
  * Lookup a renamed variable or allocate a new one
  */
-static unsigned int lookup_variable(struct cling_lcse_optimizer *self,
+static unsigned int lookup_variable(struct lcse_optimizer *self,
                 unsigned int temp) {
         assert(temp < self->variables_size);
         int var = self->variables[temp];
@@ -285,9 +285,9 @@ static unsigned int lookup_variable(struct cling_lcse_optimizer *self,
  * Prepare operands for a lcse_ir by looking the operands of ast_ir
  * for various mappings. Group them into LCSE_ settings.
  */
-static void translate(struct cling_lcse_optimizer *self,
-                struct cling_ast_ir *ast_ir,
-                struct cling_lcse_ir *lcse_ir) {
+static void translate(struct lcse_optimizer *self,
+                struct ast_ir *ast_ir,
+                struct lcse_ir *lcse_ir) {
         unsigned int address;
         lcse_ir->opcode = ast_ir->opcode;
         switch (ast_ir->opcode) {
@@ -352,10 +352,10 @@ static void translate(struct cling_lcse_optimizer *self,
  * Check for existence of an lcse_ir, fix up the ast_ir based
  * on that and update the operations set if not existed
  */
-static bool insert_operation(struct cling_lcse_optimizer *self,
-                struct cling_ast_ir *ast_ir,
-                struct cling_lcse_ir *lcse_ir) {
-        struct cling_lcse_ir *new_ir;
+static bool insert_operation(struct lcse_optimizer *self,
+                struct ast_ir *ast_ir,
+                struct lcse_ir *lcse_ir) {
+        struct lcse_ir *new_ir;
 
         new_ir = utillib_hashmap_find(&self->operations, lcse_ir);
         if (new_ir) {
@@ -459,12 +459,12 @@ static bool insert_operation(struct cling_lcse_optimizer *self,
 /*
  * Optimize on a single basic_block
  */
-static void lcse_optimize(struct cling_lcse_optimizer *self,
-                struct cling_basic_block const *block,
+static void lcse_optimize(struct lcse_optimizer *self,
+                struct basic_block const *block,
                 struct utillib_vector *output_instrs) {
         bool add_instr;
-        struct cling_ast_ir *ast_ir;
-        struct cling_lcse_ir lcse_ir;
+        struct ast_ir *ast_ir;
+        struct lcse_ir lcse_ir;
         int value, argc;
 
         for (int i = block->begin; i < block->end; ++i) {
@@ -552,14 +552,14 @@ static void lcse_optimize(struct cling_lcse_optimizer *self,
                 if (add_instr)
                         utillib_vector_push_back(output_instrs, ast_ir);
                 else
-                        cling_ast_ir_destroy(ast_ir);
+                        ast_ir_destroy(ast_ir);
         }
 }
 
-static void lcse_ir_destroy(struct cling_lcse_ir *self) { free(self); }
+static void lcse_ir_destroy(struct lcse_ir *self) { free(self); }
 
-void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
-                struct cling_ast_function const *ast_func) {
+void lcse_optimizer_init(struct lcse_optimizer *self,
+                struct ast_function const *ast_func) {
         size_t temp_size = ast_func->temps;
         self->var_count = 0;
         self->variables = malloc(sizeof self->variables[0] * temp_size);
@@ -569,17 +569,17 @@ void cling_lcse_optimizer_init(struct cling_lcse_optimizer *self,
                         utillib_vector_size(&ast_func->instrs));
 }
 
-void cling_lcse_optimizer_destroy(struct cling_lcse_optimizer *self) {
+void lcse_optimizer_destroy(struct lcse_optimizer *self) {
         free(self->address_map);
         free(self->variables);
 }
 
-void cling_lcse_optimizer_emit(struct cling_lcse_optimizer *self,
+void lcse_optimizer_emit(struct lcse_optimizer *self,
                 struct utillib_vector const *basic_blocks,
-                struct cling_ast_function *ast_func)
+                struct ast_function *ast_func)
 {
         struct utillib_vector output_instrs;
-        struct cling_basic_block const *block;
+        struct basic_block const *block;
         utillib_vector_init(&output_instrs);
 
         UTILLIB_VECTOR_FOREACH(block, basic_blocks) {

@@ -32,12 +32,12 @@
 #define memindex_2(address) ((((address-1) >> 6)) & ((1<<3)-1))
 #define memoffset(address) ((address-1) & ((1<<6)-1))
 
-static void print_memory_usage(struct cling_mips_interp const *self);
+static void print_memory_usage(struct mips_interp const *self);
 
 /*
  * From 1 to MIPS_MEM_MAX is valid memory address.
  */
-static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
+static uint8_t *mips_mem_lookup(struct mips_interp *self, int32_t address)
 {
         if (0 == address) {
                 self->error=MIPS_EC_NULL;
@@ -51,7 +51,7 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
                 self->error=MIPS_EC_ALIGN;
                 return NULL;
         }
-        struct cling_mips_memblk ** memblk_array, *memblk;
+        struct mips_memblk ** memblk_array, *memblk;
         unsigned int index;
 
         index=memindex_1(address);
@@ -78,8 +78,8 @@ static uint8_t *mips_mem_lookup(struct cling_mips_interp *self, int32_t address)
 }
 
 
-static void mips_interp_load_label(struct cling_mips_interp *self, struct cling_mips_program const *program) {
-        struct cling_mips_label const *program_label, *interp_label;
+static void mips_interp_load_label(struct mips_interp *self, struct mips_program const *program) {
+        struct mips_label const *program_label, *interp_label;
         struct utillib_pair const *pair;
         UTILLIB_HASHMAP_FOREACH(pair, &program->labels) {
                 program_label=pair->up_first;
@@ -92,14 +92,14 @@ static void mips_interp_load_label(struct cling_mips_interp *self, struct cling_
  * Memory comes directly from the stack pointer.
  * size is the number of words
  */
-static uint32_t mips_interp_alloc(struct cling_mips_interp *self, size_t size) {
+static uint32_t mips_interp_alloc(struct mips_interp *self, size_t size) {
         self->regs[MIPS_SP]-=(size<<2);
         return self->regs[MIPS_SP];
 }
 
-static void mips_interp_load_data(struct cling_mips_interp *self, struct cling_mips_program const *program) {
-        struct cling_mips_label *label;
-        struct cling_mips_data *data;
+static void mips_interp_load_data(struct mips_interp *self, struct mips_program const *program) {
+        struct mips_label *label;
+        struct mips_data *data;
         uint32_t address;
 
         UTILLIB_VECTOR_FOREACH(data, &program->data) {
@@ -146,7 +146,7 @@ static void print_string(char const *string) {
 /*
  * Execution of different instructions.
  */
-static int mips_do_syscall(struct cling_mips_interp *self) {
+static int mips_do_syscall(struct mips_interp *self) {
         int int_val;
         char char_val;
         char const *str_val;
@@ -182,15 +182,15 @@ static int mips_do_syscall(struct cling_mips_interp *self) {
         return 0; 
 }
 
-static void mips_do_move(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static void mips_do_move(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t dest_regid = ir->operands[0].regid;
         uint8_t src_regid = ir->operands[1].regid;
         self->regs[dest_regid] = self->regs[src_regid];
 }
 
-static int mips_do_addi(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static int mips_do_addi(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t dest_regid = ir->operands[0].regid;
         uint8_t src_regid = ir->operands[1].regid;
         int16_t imme = ir->operands[2].imme16;
@@ -201,40 +201,40 @@ static int mips_do_addi(struct cling_mips_interp *self,
         return 0;
 }
 
-static void mips_do_mflo(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static void mips_do_mflo(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t dest_regid = ir->operands[0].regid;
         self->regs[dest_regid] = self->lo;
 }
 
-static void mips_do_jal(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
-        struct cling_mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
+static void mips_do_jal(struct mips_interp *self,
+                struct mips_ir const *ir) {
+        struct mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
         assert(label);
         self->regs[MIPS_RA] = self->pc + 1;
         self->pc = label->address;
 }
 
-static void mips_do_li(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static void mips_do_li(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t dest_regid = ir->operands[0].regid;
         self->regs[dest_regid] = ir->operands[1].imme32;
 }
 
-static void mips_do_jr(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static void mips_do_jr(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t src_regid = ir->operands[0].regid;
         self->pc = self->regs[src_regid];
 }
 
-static uint32_t mips_do_address(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static uint32_t mips_do_address(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t base_regid = ir->operands[2].regid;
         int16_t offset = ir->operands[1].offset;
         return self->regs[base_regid] + offset;
 }
 
-static int mips_do_memory(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
+static int mips_do_memory(struct mips_interp *self, struct mips_ir const *ir) {
         uint32_t address = mips_do_address(self, ir);
         uint8_t regid=ir->operands[0].regid;
         uint8_t *memory = mips_mem_lookup(self, address);
@@ -260,9 +260,9 @@ static int mips_do_memory(struct cling_mips_interp *self, struct cling_mips_ir c
         return 0;
 }
 
-static void mips_do_la(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
-        struct cling_mips_label const *label;
+static void mips_do_la(struct mips_interp *self,
+                struct mips_ir const *ir) {
+        struct mips_label const *label;
         uint8_t dest_regid;
         dest_regid = ir->operands[0].regid;
         label=mips_label_name_find(&self->labels, ir->operands[1].label);
@@ -292,9 +292,9 @@ static bool mips_cmp_zero(uint8_t opcode, int32_t value) {
         }
 }
 
-static bool mips_do_branch(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
-        struct cling_mips_label const *label;
+static bool mips_do_branch(struct mips_interp *self,
+                struct mips_ir const *ir) {
+        struct mips_label const *label;
         uint8_t src_regid1, src_regid2;
         int32_t value;
         bool cmp;
@@ -326,8 +326,8 @@ static bool mips_do_branch(struct cling_mips_interp *self,
         return false;
 }
 
-static void mips_do_j(struct cling_mips_interp *self, struct cling_mips_ir const *ir) {
-        struct cling_mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
+static void mips_do_j(struct mips_interp *self, struct mips_ir const *ir) {
+        struct mips_label const *label=mips_label_name_find(&self->labels, ir->operands[0].label);
         assert(label);
         self->pc=label->address;
 }
@@ -335,8 +335,8 @@ static void mips_do_j(struct cling_mips_interp *self, struct cling_mips_ir const
 /*
  * Three regs arith
  */
-static int mips_do_arith1(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static int mips_do_arith1(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t dest_regid = ir->operands[0].regid;
         uint8_t src_regid1 = ir->operands[1].regid;
         uint8_t src_regid2 = ir->operands[2].regid;
@@ -361,8 +361,8 @@ static int mips_do_arith1(struct cling_mips_interp *self,
 /*
  * div mult arith
  */
-static int mips_do_arith2(struct cling_mips_interp *self,
-                struct cling_mips_ir const *ir) {
+static int mips_do_arith2(struct mips_interp *self,
+                struct mips_ir const *ir) {
         uint8_t src_regid1 = ir->operands[0].regid;
         uint8_t src_regid2 = ir->operands[1].regid;
         switch(ir->opcode) {
@@ -377,9 +377,9 @@ static int mips_do_arith2(struct cling_mips_interp *self,
         }
 }
 
-int cling_mips_interp_exec(struct cling_mips_interp *self) 
+int mips_interp_exec(struct mips_interp *self) 
 {
-        struct cling_mips_ir const *ir;
+        struct mips_ir const *ir;
         const size_t instr_size = utillib_vector_size(self->instrs);
 
         while (true) {
@@ -451,7 +451,7 @@ fetch:
         }
 }
 
-static void print_memory_usage(struct cling_mips_interp const *self) {
+static void print_memory_usage(struct mips_interp const *self) {
         size_t used_memblk=0;
         for (int i=0; i<MIPS_MEM_ARRAY_MAX; ++i)
                 if (self->memory[i])
@@ -462,7 +462,7 @@ static void print_memory_usage(struct cling_mips_interp const *self) {
         printf("used:%lu\n", used_memblk*MIPS_MEMBLK_SIZE);
 }
 
-void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option const *option)
+void mips_interp_init(struct mips_interp *self, struct option const *option)
 {
         self->option=option;
         self->error = 0;
@@ -476,22 +476,22 @@ void cling_mips_interp_init(struct cling_mips_interp *self, struct cling_option 
         self->regs[MIPS_SP]=MIPS_MEM_MAX;
 }
 
-void cling_mips_interp_load(struct cling_mips_interp *self,
-                struct cling_mips_program const *program)
+void mips_interp_load(struct mips_interp *self,
+                struct mips_program const *program)
 {
         self->instrs=&program->text;
         mips_interp_load_data(self, program);
         mips_interp_load_label(self, program);
 }
 
-void cling_mips_interp_unload(struct cling_mips_interp *self)
+void mips_interp_unload(struct mips_interp *self)
 {
 
 
 
 }
 
-void cling_mips_interp_destroy(struct cling_mips_interp *self) {
+void mips_interp_destroy(struct mips_interp *self) {
         utillib_hashmap_destroy_owning(&self->labels, NULL, mips_label_destroy);
         utillib_vector_destroy(&self->strings);
         for (int i=0; i<MIPS_MEM_ARRAY_MAX; ++i) {
@@ -502,16 +502,16 @@ void cling_mips_interp_destroy(struct cling_mips_interp *self) {
         }
 }
 
-        UTILLIB_ETAB_BEGIN(cling_mips_ecode)
+        UTILLIB_ETAB_BEGIN(mips_ecode)
         UTILLIB_ETAB_ELEM(MIPS_EC_OK)
 UTILLIB_ETAB_ELEM(MIPS_EC_EXIT)
         UTILLIB_ETAB_ELEM_INIT(MIPS_EC_ALIGN, "align error")
         UTILLIB_ETAB_ELEM_INIT(MIPS_EC_NULL, "null pointer error")
         UTILLIB_ETAB_ELEM_INIT(MIPS_EC_NOMEM, "no memory")
         UTILLIB_ETAB_ELEM_INIT(MIPS_EC_INDEX, "index out of range")
-        UTILLIB_ETAB_END(cling_mips_ecode);
+        UTILLIB_ETAB_END(mips_ecode);
 
-        static void mips_dump_regs(struct cling_mips_interp const *self, FILE *file) {
+        static void mips_dump_regs(struct mips_interp const *self, FILE *file) {
                 char const *fmt;
                 for (int i=0; i<CLING_MIPS_REG_MAX; ++i) {
                         if (self->regs[i])
@@ -523,12 +523,12 @@ UTILLIB_ETAB_ELEM(MIPS_EC_EXIT)
                 }
         }
 
-static void dump_regs(struct cling_mips_interp const *self) {
+static void dump_regs(struct mips_interp const *self) {
         mips_dump_regs(self, stdout);
 }
 
-void cling_mips_interp_print_error(struct cling_mips_interp const *self) {
-        char const * errmsg=cling_mips_ecode_tostring(self->error);
+void mips_interp_print_error(struct mips_interp const *self) {
+        char const * errmsg=mips_ecode_tostring(self->error);
         fprintf(stderr, "ERROR: %s (%d)\n", errmsg, self->error);
         fprintf(stderr, "pc=%u\n", self->pc);
         fprintf(stderr, "sp=%u\n", self->regs[MIPS_SP]);
@@ -536,9 +536,9 @@ void cling_mips_interp_print_error(struct cling_mips_interp const *self) {
         mips_ir_fprint(utillib_vector_at(self->instrs, self->pc), stderr);
 }
 
-static void dump_labels(struct cling_mips_interp const *self) {
+static void dump_labels(struct mips_interp const *self) {
         struct utillib_pair const *pair;
-        struct cling_mips_label const *label;
+        struct mips_label const *label;
         UTILLIB_HASHMAP_FOREACH(pair, &self->labels) {
                 label=pair->up_first;
                 printf("%s:\n\t0x%08"PRIX32"\n", label->label, label->address);

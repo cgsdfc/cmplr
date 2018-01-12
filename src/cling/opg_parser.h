@@ -24,7 +24,7 @@
 #include <utillib/vector.h>
 
 #include <stddef.h>
-struct cling_scanner;
+struct scanner;
 /**
  * Ths language construct this parser can recognize is as follow:
  * ＜因子＞  ::= ＜标识符＞｜＜标识符＞‘[’＜表达式＞‘]’｜＜整数＞|＜字符＞｜
@@ -37,15 +37,15 @@ struct cling_scanner;
  * add_expr : factor addop factor
  */
 
-struct cling_opg_parser {
+struct opg_parser {
         struct utillib_vector stack;
         struct utillib_vector opstack;
         size_t eof_symbol;
 };
 
-void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol);
+void opg_parser_init(struct opg_parser *self, size_t eof_symbol);
 
-void cling_opg_parser_destroy(struct cling_opg_parser *self);
+void opg_parser_destroy(struct opg_parser *self);
 
 /**
  * Parses the expression regarding `eof_symbol'.
@@ -54,12 +54,12 @@ void cling_opg_parser_destroy(struct cling_opg_parser *self);
  * and both stacks will be empty.
  */
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self,
-                struct cling_scanner *scanner);
+opg_parser_parse(struct opg_parser *self,
+                struct scanner *scanner);
 
 /*
  * Reinitialize.
  */
-void cling_opg_parser_reinit(struct cling_opg_parser *self, size_t eof_symbol);
+void opg_parser_reinit(struct opg_parser *self, size_t eof_symbol);
 
 #endif /* CLING_OPG_PARSER */

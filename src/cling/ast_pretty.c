@@ -24,108 +24,108 @@
 #include <assert.h>
 #include <utillib/json_foreach.h>
 
-static void ast_pretty_expr(struct utillib_json_value const *self,
+static void pretty_expr(struct utillib_json_value const *self,
                             struct utillib_string *string);
 
-static void ast_pretty_statement(struct utillib_json_value const *self,
+static void pretty_statement(struct utillib_json_value const *self,
                                  struct utillib_string *string,
                                  int indent_level);
 
-static void ast_pretty_composite_stmt(struct utillib_json_value const *self,
+static void pretty_composite_stmt(struct utillib_json_value const *self,
                                       struct utillib_string *string,
                                       int indent_level);
 
-static void ast_pretty_expr_stmt(struct utillib_json_value const *self,
+static void pretty_expr_stmt(struct utillib_json_value const *self,
                                  struct utillib_string *string,
                                  int indent_level);
 
-static void ast_pretty_name(struct utillib_json_value const *self,
+static void pretty_name(struct utillib_json_value const *self,
                             struct utillib_string *string) {
   utillib_string_append(string, self->as_ptr);
 }
 
-static void ast_pretty_type(struct utillib_json_value const *self,
+static void pretty_type(struct utillib_json_value const *self,
                             struct utillib_string *string) {
-  utillib_string_append(string, cling_symbol_kind_tostring(self->as_size_t));
+  utillib_string_append(string, symbol_kind_tostring(self->as_size_t));
 }
 
-static void ast_pretty_indent(struct utillib_string *string, int indent_level) {
+static void pretty_indent(struct utillib_string *string, int indent_level) {
   for (int i = 0; i < indent_level; ++i)
     utillib_string_append(string, "  ");
 }
-static void ast_pretty_factor(struct utillib_json_value const *self,
+static void pretty_factor(struct utillib_json_value const *self,
                               struct utillib_string *string) {
   struct utillib_json_value *value;
   value = utillib_json_object_at(self, "value");
   utillib_string_append(string, value->as_ptr);
 }
 
-static void ast_pretty_call(struct utillib_json_value const *self,
+static void pretty_call(struct utillib_json_value const *self,
                             struct utillib_string *string) {
   struct utillib_json_value const *lhs, *rhs, *arg;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
-  ast_pretty_factor(lhs, string);
+  pretty_factor(lhs, string);
   utillib_string_append(string, "(");
   if (utillib_json_array_size(rhs) == 0) {
     utillib_string_append(string, ")");
     return;
   }
   UTILLIB_JSON_ARRAY_FOREACH(arg, rhs) {
-    ast_pretty_expr(arg, string);
+    pretty_expr(arg, string);
     utillib_string_append(string, ", ");
   }
   utillib_string_erase_last(string);
   utillib_string_replace_last(string, ')');
 }
 
-static void ast_pretty_subscript(struct utillib_json_value const *self,
+static void pretty_subscript(struct utillib_json_value const *self,
                                  struct utillib_string *string) {
   struct utillib_json_value const *lhs, *rhs;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
-  ast_pretty_factor(lhs, string);
+  pretty_factor(lhs, string);
   utillib_string_append(string, "[");
-  ast_pretty_expr(rhs, string);
+  pretty_expr(rhs, string);
   utillib_string_append(string, "]");
 }
 
-static void ast_pretty_binary(struct utillib_json_value const *self,
+static void pretty_binary(struct utillib_json_value const *self,
                               struct utillib_string *string) {
   struct utillib_json_value const *lhs, *rhs, *op;
   lhs = utillib_json_object_at(self, "lhs");
   rhs = utillib_json_object_at(self, "rhs");
   op = utillib_json_object_at(self, "op");
 
-  ast_pretty_expr(lhs, string);
+  pretty_expr(lhs, string);
   utillib_string_append(string, " ");
-  ast_pretty_type(op, string);
+  pretty_type(op, string);
   utillib_string_append(string, " ");
-  ast_pretty_expr(rhs, string);
+  pretty_expr(rhs, string);
 }
 
-static void ast_pretty_expr(struct utillib_json_value const *self,
+static void pretty_expr(struct utillib_json_value const *self,
                             struct utillib_string *string) {
   struct utillib_json_value const *op;
   op = utillib_json_object_at(self, "op");
   if (!op) {
-    ast_pretty_factor(self, string);
+    pretty_factor(self, string);
     return;
   }
   switch (op->as_size_t) {
   case SYM_RK:
-    ast_pretty_subscript(self, string);
+    pretty_subscript(self, string);
     return;
   case SYM_RP:
-    ast_pretty_call(self, string);
+    pretty_call(self, string);
     return;
   default:
-    ast_pretty_binary(self, string);
+    pretty_binary(self, string);
     return;
   }
 }
 
-static void ast_pretty_array(
+static void pretty_array(
     struct utillib_json_value const *self, struct utillib_string *string,
     int indent_level,
     void (*array_tostring)(struct utillib_json_value const *array,
@@ -137,78 +137,78 @@ static void ast_pretty_array(
     utillib_string_append(string, "\n");
   }
 }
-static void ast_pretty_list_end(struct utillib_string *string, char end) {
+static void pretty_list_end(struct utillib_string *string, char end) {
   utillib_string_erase_last(string);
   utillib_string_replace_last(string, end);
 }
 
-static void ast_pretty_string(struct utillib_json_value const *self,
+static void pretty_string(struct utillib_json_value const *self,
                               struct utillib_string *string) {
   utillib_string_append(string, "\"");
-  ast_pretty_name(self, string);
+  pretty_name(self, string);
   utillib_string_append(string, "\"");
 }
 
-static void ast_pretty_char(struct utillib_json_value const *self,
+static void pretty_char(struct utillib_json_value const *self,
                             struct utillib_string *string) {
   utillib_string_append(string, "\'");
-  ast_pretty_name(self, string);
+  pretty_name(self, string);
   utillib_string_append(string, "\'");
 }
 
-static void ast_pretty_printf_stmt(struct utillib_json_value const *self,
+static void pretty_printf_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
   struct utillib_json_value const *value, *type, *arglist, *object;
 
   arglist = utillib_json_object_at(self, "arglist");
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "printf(");
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     type = utillib_json_object_at(object, "type");
     if (type && type->as_size_t == SYM_STRING) {
       value = utillib_json_object_at(object, "value");
-      ast_pretty_string(value, string);
+      pretty_string(value, string);
     } else {
-      ast_pretty_expr(object, string);
+      pretty_expr(object, string);
     }
     utillib_string_append(string, ", ");
   }
-  ast_pretty_list_end(string, ')');
+  pretty_list_end(string, ')');
 }
 
-static void ast_pretty_scanf_stmt(struct utillib_json_value const *self,
+static void pretty_scanf_stmt(struct utillib_json_value const *self,
                                   struct utillib_string *string,
                                   int indent_level) {
   struct utillib_json_value const *arglist, *name, *object;
 
   arglist = utillib_json_object_at(self, "arglist");
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "scanf(");
   UTILLIB_JSON_ARRAY_FOREACH(object, arglist) {
     name = utillib_json_object_at(object, "value");
-    ast_pretty_name(name, string);
+    pretty_name(name, string);
     utillib_string_append(string, ", ");
   }
-  ast_pretty_list_end(string, ')');
+  pretty_list_end(string, ')');
 }
 
-static void ast_pretty_clause(struct utillib_json_value const *self,
+static void pretty_clause(struct utillib_json_value const *self,
                               struct utillib_string *string, int indent_level) {
   struct utillib_json_value const *type;
   type = utillib_json_object_at(self, "type");
   if (type->as_size_t == SYM_COMP_STMT) {
     utillib_string_append(string, " ");
-    ast_pretty_statement(self, string, indent_level);
+    pretty_statement(self, string, indent_level);
     utillib_string_append(string, " ");
   } else {
     utillib_string_append(string, "\n");
-    ast_pretty_statement(self, string, indent_level);
+    pretty_statement(self, string, indent_level);
     utillib_string_append(string, "\n");
   }
 }
 
-static void ast_pretty_for_stmt(struct utillib_json_value const *self,
+static void pretty_for_stmt(struct utillib_json_value const *self,
                                 struct utillib_string *string,
                                 int indent_level) {
   struct utillib_json_value const *init, *cond, *step, *stmt;
@@ -217,143 +217,143 @@ static void ast_pretty_for_stmt(struct utillib_json_value const *self,
   step = utillib_json_object_at(self, "step");
   stmt = utillib_json_object_at(self, "stmt");
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "for (");
-  ast_pretty_expr(init, string);
+  pretty_expr(init, string);
   utillib_string_append(string, "; ");
-  ast_pretty_expr(cond, string);
+  pretty_expr(cond, string);
   utillib_string_append(string, "; ");
-  ast_pretty_expr(step, string);
+  pretty_expr(step, string);
   utillib_string_append(string, ")");
-  ast_pretty_clause(stmt, string, indent_level + 1);
+  pretty_clause(stmt, string, indent_level + 1);
 }
 
-static void ast_pretty_case_label(struct utillib_json_value const *self,
+static void pretty_case_label(struct utillib_json_value const *self,
                                   struct utillib_string *string) {
   struct utillib_json_value const *case_, *value;
   case_ = utillib_json_object_at(self, "case");
   if (case_) {
     value = utillib_json_object_at(case_, "value");
     utillib_string_append(string, "case ");
-    ast_pretty_name(value, string);
+    pretty_name(value, string);
   } else {
     utillib_string_append(string, "default");
   }
   utillib_string_append(string, ":\n");
 }
 
-static void ast_pretty_case_clause(struct utillib_json_value const *self,
+static void pretty_case_clause(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
   struct utillib_json_value const *stmt;
   stmt = utillib_json_object_at(self, "stmt");
-  ast_pretty_indent(string, indent_level);
-  ast_pretty_case_label(self, string);
-  ast_pretty_statement(stmt, string, indent_level + 1);
+  pretty_indent(string, indent_level);
+  pretty_case_label(self, string);
+  pretty_statement(stmt, string, indent_level + 1);
 }
 
-static void ast_pretty_switch_stmt(struct utillib_json_value const *self,
+static void pretty_switch_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
   struct utillib_json_value const *expr, *cases;
   expr = utillib_json_object_at(self, "expr");
   cases = utillib_json_object_at(self, "cases");
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "switch (");
-  ast_pretty_expr(expr, string);
+  pretty_expr(expr, string);
   utillib_string_append(string, ") {\n");
-  ast_pretty_array(cases, string, indent_level, ast_pretty_case_clause);
-  ast_pretty_indent(string, indent_level);
+  pretty_array(cases, string, indent_level, pretty_case_clause);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "}");
 }
 
-static void ast_pretty_if_stmt(struct utillib_json_value const *self,
+static void pretty_if_stmt(struct utillib_json_value const *self,
                                struct utillib_string *string,
                                int indent_level) {
   struct utillib_json_value const *expr, *then_clause, *else_clause;
   expr = utillib_json_object_at(self, "expr");
   then_clause = utillib_json_object_at(self, "then");
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "if (");
-  ast_pretty_expr(expr, string);
+  pretty_expr(expr, string);
   utillib_string_append(string, ")");
 
-  ast_pretty_clause(then_clause, string, indent_level + 1);
+  pretty_clause(then_clause, string, indent_level + 1);
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   else_clause = utillib_json_object_at(self, "else");
   if (else_clause) {
     utillib_string_append(string, "else");
-    ast_pretty_clause(else_clause, string, indent_level + 1);
+    pretty_clause(else_clause, string, indent_level + 1);
   }
 }
 
-static void ast_pretty_expr_stmt(struct utillib_json_value const *self,
+static void pretty_expr_stmt(struct utillib_json_value const *self,
                                  struct utillib_string *string,
                                  int indent_level) {
   struct utillib_json_value *expr;
   expr = utillib_json_object_at(self, "expr");
-  ast_pretty_indent(string, indent_level);
-  ast_pretty_expr(expr, string);
+  pretty_indent(string, indent_level);
+  pretty_expr(expr, string);
 }
 
-static void ast_pretty_return_stmt(struct utillib_json_value const *self,
+static void pretty_return_stmt(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
   struct utillib_json_value const *expr;
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "return");
   expr = utillib_json_object_at(self, "expr");
   if (expr) {
     utillib_string_append(string, " (");
-    ast_pretty_expr(expr, string);
+    pretty_expr(expr, string);
     utillib_string_append(string, ")");
   }
 }
 
-static void ast_pretty_statement(struct utillib_json_value const *self,
+static void pretty_statement(struct utillib_json_value const *self,
                                  struct utillib_string *string,
                                  int indent_level) {
   struct utillib_json_value const *type;
   if (self == &utillib_json_null) {
-    ast_pretty_indent(string, indent_level);
+    pretty_indent(string, indent_level);
     goto append_semi;
   }
   type = utillib_json_object_at(self, "type");
   switch (type->as_size_t) {
   case SYM_SWITCH_STMT:
-    ast_pretty_switch_stmt(self, string, indent_level);
+    pretty_switch_stmt(self, string, indent_level);
     return;
   case SYM_IF_STMT:
-    ast_pretty_if_stmt(self, string, indent_level);
+    pretty_if_stmt(self, string, indent_level);
     return;
   case SYM_FOR_STMT:
-    ast_pretty_for_stmt(self, string, indent_level);
+    pretty_for_stmt(self, string, indent_level);
     return;
   case SYM_EXPR_STMT:
-    ast_pretty_expr_stmt(self, string, indent_level);
+    pretty_expr_stmt(self, string, indent_level);
     goto append_semi;
   case SYM_PRINTF_STMT:
-    ast_pretty_printf_stmt(self, string, indent_level);
+    pretty_printf_stmt(self, string, indent_level);
     goto append_semi;
   case SYM_SCANF_STMT:
-    ast_pretty_scanf_stmt(self, string, indent_level);
+    pretty_scanf_stmt(self, string, indent_level);
     goto append_semi;
   case SYM_RETURN_STMT:
-    ast_pretty_return_stmt(self, string, indent_level);
+    pretty_return_stmt(self, string, indent_level);
     goto append_semi;
   case SYM_COMP_STMT:
-    ast_pretty_composite_stmt(self, string, indent_level);
+    pretty_composite_stmt(self, string, indent_level);
     return;
   }
 append_semi:
   utillib_string_append(string, ";");
 }
 
-static void ast_pretty_single_var_decl(struct utillib_json_value const *self,
+static void pretty_single_var_decl(struct utillib_json_value const *self,
                                        struct utillib_string *string,
                                        int indent_level) {
   struct utillib_json_value const *type, *extend, *name, *var_defs, *object;
@@ -361,8 +361,8 @@ static void ast_pretty_single_var_decl(struct utillib_json_value const *self,
   type = utillib_json_object_at(self, "type");
   var_defs = utillib_json_object_at(self, "var_defs");
 
-  ast_pretty_indent(string, indent_level);
-  ast_pretty_type(type, string);
+  pretty_indent(string, indent_level);
+  pretty_type(type, string);
   utillib_string_append(string, " ");
   UTILLIB_JSON_ARRAY_FOREACH(object, var_defs) {
     name = utillib_json_object_at(object, "name");
@@ -375,10 +375,10 @@ static void ast_pretty_single_var_decl(struct utillib_json_value const *self,
     }
     utillib_string_append(string, ", ");
   }
-  ast_pretty_list_end(string, ';');
+  pretty_list_end(string, ';');
 }
 
-static void ast_pretty_single_const_decl(struct utillib_json_value const *self,
+static void pretty_single_const_decl(struct utillib_json_value const *self,
                                          struct utillib_string *string,
                                          int indent_level) {
   struct utillib_json_value const *type, *const_defs, *name, *value, *object;
@@ -386,61 +386,61 @@ static void ast_pretty_single_const_decl(struct utillib_json_value const *self,
   type = utillib_json_object_at(self, "type");
   const_defs = utillib_json_object_at(self, "const_defs");
 
-  ast_pretty_indent(string, indent_level);
+  pretty_indent(string, indent_level);
   utillib_string_append(string, "const ");
-  ast_pretty_type(type, string);
+  pretty_type(type, string);
   utillib_string_append(string, " ");
   UTILLIB_JSON_ARRAY_FOREACH(object, const_defs) {
     name = utillib_json_object_at(object, "name");
     value = utillib_json_object_at(object, "value");
-    ast_pretty_name(name, string);
+    pretty_name(name, string);
     utillib_string_append(string, " = ");
     if (type->as_size_t == SYM_KW_CHAR) {
-      ast_pretty_char(value, string);
+      pretty_char(value, string);
     } else {
-      ast_pretty_name(value, string);
+      pretty_name(value, string);
     }
     utillib_string_append(string, ", ");
   }
-  ast_pretty_list_end(string, ';');
+  pretty_list_end(string, ';');
 }
 
-static void ast_pretty_maybe_decls(struct utillib_json_value const *self,
+static void pretty_maybe_decls(struct utillib_json_value const *self,
                                    struct utillib_string *string,
                                    int indent_level) {
   struct utillib_json_value const *const_decls, *var_decls;
   const_decls = utillib_json_object_at(self, "const_decls");
   var_decls = utillib_json_object_at(self, "var_decls");
   if (const_decls) {
-    ast_pretty_array(const_decls, string, indent_level,
-                     ast_pretty_single_const_decl);
+    pretty_array(const_decls, string, indent_level,
+                     pretty_single_const_decl);
     utillib_string_append(string, "\n");
   }
   if (var_decls) {
-    ast_pretty_array(var_decls, string, indent_level,
-                     ast_pretty_single_var_decl);
+    pretty_array(var_decls, string, indent_level,
+                     pretty_single_var_decl);
     utillib_string_append(string, "\n");
   }
 }
 
-static void ast_pretty_composite_stmt(struct utillib_json_value const *self,
+static void pretty_composite_stmt(struct utillib_json_value const *self,
                                       struct utillib_string *string,
                                       int indent_level) {
   struct utillib_json_value const *stmts;
 
   stmts = utillib_json_object_at(self, "stmts");
   utillib_string_append(string, "{\n");
-  ast_pretty_maybe_decls(self, string, indent_level);
+  pretty_maybe_decls(self, string, indent_level);
   if (stmts) {
-    ast_pretty_array(stmts, string, indent_level, ast_pretty_statement);
+    pretty_array(stmts, string, indent_level, pretty_statement);
   } else {
     utillib_string_append(string, "\n");
   }
-  ast_pretty_indent(string, indent_level - 1);
+  pretty_indent(string, indent_level - 1);
   utillib_string_append(string, "}");
 }
 
-static void ast_pretty_arglist(struct utillib_json_value const *self,
+static void pretty_arglist(struct utillib_json_value const *self,
                                struct utillib_string *string) {
   struct utillib_json_value const *type, *name, *object;
 
@@ -452,15 +452,15 @@ static void ast_pretty_arglist(struct utillib_json_value const *self,
   UTILLIB_JSON_ARRAY_FOREACH(object, self) {
     type = utillib_json_object_at(object, "type");
     name = utillib_json_object_at(object, "name");
-    ast_pretty_type(type, string);
+    pretty_type(type, string);
     utillib_string_append(string, " ");
-    ast_pretty_name(name, string);
+    pretty_name(name, string);
     utillib_string_append(string, ", ");
   }
-  ast_pretty_list_end(string, ')');
+  pretty_list_end(string, ')');
 }
 
-static void ast_pretty_function(struct utillib_json_value const *self,
+static void pretty_function(struct utillib_json_value const *self,
                                 struct utillib_string *string,
                                 int indent_level) {
   struct utillib_json_value const *arglist, *type, *name, *comp;
@@ -468,33 +468,33 @@ static void ast_pretty_function(struct utillib_json_value const *self,
   name = utillib_json_object_at(self, "name");
   arglist = utillib_json_object_at(self, "arglist");
   comp = utillib_json_object_at(self, "comp");
-  ast_pretty_type(type, string);
+  pretty_type(type, string);
   utillib_string_append(string, " ");
-  ast_pretty_name(name, string);
-  ast_pretty_arglist(arglist, string);
+  pretty_name(name, string);
+  pretty_arglist(arglist, string);
   utillib_string_append(string, "\n");
-  ast_pretty_composite_stmt(comp, string, indent_level + 1);
+  pretty_composite_stmt(comp, string, indent_level + 1);
   utillib_string_append(string, "\n");
 }
 
-static void ast_pretty_program(struct utillib_json_value const *self,
+static void pretty_program(struct utillib_json_value const *self,
                                struct utillib_string *string) {
   struct utillib_json_value const *func_decls;
   func_decls = utillib_json_object_at(self, "func_decls");
-  ast_pretty_maybe_decls(self, string, 0);
-  ast_pretty_array(func_decls, string, 0, ast_pretty_function);
+  pretty_maybe_decls(self, string, 0);
+  pretty_array(func_decls, string, 0, pretty_function);
 }
 
-char *cling_ast_pretty_expr(struct utillib_json_value const *self) {
+char *ast_pretty_expr(struct utillib_json_value const *self) {
   struct utillib_string string;
   utillib_string_init(&string);
-  ast_pretty_expr(self, &string);
+  pretty_expr(self, &string);
   return utillib_string_c_str(&string);
 }
 
-char *cling_ast_pretty_program(struct utillib_json_value const *self) {
+char *ast_pretty_program(struct utillib_json_value const *self) {
   struct utillib_string string;
   utillib_string_init(&string);
-  ast_pretty_program(self, &string);
+  pretty_program(self, &string);
   return utillib_string_c_str(&string);
 }

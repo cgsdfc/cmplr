@@ -28,7 +28,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-        UTILLIB_ENUM_BEGIN(cling_ast_opcode_kind)
+        UTILLIB_ENUM_BEGIN(ast_opcode_kind)
         UTILLIB_ENUM_ELEM(OP_NOP)
         UTILLIB_ENUM_ELEM(OP_DEFVAR)
         UTILLIB_ENUM_ELEM(OP_DEFARR)
@@ -61,7 +61,7 @@
         UTILLIB_ENUM_ELEM(OP_READ)
         UTILLIB_ENUM_ELEM(OP_WRITE)
 UTILLIB_ENUM_ELEM(OP_NL)
-        UTILLIB_ENUM_END(cling_ast_opcode_kind);
+        UTILLIB_ENUM_END(ast_opcode_kind);
 
         enum { CL_LVALUE, CL_RVALUE, };
 enum {
@@ -83,7 +83,7 @@ enum {
  * |         | arg0 <-- sp
  * +---------+
  */
-struct cling_ast_ir {
+struct ast_ir {
         int opcode;
         union {
                 struct {
@@ -266,10 +266,10 @@ struct cling_ast_ir {
  * Notes the symbol_table will
  * be reentered.
  */
-struct cling_ast_ir_global 
+struct ast_ir_global 
 {
-        struct cling_option const *option;
-        struct cling_symbol_table *symbol_table;
+        struct option const *option;
+        struct symbol_table *symbol_table;
         struct utillib_vector *instrs;
         unsigned int temps;
 };
@@ -278,7 +278,7 @@ struct cling_ast_ir_global
  * Holder of its own instrs.
  * Basic unit of code.
  */
-struct cling_ast_function 
+struct ast_function 
 {
         char const *name;
         unsigned int temps;
@@ -290,33 +290,33 @@ struct cling_ast_function
  * Holder of all the functions
  * and some global init code.
  */
-struct cling_ast_program {
-        struct cling_option const *option;
+struct ast_program {
+        struct option const *option;
         struct utillib_vector init_code;
         struct utillib_vector funcs;
 };
 
-void cling_ast_program_init(struct cling_ast_program *self, struct cling_option const *option);
+void ast_program_init(struct ast_program *self, struct option const *option);
 
-void cling_ast_program_destroy(struct cling_ast_program *self);
+void ast_program_destroy(struct ast_program *self);
 
-void cling_ast_ir_emit_program(struct cling_ast_program *self,
+void ast_ir_emit_program(struct ast_program *self,
                 struct utillib_json_value const *object,
-                struct cling_symbol_table *symbol_table);
+                struct symbol_table *symbol_table);
 
-void cling_ast_program_print(struct cling_ast_program const *self, FILE *file);
+void ast_program_print(struct ast_program const *self, FILE *file);
 
-void cling_ast_ir_destroy(struct cling_ast_ir *self);
+void ast_ir_destroy(struct ast_ir *self);
 void ast_ir_fix_address(struct utillib_vector *instrs,
                 unsigned int const *address_map);
-void ast_ir_print(struct cling_ast_ir const *self, FILE *file);
+void ast_ir_print(struct ast_ir const *self, FILE *file);
 
-bool ast_ir_is_local_jump(struct cling_ast_ir const *ast_ir);
+bool ast_ir_is_local_jump(struct ast_ir const *ast_ir);
 void ast_ir_vector_print(struct utillib_vector const *instrs,
                 FILE *file);
-int ast_ir_get_jump_address(struct cling_ast_ir const *ast_ir);
+int ast_ir_get_jump_address(struct ast_ir const *ast_ir);
 
-bool ast_ir_useless_jump(struct cling_ast_ir const *ast_ir, int ast_pc);
-int ast_ir_get_assign_target(struct cling_ast_ir const *ir);
+bool ast_ir_useless_jump(struct ast_ir const *ast_ir, int ast_pc);
+int ast_ir_get_assign_target(struct ast_ir const *ir);
 
 #endif /* CLING_AST_IR_H */

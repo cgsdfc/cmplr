@@ -24,7 +24,7 @@
 #include <utillib/enum.h>
 #include <utillib/symbol.h>
 
-UTILLIB_ENUM_BEGIN(cling_symbol_kind)
+UTILLIB_ENUM_BEGIN(symbol_kind)
 
 UTILLIB_ENUM_ELEM_INIT(SYM_PROGRAM, 1)
 UTILLIB_ENUM_ELEM(SYM_ADD_OP)
@@ -103,7 +103,7 @@ UTILLIB_ENUM_ELEM(SYM_COMMA)
 UTILLIB_ENUM_ELEM(SYM_LP)
 UTILLIB_ENUM_ELEM(SYM_RP)
 
-UTILLIB_ENUM_END(cling_symbol_kind);
+UTILLIB_ENUM_END(symbol_kind);
 
 bool opg_parser_is_relop(unsigned op);
 

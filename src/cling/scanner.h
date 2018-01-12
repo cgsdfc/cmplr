@@ -22,15 +22,15 @@
 #define CLING_SCANNER_H
 #include <utillib/scanner.h>
 #include <stdio.h>
-struct cling_option;
-struct cling_rd_parser;
+struct option;
+struct rd_parser;
 
-struct cling_scanner 
+struct scanner 
 {
         struct utillib_char_scanner input;
         struct utillib_string buffer;
-        struct cling_rd_parser *parser;
-        struct cling_option const *option;
+        struct rd_parser *parser;
+        struct option const *option;
         size_t context;
         size_t lookahead;
 };
@@ -40,13 +40,13 @@ struct cling_scanner
 /* ＜整数＞    ::= ［＋｜－］＜无符号整数＞｜０ */
 /* ＜字符＞  ::= '＜加法运算符＞'｜'＜乘法运算符＞'｜'＜字母＞'｜'＜数字＞' */
 
-void cling_scanner_init(struct cling_scanner *self,
-                struct cling_option const *option,
-                struct cling_rd_parser *parser, FILE *file);
-void cling_scanner_destroy(struct cling_scanner *self);
-size_t cling_scanner_lookahead(struct cling_scanner const *self);
-void cling_scanner_shiftaway(struct cling_scanner *self);
-char const *cling_scanner_semantic(struct cling_scanner const *self);
-void cling_scanner_context(struct cling_scanner *self, size_t context);
+void scanner_init(struct scanner *self,
+                struct option const *option,
+                struct rd_parser *parser, FILE *file);
+void scanner_destroy(struct scanner *self);
+size_t scanner_lookahead(struct scanner const *self);
+void scanner_shiftaway(struct scanner *self);
+char const *scanner_semantic(struct scanner const *self);
+void scanner_context(struct scanner *self, size_t context);
 
 #endif /* CLING_SCANNER_H */

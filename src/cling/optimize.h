@@ -24,22 +24,22 @@
 #include "basic_block.h"
 #include "lcse.h"
 
-struct cling_option;
-struct cling_ast_function;
+struct option;
+struct ast_function;
 /*
  * High level modules that controls
  * optizization.
  */
-struct cling_optimizer {
-  struct cling_option const *option;
+struct optimizer {
+  struct option const *option;
   struct utillib_vector basic_blocks;
-  struct cling_lcse_optimizer lcse;
+  struct lcse_optimizer lcse;
 };
 
-void cling_optimizer_init(struct cling_optimizer *self, struct cling_option const *option,
-    struct cling_ast_function const *ast_func);
-void cling_optimizer_destroy(struct cling_optimizer *self);
-void cling_optimizer_optimize(struct cling_optimizer *self,
-    struct cling_ast_function *ast_func);
+void optimizer_init(struct optimizer *self, struct option const *option,
+    struct ast_function const *ast_func);
+void optimizer_destroy(struct optimizer *self);
+void optimizer_optimize(struct optimizer *self,
+    struct ast_function *ast_func);
 
 #endif /* CLING_OPTIMIZE_H */

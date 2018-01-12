@@ -50,8 +50,8 @@ enum {
         CL_EUNKNOWN,
 };
 
-struct cling_scanner;
-struct cling_error 
+struct scanner;
+struct error 
 {
         int kind;
         char const *context;
@@ -97,46 +97,46 @@ struct cling_error
         };
 };
 
-void cling_error_destroy(struct cling_error *self);
+void error_destroy(struct error *self);
 
-struct cling_error *cling_expected_error(struct cling_scanner const *scanner,
+struct error *expected_error(struct scanner const *scanner,
                 size_t expected, size_t context);
 
-struct cling_error *cling_unexpected_error(struct cling_scanner const *scanner,
+struct error *unexpected_error(struct scanner const *scanner,
                 size_t context);
 
-struct cling_error *cling_redefined_error(struct cling_scanner const *scanner,
+struct error *redefined_error(struct scanner const *scanner,
                 char const *name, size_t context);
 
-struct cling_error *
-cling_undefined_name_error(struct cling_scanner const *scanner,
+struct error *
+undefined_name_error(struct scanner const *scanner,
                 char const *name, size_t context);
 
-struct cling_error *
-cling_not_lvalue_error(struct cling_scanner const *scanner,
+struct error *
+not_lvalue_error(struct scanner const *scanner,
                 struct utillib_json_value const *value, size_t context);
 
-struct cling_error *
-cling_incompatible_type_error(struct cling_scanner const *scanner,
+struct error *
+incompatible_type_error(struct scanner const *scanner,
                 int actual_type, int expected_type,
                 size_t context);
-struct cling_error *
-cling_invalid_expr_error(struct cling_scanner const *scanner,
+struct error *
+invalid_expr_error(struct scanner const *scanner,
                 struct utillib_json_value const *value,
                 size_t context);
 
-struct cling_error *
-cling_argc_unmatched_error(struct cling_scanner const *scanner,
+struct error *
+argc_unmatched_error(struct scanner const *scanner,
                 char const *func_name, unsigned int actual_argc,
                 unsigned int expected_argc, size_t context);
 
-struct cling_error *cling_dupcase_error(struct cling_scanner const *scanner,
+struct error *dupcase_error(struct scanner const *scanner,
                 int case_type, char const *label,
                 size_t context);
-struct cling_error *cling_badtoken_error(struct cling_scanner const *scanner,
+struct error *badtoken_error(struct scanner const *scanner,
                 int type, char const *evidence,
                 size_t context);
 
-void cling_error_print(struct cling_error const *self);
+void error_print(struct error const *self);
 
 #endif /* CLING_ERROR_H */

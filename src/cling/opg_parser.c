@@ -43,18 +43,6 @@
  */
 enum { OPG_REDUCE, OPG_SHIFTIN, OPG_ERROR };
 
-static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
-        /*
-         * We do not want eof_symbol to conflict
-         * with any other one. Simply use negative
-         * to distinguish both.
-         */
-        self->eof_symbol = eof_symbol;
-        utillib_vector_init(&self->stack);
-        utillib_vector_init(&self->opstack);
-        utillib_vector_push_back(&self->opstack, (void*) self->eof_symbol);
-}
-
 /**
  * This is a hard-coded Precedence Matrix.
  * Compares the precedence of the stack-top symbol(lhs)
@@ -66,7 +54,7 @@ static void opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
  * the code can be less and cleaner.
  * What's worse, the order within the same group (lhs==..., rhs==...) matters.
  */
-static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
+static size_t opg_parser_compare(struct opg_parser *self, size_t lhs,
                 size_t rhs) {
         const size_t eof_symbol = self->eof_symbol;
         const bool lhs_is_relop = opg_parser_is_relop(lhs);
@@ -137,23 +125,23 @@ static size_t opg_parser_compare(struct cling_opg_parser *self, size_t lhs,
 /*
  * debugging functions.
  */
-static void opg_parser_show_opstack(struct cling_opg_parser const *self) {
-        size_t op;
+static void opg_parser_show_opstack(struct opg_parser const *self) {
+        void *op;
         UTILLIB_VECTOR_FOREACH(op, &self->opstack) {
-                printf("%s ", cling_symbol_kind_tostring(op));
+                printf("%s ", symbol_kind_tostring((uintptr_t)op));
         }
         puts("");
 }
 
-static void opg_parser_show_stack(struct cling_opg_parser const *self) {
+static void opg_parser_show_stack(struct opg_parser const *self) {
         struct utillib_json_value *val;
 
         UTILLIB_VECTOR_FOREACH(val, &self->stack) { utillib_json_pretty_print(val); }
 }
 
 static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {
-        printf("stacktop %s\n", cling_symbol_kind_tostring(stacktop));
-        printf("lookahead %s\n", cling_symbol_kind_tostring(lookahead));
+        printf("stacktop %s\n", symbol_kind_tostring(stacktop));
+        printf("lookahead %s\n", symbol_kind_tostring(lookahead));
 }
 
 /*
@@ -162,7 +150,7 @@ static void opg_parser_show_lookahead(size_t lookahead, size_t stacktop) {
  * Specially, subscription is `SYM_RK'.
  * And call is `SYM_RP'.
  */
-static int opg_parser_reduce(struct cling_opg_parser *self, size_t lookahead) {
+static int opg_parser_reduce(struct opg_parser *self, size_t lookahead) {
         struct utillib_json_value *lhs;
         struct utillib_json_value *rhs;
         struct utillib_json_value *object;
@@ -278,20 +266,28 @@ make_binary:
         lhs = utillib_vector_back(stack);
         utillib_vector_pop_back(stack);
         object = utillib_json_object_create_empty();
-        cling_ast_set_op(object, op);
-        cling_ast_set_lhs(object, lhs);
-        cling_ast_set_rhs(object, rhs);
+        ast_set_op(object, op);
+        ast_set_lhs(object, lhs);
+        ast_set_rhs(object, rhs);
         utillib_vector_push_back(stack, object);
         return 0;
 error:
         return 1;
 }
 
-void cling_opg_parser_init(struct cling_opg_parser *self, size_t eof_symbol) {
-        opg_parser_init(self, eof_symbol);
+void opg_parser_init(struct opg_parser *self, size_t eof_symbol) {
+        /*
+         * We do not want eof_symbol to conflict
+         * with any other one. Simply use negative
+         * to distinguish both.
+         */
+        self->eof_symbol = eof_symbol;
+        utillib_vector_init(&self->stack);
+        utillib_vector_init(&self->opstack);
+        utillib_vector_push_back(&self->opstack, (void*) self->eof_symbol);
 }
 
-void cling_opg_parser_destroy(struct cling_opg_parser *self) {
+void opg_parser_destroy(struct opg_parser *self) {
         utillib_vector_destroy_owning(&self->stack, utillib_json_value_destroy);
         utillib_vector_destroy(&self->opstack);
 }
@@ -331,8 +327,8 @@ static bool good_token(size_t lookahead)
  * Currently, it return null as indicator of error.
  */
 struct utillib_json_value *
-cling_opg_parser_parse(struct cling_opg_parser *self,
-                struct cling_scanner *scanner) {
+opg_parser_parse(struct opg_parser *self,
+                struct scanner *scanner) {
 
         size_t lookahead;
         size_t stacktop;
@@ -343,10 +339,10 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
         const size_t eof_symbol = self->eof_symbol;
         const size_t old_context=scanner->context;
 
-        cling_scanner_context(scanner, SYM_EXPR);
+        scanner_context(scanner, SYM_EXPR);
         while (!utillib_vector_empty(opstack)) {
                 /* opg_parser_show_stack(self); */
-                lookahead = cling_scanner_lookahead(scanner);
+                lookahead = scanner_lookahead(scanner);
                 /* if (!good_token(lookahead)) */
                 /*   goto error; */
                 if (utillib_vector_size(opstack) == 1 && lookahead == eof_symbol) {
@@ -367,21 +363,21 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
                          */
                         val = utillib_vector_back(stack);
                         utillib_vector_pop_back(stack);
-                        cling_scanner_context(scanner, old_context);
+                        scanner_context(scanner, old_context);
                         return val;
                 }
 
                 stacktop =(uintptr_t)  utillib_vector_back(opstack);
                 if (lookahead == SYM_IDEN || lookahead == SYM_INTEGER || lookahead == SYM_CHAR) {
                         utillib_vector_push_back(
-                                        stack, cling_ast_factor(lookahead, cling_scanner_semantic(scanner)));
+                                        stack, ast_factor(lookahead, scanner_semantic(scanner)));
                         if (lookahead == SYM_IDEN)
                                 /*
                                  * SYM_IDEN matters in call_expr
                                  * so pushes it.
                                  */
                                 utillib_vector_push_back(opstack, (void*) lookahead);
-                        cling_scanner_shiftaway(scanner);
+                        scanner_shiftaway(scanner);
                         continue;
                 }
                 /*
@@ -399,7 +395,7 @@ cling_opg_parser_parse(struct cling_opg_parser *self,
                         case OPG_SHIFTIN:
 shiftin:
                                 utillib_vector_push_back(opstack, (void*) lookahead);
-                                cling_scanner_shiftaway(scanner);
+                                scanner_shiftaway(scanner);
                                 break;
                         case OPG_REDUCE:
                                 if (0 != opg_parser_reduce(self, lookahead)) {
@@ -412,7 +408,7 @@ shiftin:
                 }
         }
 error:
-        cling_scanner_context(scanner, old_context);
+        scanner_context(scanner, old_context);
         return NULL;
 }
 
@@ -420,7 +416,7 @@ error:
  * In some case reuseing a opg_parser is desirable.
  * After reinited, it can be used as inited.
  */
-void cling_opg_parser_reinit(struct cling_opg_parser *self, size_t eof_symbol) {
-        cling_opg_parser_destroy(self);
+void opg_parser_reinit(struct opg_parser *self, size_t eof_symbol) {
+        opg_parser_destroy(self);
         opg_parser_init(self, eof_symbol);
 }

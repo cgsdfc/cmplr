@@ -23,29 +23,21 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#define FN_BUFSIZ 100
 
-enum {
-        ENOINPUT=1, EFOPEN, ESYNTAX
-};
-
-static struct cling_option option;
-static struct cling_frontend frontend;
-static struct cling_backend backend;
-static FILE *source_file;
-static FILE *mips_file;
-static char filename_buffer[100];
-
+static char filename_buffer[FN_BUFSIZ];
 static void die_of_fopen(char const *filename){
-        fprintf(stderr, "%s cannot be opened\n", filename_buffer);
-        exit(EFOPEN);
+        fprintf(stderr, "%s cannot be opened\n", filename);
+        exit(1);
 }
 
-
-int main(void)
+static FILE * open_source_prompt(struct option *option)
 {
         char optch;
-        printf("please input a file\n");
-        fgets(filename_buffer, sizeof filename_buffer, stdin);
+        FILE *source_file;
+
+        printf("please input a file");
+        fgets(filename_buffer, FN_BUFSIZ, stdin);
         filename_buffer[strlen(filename_buffer)-1]='\0';
         source_file=fopen(filename_buffer, "r");
         if (!source_file) {
@@ -54,33 +46,57 @@ int main(void)
         printf("please tell me whether to do optimization(Y/n)");
         optch=getchar();
         switch(optch) {
-                case 'Y': case 'y':
-                        option.optimize_lcse=true;
-                        break;
-                case 'N': case 'n':
-                        option.optimize_lcse=false;
-                        break;
-                default:
-                        puts("say Y or n, please");
-                        exit(1);
+        case 'Y': case 'y':
+                option->optimize_lcse=true;
+                break;
+        case 'N': case 'n':
+                option->optimize_lcse=false;
+                break;
+        default:
+                puts("say Y or n, please");
+                exit(1);
         }
+        return source_file;
+}
 
-        cling_frontend_init(&frontend, &option, source_file);
-        if (0 != cling_frontend_parse(&frontend)) {
-                cling_frontend_destroy(&frontend);
-                return ESYNTAX;
+static FILE *open_source_argv(char const *path)
+{
+        FILE *source_file=fopen(path, "r");
+        if (!source_file)
+                die_of_fopen(path);
+        strncpy(filename_buffer, path, FN_BUFSIZ);
+        return source_file;
+}
+
+int main(int argc, char **argv)
+{
+        struct option option={0};
+        struct frontend frontend={0};
+        struct backend backend={0};
+        FILE *source_file=NULL;
+        FILE *mips_file=NULL;
+
+#ifdef PROMPT_USER
+        source_file=open_source_prompt();
+#else
+        source_file=open_source_argv(argv[1]);
+#endif
+        frontend_init(&frontend, &option, source_file);
+        backend_init(&backend, &option);
+        if (0 != frontend_parse(&frontend)) {
+                frontend_destroy(&frontend);
+                return 1;
         }
-        cling_backend_init(&backend, &option);
-        cling_backend_codegen(&backend, &frontend);
+        backend_codegen(&backend, &frontend);
         strncat(filename_buffer, ".s", sizeof filename_buffer);
         mips_file=fopen(filename_buffer, "w");
         if (!mips_file) {
                 die_of_fopen(filename_buffer);
         }
-        cling_backend_dump_mips(&backend, mips_file);
+        backend_dump_mips(&backend, mips_file);
         fclose(mips_file);
         printf("Assembly has been written to %s\n", filename_buffer);
-        cling_frontend_destroy(&frontend);
-        cling_backend_destroy(&backend);
+        frontend_destroy(&frontend);
+        backend_destroy(&backend);
         return 0;
 }
