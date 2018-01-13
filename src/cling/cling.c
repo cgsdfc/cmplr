@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #define FN_BUFSIZ 100
+#define PROMPT_USER
 
 static char filename_buffer[FN_BUFSIZ];
 static void die_of_fopen(char const *filename){
@@ -42,19 +43,6 @@ static FILE * open_source_prompt(struct option *option)
         source_file=fopen(filename_buffer, "r");
         if (!source_file) {
                 die_of_fopen(filename_buffer);
-        }
-        printf("please tell me whether to do optimization(Y/n)");
-        optch=getchar();
-        switch(optch) {
-        case 'Y': case 'y':
-                option->optimize_lcse=true;
-                break;
-        case 'N': case 'n':
-                option->optimize_lcse=false;
-                break;
-        default:
-                puts("say Y or n, please");
-                exit(1);
         }
         return source_file;
 }
@@ -77,7 +65,7 @@ int main(int argc, char **argv)
         FILE *mips_file=NULL;
 
 #ifdef PROMPT_USER
-        source_file=open_source_prompt();
+        source_file=open_source_prompt(&option);
 #else
         source_file=open_source_argv(argv[1]);
 #endif
